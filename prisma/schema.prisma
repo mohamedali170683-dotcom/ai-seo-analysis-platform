@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  projects      Project[]
+  apiKeys       ApiKey[]
+  
+  @@map("users")
+}
+
+model ApiKey {
+  id            String    @id @default(cuid())
+  userId        String
+  service       String
+  key           String    @db.Text
+  refreshToken  String?   @db.Text
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, service])
+  @@map("api_keys")
+}
+
+model Project {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  domain        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  keywords      Keyword[]
+  aiOverviews   AiOverview[]
+  trafficData   TrafficData[]
+  chatbotQueries ChatbotQuery[]
+  
+  @@map("projects")
+}
+
+model Keyword {
+  id            String    @id @default(cuid())
+  projectId     String
+  keyword       String
+  searchVolume  Int?
+  difficulty    Float?
+  intent        String?
+  category      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  aiOverviews   AiOverview[]
+  trafficData   TrafficData[]
+  
+  @@unique([projectId, keyword])
+  @@index([projectId])
+  @@map("keywords")
+}
+
+model AiOverview {
+  id            String    @id @default(cuid())
+  projectId     String
+  keywordId     String
+  date          DateTime
+  hasAiOverview Boolean
+  position      Int?
+  contentLength Int?
+  sources       Json?
+  createdAt     DateTime  @default(now())
+  
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+  
+  @@unique([keywordId, date])
+  @@index([projectId, date])
+  @@map("ai_overviews")
+}
+
+model TrafficData {
+  id            String    @id @default(cuid())
+  projectId     String
+  keywordId     String?
+  url           String?
+  date          DateTime
+  clicks        Int
+  impressions   Int
+  ctr           Float
+  position      Float
+  device        String?
+  country       String?
+  createdAt     DateTime  @default(now())
+  
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  keyword       Keyword?  @relation(fields: [keywordId], references: [id], onDelete: SetNull)
+  
+  @@unique([projectId, keywordId, url, date, device, country])
+  @@index([projectId, date])
+  @@index([keywordId])
+  @@map("traffic_data")
+}
+
+model ChatbotQuery {
+  id            String    @id @default(cuid())
+  projectId     String
+  question      String    @db.Text
+  platform      String
+  modelVersion  String?
+  queryDate     DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  responses     ChatbotResponse[]
+  
+  @@index([projectId, platform])
+  @@map("chatbot_queries")
+}
+
+model ChatbotResponse {
+  id            String    @id @default(cuid())
+  queryId       String
+  responseText  String    @db.Text
+  hasBrandMention Boolean
+  brandPosition Int?
+  citedUrls     Json?
+  competitors   Json?
+  sentiment     String?
+  responseDate  DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  
+  query         ChatbotQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  
+  @@index([queryId])
+  @@map("chatbot_responses")
+}
+
+model VisibilityScore {
+  id            String    @id @default(cuid())
+  projectId     String
+  platform      String
+  date          DateTime
+  overallScore  Float
+  mentionRate   Float
+  avgPosition   Float?
+  citationRate  Float
+  shareOfVoice  Float?
+  createdAt     DateTime  @default(now())
+  
+  @@unique([projectId, platform, date])
+  @@index([projectId, date])
+  @@map("visibility_scores")
+}
+
+model AnalysisJob {
+  id            String    @id @default(cuid())
+  projectId     String
+  type          String
+  status        String
+  progress      Int       @default(0)
+  parameters    Json?
+  result        Json?
+  error         String?   @db.Text
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  
+  @@index([projectId, status])
+  @@map("analysis_jobs")
+}
