@@ -86,3 +86,4 @@ MIT License - see LICENSE file
 
 🙏 Acknowledgments
 Built with Next.js, Prisma, OpenAI, and love ❤️
+Version 1.0.0 - Full Interactive App
