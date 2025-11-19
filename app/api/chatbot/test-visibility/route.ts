@@ -65,13 +65,13 @@ export async function POST(request: Request) {
         },
       });
 
-      await prisma.chatbotResponse.create({
+       await prisma.chatbotResponse.create({
         data: {
           queryId: query.id,
           responseText: response,
           hasBrandMention,
           brandPosition,
-          citedUrls: citedUrls.length > 0 ? citedUrls : null,
+          ...(citedUrls.length > 0 && { citedUrls }),
         },
       });
     }
