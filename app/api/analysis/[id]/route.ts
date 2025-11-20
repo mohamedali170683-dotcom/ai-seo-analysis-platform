@@ -54,19 +54,21 @@ export async function GET(
           : null,
     };
 
-    // Platform breakdown
-    const platformStats = {
+   // Platform breakdown
+    const platformStats: any = {
       chatgpt: {
         tests: analysis.aiTestResults.filter((r) => r.platform === "chatgpt").length,
         mentions: analysis.aiTestResults.filter(
           (r) => r.platform === "chatgpt" && r.brandMentioned
         ).length,
+        mentionRate: 0,
       },
       gemini: {
         tests: analysis.aiTestResults.filter((r) => r.platform === "gemini").length,
         mentions: analysis.aiTestResults.filter(
           (r) => r.platform === "gemini" && r.brandMentioned
         ).length,
+        mentionRate: 0,
       },
     };
 
