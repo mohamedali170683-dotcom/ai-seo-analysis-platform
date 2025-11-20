@@ -16,6 +16,7 @@ model User {
   
   projects      Project[]
   apiKeys       ApiKey[]
+  analyses      Analysis[]
   
   @@map("users")
 }
@@ -54,6 +55,118 @@ model Project {
   @@map("projects")
 }
 
+// NEW: Analysis Reports
+model Analysis {
+  id                String    @id @default(cuid())
+  userId            String
+  brandOrKeyword    String
+  domain            String
+  competitors       String?
+  status            String    @default("pending")  // pending, discovering, testing, analyzing, completed, failed
+  progress          Int       @default(0)
+  overallScore      Float?
+  createdAt         DateTime  @default(now())
+  completedAt       DateTime?
+  error             String?   @db.Text
+  
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  discoveredQuestions DiscoveredQuestion[]
+  aiTestResults       AITestResult[]
+  competitors_detected DetectedCompetitor[]
+  insights            AIInsight[]
+  
+  @@index([userId, status])
+  @@map("analyses")
+}
+
+// NEW: Discovered Questions (from DataForSEO)
+model DiscoveredQuestion {
+  id              String    @id @default(cuid())
+  analysisId      String
+  question        String    @db.Text
+  searchVolume    Int?
+  difficulty      Float?
+  commercialIntent String?  // high, medium, low
+  category        String?   // performance, style, price, innovation, etc.
+  source          String    @default("dataforseo")
+  createdAt       DateTime  @default(now())
+  
+  analysis        Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  testResults     AITestResult[]
+  
+  @@index([analysisId])
+  @@map("discovered_questions")
+}
+
+// NEW: AI Test Results (batch testing)
+model AITestResult {
+  id                String    @id @default(cuid())
+  analysisId        String
+  questionId        String
+  platform          String    // chatgpt, gemini
+  modelVersion      String
+  queryNumber       Int       // 1-10 for statistical significance
+  brandMentioned    Boolean
+  position          Int?      // 1, 2, 3, etc. or null if not mentioned
+  contextExtract    String?   @db.Text
+  sentiment         String?   // positive, neutral, negative
+  recommendationType String?  // direct, conditional, listed
+  citedUrls         Json?
+  fullResponse      String?   @db.Text
+  createdAt         DateTime  @default(now())
+  
+  analysis          Analysis           @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  question          DiscoveredQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  
+  @@index([analysisId, platform])
+  @@index([questionId])
+  @@map("ai_test_results")
+}
+
+// NEW: Detected Competitors
+model DetectedCompetitor {
+  id              String    @id @default(cuid())
+  analysisId      String
+  competitorName  String
+  domain          String?
+  detectionMethod String    // user_provided, ai_detected
+  mentionRate     Float?
+  avgPosition     Float?
+  overallScore    Float?
+  createdAt       DateTime  @default(now())
+  
+  analysis        Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  
+  @@index([analysisId])
+  @@map("detected_competitors")
+}
+
+// NEW: AI-Generated Insights
+model AIInsight {
+  id              String    @id @default(cuid())
+  analysisId      String
+  category        String    // pattern, recommendation, gap, opportunity
+  priority        Int       // 1 (highest) to 5 (lowest)
+  title           String
+  finding         String    @db.Text
+  dataEvidence    String    @db.Text
+  aiReasoning     String    @db.Text
+  actions         Json      // array of action items
+  expectedImpact  Json?     // mention_rate, position, citation_rate changes
+  effort          String    // low, medium, high
+  timeline        String    // weeks estimate
+  confidence      String    // high, medium, low
+  correlationScore Float?   // 0-100
+  createdAt       DateTime  @default(now())
+  
+  analysis        Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  
+  @@index([analysisId, priority])
+  @@map("ai_insights")
+}
+
+// EXISTING MODELS (keep as is)
 model Keyword {
   id            String    @id @default(cuid())
   projectId     String
