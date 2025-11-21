@@ -191,7 +191,7 @@ export class AnalysisPipeline {
       question: q.question,
       searchVolume: q.searchVolume,
       category: q.category,
-      results: analysis.aiTestResults.filter((r) => r.question === q.question),
+      results: analysis.aiTestResults.filter((r) => r.question === q.question) as any,
     }));
 
     const stageAnalyses = await analysisEngine.analyzeByJourneyStage(
