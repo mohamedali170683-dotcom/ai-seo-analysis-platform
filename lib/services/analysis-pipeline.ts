@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
 import { QuestionDiscoveryService } from "./question-discovery-service";
-import { CompetitorDetectionService } from "./competitor-detection-service";
 import { BatchAITestingService } from "./batch-ai-testing-service";
 import { AIAnalysisEngineJourney } from "./ai-analysis-engine-journey";
 
@@ -26,33 +25,27 @@ export class AnalysisPipeline {
     try {
       console.log(`🚀 Starting analysis pipeline for: ${this.config.brandOrKeyword}`);
 
-      // Update status to running
       await prisma.analysis.update({
         where: { id: this.config.analysisId },
         data: { status: "running", progress: 5 },
       });
 
-      // Step 1: Discover questions (10%)
       await this.updateProgress(10, "Discovering relevant questions");
       const questions = await this.discoverQuestions();
       console.log(`✅ Discovered ${questions.length} questions`);
 
-      // Step 2: Detect competitors (20%)
       await this.updateProgress(20, "Detecting competitors");
       const competitors = await this.detectCompetitors();
       console.log(`✅ Detected ${competitors.length} competitors`);
 
-      // Step 3: Batch test questions (40%)
       await this.updateProgress(40, "Testing with ChatGPT & Gemini");
       await this.batchTestQuestions(questions);
       console.log(`✅ Batch testing complete`);
 
-      // Step 4: AI Analysis by Journey Stage (70%)
       await this.updateProgress(70, "Analyzing patterns by user journey stage");
       await this.runJourneyStageAnalysis(questions, competitors);
       console.log(`✅ Journey stage analysis complete`);
 
-      // Step 5: Complete (100%)
       await this.updateProgress(100, "Analysis complete");
       await prisma.analysis.update({
         where: { id: this.config.analysisId },
@@ -93,11 +86,10 @@ export class AnalysisPipeline {
 
     const questions = await discoveryService.discoverQuestions(
       this.config.brandOrKeyword,
-      100, // min volume
-      20 // max questions
+      100,
+      20
     );
 
-    // Save to database
     for (const q of questions) {
       await prisma.discoveredQuestion.create({
         data: {
@@ -116,17 +108,14 @@ export class AnalysisPipeline {
   }
 
   private async detectCompetitors() {
-    // Simple competitor detection - just use provided competitors
     let competitors: string[] = [];
 
     if (this.config.competitors && this.config.competitors.length > 0) {
       competitors = this.config.competitors;
     } else {
-      // Use default mock competitors if none provided
       competitors = ["Competitor A", "Competitor B"];
     }
 
-    // Save to database
     for (const comp of competitors) {
       await prisma.detectedCompetitor.create({
         data: {
@@ -164,7 +153,6 @@ export class AnalysisPipeline {
         5
       );
 
-     // Save results to database
       for (const result of results) {
         await prisma.aITestResult.create({
           data: {
@@ -181,8 +169,12 @@ export class AnalysisPipeline {
           },
         });
       }
+    }
+  }
 
-    // Fetch all test results
+  private async runJourneyStageAnalysis(questions: any[], competitors: string[]) {
+    const analysisEngine = new AIAnalysisEngineJourney(this.config.openaiApiKey);
+
     const analysis = await prisma.analysis.findUnique({
       where: { id: this.config.analysisId },
       include: {
@@ -195,7 +187,6 @@ export class AnalysisPipeline {
       throw new Error("Analysis not found");
     }
 
-    // Group results by question with journey stage category
     const questionResults = analysis.discoveredQuestions.map((q) => ({
       question: q.question,
       searchVolume: q.searchVolume,
@@ -203,16 +194,13 @@ export class AnalysisPipeline {
       results: analysis.aiTestResults.filter((r) => r.question === q.question),
     }));
 
-    // Run journey stage analysis
     const stageAnalyses = await analysisEngine.analyzeByJourneyStage(
       this.config.brandOrKeyword,
       questionResults,
       competitors.map(name => ({ competitorName: name }))
     );
 
-    // Save insights from all journey stages
     for (const stageAnalysis of stageAnalyses) {
-      // Save patterns as insights
       await prisma.aIInsight.create({
         data: {
           analysisId: this.config.analysisId,
@@ -234,7 +222,6 @@ export class AnalysisPipeline {
         },
       });
 
-      // Save all strategic insights for this stage
       for (const insight of stageAnalysis.insights) {
         await prisma.aIInsight.create({
           data: {
