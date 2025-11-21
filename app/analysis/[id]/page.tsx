@@ -80,7 +80,13 @@ export default function AnalysisResultsPage({ params }: PageProps) {
     );
   }
 
-  const { analysis, stats, platformStats, questions, competitors, insights } = data;
+  // Extract data from the correct structure
+  const analysis = data.analysis;
+  const stats = analysis.stats || {};
+  const platformStats = stats.platformStats || { chatgpt: { tests: 0, mentions: 0, mentionRate: 0 }, gemini: { tests: 0, mentions: 0, mentionRate: 0 } };
+  const questions = analysis.discoveredQuestions || [];
+  const competitors = analysis.detectedCompetitors || [];
+  const insights = analysis.aiInsights || [];
 
   // In progress view
   if (analysis.status !== "completed") {
@@ -112,6 +118,13 @@ export default function AnalysisResultsPage({ params }: PageProps) {
               </div>
             </div>
 
+            {/* Current Step */}
+            {analysis.currentStep && (
+              <div className="text-center text-sm text-gray-600 mb-6">
+                {analysis.currentStep}
+              </div>
+            )}
+
             {/* Status Steps */}
             <div className="space-y-3">
               <div className={`flex items-center gap-3 p-3 rounded-lg ${analysis.progress >= 10 ? "bg-green-50" : "bg-gray-50"}`}>
@@ -121,25 +134,25 @@ export default function AnalysisResultsPage({ params }: PageProps) {
                 <span className="text-sm font-medium">Discovering relevant questions</span>
               </div>
 
-              <div className={`flex items-center gap-3 p-3 rounded-lg ${analysis.progress >= 35 ? "bg-green-50" : "bg-gray-50"}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm ${analysis.progress >= 35 ? "bg-green-600" : "bg-gray-400"}`}>
-                  {analysis.progress >= 35 ? "✓" : "2"}
+              <div className={`flex items-center gap-3 p-3 rounded-lg ${analysis.progress >= 20 ? "bg-green-50" : "bg-gray-50"}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm ${analysis.progress >= 20 ? "bg-green-600" : "bg-gray-400"}`}>
+                  {analysis.progress >= 20 ? "✓" : "2"}
                 </div>
                 <span className="text-sm font-medium">Detecting competitors</span>
               </div>
 
-              <div className={`flex items-center gap-3 p-3 rounded-lg ${analysis.progress >= 75 ? "bg-green-50" : "bg-gray-50"}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm ${analysis.progress >= 75 ? "bg-green-600" : "bg-gray-400"}`}>
-                  {analysis.progress >= 75 ? "✓" : "3"}
+              <div className={`flex items-center gap-3 p-3 rounded-lg ${analysis.progress >= 70 ? "bg-green-50" : "bg-gray-50"}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm ${analysis.progress >= 70 ? "bg-green-600" : "bg-gray-400"}`}>
+                  {analysis.progress >= 70 ? "✓" : "3"}
                 </div>
-                <span className="text-sm font-medium">Testing with ChatGPT & Gemini (100+ queries)</span>
+                <span className="text-sm font-medium">Testing with ChatGPT & Gemini</span>
               </div>
 
-              <div className={`flex items-center gap-3 p-3 rounded-lg ${analysis.progress >= 95 ? "bg-green-50" : "bg-gray-50"}`}>
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm ${analysis.progress >= 95 ? "bg-green-600" : "bg-gray-400"}`}>
-                  {analysis.progress >= 95 ? "✓" : "4"}
+              <div className={`flex items-center gap-3 p-3 rounded-lg ${analysis.progress >= 100 ? "bg-green-50" : "bg-gray-50"}`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-sm ${analysis.progress >= 100 ? "bg-green-600" : "bg-gray-400"}`}>
+                  {analysis.progress >= 100 ? "✓" : "4"}
                 </div>
-                <span className="text-sm font-medium">AI analyzing patterns & generating insights</span>
+                <span className="text-sm font-medium">AI analyzing patterns by journey stage</span>
               </div>
             </div>
 
@@ -189,11 +202,11 @@ export default function AnalysisResultsPage({ params }: PageProps) {
                 AI Visibility Score
               </h2>
               <div className="text-7xl font-bold mb-4">
-                {analysis.overallScore?.toFixed(0) || "N/A"}
+                {stats.visibilityScore?.toFixed(0) || "N/A"}
                 <span className="text-3xl opacity-75">/100</span>
               </div>
               <p className="text-blue-100">
-                Based on {stats.totalTests} AI queries across ChatGPT and Gemini
+                Based on {stats.totalTests || 0} AI queries across ChatGPT and Gemini
               </p>
             </div>
 
@@ -201,10 +214,10 @@ export default function AnalysisResultsPage({ params }: PageProps) {
               <div className="bg-white bg-opacity-20 rounded-lg p-4">
                 <div className="text-sm opacity-90 mb-1">Mention Rate</div>
                 <div className="text-3xl font-bold">
-                  {stats.mentionRate.toFixed(1)}%
+                  {stats.overallMentionRate?.toFixed(1) || 0}%
                 </div>
                 <div className="text-sm opacity-75">
-                  {stats.totalMentions} of {stats.totalTests} responses
+                  {stats.totalMentions || 0} of {stats.totalTests || 0} responses
                 </div>
               </div>
 
@@ -286,12 +299,12 @@ export default function AnalysisResultsPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Strategic Insights */}
+        {/* Strategic Insights - Journey Stage Based */}
         {insights && insights.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <Target className="w-6 h-6 text-purple-600" />
-              Strategic Recommendations
+              AI Visibility Insights by User Journey Stage
             </h2>
 
             <div className="space-y-6">
@@ -355,24 +368,26 @@ export default function AnalysisResultsPage({ params }: PageProps) {
 
                     <div>
                       <div className="text-sm font-semibold text-gray-700 mb-1">
-                        🧠 Why This Works for AI Visibility:
+                        🧠 AI Analysis:
                       </div>
                       <p className="text-gray-700 text-sm">{insight.aiReasoning}</p>
                     </div>
 
-                    <div>
-                      <div className="text-sm font-semibold text-gray-700 mb-2">
-                        ✅ Actions to Boost AI Visibility:
+                    {insight.actions && insight.actions.length > 0 && (
+                      <div>
+                        <div className="text-sm font-semibold text-gray-700 mb-2">
+                          ✅ Recommended Actions:
+                        </div>
+                        <ul className="space-y-2">
+                          {insight.actions.map((action: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-gray-800">
+                              <span className="text-green-600 font-bold">{i + 1}.</span>
+                              <span>{action}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                      <ul className="space-y-2">
-                        {(insight.actions as string[]).map((action: string, i: number) => (
-                          <li key={i} className="flex items-start gap-2 text-sm text-gray-800">
-                            <span className="text-green-600 font-bold">{i + 1}.</span>
-                            <span>{action}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    )}
 
                     <div className="grid md:grid-cols-3 gap-4 mt-4">
                       <div className="bg-white rounded-lg p-3">
@@ -399,34 +414,34 @@ export default function AnalysisResultsPage({ params }: PageProps) {
         {questions && questions.length > 0 && (
           <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
             <h2 className="text-2xl font-bold mb-6">
-              Top Questions Analyzed ({questions.length})
+              Questions Analyzed ({questions.length})
             </h2>
             <div className="space-y-3 max-h-96 overflow-y-auto">
-              {questions.slice(0, 20).map((q: any) => (
+              {questions.map((q: any) => (
                 <div
                   key={q.id}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex-1">
                     <div className="font-medium text-gray-900">{q.question}</div>
-                    <div className="text-sm text-gray-600 mt-1">
-                      <span className="mr-4">
+                    <div className="text-sm text-gray-600 mt-1 flex gap-4">
+                      <span>
                         📊 {q.searchVolume?.toLocaleString() || "N/A"} searches/mo
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded text-xs font-medium ${
-                          q.commercialIntent === "high"
+                          q.intent === "commercial"
                             ? "bg-green-100 text-green-700"
-                            : q.commercialIntent === "medium"
-                            ? "bg-yellow-100 text-yellow-700"
+                            : q.intent === "informational"
+                            ? "bg-blue-100 text-blue-700"
                             : "bg-gray-100 text-gray-700"
                         }`}
                       >
-                        {q.commercialIntent} intent
+                        {q.intent}
                       </span>
                       {q.category && (
-                        <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                          {q.category}
+                        <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium capitalize">
+                          {q.category} stage
                         </span>
                       )}
                     </div>
@@ -447,11 +462,6 @@ export default function AnalysisResultsPage({ params }: PageProps) {
                   <div className="font-bold text-gray-900">{comp.competitorName}</div>
                   {comp.domain && (
                     <div className="text-sm text-gray-600">{comp.domain}</div>
-                  )}
-                  {comp.mentionRate && (
-                    <div className="text-sm text-purple-600 font-medium mt-2">
-                      {comp.mentionRate.toFixed(1)}% mention rate
-                    </div>
                   )}
                 </div>
               ))}
