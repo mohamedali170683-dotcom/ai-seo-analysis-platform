@@ -200,49 +200,33 @@ export class AnalysisPipeline {
       competitors.map(name => ({ competitorName: name }))
     );
 
+    // Save each journey stage analysis as structured insights
     for (const stageAnalysis of stageAnalyses) {
+      // Save the full stage data as a single "journey_stage" insight
       await prisma.aIInsight.create({
         data: {
           analysisId: this.config.analysisId,
-          category: "pattern",
-          priority: 1,
-          title: `${stageAnalysis.stageLabel} - Patterns Detected`,
-          finding: `AI considers: ${stageAnalysis.patterns.commonVariables.join(", ")}`,
-          dataEvidence: `${stageAnalysis.totalTests} tests, ${stageAnalysis.mentionRate}% mention rate`,
-          aiReasoning: `Content themes: ${stageAnalysis.patterns.contentThemes.join(", ")}`,
-          actions: stageAnalysis.patterns.recommendationTriggers,
+          category: "journey_stage",
+          priority: stageAnalysis.stage === "awareness" ? 1 : stageAnalysis.stage === "consideration" ? 2 : 3,
+          title: `${stageAnalysis.stageLabel} Analysis`,
+          finding: stageAnalysis.recommendation.commonPattern,
+          dataEvidence: `${stageAnalysis.portrayal.totalTests} tests, ${stageAnalysis.portrayal.mentionRate}% mention rate`,
+          aiReasoning: stageAnalysis.recommendation.contentType,
+          actions: [stageAnalysis.recommendation.focusedAction],
           expectedImpact: {
             stage: stageAnalysis.stage,
-            visibilityScore: stageAnalysis.visibilityScore,
-            mentionRate: stageAnalysis.mentionRate,
+            stageLabel: stageAnalysis.stageLabel,
+            questions: stageAnalysis.questions,
+            portrayal: stageAnalysis.portrayal,
+            recommendation: stageAnalysis.recommendation,
           },
           effort: "medium",
           timeline: "4-8 weeks",
           confidence: "high",
         },
       });
-
-      for (const insight of stageAnalysis.insights) {
-        await prisma.aIInsight.create({
-          data: {
-            analysisId: this.config.analysisId,
-            category: insight.category,
-            priority: insight.priority,
-            title: `${stageAnalysis.stageLabel} - ${insight.title}`,
-            finding: insight.finding,
-            dataEvidence: insight.dataEvidence,
-            aiReasoning: insight.aiReasoning,
-            actions: insight.actions,
-            expectedImpact: insight.expectedImpact,
-            effort: insight.effort,
-            timeline: insight.timeline,
-            confidence: insight.confidence,
-            correlationScore: insight.correlationScore,
-          },
-        });
-      }
     }
 
-    console.log(`✅ Saved insights for ${stageAnalyses.length} journey stages`);
+    console.log(`✅ Saved ${stageAnalyses.length} journey stage analyses`);
   }
 }
