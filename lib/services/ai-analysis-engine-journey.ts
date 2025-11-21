@@ -108,7 +108,7 @@ export class AIAnalysisEngineJourney {
     competitorData?: any[]
   ): Promise<JourneyStageAnalysis> {
     
-    const stageLabels = {
+    const stageLabels: Record<"awareness" | "consideration" | "decision", string> = {
       awareness: "Awareness Stage",
       consideration: "Consideration Stage",
       decision: "Decision Stage",
@@ -254,7 +254,7 @@ Return ONLY the JSON, no other text.`;
    * Generate insights specific to a journey stage
    */
   private async generateStageInsights(
-    stage: string,
+    stage: "awareness" | "consideration" | "decision",
     brandName: string,
     questions: any[],
     patterns: any,
@@ -262,7 +262,7 @@ Return ONLY the JSON, no other text.`;
     avgPosition: number | null
   ): Promise<AIInsight[]> {
     try {
-      const stageDescriptions = {
+      const stageDescriptions: Record<"awareness" | "consideration" | "decision", string> = {
         awareness: "users are learning about the category and discovering brands",
         consideration: "users are comparing options and seeking recommendations",
         decision: "users are ready to buy and looking for pricing/purchase information",
