@@ -67,7 +67,11 @@ export class AIAnalysisEngineJourney {
       for (const [stage, questions] of Object.entries(stageGroups)) {
         if (questions.length === 0) {
           // Still include empty stages with placeholder data
-          stageAnalyses.push(this.createEmptyStage(stage as any, brandName));
+          const emptyStage = this.createEmptyStage(
+            stage as "awareness" | "consideration" | "decision",
+            brandName
+          );
+          stageAnalyses.push(emptyStage);
           continue;
         }
 
@@ -92,7 +96,7 @@ export class AIAnalysisEngineJourney {
   private createEmptyStage(
     stage: "awareness" | "consideration" | "decision",
     brandName: string
-): Promise<JourneyStageAnalysis> {
+  ): JourneyStageAnalysis {
     const labels = {
       awareness: "Awareness Stage",
       consideration: "Consideration Stage",
@@ -120,7 +124,7 @@ export class AIAnalysisEngineJourney {
     };
   }
 
-private async analyzeStage(
+  private async analyzeStage(
     stage: "awareness" | "consideration" | "decision",
     brandName: string,
     questions: any[],
