@@ -74,7 +74,6 @@ export async function POST(request: Request) {
     }
 }
 // Hobby plan timeout - 10 seconds default
-export const maxDuration = 10;
 
 // Allow streaming responses to prevent timeout
 export const dynamic = 'force-dynamic';
