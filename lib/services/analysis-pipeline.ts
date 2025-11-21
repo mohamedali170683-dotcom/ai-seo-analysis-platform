@@ -2,14 +2,17 @@ import { prisma } from "@/lib/db/prisma";
 import { QuestionDiscoveryService } from "./question-discovery-service";
 import { CompetitorDetectionService } from "./competitor-detection-service";
 import { BatchAITestingService } from "./batch-ai-testing-service";
-import { AIAnalysisEngine } from "./ai-analysis-engine";
+import { AIAnalysisEngineJourney } from "./ai-analysis-engine-journey";
 
 export interface AnalysisPipelineConfig {
   analysisId: string;
   brandOrKeyword: string;
-  domain: string;
-  competitors?: string;
-  userId: string;
+  domain?: string;
+  competitors?: string[];
+  openaiApiKey: string;
+  geminiApiKey: string;
+  dataForSEOUsername: string;
+  dataForSEOPassword: string;
 }
 
 export class AnalysisPipeline {
@@ -19,293 +22,250 @@ export class AnalysisPipeline {
     this.config = config;
   }
 
-  /**
-   * Run the complete analysis pipeline
-   */
   async execute() {
     try {
-      // Step 1: Update status to discovering
-      await this.updateProgress("discovering", 10);
+      console.log(`🚀 Starting analysis pipeline for: ${this.config.brandOrKeyword}`);
 
-      // Step 2: Discover questions
-      const questions = await this.discoverQuestions();
-      await this.updateProgress("discovering", 25);
-
-      // Step 3: Detect competitors
-      const competitors = await this.detectCompetitors();
-      await this.updateProgress("discovering", 35);
-
-      // Step 4: Batch AI testing
-      await this.updateProgress("testing", 40);
-      const testResults = await this.batchTestQuestions(questions);
-      await this.updateProgress("testing", 75);
-
-      // Step 5: AI Analysis
-      await this.updateProgress("analyzing", 80);
-      const insights = await this.analyzeResults(testResults, competitors);
-      await this.updateProgress("analyzing", 90);
-
-      // Step 6: Calculate overall score
-      const overallScore = this.calculateOverallScore(testResults);
-      await this.updateProgress("analyzing", 95);
-
-      // Step 7: Mark as completed
+      // Update status to running
       await prisma.analysis.update({
         where: { id: this.config.analysisId },
-        data: {
+        data: { status: "running", progress: 5 },
+      });
+
+      // Step 1: Discover questions (10%)
+      await this.updateProgress(10, "Discovering relevant questions");
+      const questions = await this.discoverQuestions();
+      console.log(`✅ Discovered ${questions.length} questions`);
+
+      // Step 2: Detect competitors (20%)
+      await this.updateProgress(20, "Detecting competitors");
+      const competitors = await this.detectCompetitors();
+      console.log(`✅ Detected ${competitors.length} competitors`);
+
+      // Step 3: Batch test questions (40%)
+      await this.updateProgress(40, "Testing with ChatGPT & Gemini");
+      await this.batchTestQuestions(questions);
+      console.log(`✅ Batch testing complete`);
+
+      // Step 4: AI Analysis by Journey Stage (70%)
+      await this.updateProgress(70, "Analyzing patterns by user journey stage");
+      await this.runJourneyStageAnalysis(questions, competitors);
+      console.log(`✅ Journey stage analysis complete`);
+
+      // Step 5: Complete (100%)
+      await this.updateProgress(100, "Analysis complete");
+      await prisma.analysis.update({
+        where: { id: this.config.analysisId },
+        data: { 
           status: "completed",
-          progress: 100,
-          overallScore,
           completedAt: new Date(),
         },
       });
 
-      return {
-        success: true,
-        analysisId: this.config.analysisId,
-        overallScore,
-      };
-    } catch (error: any) {
-      console.error("Pipeline execution error:", error);
+      console.log(`🎉 Analysis pipeline completed for: ${this.config.brandOrKeyword}`);
 
-      // Mark as failed
+    } catch (error: any) {
+      console.error("❌ Pipeline execution failed:", error);
       await prisma.analysis.update({
         where: { id: this.config.analysisId },
         data: {
           status: "failed",
-          error: error.message,
+          progress: 0,
+          currentStep: `Failed: ${error.message}`,
         },
       });
-
       throw error;
     }
   }
 
-  /**
-   * Step 1: Discover relevant questions
-   */
+  private async updateProgress(progress: number, currentStep: string) {
+    await prisma.analysis.update({
+      where: { id: this.config.analysisId },
+      data: { progress, currentStep },
+    });
+  }
+
   private async discoverQuestions() {
-    const questionService = new QuestionDiscoveryService(
-      process.env.DATAFORSEO_LOGIN!,
-      process.env.DATAFORSEO_PASSWORD!
+    const discoveryService = new QuestionDiscoveryService(
+      this.config.dataForSEOUsername,
+      this.config.dataForSEOPassword
     );
 
-    const discovered = await questionService.discoverQuestions(
+    const questions = await discoveryService.discoverQuestions(
       this.config.brandOrKeyword,
-      100, // minimum volume
-      50 // max questions
+      100, // min volume
+      20 // max questions (increased from 3 since you're on Pro now)
     );
 
     // Save to database
-    for (const q of discovered) {
+    for (const q of questions) {
       await prisma.discoveredQuestion.create({
         data: {
           analysisId: this.config.analysisId,
           question: q.question,
           searchVolume: q.searchVolume,
           difficulty: q.difficulty,
-          commercialIntent: q.commercialIntent,
-          category: q.category,
-          source: "dataforseo",
+          intent: q.intent,
+          category: q.category, // ✅ NEW: Journey stage category
+          score: q.score,
         },
       });
     }
 
-    return discovered;
+    return questions;
   }
 
-  /**
-   * Step 2: Detect competitors
-   */
   private async detectCompetitors() {
-    const competitorService = new CompetitorDetectionService(
-      process.env.OPENAI_API_KEY!
+    const detectionService = new CompetitorDetectionService(
+      this.config.dataForSEOUsername,
+      this.config.dataForSEOPassword
     );
 
-    const detected = await competitorService.detectCompetitors(
-      this.config.brandOrKeyword,
-      this.config.domain,
-      this.config.competitors
-    );
+    let competitors: string[] = [];
+
+    if (this.config.competitors && this.config.competitors.length > 0) {
+      competitors = this.config.competitors;
+    } else if (this.config.domain) {
+      const detected = await detectionService.detectCompetitors(this.config.domain);
+      competitors = detected.map((c) => c.name);
+    }
 
     // Save to database
-    for (const comp of detected) {
+    for (const comp of competitors) {
       await prisma.detectedCompetitor.create({
         data: {
           analysisId: this.config.analysisId,
-          competitorName: comp.name,
-          domain: comp.domain,
-          detectionMethod: comp.reason.includes("User-specified")
-            ? "user_provided"
-            : "ai_detected",
+          competitorName: comp,
+          domain: comp,
+          overlapScore: 0,
         },
       });
     }
 
-    return detected;
+    return competitors;
   }
 
-  /**
-   * Step 3: Batch test questions with AI
-   */
   private async batchTestQuestions(questions: any[]) {
     const testingService = new BatchAITestingService(
-      process.env.OPENAI_API_KEY!,
-      process.env.GEMINI_API_KEY
+      this.config.openaiApiKey,
+      this.config.geminiApiKey
     );
 
-    const allResults: any[] = [];
-
-       // Test each question (limit to 3 for Hobby plan speed - completes in ~30-45 seconds)
-    const questionsToTest = questions.slice(0, 3);
+    // Test more questions now that you're on Pro plan
+    const questionsToTest = questions.slice(0, 20); // Increased from 3
 
     for (let i = 0; i < questionsToTest.length; i++) {
       const question = questionsToTest[i];
+      const progress = 40 + Math.floor((i / questionsToTest.length) * 30);
+      
+      await this.updateProgress(
+        progress,
+        `Testing question ${i + 1}/${questionsToTest.length}: ${question.question.substring(0, 50)}...`
+      );
 
-      try {
-        // Test 3 times per platform for speed (still provides good data)
-        const results = await testingService.testQuestion(
-          question.question,
-          this.config.brandOrKeyword,
-          3 // tests per platform (3 ChatGPT + 0 Gemini = 9 total queries)
-        );
+      const results = await testingService.testQuestion(
+        question.question,
+        this.config.brandOrKeyword,
+        5 // tests per platform (increased from 3)
+      );
 
-        // Get question ID from database
-        const dbQuestion = await prisma.discoveredQuestion.findFirst({
-          where: {
+      // Save results to database
+      for (const result of results) {
+        await prisma.aITestResult.create({
+          data: {
             analysisId: this.config.analysisId,
+            questionId: question.id || null,
             question: question.question,
+            platform: result.platform,
+            brandMentioned: result.brandMentioned,
+            position: result.position,
+            sentiment: result.sentiment,
+            context: result.context,
+            fullResponse: result.fullResponse,
+            citations: result.citations || [],
           },
         });
-
-        if (dbQuestion) {
-          // Save results to database
-          for (const result of results) {
-            await prisma.aITestResult.create({
-              data: {
-                analysisId: this.config.analysisId,
-                questionId: dbQuestion.id,
-                platform: result.platform,
-                modelVersion: result.modelVersion,
-                queryNumber: result.queryNumber,
-                brandMentioned: result.brandMentioned,
-                position: result.position,
-                contextExtract: result.contextExtract,
-                sentiment: result.sentiment,
-                recommendationType: result.recommendationType,
-                citedUrls: result.citedUrls.length > 0 ? result.citedUrls : undefined,
-                fullResponse: result.fullResponse,
-              },
-            });
-          }
-
-          allResults.push({
-            question: question.question,
-            searchVolume: question.searchVolume,
-            category: question.category || "general",
-            results,
-          });
-        }
-
-        // Update progress
-        const progress = 40 + Math.floor((i / questionsToTest.length) * 35);
-        await this.updateProgress("testing", progress);
-
-        // Small delay to avoid rate limits
-        await this.delay(2000);
-      } catch (error) {
-        console.error(`Error testing question "${question.question}":`, error);
-        // Continue with next question
       }
     }
-
-    return allResults;
   }
 
-  /**
-   * Step 4: Analyze results with AI
-   */
-  private async analyzeResults(testResults: any[], competitors: any[]) {
-    const analysisEngine = new AIAnalysisEngine(process.env.OPENAI_API_KEY!);
+  private async runJourneyStageAnalysis(questions: any[], competitors: string[]) {
+    const analysisEngine = new AIAnalysisEngineJourney(this.config.openaiApiKey);
 
-    const insights = await analysisEngine.analyzeResults(
+    // Fetch all test results
+    const analysis = await prisma.analysis.findUnique({
+      where: { id: this.config.analysisId },
+      include: {
+        discoveredQuestions: true,
+        aiTestResults: true,
+      },
+    });
+
+    if (!analysis) {
+      throw new Error("Analysis not found");
+    }
+
+    // Group results by question with journey stage category
+    const questionResults = analysis.discoveredQuestions.map((q) => ({
+      question: q.question,
+      searchVolume: q.searchVolume,
+      category: q.category, // ✅ Journey stage: awareness/consideration/decision
+      results: analysis.aiTestResults.filter((r) => r.question === q.question),
+    }));
+
+    // Run journey stage analysis
+    const stageAnalyses = await analysisEngine.analyzeByJourneyStage(
       this.config.brandOrKeyword,
-      testResults,
-      competitors
+      questionResults,
+      competitors.map(name => ({ competitorName: name }))
     );
 
-    // Save insights to database
-    for (const insight of insights) {
+    // Save insights from all journey stages
+    for (const stageAnalysis of stageAnalyses) {
+      // Save patterns as insights
       await prisma.aIInsight.create({
         data: {
           analysisId: this.config.analysisId,
-          category: insight.category,
-          priority: insight.priority,
-          title: insight.title,
-          finding: insight.finding,
-          dataEvidence: insight.dataEvidence,
-          aiReasoning: insight.aiReasoning,
-          actions: insight.actions,
-          expectedImpact: insight.expectedImpact,
-          effort: insight.effort,
-          timeline: insight.timeline,
-          confidence: insight.confidence,
-          correlationScore: insight.correlationScore,
+          category: "pattern",
+          priority: 1,
+          title: `${stageAnalysis.stageLabel} - Patterns Detected`,
+          finding: `AI considers: ${stageAnalysis.patterns.commonVariables.join(", ")}`,
+          dataEvidence: `${stageAnalysis.totalTests} tests, ${stageAnalysis.mentionRate}% mention rate`,
+          aiReasoning: `Content themes: ${stageAnalysis.patterns.contentThemes.join(", ")}`,
+          actions: stageAnalysis.patterns.recommendationTriggers,
+          expectedImpact: {
+            stage: stageAnalysis.stage,
+            visibilityScore: stageAnalysis.visibilityScore,
+            mentionRate: stageAnalysis.mentionRate,
+          },
+          effort: "medium",
+          timeline: "4-8 weeks",
+          confidence: "high",
         },
       });
+
+      // Save all strategic insights for this stage
+      for (const insight of stageAnalysis.insights) {
+        await prisma.aIInsight.create({
+          data: {
+            analysisId: this.config.analysisId,
+            category: insight.category,
+            priority: insight.priority,
+            title: `${stageAnalysis.stageLabel} - ${insight.title}`,
+            finding: insight.finding,
+            dataEvidence: insight.dataEvidence,
+            aiReasoning: insight.aiReasoning,
+            actions: insight.actions,
+            expectedImpact: insight.expectedImpact,
+            effort: insight.effort,
+            timeline: insight.timeline,
+            confidence: insight.confidence,
+            correlationScore: insight.correlationScore,
+          },
+        });
+      }
     }
 
-    return insights;
-  }
-
-  /**
-   * Calculate overall visibility score
-   */
-  private calculateOverallScore(testResults: any[]): number {
-    if (testResults.length === 0) return 0;
-
-    const totalTests = testResults.reduce((sum, q) => sum + q.results.length, 0);
-    const totalMentions = testResults.reduce(
-      (sum, q) => sum + q.results.filter((r: any) => r.brandMentioned).length,
-      0
-    );
-
-    const mentionRate = (totalMentions / totalTests) * 100;
-
-    // Get average position (only for mentions)
-    const positions = testResults
-      .flatMap((q) => q.results)
-      .filter((r: any) => r.position !== null)
-      .map((r: any) => r.position);
-
-    const avgPosition =
-      positions.length > 0
-        ? positions.reduce((a: number, b: number) => a + b, 0) / positions.length
-        : 5;
-
-    // Calculate score (0-100)
-    // Formula: mention rate * 0.7 + (position score) * 0.3
-    const positionScore = Math.max(0, 100 - (avgPosition - 1) * 20);
-
-    const overallScore = mentionRate * 0.7 + positionScore * 0.3;
-
-    return Math.min(100, Math.max(0, overallScore));
-  }
-
-  /**
-   * Update progress in database
-   */
-  private async updateProgress(status: string, progress: number) {
-    await prisma.analysis.update({
-      where: { id: this.config.analysisId },
-      data: { status, progress },
-    });
-  }
-
-  /**
-   * Delay helper
-   */
-  private delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+    console.log(`✅ Saved insights for ${stageAnalyses.length} journey stages`);
   }
 }
