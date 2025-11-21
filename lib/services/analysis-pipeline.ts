@@ -164,7 +164,7 @@ export class AnalysisPipeline {
         5
       );
 
-      // Save results to database
+     // Save results to database
       for (const result of results) {
         await prisma.aITestResult.create({
           data: {
@@ -175,17 +175,12 @@ export class AnalysisPipeline {
             brandMentioned: result.brandMentioned,
             position: result.position,
             sentiment: result.sentiment,
-            context: result.context,
+            context: null,
             fullResponse: result.fullResponse,
             citations: result.citations || [],
           },
         });
       }
-    }
-  }
-
-  private async runJourneyStageAnalysis(questions: any[], competitors: string[]) {
-    const analysisEngine = new AIAnalysisEngineJourney(this.config.openaiApiKey);
 
     // Fetch all test results
     const analysis = await prisma.analysis.findUnique({
