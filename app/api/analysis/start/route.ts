@@ -38,10 +38,8 @@ export async function POST(request: Request) {
       },
     });
 
-   // Execute pipeline synchronously (must complete within Hobby plan 10s limit)
-    // With 3 questions x 3 tests, this should take ~30-45 seconds
-    // We'll need to handle timeout gracefully
-    
+    // Start pipeline execution in background
+    // For Hobby plan, this will run as long as it can before timeout
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
@@ -50,30 +48,21 @@ export async function POST(request: Request) {
       userId,
     });
 
-    // Try to execute with timeout handling
-    try {
-      // Start execution but don't await - let it run in background
-      // This is a compromise for Hobby plan
-      setTimeout(() => {
-        pipeline.execute().catch((error) => {
-          console.error("Pipeline execution failed:", error);
-        });
-      }, 100);
+    // Execute pipeline asynchronously
+    pipeline.execute().catch((error) => {
+      console.error("Pipeline execution failed:", error);
+    });
 
-      // Return immediately so function doesn't timeout
-      return NextResponse.json({
-        success: true,
-        analysisId: analysis.id,
-        message: "Analysis started successfully",
-      });
-    } catch (error: any) {
-      return NextResponse.json({
-        success: false,
-        error: error.message,
-      }, { status: 500 });
-    }
+    return NextResponse.json({
+      success: true,
+      analysisId: analysis.id,
+      message: "Analysis started successfully",
+    });
+  } catch (error: any) {
+    console.error("Error starting analysis:", error);
+    return NextResponse.json(
+      { success: false, error: error.message },
+      { status: 500 }
+    );
+  }
 }
-// Hobby plan timeout - 10 seconds default
-
-// Allow streaming responses to prevent timeout
-export const dynamic = 'force-dynamic';
