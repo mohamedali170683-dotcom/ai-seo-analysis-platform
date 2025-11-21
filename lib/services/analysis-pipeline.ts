@@ -165,7 +165,7 @@ export class AnalysisPipeline {
             sentiment: result.sentiment,
             context: null,
             fullResponse: result.fullResponse,
-            citations: result.citations || [],
+            citations: [],
           },
         });
       }
