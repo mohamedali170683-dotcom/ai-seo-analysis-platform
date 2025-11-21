@@ -156,18 +156,18 @@ export class AnalysisPipeline {
 
     const allResults: any[] = [];
 
-    // Test each question (limit to top 20 for time/cost)
-    const questionsToTest = questions.slice(0, 20);
+       // Test each question (limit to 3 for Hobby plan speed - completes in ~30-45 seconds)
+    const questionsToTest = questions.slice(0, 3);
 
     for (let i = 0; i < questionsToTest.length; i++) {
       const question = questionsToTest[i];
 
       try {
-        // Test 5 times per platform for statistical significance
+        // Test 3 times per platform for speed (still provides good data)
         const results = await testingService.testQuestion(
           question.question,
           this.config.brandOrKeyword,
-          5 // tests per platform
+          3 // tests per platform (3 ChatGPT + 0 Gemini = 9 total queries)
         );
 
         // Get question ID from database
