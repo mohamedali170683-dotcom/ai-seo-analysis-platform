@@ -92,7 +92,7 @@ export class AIAnalysisEngineJourney {
   private createEmptyStage(
     stage: "awareness" | "consideration" | "decision",
     brandName: string
-  ): JourneyStageAnalysis {
+): Promise<JourneyStageAnalysis> {
     const labels = {
       awareness: "Awareness Stage",
       consideration: "Consideration Stage",
