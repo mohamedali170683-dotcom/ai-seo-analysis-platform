@@ -7,45 +7,42 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { brandOrKeyword, domain, competitors } = body;
 
-    if (!brandOrKeyword || !domain) {
+    if (!brandOrKeyword) {
       return NextResponse.json(
-        { success: false, error: "Brand/keyword and domain are required" },
+        { success: false, error: "Brand or keyword is required" },
         { status: 400 }
       );
     }
 
-    // Create demo user if needed
-    let userId: string;
-    const demoUser = await prisma.user.upsert({
+    // Create or get user
+    const user = await prisma.user.upsert({
       where: { email: "demo@example.com" },
       update: {},
-      create: {
-        email: "demo@example.com",
-        name: "Demo User",
-      },
+      create: { email: "demo@example.com" },
     });
-    userId = demoUser.id;
 
     // Create analysis record
     const analysis = await prisma.analysis.create({
       data: {
-        userId,
+        userId: user.id,
         brandOrKeyword,
-        domain,
-        competitors,
+        domain: domain || null,
+        competitors: competitors || [],
         status: "pending",
         progress: 0,
       },
     });
 
-    // Start pipeline execution in background
-    // For Hobby plan, this will run as long as it can before timeout
+    // Initialize pipeline
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
       domain,
       competitors,
-      userId,
+      openaiApiKey: process.env.OPENAI_API_KEY!,
+      geminiApiKey: process.env.GEMINI_API_KEY || "",
+      dataForSEOUsername: process.env.DATAFORSEO_LOGIN!,
+      dataForSEOPassword: process.env.DATAFORSEO_PASSWORD!,
     });
 
     // Execute pipeline asynchronously
@@ -58,10 +55,11 @@ export async function POST(request: Request) {
       analysisId: analysis.id,
       message: "Analysis started successfully",
     });
+
   } catch (error: any) {
     console.error("Error starting analysis:", error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: error.message || "Failed to start analysis" },
       { status: 500 }
     );
   }
