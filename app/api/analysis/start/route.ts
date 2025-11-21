@@ -5,13 +5,27 @@ import { AnalysisPipeline } from "@/lib/services/analysis-pipeline";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { brandOrKeyword, domain, competitors } = body;
+    let { brandOrKeyword, domain, competitors } = body;
 
     if (!brandOrKeyword) {
       return NextResponse.json(
         { success: false, error: "Brand or keyword is required" },
         { status: 400 }
       );
+    }
+
+    // Convert competitors to array if it's a string
+    let competitorsArray: string[] = [];
+    if (competitors) {
+      if (typeof competitors === "string") {
+        // Split by comma and trim whitespace
+        competitorsArray = competitors
+          .split(",")
+          .map((c: string) => c.trim())
+          .filter((c: string) => c.length > 0);
+      } else if (Array.isArray(competitors)) {
+        competitorsArray = competitors;
+      }
     }
 
     // Create or get user
@@ -27,7 +41,7 @@ export async function POST(request: Request) {
         userId: user.id,
         brandOrKeyword,
         domain: domain || null,
-        competitors: competitors || [],
+        competitors: competitorsArray,
         status: "pending",
         progress: 0,
       },
@@ -38,7 +52,7 @@ export async function POST(request: Request) {
       analysisId: analysis.id,
       brandOrKeyword,
       domain,
-      competitors,
+      competitors: competitorsArray,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY || "",
       dataForSEOUsername: process.env.DATAFORSEO_LOGIN!,
