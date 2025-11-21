@@ -3,328 +3,303 @@ import axios from "axios";
 export interface DiscoveredQuestion {
   question: string;
   searchVolume: number;
-  difficulty?: number;
-  commercialIntent: "high" | "medium" | "low";
-  category?: string;
+  difficulty: number;
+  intent: "informational" | "commercial" | "navigational";
+  category: "awareness" | "consideration" | "decision";
+  score: number;
+  relatedTerms: string[];
 }
 
 export class QuestionDiscoveryService {
-  private login: string;
-  private password: string;
-  private auth: string;
+  private dataForSEOUsername: string;
+  private dataForSEOPassword: string;
+  private timeout: number = 8000;
 
-  constructor(login: string, password: string) {
-    this.login = login;
-    this.password = password;
-    this.auth = Buffer.from(`${login}:${password}`).toString('base64');
+  constructor(dataForSEOUsername: string, dataForSEOPassword: string) {
+    this.dataForSEOUsername = dataForSEOUsername;
+    this.dataForSEOPassword = dataForSEOPassword;
   }
 
-  /**
-   * Discover relevant questions for a brand/keyword
-   */
   async discoverQuestions(
     brandOrKeyword: string,
     minVolume: number = 100,
     maxQuestions: number = 50
   ): Promise<DiscoveredQuestion[]> {
     try {
-      console.log(`Discovering questions for: ${brandOrKeyword}`);
-      
-      // Try DataForSEO first (with timeout)
+      console.log(`🔍 Starting question discovery for: ${brandOrKeyword}`);
+
       const allQuestions: DiscoveredQuestion[] = [];
 
+      // Try DataForSEO first
       try {
-        // Get keyword suggestions with timeout
-        const suggestionsPromise = this.getKeywordSuggestions(brandOrKeyword);
-        const suggestions = await Promise.race([
-          suggestionsPromise,
-          this.timeout(8000) // 8 second timeout
-        ]) as DiscoveredQuestion[];
-        
-        console.log(`Got ${suggestions.length} suggestions from DataForSEO`);
-        allQuestions.push(...suggestions);
-      } catch (error) {
-        console.error("DataForSEO keyword suggestions failed or timed out:", error);
-      }
+        const keywordSuggestions = await this.getKeywordSuggestions(brandOrKeyword);
+        allQuestions.push(...keywordSuggestions);
 
-      try {
-        // Get related questions with timeout
-        const questionsPromise = this.getRelatedQuestions(brandOrKeyword);
-        const relatedQuestions = await Promise.race([
-          questionsPromise,
-          this.timeout(8000) // 8 second timeout
-        ]) as DiscoveredQuestion[];
-        
-        console.log(`Got ${relatedQuestions.length} related questions from DataForSEO`);
+        const relatedQuestions = await this.getRelatedQuestions(brandOrKeyword);
         allQuestions.push(...relatedQuestions);
+
+        console.log(`✅ DataForSEO returned ${allQuestions.length} questions`);
       } catch (error) {
-        console.error("DataForSEO related questions failed or timed out:", error);
+        console.log("⚠️ DataForSEO failed, will use fallback");
       }
 
-      // If DataForSEO returned questions, use them
       if (allQuestions.length > 0) {
-        console.log(`Using ${allQuestions.length} questions from DataForSEO`);
-        const filtered = allQuestions.filter(q => q.searchVolume >= minVolume);
-        const unique = this.deduplicateQuestions(filtered);
-        const scored = unique.map(q => ({
-          ...q,
-          score: this.calculateQuestionScore(q),
-        }));
-        scored.sort((a, b) => b.score - a.score);
-        return scored.slice(0, maxQuestions).map(({ score, ...q }) => q);
+        const uniqueQuestions = this.deduplicateQuestions(allQuestions);
+        const scoredQuestions = this.scoreQuestions(uniqueQuestions);
+        const topQuestions = scoredQuestions
+          .filter((q) => q.searchVolume >= minVolume)
+          .slice(0, maxQuestions);
+
+        console.log(`✅ Returning ${topQuestions.length} unique questions`);
+        return topQuestions;
       }
 
-      // FALLBACK: Use mock questions if DataForSEO fails
-      console.log("DataForSEO returned no questions, using fallback mock questions");
+      console.log("⚠️ DataForSEO returned no questions, using fallback mock questions");
       return this.getMockQuestions(brandOrKeyword);
 
-    } catch (error) {
-      console.error("Error discovering questions:", error);
-      // Always return mock questions as last resort
-      console.log("Using fallback mock questions due to error");
+    } catch (error: any) {
+      console.error("❌ Question discovery error:", error.message);
       return this.getMockQuestions(brandOrKeyword);
     }
   }
 
-  /**
-   * Timeout helper
-   */
-  private timeout(ms: number): Promise<never> {
-    return new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), ms)
-    );
+  private getMockQuestions(brandOrKeyword: string): DiscoveredQuestion[] {
+    return [
+      {
+        question: `What is ${brandOrKeyword}?`,
+        searchVolume: 1200,
+        difficulty: 35,
+        intent: "informational",
+        category: "awareness",
+        score: 85,
+        relatedTerms: [brandOrKeyword, "overview", "information"],
+      },
+      {
+        question: `What are the best alternatives to ${brandOrKeyword}?`,
+        searchVolume: 800,
+        difficulty: 45,
+        intent: "commercial",
+        category: "consideration",
+        score: 90,
+        relatedTerms: [brandOrKeyword, "alternatives", "competitors", "comparison"],
+      },
+      {
+        question: `How much does ${brandOrKeyword} cost?`,
+        searchVolume: 600,
+        difficulty: 30,
+        intent: "commercial",
+        category: "decision",
+        score: 80,
+        relatedTerms: [brandOrKeyword, "pricing", "cost", "price"],
+      },
+    ];
   }
 
-  /**
-   * Get mock questions as fallback
-   */
-  private getMockQuestions(brandOrKeyword: string): DiscoveredQuestion[] {
-    const brand = brandOrKeyword.toLowerCase();
-    
-    // Generic high-value questions that work for any brand
-    const genericQuestions = [
+  private async getKeywordSuggestions(keyword: string): Promise<DiscoveredQuestion[]> {
+    const apiUrl = "https://api.dataforseo.com/v3/dataforseo_labs/google/keyword_suggestions/live";
+
+    const requestBody = [
       {
-        question: `What are the best ${brand} products?`,
-        searchVolume: 12000,
-        commercialIntent: "high" as const,
-        category: "general",
-      },
-      {
-        question: `Is ${brand} a good brand?`,
-        searchVolume: 8500,
-        commercialIntent: "medium" as const,
-        category: "general",
-      },
-      {
-        question: `${brand} vs competitors`,
-        searchVolume: 6200,
-        commercialIntent: "high" as const,
-        category: "comparison",
+        keyword: keyword,
+        language_code: "en",
+        location_code: 2840,
+        include_seed_keyword: true,
+        limit: 100,
+        filters: ["keyword_data.keyword_info.search_volume", ">", 50],
       },
     ];
 
-    console.log(`Generated ${genericQuestions.length} mock questions for ${brand}`);
-    return genericQuestions.slice(0, 3);
-  }
-
-  /**
-   * Get keyword suggestions
-   */
-  private async getKeywordSuggestions(keyword: string): Promise<DiscoveredQuestion[]> {
     try {
-      const response = await axios.post(
-        "https://api.dataforseo.com/v3/dataforseo_labs/google/keyword_suggestions/live",
-        [{
-          keyword,
-          location_code: 2840,
-          language_code: "en",
-          limit: 50,
-        }],
-        {
-          headers: {
-            Authorization: `Basic ${this.auth}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 15000,
-        }
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("DataForSEO timeout")), this.timeout)
       );
 
-      const items = response.data?.tasks?.[0]?.result?.[0]?.items || [];
+      const apiCallPromise = axios.post(apiUrl, requestBody, {
+        auth: {
+          username: this.dataForSEOUsername,
+          password: this.dataForSEOPassword,
+        },
+        headers: { "Content-Type": "application/json" },
+      });
 
-      return items
-        .filter((item: any) => item.keyword && item.search_volume)
-        .map((item: any) => ({
-          question: item.keyword,
-          searchVolume: item.search_volume,
-          difficulty: item.keyword_difficulty,
-          commercialIntent: this.classifyCommercialIntent(item.keyword, item.cpc),
-          category: this.categorizeQuestion(item.keyword),
-        }));
-    } catch (error) {
-      console.error("Error getting keyword suggestions:", error);
+      const response: any = await Promise.race([apiCallPromise, timeoutPromise]);
+
+      if (response.data?.tasks?.[0]?.result?.[0]?.items) {
+        const items = response.data.tasks[0].result[0].items;
+
+        return items
+          .filter((item: any) => this.isQuestionKeyword(item.keyword))
+          .map((item: any) => ({
+            question: item.keyword,
+            searchVolume: item.keyword_data?.keyword_info?.search_volume || 0,
+            difficulty: item.keyword_data?.keyword_properties?.keyword_difficulty || 50,
+            intent: this.classifyIntent(item.keyword),
+            category: this.categorizeQuestion(item.keyword),
+            score: 0,
+            relatedTerms: [],
+          }));
+      }
+
+      return [];
+    } catch (error: any) {
+      console.error("DataForSEO keyword suggestions error:", error.message);
       return [];
     }
   }
 
-  /**
-   * Get related questions (People Also Ask)
-   */
   private async getRelatedQuestions(keyword: string): Promise<DiscoveredQuestion[]> {
+    const apiUrl = "https://api.dataforseo.com/v3/serp/google/organic/live/advanced";
+
+    const requestBody = [
+      {
+        keyword: `${keyword} questions`,
+        language_code: "en",
+        location_code: 2840,
+        device: "desktop",
+        os: "windows",
+      },
+    ];
+
     try {
-      const response = await axios.post(
-        "https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
-        [{
-          keyword,
-          location_code: 2840,
-          language_code: "en",
-          device: "desktop",
-          os: "windows",
-        }],
-        {
-          headers: {
-            Authorization: `Basic ${this.auth}`,
-            "Content-Type": "application/json",
-          },
-          timeout: 15000,
-        }
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("DataForSEO timeout")), this.timeout)
       );
 
-      const items = response.data?.tasks?.[0]?.result?.[0]?.items || [];
+      const apiCallPromise = axios.post(apiUrl, requestBody, {
+        auth: {
+          username: this.dataForSEOUsername,
+          password: this.dataForSEOPassword,
+        },
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const response: any = await Promise.race([apiCallPromise, timeoutPromise]);
+
       const questions: DiscoveredQuestion[] = [];
 
-      // Extract "People Also Ask" questions
-      items.forEach((item: any) => {
-        if (item.type === "people_also_ask" && item.items) {
-          item.items.forEach((paaItem: any) => {
-            if (paaItem.title) {
-              questions.push({
-                question: paaItem.title,
-                searchVolume: 1000, // Default estimate for PAA
-                commercialIntent: this.classifyCommercialIntent(paaItem.title),
-                category: this.categorizeQuestion(paaItem.title),
-              });
-            }
-          });
-        }
-      });
+      if (response.data?.tasks?.[0]?.result?.[0]?.items) {
+        const items = response.data.tasks[0].result[0].items;
 
-      // Also extract related searches
-      items.forEach((item: any) => {
-        if (item.type === "related_searches" && item.items) {
-          item.items.forEach((relatedItem: any) => {
-            if (relatedItem.title) {
-              questions.push({
-                question: relatedItem.title,
-                searchVolume: 500, // Default estimate
-                commercialIntent: this.classifyCommercialIntent(relatedItem.title),
-                category: this.categorizeQuestion(relatedItem.title),
-              });
-            }
-          });
-        }
-      });
+        items.forEach((item: any) => {
+          if (item.type === "people_also_ask" && item.items) {
+            item.items.forEach((paaItem: any) => {
+              if (paaItem.title) {
+                questions.push({
+                  question: paaItem.title,
+                  searchVolume: 100,
+                  difficulty: 40,
+                  intent: "informational",
+                  category: this.categorizeQuestion(paaItem.title),
+                  score: 0,
+                  relatedTerms: [],
+                });
+              }
+            });
+          }
+        });
+      }
 
       return questions;
-    } catch (error) {
-      console.error("Error getting related questions:", error);
+    } catch (error: any) {
+      console.error("DataForSEO related questions error:", error.message);
       return [];
     }
   }
 
-  /**
-   * Classify commercial intent
-   */
-  private classifyCommercialIntent(
-    question: string,
-    cpc?: number
-  ): "high" | "medium" | "low" {
-    const highIntentKeywords = [
-      "best", "top", "buy", "purchase", "price", "cost",
-      "review", "vs", "versus", "compare", "alternative",
-      "which", "should i", "recommend",
+  private isQuestionKeyword(keyword: string): boolean {
+    const questionWords = [
+      "what", "how", "why", "when", "where", "who", "which",
+      "best", "vs", "versus", "compare", "difference",
+      "should", "can", "do", "does", "is", "are",
     ];
-
-    const lowIntentKeywords = [
-      "what is", "how to", "tutorial", "guide",
-      "meaning", "definition", "history",
-    ];
-
-    const lowerQuestion = question.toLowerCase();
-
-    // CPC-based classification
-    if (cpc && cpc > 2) return "high";
-    if (cpc && cpc > 0.5) return "medium";
-
-    // Keyword-based classification
-    const hasHighIntent = highIntentKeywords.some(kw => lowerQuestion.includes(kw));
-    const hasLowIntent = lowIntentKeywords.some(kw => lowerQuestion.includes(kw));
-
-    if (hasHighIntent) return "high";
-    if (hasLowIntent) return "low";
-
-    return "medium";
+    const lowerKeyword = keyword.toLowerCase();
+    return questionWords.some((word) => lowerKeyword.includes(word));
   }
 
-  /**
-   * Categorize question into themes
-   */
-  private categorizeQuestion(question: string): string {
-    const categories = {
-      performance: ["performance", "fast", "speed", "efficient", "powerful"],
-      style: ["style", "design", "look", "fashion", "aesthetic", "appearance"],
-      price: ["price", "cost", "budget", "cheap", "affordable", "expensive", "value"],
-      innovation: ["innovative", "technology", "latest", "cutting-edge", "advanced", "new"],
-      sustainability: ["sustainable", "eco", "green", "environment", "recycled"],
-      durability: ["durable", "lasting", "quality", "reliable", "lifespan"],
-      comfort: ["comfortable", "comfort", "cushion", "support", "fit"],
-      professional: ["professional", "athlete", "expert", "serious", "competitive"],
-    };
+  private classifyIntent(keyword: string): "informational" | "commercial" | "navigational" {
+    const lowerKeyword = keyword.toLowerCase();
 
+    const commercialKeywords = [
+      "buy", "price", "cost", "purchase", "shop", "deal",
+      "best", "top", "review", "vs", "compare", "alternative",
+    ];
+    const navigationalKeywords = ["login", "sign in", "website", "official"];
+
+    if (commercialKeywords.some((word) => lowerKeyword.includes(word))) {
+      return "commercial";
+    }
+    if (navigationalKeywords.some((word) => lowerKeyword.includes(word))) {
+      return "navigational";
+    }
+    return "informational";
+  }
+
+  private categorizeQuestion(question: string): "awareness" | "consideration" | "decision" {
     const lowerQuestion = question.toLowerCase();
 
-    for (const [category, keywords] of Object.entries(categories)) {
-      if (keywords.some(kw => lowerQuestion.includes(kw))) {
-        return category;
-      }
+    // DECISION STAGE: High commercial intent, ready to buy
+    const decisionKeywords = [
+      "price", "cost", "pricing", "buy", "purchase", "shop",
+      "where to buy", "cheapest", "discount", "coupon", "deal",
+      "shipping", "delivery", "warranty", "guarantee", "return policy",
+    ];
+
+    // CONSIDERATION STAGE: Comparing options, seeking recommendations
+    const considerationKeywords = [
+      "best", "top", "vs", "versus", "compare", "comparison",
+      "alternative", "competitor", "difference between", "which",
+      "should i", "recommend", "review", "pros and cons",
+      "better than", "worth it", "good", "bad",
+    ];
+
+    // AWARENESS STAGE: Learning, discovering (default)
+    // Keywords: what, why, how, who, when, where, guide, tutorial, beginner
+
+    // Check decision first (highest intent)
+    if (decisionKeywords.some(keyword => lowerQuestion.includes(keyword))) {
+      return "decision";
     }
 
-    return "general";
+    // Then consideration
+    if (considerationKeywords.some(keyword => lowerQuestion.includes(keyword))) {
+      return "consideration";
+    }
+
+    // Default to awareness
+    return "awareness";
   }
 
-  /**
-   * Calculate question score
-   */
-  private calculateQuestionScore(question: DiscoveredQuestion): number {
-    const intentMultiplier = {
-      high: 3,
-      medium: 2,
-      low: 1,
-    };
-
-    return question.searchVolume * intentMultiplier[question.commercialIntent];
-  }
-
-  /**
-   * Remove duplicates
-   */
-  private deduplicateQuestions(
-    questions: DiscoveredQuestion[]
-  ): DiscoveredQuestion[] {
+  private deduplicateQuestions(questions: DiscoveredQuestion[]): DiscoveredQuestion[] {
     const seen = new Set<string>();
-    const unique: DiscoveredQuestion[] = [];
-
-    for (const q of questions) {
-      const normalized = q.question
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, "")
-        .trim();
-
-      if (!seen.has(normalized)) {
-        seen.add(normalized);
-        unique.push(q);
+    return questions.filter((q) => {
+      const normalized = q.question.toLowerCase().trim();
+      if (seen.has(normalized)) {
+        return false;
       }
-    }
+      seen.add(normalized);
+      return true;
+    });
+  }
 
-    return unique;
+  private scoreQuestions(questions: DiscoveredQuestion[]): DiscoveredQuestion[] {
+    return questions.map((q) => {
+      let score = 50;
+
+      // Search volume scoring
+      if (q.searchVolume > 1000) score += 30;
+      else if (q.searchVolume > 500) score += 20;
+      else if (q.searchVolume > 100) score += 10;
+
+      // Difficulty scoring (lower is better)
+      if (q.difficulty < 30) score += 15;
+      else if (q.difficulty < 50) score += 10;
+      else score += 5;
+
+      // Intent scoring
+      if (q.intent === "commercial") score += 15;
+      else if (q.intent === "informational") score += 10;
+
+      return { ...q, score };
+    });
   }
 }
