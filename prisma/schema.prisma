@@ -8,293 +8,102 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  projects      Project[]
-  apiKeys       ApiKey[]
-  analyses      Analysis[]
-  
-  @@map("users")
+  id        String     @id @default(cuid())
+  email     String     @unique
+  createdAt DateTime   @default(now())
+  analyses  Analysis[]
 }
 
-model ApiKey {
-  id            String    @id @default(cuid())
-  userId        String
-  service       String
-  key           String    @db.Text
-  refreshToken  String?   @db.Text
-  expiresAt     DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, service])
-  @@map("api_keys")
-}
-
-model Project {
-  id            String    @id @default(cuid())
-  userId        String
-  name          String
-  domain        String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  keywords      Keyword[]
-  aiOverviews   AiOverview[]
-  trafficData   TrafficData[]
-  chatbotQueries ChatbotQuery[]
-  
-  @@map("projects")
-}
-
-// NEW: Analysis Reports
 model Analysis {
-  id                String    @id @default(cuid())
-  userId            String
-  brandOrKeyword    String
-  domain            String
-  competitors       String?
-  status            String    @default("pending")  // pending, discovering, testing, analyzing, completed, failed
-  progress          Int       @default(0)
-  overallScore      Float?
-  createdAt         DateTime  @default(now())
-  completedAt       DateTime?
-  error             String?   @db.Text
-  
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  discoveredQuestions DiscoveredQuestion[]
-  aiTestResults       AITestResult[]
-  competitors_detected DetectedCompetitor[]
-  insights            AIInsight[]
-  
-  @@index([userId, status])
+  id                   String                @id @default(cuid())
+  userId               String
+  user                 User                  @relation(fields: [userId], references: [id])
+  brandOrKeyword       String
+  domain               String?
+  competitors          String[]
+  status               String                @default("pending")
+  progress             Int                   @default(0)
+  currentStep          String?
+  createdAt            DateTime              @default(now())
+  completedAt          DateTime?
+  discoveredQuestions  DiscoveredQuestion[]
+  aiTestResults        AITestResult[]
+  detectedCompetitors  DetectedCompetitor[]
+  aiInsights           AIInsight[]
+
+  @@index([userId])
+  @@index([status])
   @@map("analyses")
 }
 
-// NEW: Discovered Questions (from DataForSEO)
 model DiscoveredQuestion {
-  id              String    @id @default(cuid())
-  analysisId      String
-  question        String    @db.Text
-  searchVolume    Int?
-  difficulty      Float?
-  commercialIntent String?  // high, medium, low
-  category        String?   // performance, style, price, innovation, etc.
-  source          String    @default("dataforseo")
-  createdAt       DateTime  @default(now())
-  
-  analysis        Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  testResults     AITestResult[]
-  
+  id           String   @id @default(cuid())
+  analysisId   String
+  analysis     Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  question     String
+  searchVolume Int
+  difficulty   Int
+  intent       String
+  category     String
+  score        Int
+  createdAt    DateTime @default(now())
+
   @@index([analysisId])
   @@map("discovered_questions")
 }
 
-// NEW: AI Test Results (batch testing)
 model AITestResult {
-  id                String    @id @default(cuid())
-  analysisId        String
-  questionId        String
-  platform          String    // chatgpt, gemini
-  modelVersion      String
-  queryNumber       Int       // 1-10 for statistical significance
-  brandMentioned    Boolean
-  position          Int?      // 1, 2, 3, etc. or null if not mentioned
-  contextExtract    String?   @db.Text
-  sentiment         String?   // positive, neutral, negative
-  recommendationType String?  // direct, conditional, listed
-  citedUrls         Json?
-  fullResponse      String?   @db.Text
-  createdAt         DateTime  @default(now())
-  
-  analysis          Analysis           @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  question          DiscoveredQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  
-  @@index([analysisId, platform])
-  @@index([questionId])
+  id             String   @id @default(cuid())
+  analysisId     String
+  analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  questionId     String?
+  question       String
+  platform       String
+  brandMentioned Boolean
+  position       Int?
+  sentiment      String?
+  context        String?
+  fullResponse   String?
+  citations      String[]
+  createdAt      DateTime @default(now())
+
+  @@index([analysisId])
+  @@index([platform])
   @@map("ai_test_results")
 }
 
-// NEW: Detected Competitors
 model DetectedCompetitor {
-  id              String    @id @default(cuid())
-  analysisId      String
-  competitorName  String
-  domain          String?
-  detectionMethod String    // user_provided, ai_detected
-  mentionRate     Float?
-  avgPosition     Float?
-  overallScore    Float?
-  createdAt       DateTime  @default(now())
-  
-  analysis        Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  
+  id             String   @id @default(cuid())
+  analysisId     String
+  analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  competitorName String
+  domain         String?
+  overlapScore   Float
+  createdAt      DateTime @default(now())
+
   @@index([analysisId])
   @@map("detected_competitors")
 }
 
-// NEW: AI-Generated Insights
 model AIInsight {
-  id              String    @id @default(cuid())
-  analysisId      String
-  category        String    // pattern, recommendation, gap, opportunity
-  priority        Int       // 1 (highest) to 5 (lowest)
-  title           String
-  finding         String    @db.Text
-  dataEvidence    String    @db.Text
-  aiReasoning     String    @db.Text
-  actions         Json      // array of action items
-  expectedImpact  Json?     // mention_rate, position, citation_rate changes
-  effort          String    // low, medium, high
-  timeline        String    // weeks estimate
-  confidence      String    // high, medium, low
-  correlationScore Float?   // 0-100
-  createdAt       DateTime  @default(now())
-  
-  analysis        Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  
-  @@index([analysisId, priority])
+  id               String   @id @default(cuid())
+  analysisId       String
+  analysis         Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  category         String
+  priority         Int
+  title            String
+  finding          String
+  dataEvidence     String
+  aiReasoning      String
+  actions          String[]
+  expectedImpact   Json
+  effort           String
+  timeline         String
+  confidence       String
+  correlationScore Int?
+  createdAt        DateTime @default(now())
+
+  @@index([analysisId])
+  @@index([category])
   @@map("ai_insights")
-}
-
-// EXISTING MODELS (keep as is)
-model Keyword {
-  id            String    @id @default(cuid())
-  projectId     String
-  keyword       String
-  searchVolume  Int?
-  difficulty    Float?
-  intent        String?
-  category      String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  aiOverviews   AiOverview[]
-  trafficData   TrafficData[]
-  
-  @@unique([projectId, keyword])
-  @@index([projectId])
-  @@map("keywords")
-}
-
-model AiOverview {
-  id            String    @id @default(cuid())
-  projectId     String
-  keywordId     String
-  date          DateTime
-  hasAiOverview Boolean
-  position      Int?
-  contentLength Int?
-  sources       Json?
-  createdAt     DateTime  @default(now())
-  
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  keyword       Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
-  
-  @@unique([keywordId, date])
-  @@index([projectId, date])
-  @@map("ai_overviews")
-}
-
-model TrafficData {
-  id            String    @id @default(cuid())
-  projectId     String
-  keywordId     String?
-  url           String?
-  date          DateTime
-  clicks        Int
-  impressions   Int
-  ctr           Float
-  position      Float
-  device        String?
-  country       String?
-  createdAt     DateTime  @default(now())
-  
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  keyword       Keyword?  @relation(fields: [keywordId], references: [id], onDelete: SetNull)
-  
-  @@unique([projectId, keywordId, url, date, device, country])
-  @@index([projectId, date])
-  @@index([keywordId])
-  @@map("traffic_data")
-}
-
-model ChatbotQuery {
-  id            String    @id @default(cuid())
-  projectId     String
-  question      String    @db.Text
-  platform      String
-  modelVersion  String?
-  queryDate     DateTime  @default(now())
-  createdAt     DateTime  @default(now())
-  
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  responses     ChatbotResponse[]
-  
-  @@index([projectId, platform])
-  @@map("chatbot_queries")
-}
-
-model ChatbotResponse {
-  id            String    @id @default(cuid())
-  queryId       String
-  responseText  String    @db.Text
-  hasBrandMention Boolean
-  brandPosition Int?
-  citedUrls     Json?
-  competitors   Json?
-  sentiment     String?
-  responseDate  DateTime  @default(now())
-  createdAt     DateTime  @default(now())
-  
-  query         ChatbotQuery @relation(fields: [queryId], references: [id], onDelete: Cascade)
-  
-  @@index([queryId])
-  @@map("chatbot_responses")
-}
-
-model VisibilityScore {
-  id            String    @id @default(cuid())
-  projectId     String
-  platform      String
-  date          DateTime
-  overallScore  Float
-  mentionRate   Float
-  avgPosition   Float?
-  citationRate  Float
-  shareOfVoice  Float?
-  createdAt     DateTime  @default(now())
-  
-  @@unique([projectId, platform, date])
-  @@index([projectId, date])
-  @@map("visibility_scores")
-}
-
-model AnalysisJob {
-  id            String    @id @default(cuid())
-  projectId     String
-  type          String
-  status        String
-  progress      Int       @default(0)
-  parameters    Json?
-  result        Json?
-  error         String?   @db.Text
-  startedAt     DateTime?
-  completedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  
-  @@index([projectId, status])
-  @@map("analysis_jobs")
 }
