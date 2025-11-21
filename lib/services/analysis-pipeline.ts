@@ -94,7 +94,7 @@ export class AnalysisPipeline {
     const questions = await discoveryService.discoverQuestions(
       this.config.brandOrKeyword,
       100, // min volume
-      20 // max questions (increased from 3 since you're on Pro now)
+      20 // max questions
     );
 
     // Save to database
@@ -106,7 +106,7 @@ export class AnalysisPipeline {
           searchVolume: q.searchVolume,
           difficulty: q.difficulty,
           intent: q.intent,
-          category: q.category, // ✅ NEW: Journey stage category
+          category: q.category,
           score: q.score,
         },
       });
@@ -116,18 +116,14 @@ export class AnalysisPipeline {
   }
 
   private async detectCompetitors() {
-    const detectionService = new CompetitorDetectionService(
-      this.config.dataForSEOUsername,
-      this.config.dataForSEOPassword
-    );
-
+    // Simple competitor detection - just use provided competitors
     let competitors: string[] = [];
 
     if (this.config.competitors && this.config.competitors.length > 0) {
       competitors = this.config.competitors;
-    } else if (this.config.domain) {
-      const detected = await detectionService.detectCompetitors(this.config.domain);
-      competitors = detected.map((c) => c.name);
+    } else {
+      // Use default mock competitors if none provided
+      competitors = ["Competitor A", "Competitor B"];
     }
 
     // Save to database
@@ -151,8 +147,7 @@ export class AnalysisPipeline {
       this.config.geminiApiKey
     );
 
-    // Test more questions now that you're on Pro plan
-    const questionsToTest = questions.slice(0, 20); // Increased from 3
+    const questionsToTest = questions.slice(0, 20);
 
     for (let i = 0; i < questionsToTest.length; i++) {
       const question = questionsToTest[i];
@@ -166,7 +161,7 @@ export class AnalysisPipeline {
       const results = await testingService.testQuestion(
         question.question,
         this.config.brandOrKeyword,
-        5 // tests per platform (increased from 3)
+        5
       );
 
       // Save results to database
@@ -174,7 +169,7 @@ export class AnalysisPipeline {
         await prisma.aITestResult.create({
           data: {
             analysisId: this.config.analysisId,
-            questionId: question.id || null,
+            questionId: null,
             question: question.question,
             platform: result.platform,
             brandMentioned: result.brandMentioned,
@@ -209,7 +204,7 @@ export class AnalysisPipeline {
     const questionResults = analysis.discoveredQuestions.map((q) => ({
       question: q.question,
       searchVolume: q.searchVolume,
-      category: q.category, // ✅ Journey stage: awareness/consideration/decision
+      category: q.category,
       results: analysis.aiTestResults.filter((r) => r.question === q.question),
     }));
 
