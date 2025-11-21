@@ -120,12 +120,12 @@ export class AIAnalysisEngineJourney {
     };
   }
 
-  private async analyzeStage(
+private async analyzeStage(
     stage: "awareness" | "consideration" | "decision",
     brandName: string,
     questions: any[],
     competitorData?: any[]
-  ): JourneyStageAnalysis {
+  ): Promise<JourneyStageAnalysis> {
     
     const stageLabels = {
       awareness: "Awareness Stage",
