@@ -19,7 +19,7 @@ export async function GET(
         },
         detectedCompetitors: true,
         aiInsights: {
-          orderBy: [{ priority: "asc" }, { correlationScore: "desc" }],
+          orderBy: [{ priority: "asc" }],
         },
       },
     });
@@ -31,12 +31,16 @@ export async function GET(
       );
     }
 
+    // Extract journey stages from insights
+    const journeyStages = analysis.aiInsights
+      .filter(insight => insight.category === "journey_stage")
+      .map(insight => insight.expectedImpact);
+
     // Calculate overall statistics
     const totalTests = analysis.aiTestResults.length;
     const totalMentions = analysis.aiTestResults.filter((r) => r.brandMentioned).length;
     const overallMentionRate = totalTests > 0 ? (totalMentions / totalTests) * 100 : 0;
 
-    // Platform breakdown
     const platformStats: any = {
       chatgpt: {
         tests: analysis.aiTestResults.filter((r) => r.platform === "chatgpt").length,
@@ -54,7 +58,6 @@ export async function GET(
       },
     };
 
-    // Calculate mention rates
     platformStats.chatgpt.mentionRate =
       platformStats.chatgpt.tests > 0
         ? (platformStats.chatgpt.mentions / platformStats.chatgpt.tests) * 100
@@ -64,14 +67,12 @@ export async function GET(
         ? (platformStats.gemini.mentions / platformStats.gemini.tests) * 100
         : 0;
 
-    // Calculate average position
     const positions = analysis.aiTestResults
       .filter((r) => r.position !== null)
       .map((r) => r.position as number);
     const avgPosition =
       positions.length > 0 ? positions.reduce((a, b) => a + b, 0) / positions.length : null;
 
-    // Calculate visibility score (0-100)
     const positionScore = avgPosition ? Math.max(0, 100 - (avgPosition - 1) * 20) : 50;
     const visibilityScore = overallMentionRate * 0.7 + positionScore * 0.3;
 
@@ -100,6 +101,7 @@ export async function GET(
         aiTestResults: analysis.aiTestResults,
         detectedCompetitors: analysis.detectedCompetitors,
         aiInsights: analysis.aiInsights,
+        journeyStages, // Add journey stages directly
       },
     });
   } catch (error: any) {
