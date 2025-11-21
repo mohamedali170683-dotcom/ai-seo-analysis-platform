@@ -129,7 +129,7 @@ export default function AnalysisResultsPage({ params }: PageProps) {
   }
 
   // Parse journey stage data from AI insights
-  const journeyStages = parseJourneyStages(analysis.aiInsights, analysis.discoveredQuestions, analysis.aiTestResults);
+  const journeyStages = analysis.journeyStages || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
