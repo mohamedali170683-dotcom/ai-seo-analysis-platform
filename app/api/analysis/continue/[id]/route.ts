@@ -39,7 +39,7 @@ export async function POST(
             question: q.question,
             searchVolume: q.searchVolume,
             difficulty: q.difficulty,
-          intent: q.intent,
+      commercialIntent: q.commercialIntent,
             category: q.category,
             source: "auto",
           },
