@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { AnalysisPipeline } from "@/lib/services/analysis-pipeline";
 
+// Allow up to 5 minutes on Pro plan
+export const maxDuration = 300;
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -18,7 +21,6 @@ export async function POST(request: Request) {
     let competitorsArray: string[] = [];
     if (competitors) {
       if (typeof competitors === "string") {
-        // Split by comma and trim whitespace
         competitorsArray = competitors
           .split(",")
           .map((c: string) => c.trim())
@@ -59,9 +61,11 @@ export async function POST(request: Request) {
       dataForSEOPassword: process.env.DATAFORSEO_PASSWORD!,
     });
 
-    // Execute pipeline asynchronously
-    pipeline.execute().catch((error) => {
-      console.error("Pipeline execution failed:", error);
+    // Execute pipeline in background with proper error handling
+    setImmediate(() => {
+      pipeline.execute().catch((error) => {
+        console.error("Pipeline execution failed:", error);
+      });
     });
 
     return NextResponse.json({
