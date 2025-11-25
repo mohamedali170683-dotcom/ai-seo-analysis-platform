@@ -1,9 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart } from "lucide-react";
+import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart, ChevronDown } from "lucide-react";
 
-// Mock realistic data for Purina analysis
 const DEMO_DATA = {
   brandOrKeyword: "Purina",
   domain: "https://shop.purina.de",
@@ -11,20 +11,20 @@ const DEMO_DATA = {
   totalTests: 180,
   totalQuestions: 12,
   
-  // Scoring methodology
   scoringMethodology: {
     mentionRate: { weight: 50, description: "How often your brand appears in AI responses", yourScore: 65, calculation: "(Mentions ÷ Total Tests) × 100" },
     averagePosition: { weight: 30, description: "Where your brand is mentioned (1st = 100pts, 5th = 20pts)", yourScore: 72, calculation: "100 - ((Avg Position - 1) × 20)" },
     sentiment: { weight: 20, description: "How positively your brand is portrayed", yourScore: 64, calculation: "(Positive% - Negative%) normalized to 0-100" }
   },
   
-  // Sentiment definitions
   sentimentDefinitions: {
     positive: {
       label: "Positive",
       emoji: "👍",
       color: "green",
       description: "AI recommends or praises your brand with favorable language",
+      tone: "Enthusiastic, confident, endorsing",
+      keywords: ["highly recommend", "excellent", "best", "trusted", "top-rated", "outstanding", "superior", "proven", "leading", "preferred"],
       examples: [
         '"Purina Pro Plan is highly recommended by veterinarians..."',
         '"Excellent choice for nutritional balance..."',
@@ -36,6 +36,8 @@ const DEMO_DATA = {
       emoji: "😐",
       color: "gray",
       description: "AI mentions your brand factually without endorsement or criticism",
+      tone: "Objective, informative, balanced",
+      keywords: ["available", "offers", "includes", "provides", "one option", "can be found", "also", "another"],
       examples: [
         '"Purina is one option available at most retailers..."',
         '"Purina offers various product lines including..."',
@@ -47,6 +49,8 @@ const DEMO_DATA = {
       emoji: "👎",
       color: "red",
       description: "AI expresses concerns, criticisms, or warns against your brand",
+      tone: "Cautionary, critical, discouraging",
+      keywords: ["concerns", "issues", "not recommended", "avoid", "problems", "controversial", "recalls", "complaints", "inferior"],
       examples: [
         '"Some pet owners have concerns about ingredient quality..."',
         '"Not recommended for dogs with specific allergies..."',
@@ -92,9 +96,9 @@ const DEMO_DATA = {
             sentiment: "positive"
           },
           {
-            platform: "ChatGPT",
+            platform: "Copilot",
             question: "What is the healthiest cat food?",
-            excerpt: "Healthy cat food should be high in animal protein and low in carbohydrates. Brands like Purina Pro Plan, Royal Canin, and Hill's Science Diet are frequently recommended by veterinarians because they invest in nutritional research and quality control. Purina Pro Plan offers formulas specifically designed for different cat needs, including urinary health and weight management.",
+            excerpt: "The healthiest cat food should be high in animal protein and formulated for your cat's life stage. Purina Pro Plan is frequently recommended by veterinarians for its research-backed formulations. Other quality brands include Royal Canin and Hill's Science Diet. Look for foods with named meat sources as the first ingredient and avoid excessive carbohydrates.",
             brandPosition: 1,
             sentiment: "positive"
           },
@@ -113,7 +117,7 @@ const DEMO_DATA = {
             sentiment: "neutral"
           },
           {
-            platform: "Gemini",
+            platform: "Copilot",
             question: "What should I look for in dog food?",
             excerpt: "Look for AAFCO certification, which ensures the food meets minimum nutritional standards. Quality brands include Orijen, Acana, Purina Pro Plan, and Blue Buffalo. Check that the first ingredient is a whole protein source. Some dogs may have sensitivities to certain grains or proteins, so monitor your dog's response when switching foods.",
             brandPosition: 3,
@@ -170,7 +174,7 @@ const DEMO_DATA = {
             sentiment: "positive"
           },
           {
-            platform: "ChatGPT",
+            platform: "Copilot",
             question: "Is Purina Pro Plan worth it?",
             excerpt: "Purina Pro Plan is generally worth the investment for several reasons: it's backed by extensive research and feeding trials, formulated by veterinary nutritionists, and uses high-quality protein sources. While it's pricier than grocery store brands, it's more affordable than many premium boutique brands while maintaining comparable quality. Many pet owners report improved coat condition, energy levels, and digestive health after switching to Pro Plan.",
             brandPosition: 1,
@@ -191,7 +195,7 @@ const DEMO_DATA = {
             sentiment: "positive"
           },
           {
-            platform: "Gemini",
+            platform: "Copilot",
             question: "Purina vs Royal Canin - which is better?",
             excerpt: "The choice between Purina and Royal Canin depends on your pet's specific needs. Royal Canin offers more specialized breed-specific formulas and has a strong reputation in veterinary medicine, particularly for prescription diets. Purina Pro Plan provides excellent everyday nutrition at a lower price point and also offers therapeutic formulas. Both brands conduct feeding trials and have veterinary backing. Consider your budget and whether your pet has breed-specific or medical needs.",
             brandPosition: 1,
@@ -248,7 +252,7 @@ const DEMO_DATA = {
             sentiment: "positive"
           },
           {
-            platform: "ChatGPT",
+            platform: "Copilot",
             question: "Purina Pro Plan cheapest price",
             excerpt: "To get the best price on Purina Pro Plan: (1) Set up auto-ship on Chewy or Amazon for 5-10% off, (2) Check for promotional codes on RetailMeNot or Honey, (3) Buy larger bag sizes (30lb vs 15lb) for better per-pound pricing, (4) Watch for sales at Petco/PetSmart (often 20-30% off during pet appreciation events). Typical pricing: 15lb bag = $45-55, 30lb bag = $75-90 depending on formula.",
             brandPosition: 1,
@@ -262,7 +266,7 @@ const DEMO_DATA = {
             sentiment: "positive"
           },
           {
-            platform: "ChatGPT",
+            platform: "Copilot",
             question: "Purina Pro Plan auto-ship discount",
             excerpt: "Several retailers offer auto-ship discounts on Purina Pro Plan: Chewy.com (5-10% off), Amazon Subscribe & Save (5-15% off with 5+ subscriptions), Petco Repeat Delivery (5% off + free shipping), and Purina.com (10% off). Chewy tends to have the most competitive pricing and flexible delivery schedules. Auto-ship also ensures you never run out of food, and you can easily skip, reschedule, or cancel shipments.",
             brandPosition: 1,
@@ -293,9 +297,14 @@ const DEMO_DATA = {
 };
 
 export default function DemoPage() {
+  const [expandedStage, setExpandedStage] = useState<string | null>(null);
+
+  const toggleStage = (stage: string) => {
+    setExpandedStage(expandedStage === stage ? null : stage);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
@@ -310,7 +319,7 @@ export default function DemoPage() {
               <h1 className="text-3xl font-bold text-gray-900">
                 {DEMO_DATA.brandOrKeyword} - AI Visibility Journey Analysis
               </h1>
-              <p className="text-gray-600 mt-1">{DEMO_DATA.domain} • {DEMO_DATA.totalTests} AI responses analyzed • {DEMO_DATA.totalQuestions} questions tested</p>
+              <p className="text-gray-600 mt-1">{DEMO_DATA.domain}</p>
             </div>
             <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
               <Download className="w-4 h-4" />
@@ -321,7 +330,36 @@ export default function DemoPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Overall Score Card */}
+        <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl shadow-2xl p-8 mb-8">
+          <div className="grid md:grid-cols-4 gap-6 text-white text-center">
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-5xl font-bold mb-2">{DEMO_DATA.totalTests}</div>
+              <div className="text-sm font-semibold opacity-90">AI Responses Analyzed</div>
+              <div className="text-xs opacity-75 mt-1">Across 3 Platforms</div>
+            </div>
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-5xl font-bold mb-2">{DEMO_DATA.totalQuestions}</div>
+              <div className="text-sm font-semibold opacity-90">Questions Tested</div>
+              <div className="text-xs opacity-75 mt-1">Covering All Journey Stages</div>
+            </div>
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-5xl font-bold mb-2">3</div>
+              <div className="text-sm font-semibold opacity-90">AI Platforms</div>
+              <div className="text-xs opacity-75 mt-1">ChatGPT • Gemini • Copilot</div>
+            </div>
+            <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-5xl font-bold mb-2">15</div>
+              <div className="text-sm font-semibold opacity-90">Tests Per Question</div>
+              <div className="text-xs opacity-75 mt-1">Ensuring Statistical Significance</div>
+            </div>
+          </div>
+          <div className="text-center mt-6 text-white">
+            <div className="text-sm font-semibold opacity-90">
+              🏆 This comprehensive analysis represents <strong>180 individual AI queries</strong> to ensure data quality and reliability
+            </div>
+          </div>
+        </div>
+
         <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-12 text-white mb-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-semibold mb-6 opacity-90">
@@ -333,7 +371,6 @@ export default function DemoPage() {
             </div>
           </div>
           
-          {/* Score Breakdown */}
           <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-8">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
               <Info className="w-5 h-5" />
@@ -358,33 +395,44 @@ export default function DemoPage() {
           </div>
         </div>
 
-        {/* Visual User Journey Map */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">The AI-Powered User Journey</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">The AI-Powered User Journey</h2>
+          <p className="text-center text-gray-600 mb-8">Click on any stage to see detailed visibility analysis</p>
           <div className="relative">
-            {/* Journey Line */}
             <div className="absolute top-1/2 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transform -translate-y-1/2 hidden md:block"></div>
             
-            {/* Journey Stages */}
             <div className="grid md:grid-cols-3 gap-8 relative z-10">
               {DEMO_DATA.journeyStages.map((stage, index) => {
                 const Icon = stage.icon;
+                const isExpanded = expandedStage === stage.stage;
                 return (
                   <div key={stage.stage} className="text-center">
                     <div className={`bg-gradient-to-br ${stage.color} w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl border-4 border-white`}>
                       <Icon className="w-12 h-12 text-white" />
                     </div>
-                    <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-100">
+                    <div className={`bg-white rounded-xl p-4 shadow-lg border-2 transition-all cursor-pointer hover:shadow-2xl ${
+                      isExpanded ? 'border-blue-500 scale-105' : 'border-gray-100'
+                    }`}>
                       <div className="text-sm text-gray-500 font-semibold mb-1">STAGE {index + 1}</div>
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{stage.stageLabel}</h3>
                       <p className="text-sm text-gray-600 mb-4">{stage.stageDescription}</p>
-                      <div className="bg-gray-50 rounded-lg p-3">
+                      <div className="bg-gray-50 rounded-lg p-3 mb-4">
                         <div className="text-3xl font-bold text-gray-900">{stage.portrayal.visibilityScore}</div>
                         <div className="text-xs text-gray-600">Visibility Score</div>
                       </div>
-                      <div className="mt-3 text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 mb-4">
                         {stage.portrayal.mentionRate}% mention rate • {stage.portrayal.totalAnswersAnalyzed} responses analyzed
                       </div>
+                      <button
+                        onClick={() => toggleStage(stage.stage)}
+                        className={`w-full py-2 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                          isExpanded
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        }`}>
+                        {isExpanded ? 'Hide Details' : `See ${stage.stageLabel} Details`}
+                        <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
                     </div>
                     {index < 2 && (
                       <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
@@ -398,7 +446,6 @@ export default function DemoPage() {
           </div>
         </div>
 
-        {/* Sentiment Guide */}
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-xl p-8 mb-12 border-2 border-gray-200">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">📊 Understanding Sentiment Analysis</h2>
           <p className="text-center text-gray-600 mb-8">How we evaluate whether AI responses are favorable, neutral, or critical of your brand</p>
@@ -415,10 +462,31 @@ export default function DemoPage() {
                     data.color === 'red' ? 'text-red-700' : 'text-gray-700'
                   }`}>{data.label}</h3>
                 </div>
-                <p className="text-sm text-gray-700 mb-4">{data.description}</p>
+                <p className="text-sm text-gray-700 mb-3">{data.description}</p>
+                
+                <div className="bg-blue-50 rounded-lg p-3 mb-3">
+                  <div className="text-xs font-semibold text-blue-900 mb-2">Tone of Voice:</div>
+                  <div className="text-xs text-blue-800 italic">{data.tone}</div>
+                </div>
+
+                <div className="bg-purple-50 rounded-lg p-3 mb-3">
+                  <div className="text-xs font-semibold text-purple-900 mb-2">Key Words & Phrases:</div>
+                  <div className="flex flex-wrap gap-1">
+                    {data.keywords.slice(0, 6).map((keyword, i) => (
+                      <span key={i} className={`text-xs px-2 py-1 rounded-full ${
+                        data.color === 'green' ? 'bg-green-100 text-green-700' :
+                        data.color === 'red' ? 'bg-red-100 text-red-700' :
+                        'bg-gray-200 text-gray-700'
+                      }`}>
+                        {keyword}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="bg-gray-50 rounded-lg p-3">
                   <div className="text-xs font-semibold text-gray-600 mb-2">Example Phrases:</div>
-                  {data.examples.map((example, i) => (
+                  {data.examples.slice(0, 2).map((example, i) => (
                     <div key={i} className="text-xs text-gray-700 mb-1 italic">• {example}</div>
                   ))}
                 </div>
@@ -427,15 +495,16 @@ export default function DemoPage() {
           </div>
         </div>
 
-        {/* Journey Stages Detail */}
         <div className="space-y-12">
           {DEMO_DATA.journeyStages.map((stage, index) => (
-            <JourneyStageCard
-              key={stage.stage}
-              stage={stage}
-              brandName={DEMO_DATA.brandOrKeyword}
-              stageNumber={index + 1}
-            />
+            expandedStage === stage.stage && (
+              <JourneyStageCard
+                key={stage.stage}
+                stage={stage}
+                brandName={DEMO_DATA.brandOrKeyword}
+                stageNumber={index + 1}
+              />
+            )
           ))}
         </div>
       </main>
@@ -448,7 +517,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
 
   return (
     <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-100">
-      {/* Stage Header */}
       <div className={`bg-gradient-to-r ${stage.color} p-8 text-white`}>
         <div className="flex items-center gap-4 mb-4">
           <div className="bg-white bg-opacity-20 p-4 rounded-xl">
@@ -467,7 +535,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
       </div>
 
       <div className="p-8">
-        {/* Questions + Statistical Significance */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-900">Questions Analyzed</h3>
@@ -491,7 +558,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
 
         <div className="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-10"></div>
 
-        {/* Q1: Portrayal */}
         <div className="mb-10">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-2xl mb-8 shadow-lg">
             <h3 className="text-3xl font-bold flex items-center gap-3">
@@ -501,7 +567,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
           </div>
           
           <div className="space-y-8">
-            {/* Mention Rate & Position */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
                 <div className="text-sm font-semibold text-blue-700 mb-2">MENTION RATE</div>
@@ -520,32 +585,47 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </div>
             </div>
 
-            {/* Sentiment Analysis */}
             <div className="bg-white rounded-2xl p-6 border-4 border-gray-100 shadow-lg">
               <div className="font-bold text-gray-900 mb-4 text-xl">😊 Sentiment Breakdown:</div>
               <div className="grid grid-cols-3 gap-4 mb-6">
-                {[
-                  { key: 'positive', emoji: '👍', color: 'green' },
-                  { key: 'neutral', emoji: '😐', color: 'gray' },
-                  { key: 'negative', emoji: '👎', color: 'red' }
-                ].map((sent) => {
-                  const value = stage.portrayal.sentiment[sent.key];
-                  const isDominant = stage.portrayal.sentiment.dominant === sent.key;
-                  return (
-                    <div key={sent.key} className={`p-6 rounded-xl text-center transition-all ${
-                      isDominant
-                        ? `bg-${sent.color}-500 text-white shadow-2xl scale-105 ring-4 ring-${sent.color}-200`
-                        : `bg-${sent.color}-50 text-${sent.color}-700 border-2 border-${sent.color}-200`
-                    }`}>
-                      <div className="text-4xl mb-2">{sent.emoji}</div>
-                      <div className="text-4xl font-bold mb-1">{value}%</div>
-                      <div className="text-sm font-semibold capitalize">{sent.key}</div>
-                      {isDominant && (
-                        <div className="mt-2 text-xs bg-white bg-opacity-20 px-2 py-1 rounded">DOMINANT</div>
-                      )}
-                    </div>
-                  );
-                })}
+                <div className={`p-6 rounded-xl text-center transition-all ${
+                  stage.portrayal.sentiment.dominant === 'positive'
+                    ? 'bg-green-500 text-white shadow-2xl scale-105 ring-4 ring-green-200'
+                    : 'bg-green-50 text-green-700 border-2 border-green-200'
+                }`}>
+                  <div className="text-4xl mb-2">👍</div>
+                  <div className="text-4xl font-bold mb-1">{stage.portrayal.sentiment.positive}%</div>
+                  <div className="text-sm font-semibold">Positive</div>
+                  {stage.portrayal.sentiment.dominant === 'positive' && (
+                    <div className="mt-2 text-xs bg-white bg-opacity-20 px-2 py-1 rounded">DOMINANT</div>
+                  )}
+                </div>
+
+                <div className={`p-6 rounded-xl text-center transition-all ${
+                  stage.portrayal.sentiment.dominant === 'neutral'
+                    ? 'bg-gray-500 text-white shadow-2xl scale-105 ring-4 ring-gray-200'
+                    : 'bg-gray-50 text-gray-700 border-2 border-gray-200'
+                }`}>
+                  <div className="text-4xl mb-2">😐</div>
+                  <div className="text-4xl font-bold mb-1">{stage.portrayal.sentiment.neutral}%</div>
+                  <div className="text-sm font-semibold">Neutral</div>
+                  {stage.portrayal.sentiment.dominant === 'neutral' && (
+                    <div className="mt-2 text-xs bg-white bg-opacity-20 px-2 py-1 rounded">DOMINANT</div>
+                  )}
+                </div>
+
+                <div className={`p-6 rounded-xl text-center transition-all ${
+                  stage.portrayal.sentiment.dominant === 'negative'
+                    ? 'bg-red-500 text-white shadow-2xl scale-105 ring-4 ring-red-200'
+                    : 'bg-red-50 text-red-700 border-2 border-red-200'
+                }`}>
+                  <div className="text-4xl mb-2">👎</div>
+                  <div className="text-4xl font-bold mb-1">{stage.portrayal.sentiment.negative}%</div>
+                  <div className="text-sm font-semibold">Negative</div>
+                  {stage.portrayal.sentiment.dominant === 'negative' && (
+                    <div className="mt-2 text-xs bg-white bg-opacity-20 px-2 py-1 rounded">DOMINANT</div>
+                  )}
+                </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg text-center">
                 <span className="text-gray-700">Overall Sentiment: </span>
@@ -558,7 +638,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </div>
             </div>
 
-            {/* AI Answer Examples - MULTIPLE */}
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-4 border-yellow-200">
               <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-xl">
                 <span className="text-3xl">💬</span>
@@ -593,16 +672,13 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </div>
             </div>
 
-            {/* Competitor Comparison - VISUAL */}
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border-4 border-purple-200">
               <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-2xl">
                 <span className="text-3xl">🏆</span>
                 Competitive Landscape in {stage.stageLabel}
               </div>
               
-              {/* Visual Bar Chart */}
               <div className="space-y-4 mb-6">
-                {/* Your Brand */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-bold text-blue-700 text-lg">{brandName} (You) ⭐</span>
@@ -614,14 +690,12 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                   <div className="w-full bg-gray-200 rounded-full h-8 relative overflow-hidden">
                     <div 
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-8 rounded-full flex items-center justify-end pr-3 text-white font-bold transition-all duration-1000"
-                      style={{ width: `${stage.portrayal.mentionRate}%` }}
-                    >
+                      style={{ width: `${stage.portrayal.mentionRate}%` }}>
                       {stage.portrayal.mentionRate}%
                     </div>
                   </div>
                 </div>
                 
-                {/* Competitors */}
                 {stage.portrayal.competitorComparison.map((comp: any, i: number) => (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-2">
@@ -634,8 +708,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                     <div className="w-full bg-gray-200 rounded-full h-6 relative overflow-hidden">
                       <div 
                         className="bg-gradient-to-r from-gray-400 to-gray-500 h-6 rounded-full flex items-center justify-end pr-3 text-white text-sm font-semibold transition-all duration-1000"
-                        style={{ width: `${comp.mentionRate}%` }}
-                      >
+                        style={{ width: `${comp.mentionRate}%` }}>
                         {comp.mentionRate}%
                       </div>
                     </div>
@@ -643,7 +716,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 ))}
               </div>
               
-              {/* Gap Analysis */}
               <div className="bg-white p-5 rounded-xl border-2 border-purple-300">
                 <div className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-purple-600" />
@@ -666,7 +738,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
 
         <div className="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent my-10"></div>
 
-        {/* Q2: Recommendations */}
         <div>
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl mb-8 shadow-lg">
             <h3 className="text-3xl font-bold flex items-center gap-3">
@@ -696,7 +767,6 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </p>
             </div>
 
-            {/* Hero Action */}
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl blur-md opacity-40"></div>
               <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-8 text-white shadow-2xl border-4 border-green-300">
