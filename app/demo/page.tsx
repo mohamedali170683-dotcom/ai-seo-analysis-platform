@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp } from "lucide-react";
+import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart } from "lucide-react";
 
 // Mock realistic data for Purina analysis
 const DEMO_DATA = {
@@ -11,118 +11,282 @@ const DEMO_DATA = {
   totalTests: 180,
   totalQuestions: 12,
   
+  // Scoring methodology
+  scoringMethodology: {
+    mentionRate: { weight: 50, description: "How often your brand appears in AI responses", yourScore: 65, calculation: "(Mentions ÷ Total Tests) × 100" },
+    averagePosition: { weight: 30, description: "Where your brand is mentioned (1st = 100pts, 5th = 20pts)", yourScore: 72, calculation: "100 - ((Avg Position - 1) × 20)" },
+    sentiment: { weight: 20, description: "How positively your brand is portrayed", yourScore: 64, calculation: "(Positive% - Negative%) normalized to 0-100" }
+  },
+  
+  // Sentiment definitions
+  sentimentDefinitions: {
+    positive: {
+      label: "Positive",
+      emoji: "👍",
+      color: "green",
+      description: "AI recommends or praises your brand with favorable language",
+      examples: [
+        '"Purina Pro Plan is highly recommended by veterinarians..."',
+        '"Excellent choice for nutritional balance..."',
+        '"Trusted brand with extensive research backing..."'
+      ]
+    },
+    neutral: {
+      label: "Neutral",
+      emoji: "😐",
+      color: "gray",
+      description: "AI mentions your brand factually without endorsement or criticism",
+      examples: [
+        '"Purina is one option available at most retailers..."',
+        '"Purina offers various product lines including..."',
+        '"Can be found at Petco, PetSmart, and Amazon..."'
+      ]
+    },
+    negative: {
+      label: "Negative",
+      emoji: "👎",
+      color: "red",
+      description: "AI expresses concerns, criticisms, or warns against your brand",
+      examples: [
+        '"Some pet owners have concerns about ingredient quality..."',
+        '"Not recommended for dogs with specific allergies..."',
+        '"Other brands may offer better value for premium ingredients..."'
+      ]
+    }
+  },
+  
   journeyStages: [
     {
       stage: "awareness",
-      stageLabel: "Awareness Stage",
+      stageLabel: "Awareness",
+      stageDescription: "User is learning about pet nutrition and discovering brands",
       icon: Brain,
       color: "from-blue-500 to-blue-600",
       
       questions: [
-        { question: "What is Purina?", searchVolume: 12000 },
-        { question: "Who owns Purina?", searchVolume: 8500 },
-        { question: "Is Purina a good brand?", searchVolume: 15000 },
-        { question: "Where is Purina made?", searchVolume: 6200 },
+        { question: "What should I look for in dog food?", searchVolume: 18500, answersAnalyzed: 15 },
+        { question: "What is the healthiest cat food?", searchVolume: 22000, answersAnalyzed: 15 },
+        { question: "How to choose good pet food?", searchVolume: 14200, answersAnalyzed: 15 },
+        { question: "What ingredients are best in dog food?", searchVolume: 16800, answersAnalyzed: 15 },
       ],
       
       portrayal: {
         mentionRate: 78.3,
         totalQuestions: 4,
         totalTests: 60,
+        totalAnswersAnalyzed: 60,
         visibilityScore: 71.2,
+        averagePosition: 2.1,
         sentiment: {
           positive: 65.0,
           negative: 8.3,
           neutral: 26.7,
           dominant: "positive"
         },
-        exampleExtract: "...Purina is a well-established pet food brand owned by Nestlé, with over 90 years of experience in pet nutrition. They offer a wide range of products formulated with veterinary nutritionists, including Pro Plan, ONE, and Fancy Feast...",
+        aiAnswerExamples: [
+          {
+            platform: "ChatGPT",
+            question: "What should I look for in dog food?",
+            excerpt: "When choosing dog food, look for brands that meet AAFCO standards and have undergone feeding trials. Purina Pro Plan is a veterinarian-recommended brand that offers science-backed formulations. Look for named protein sources (like chicken, beef) as the first ingredient, avoid artificial preservatives, and consider your dog's specific life stage and health needs.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "ChatGPT",
+            question: "What is the healthiest cat food?",
+            excerpt: "Healthy cat food should be high in animal protein and low in carbohydrates. Brands like Purina Pro Plan, Royal Canin, and Hill's Science Diet are frequently recommended by veterinarians because they invest in nutritional research and quality control. Purina Pro Plan offers formulas specifically designed for different cat needs, including urinary health and weight management.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "Gemini",
+            question: "How to choose good pet food?",
+            excerpt: "Good pet food should list a quality protein source first, contain essential vitamins and minerals, and be appropriate for your pet's age and size. Major brands like Purina, Mars Petcare, and Nestlé Purina invest heavily in research. Purina has over 500 scientists working on pet nutrition and conducts extensive feeding trials to ensure their formulas meet pets' nutritional needs.",
+            brandPosition: 2,
+            sentiment: "positive"
+          },
+          {
+            platform: "ChatGPT",
+            question: "What ingredients are best in dog food?",
+            excerpt: "The best ingredients include named animal proteins (chicken meal, beef, salmon), whole grains or quality carbohydrates, omega fatty acids for coat health, and probiotics for digestion. Brands like Hill's, Purina, and Royal Canin typically include these components. Avoid foods with unnamed meat by-products or excessive fillers.",
+            brandPosition: 2,
+            sentiment: "neutral"
+          },
+          {
+            platform: "Gemini",
+            question: "What should I look for in dog food?",
+            excerpt: "Look for AAFCO certification, which ensures the food meets minimum nutritional standards. Quality brands include Orijen, Acana, Purina Pro Plan, and Blue Buffalo. Check that the first ingredient is a whole protein source. Some dogs may have sensitivities to certain grains or proteins, so monitor your dog's response when switching foods.",
+            brandPosition: 3,
+            sentiment: "neutral"
+          }
+        ],
         competitorComparison: [
-          { competitorName: "Mars Petcare", mentionRate: 82.1, sentiment: "positive" },
-          { competitorName: "Hill's Pet Nutrition", mentionRate: 71.5, sentiment: "positive" },
+          { competitorName: "Hill's Pet Nutrition", mentionRate: 71.5, avgPosition: 2.3, sentiment: "positive" },
+          { competitorName: "Royal Canin", mentionRate: 68.3, avgPosition: 2.5, sentiment: "positive" },
+          { competitorName: "Mars Petcare", mentionRate: 82.1, avgPosition: 1.8, sentiment: "positive" },
         ]
       },
       
       recommendation: {
-        commonPattern: "AI responses consistently emphasize Purina's veterinary research, AAFCO compliance, and long-standing brand reputation as key trust signals.",
-        contentType: "Educational content about veterinary formulation process, ingredient sourcing transparency, and nutritional science credentials",
-        focusedAction: "Create a dedicated 'Nutrition Science Hub' featuring veterinarian-endorsed educational content, published research studies, and transparent ingredient sourcing documentation to establish thought leadership in the awareness stage."
+        commonPattern: "AI responses consistently prioritize brands that demonstrate veterinary endorsement, AAFCO certification, feeding trial data, and transparent ingredient sourcing when educating users about pet nutrition fundamentals.",
+        contentType: "Educational content about nutritional science, ingredient transparency guides, veterinarian collaboration evidence, and AAFCO compliance documentation",
+        focusedAction: "Create a comprehensive 'Pet Nutrition Science Hub' featuring: (1) Interactive ingredient decoder tool, (2) Published feeding trial results, (3) Video interviews with Purina veterinary nutritionists, and (4) Transparent sourcing documentation. Make this content easily crawlable and reference-friendly for AI systems."
       }
     },
     
     {
       stage: "consideration",
-      stageLabel: "Consideration Stage",
+      stageLabel: "Consideration",
+      stageDescription: "User is comparing specific brands and evaluating which is best for their pet",
       icon: Users,
       color: "from-purple-500 to-purple-600",
       
       questions: [
-        { question: "What's the best Purina dog food?", searchVolume: 9800 },
-        { question: "Purina vs Royal Canin - which is better?", searchVolume: 7200 },
-        { question: "Is Purina Pro Plan worth it?", searchVolume: 11500 },
-        { question: "Why do vets recommend Purina?", searchVolume: 13200 },
+        { question: "Purina vs Royal Canin - which is better?", searchVolume: 7200, answersAnalyzed: 15 },
+        { question: "Is Purina Pro Plan worth it?", searchVolume: 11500, answersAnalyzed: 15 },
+        { question: "Why do vets recommend Purina?", searchVolume: 13200, answersAnalyzed: 15 },
+        { question: "Best dog food brands for sensitive stomach", searchVolume: 9100, answersAnalyzed: 15 },
       ],
       
       portrayal: {
         mentionRate: 64.2,
         totalQuestions: 4,
         totalTests: 60,
+        totalAnswersAnalyzed: 60,
         visibilityScore: 62.8,
+        averagePosition: 2.4,
         sentiment: {
           positive: 71.7,
           negative: 5.0,
           neutral: 23.3,
           dominant: "positive"
         },
-        exampleExtract: "...Veterinarians often recommend Purina Pro Plan because it's backed by extensive research and feeding trials. The brand invests heavily in nutritional science, and many formulas are developed in consultation with veterinary nutritionists. Pro Plan also offers specialized diets for specific health conditions...",
+        aiAnswerExamples: [
+          {
+            platform: "ChatGPT",
+            question: "Purina vs Royal Canin - which is better?",
+            excerpt: "Both Purina Pro Plan and Royal Canin are veterinarian-recommended brands with strong research backgrounds. Purina Pro Plan tends to be more affordable while still offering quality nutrition. Royal Canin specializes in breed-specific and prescription formulas. Many vets recommend Purina Pro Plan for everyday nutrition due to its balance of quality and value, while Royal Canin excels for pets with specific medical needs.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "ChatGPT",
+            question: "Is Purina Pro Plan worth it?",
+            excerpt: "Purina Pro Plan is generally worth the investment for several reasons: it's backed by extensive research and feeding trials, formulated by veterinary nutritionists, and uses high-quality protein sources. While it's pricier than grocery store brands, it's more affordable than many premium boutique brands while maintaining comparable quality. Many pet owners report improved coat condition, energy levels, and digestive health after switching to Pro Plan.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "Gemini",
+            question: "Why do vets recommend Purina?",
+            excerpt: "Veterinarians recommend Purina for several evidence-based reasons: (1) Over 500 scientists and nutritionists work on their formulas, (2) They conduct extensive feeding trials, not just lab analysis, (3) Consistent quality control and ingredient sourcing, (4) Wide range of therapeutic and specialized diets, and (5) Long track record with minimal recall history. Purina also provides extensive veterinary education and research funding.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "ChatGPT",
+            question: "Best dog food brands for sensitive stomach",
+            excerpt: "For dogs with sensitive stomachs, several brands offer specialized formulas: Hill's Science Diet Sensitive Stomach, Purina Pro Plan Sensitive Skin & Stomach, Royal Canin Digestive Care, and Blue Buffalo Basics. Purina Pro Plan's sensitive formula contains prebiotic fiber, easily digestible proteins like salmon, and no corn, wheat, or soy. Many veterinarians specifically recommend it for digestive issues.",
+            brandPosition: 2,
+            sentiment: "positive"
+          },
+          {
+            platform: "Gemini",
+            question: "Purina vs Royal Canin - which is better?",
+            excerpt: "The choice between Purina and Royal Canin depends on your pet's specific needs. Royal Canin offers more specialized breed-specific formulas and has a strong reputation in veterinary medicine, particularly for prescription diets. Purina Pro Plan provides excellent everyday nutrition at a lower price point and also offers therapeutic formulas. Both brands conduct feeding trials and have veterinary backing. Consider your budget and whether your pet has breed-specific or medical needs.",
+            brandPosition: 1,
+            sentiment: "neutral"
+          }
+        ],
         competitorComparison: [
-          { competitorName: "Mars Petcare", mentionRate: 69.8, sentiment: "positive" },
-          { competitorName: "Hill's Pet Nutrition", mentionRate: 75.3, sentiment: "positive" },
+          { competitorName: "Hill's Pet Nutrition", mentionRate: 75.3, avgPosition: 1.9, sentiment: "positive" },
+          { competitorName: "Royal Canin", mentionRate: 81.7, avgPosition: 1.6, sentiment: "positive" },
+          { competitorName: "Mars Petcare", mentionRate: 69.8, avgPosition: 2.6, sentiment: "positive" },
         ]
       },
       
       recommendation: {
-        commonPattern: "AI chatbots prioritize brands that can demonstrate specific health benefits, clinical research backing, and veterinary endorsements when making recommendations.",
-        contentType: "Comparison-friendly content highlighting unique formulations, clinical trial results, and specific health benefit documentation for different pet needs",
-        focusedAction: "Develop an interactive 'Formula Finder' tool with detailed comparison charts showing clinical evidence, ingredient benefits, and vet testimonial videos for each product line to help users make informed comparisons."
+        commonPattern: "AI chatbots prioritize brands that provide specific evidence for claims: published research, feeding trial data, veterinary testimonials, and documented health outcomes when users are actively comparing options.",
+        contentType: "Comparison-friendly content with clinical trial results, third-party testing data, vet testimonial videos, before/after case studies, and ingredient quality certifications",
+        focusedAction: "Develop a 'Pro Plan Evidence Library' with: (1) Side-by-side comparison tool showing Purina vs competitors on 10+ criteria with citations, (2) Database of 50+ vet testimonial videos searchable by specialty, (3) Public feeding trial results with methodology and outcomes, (4) Interactive cost-per-feeding calculator. Structure this data with schema.org markup for AI ingestion."
       }
     },
     
     {
       stage: "decision",
-      stageLabel: "Decision Stage",
+      stageLabel: "Decision",
+      stageDescription: "User is ready to purchase and looking for where to buy, pricing, and deals",
       icon: ShoppingCart,
       color: "from-pink-500 to-pink-600",
       
       questions: [
-        { question: "Where can I buy Purina Pro Plan?", searchVolume: 8900 },
-        { question: "How much does Purina dog food cost?", searchVolume: 10500 },
-        { question: "Does Purina offer free shipping?", searchVolume: 3200 },
-        { question: "Purina Pro Plan price comparison", searchVolume: 5800 },
+        { question: "Where to buy Purina Pro Plan?", searchVolume: 8900, answersAnalyzed: 15 },
+        { question: "Purina Pro Plan cheapest price", searchVolume: 6500, answersAnalyzed: 15 },
+        { question: "Does Chewy sell Purina?", searchVolume: 4200, answersAnalyzed: 15 },
+        { question: "Purina Pro Plan auto-ship discount", searchVolume: 3100, answersAnalyzed: 15 },
       ],
       
       portrayal: {
         mentionRate: 52.5,
         totalQuestions: 4,
         totalTests: 60,
+        totalAnswersAnalyzed: 60,
         visibilityScore: 58.3,
+        averagePosition: 3.1,
         sentiment: {
           positive: 55.0,
           negative: 10.0,
           neutral: 35.0,
           dominant: "positive"
         },
-        exampleExtract: "...Purina Pro Plan is available at major retailers including Petco, PetSmart, Chewy.com, and Amazon. Prices typically range from $45-75 for a 30lb bag depending on the formula. Many online retailers offer auto-ship discounts of 5-10%...",
+        aiAnswerExamples: [
+          {
+            platform: "ChatGPT",
+            question: "Where to buy Purina Pro Plan?",
+            excerpt: "Purina Pro Plan is widely available at major pet retailers including: Petco, PetSmart, Chewy.com, Amazon, Walmart, and local pet specialty stores. Online retailers like Chewy often offer auto-ship discounts (typically 5-10% off), free shipping on orders over $49, and easy subscription management. You can also purchase directly from Purina's website, though third-party retailers often have better pricing and promotions.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "ChatGPT",
+            question: "Purina Pro Plan cheapest price",
+            excerpt: "To get the best price on Purina Pro Plan: (1) Set up auto-ship on Chewy or Amazon for 5-10% off, (2) Check for promotional codes on RetailMeNot or Honey, (3) Buy larger bag sizes (30lb vs 15lb) for better per-pound pricing, (4) Watch for sales at Petco/PetSmart (often 20-30% off during pet appreciation events). Typical pricing: 15lb bag = $45-55, 30lb bag = $75-90 depending on formula.",
+            brandPosition: 1,
+            sentiment: "neutral"
+          },
+          {
+            platform: "Gemini",
+            question: "Does Chewy sell Purina?",
+            excerpt: "Yes, Chewy carries a full range of Purina products including Pro Plan, ONE, Fancy Feast, and more. Chewy offers auto-ship savings (5% off for most items, 10% off for Pro Plan), free 1-2 day shipping on orders over $49, and easy subscription management. They also have excellent customer service and a 100% satisfaction guarantee. Many pet owners prefer Chewy for the convenience of home delivery and consistent pricing.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "ChatGPT",
+            question: "Purina Pro Plan auto-ship discount",
+            excerpt: "Several retailers offer auto-ship discounts on Purina Pro Plan: Chewy.com (5-10% off), Amazon Subscribe & Save (5-15% off with 5+ subscriptions), Petco Repeat Delivery (5% off + free shipping), and Purina.com (10% off). Chewy tends to have the most competitive pricing and flexible delivery schedules. Auto-ship also ensures you never run out of food, and you can easily skip, reschedule, or cancel shipments.",
+            brandPosition: 1,
+            sentiment: "positive"
+          },
+          {
+            platform: "Gemini",
+            question: "Where to buy Purina Pro Plan?",
+            excerpt: "Purina Pro Plan is available both online and in-store. Online options include Chewy, Amazon, Petco.com, PetSmart.com, and Walmart.com. Physical stores include Petco, PetSmart, local pet boutiques, and some Walmart locations. For the best deals, compare prices across retailers and consider auto-ship options. Chewy and Amazon typically offer the lowest prices with free shipping, while in-store purchases allow you to get the product immediately.",
+            brandPosition: 1,
+            sentiment: "neutral"
+          }
+        ],
         competitorComparison: [
-          { competitorName: "Mars Petcare", mentionRate: 58.2, sentiment: "positive" },
-          { competitorName: "Hill's Pet Nutrition", mentionRate: 61.7, sentiment: "positive" },
+          { competitorName: "Hill's Pet Nutrition", mentionRate: 61.7, avgPosition: 2.8, sentiment: "positive" },
+          { competitorName: "Royal Canin", mentionRate: 58.3, avgPosition: 2.9, sentiment: "positive" },
+          { competitorName: "Mars Petcare", mentionRate: 58.2, avgPosition: 3.2, sentiment: "positive" },
         ]
       },
       
       recommendation: {
-        commonPattern: "AI responses highlight availability, pricing transparency, and purchase convenience as critical factors. They frequently cite specific retailer partnerships and subscription options.",
-        contentType: "Structured data for pricing, retailer locator optimization, and clear shipping/subscription policy documentation",
-        focusedAction: "Implement schema.org Product markup with real-time pricing across all retailer partners, create an optimized 'Where to Buy' page with live inventory status, and prominently feature subscription savings to improve decision-stage visibility."
+        commonPattern: "AI responses prioritize brands with clear, structured information about: retailer partnerships, real-time pricing, shipping options, subscription savings, and inventory availability. AI struggles to recommend brands with fragmented purchase paths.",
+        contentType: "Structured e-commerce data: schema.org Product markup, real-time pricing feeds, retailer locator with live inventory, clear shipping/return policies, and subscription benefit documentation",
+        focusedAction: "Implement comprehensive e-commerce optimization: (1) Add schema.org Product, Offer, and Organization markup to all product pages, (2) Create API partnerships with Chewy/Amazon to display real-time pricing and availability, (3) Build an enhanced 'Where to Buy' tool with live inventory, price comparison, and subscription calculator, (4) Ensure all retailer partners have accurate Purina product data feeds. This structured data makes it easy for AI to cite accurate purchase information."
       }
     }
   ]
@@ -140,13 +304,13 @@ export default function DemoPage() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold mb-2">
-                DEMO REPORT
+              <div className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-2 shadow-lg">
+                ✨ DEMO REPORT - PROTOTYPE
               </div>
               <h1 className="text-3xl font-bold text-gray-900">
                 {DEMO_DATA.brandOrKeyword} - AI Visibility Journey Analysis
               </h1>
-              <p className="text-gray-600">{DEMO_DATA.domain}</p>
+              <p className="text-gray-600 mt-1">{DEMO_DATA.domain} • {DEMO_DATA.totalTests} AI responses analyzed • {DEMO_DATA.totalQuestions} questions tested</p>
             </div>
             <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
               <Download className="w-4 h-4" />
@@ -156,24 +320,114 @@ export default function DemoPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Overall Score */}
-        <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-2xl shadow-2xl p-12 text-white mb-12">
-          <div className="text-center">
-            <h2 className="text-2xl font-semibold mb-4 opacity-90">
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Overall Score Card */}
+        <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-12 text-white mb-12">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-semibold mb-6 opacity-90">
               Overall AI Visibility Score
             </h2>
-            <div className="text-9xl font-bold mb-4">
+            <div className="text-9xl font-bold mb-6">
               {DEMO_DATA.overallScore}
               <span className="text-5xl opacity-75">/100</span>
             </div>
-            <p className="text-xl text-blue-100">
-              Analyzed across {DEMO_DATA.journeyStages.length} journey stages • {DEMO_DATA.totalTests} AI queries • {DEMO_DATA.totalQuestions} questions
-            </p>
+          </div>
+          
+          {/* Score Breakdown */}
+          <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-8">
+            <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+              <Info className="w-5 h-5" />
+              How This Score is Calculated:
+            </h3>
+            <div className="grid md:grid-cols-3 gap-6">
+              {Object.entries(DEMO_DATA.scoringMethodology).map(([key, data]) => (
+                <div key={key} className="bg-white bg-opacity-10 rounded-xl p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="font-bold text-lg">{data.weight}%</div>
+                    <div className="text-3xl font-bold">{data.yourScore}</div>
+                  </div>
+                  <div className="text-sm opacity-90 mb-2 font-semibold capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                  <div className="text-xs opacity-75 mb-2">{data.description}</div>
+                  <div className="text-xs font-mono bg-black bg-opacity-20 px-2 py-1 rounded">{data.calculation}</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 text-center text-sm opacity-90">
+              <strong>Final Score = </strong> (Mention Rate × 0.50) + (Position Score × 0.30) + (Sentiment Score × 0.20) = <strong className="text-xl">{DEMO_DATA.overallScore}</strong>
+            </div>
           </div>
         </div>
 
-        {/* Journey Stages */}
+        {/* Visual User Journey Map */}
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">The AI-Powered User Journey</h2>
+          <div className="relative">
+            {/* Journey Line */}
+            <div className="absolute top-1/2 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transform -translate-y-1/2 hidden md:block"></div>
+            
+            {/* Journey Stages */}
+            <div className="grid md:grid-cols-3 gap-8 relative z-10">
+              {DEMO_DATA.journeyStages.map((stage, index) => {
+                const Icon = stage.icon;
+                return (
+                  <div key={stage.stage} className="text-center">
+                    <div className={`bg-gradient-to-br ${stage.color} w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl border-4 border-white`}>
+                      <Icon className="w-12 h-12 text-white" />
+                    </div>
+                    <div className="bg-white rounded-xl p-4 shadow-lg border-2 border-gray-100">
+                      <div className="text-sm text-gray-500 font-semibold mb-1">STAGE {index + 1}</div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{stage.stageLabel}</h3>
+                      <p className="text-sm text-gray-600 mb-4">{stage.stageDescription}</p>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-3xl font-bold text-gray-900">{stage.portrayal.visibilityScore}</div>
+                        <div className="text-xs text-gray-600">Visibility Score</div>
+                      </div>
+                      <div className="mt-3 text-xs text-gray-500">
+                        {stage.portrayal.mentionRate}% mention rate • {stage.portrayal.totalAnswersAnalyzed} responses analyzed
+                      </div>
+                    </div>
+                    {index < 2 && (
+                      <div className="hidden md:block absolute top-1/2 right-0 transform translate-x-1/2 -translate-y-1/2">
+                        <ArrowRight className="w-8 h-8 text-purple-500" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Sentiment Guide */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-xl p-8 mb-12 border-2 border-gray-200">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">📊 Understanding Sentiment Analysis</h2>
+          <p className="text-center text-gray-600 mb-8">How we evaluate whether AI responses are favorable, neutral, or critical of your brand</p>
+          <div className="grid md:grid-cols-3 gap-6">
+            {Object.entries(DEMO_DATA.sentimentDefinitions).map(([key, data]) => (
+              <div key={key} className={`bg-white rounded-xl p-6 border-4 ${
+                data.color === 'green' ? 'border-green-200' :
+                data.color === 'red' ? 'border-red-200' : 'border-gray-200'
+              }`}>
+                <div className="text-center mb-4">
+                  <div className="text-5xl mb-2">{data.emoji}</div>
+                  <h3 className={`text-2xl font-bold ${
+                    data.color === 'green' ? 'text-green-700' :
+                    data.color === 'red' ? 'text-red-700' : 'text-gray-700'
+                  }`}>{data.label}</h3>
+                </div>
+                <p className="text-sm text-gray-700 mb-4">{data.description}</p>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <div className="text-xs font-semibold text-gray-600 mb-2">Example Phrases:</div>
+                  {data.examples.map((example, i) => (
+                    <div key={i} className="text-xs text-gray-700 mb-1 italic">• {example}</div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Journey Stages Detail */}
         <div className="space-y-12">
           {DEMO_DATA.journeyStages.map((stage, index) => (
             <JourneyStageCard
@@ -193,223 +447,266 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
   const Icon = stage.icon;
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-100">
+    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-100">
       {/* Stage Header */}
       <div className={`bg-gradient-to-r ${stage.color} p-8 text-white`}>
         <div className="flex items-center gap-4 mb-4">
           <div className="bg-white bg-opacity-20 p-4 rounded-xl">
-            <Icon className="w-10 h-10" />
+            <Icon className="w-12 h-12" />
           </div>
-          <div>
-            <div className="text-sm opacity-90 font-semibold">Journey Stage {stageNumber}</div>
-            <h2 className="text-4xl font-bold">{stage.stageLabel}</h2>
+          <div className="flex-1">
+            <div className="text-sm opacity-90 font-semibold">JOURNEY STAGE {stageNumber}</div>
+            <h2 className="text-4xl font-bold mb-1">{stage.stageLabel}</h2>
+            <p className="text-lg opacity-90">{stage.stageDescription}</p>
           </div>
-        </div>
-        
-        <div className="bg-white bg-opacity-20 rounded-xl p-5 inline-block">
-          <div className="text-sm opacity-90 mb-1">Stage Visibility Score</div>
-          <div className="text-5xl font-bold">
-            {stage.portrayal.visibilityScore}
-            <span className="text-2xl opacity-75">/100</span>
+          <div className="bg-white bg-opacity-20 rounded-xl p-4 text-center">
+            <div className="text-5xl font-bold">{stage.portrayal.visibilityScore}</div>
+            <div className="text-sm opacity-90">Score</div>
           </div>
         </div>
       </div>
 
       <div className="p-8">
-        {/* Questions Analyzed */}
+        {/* Questions + Statistical Significance */}
         <div className="mb-10">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            📋 Questions Analyzed in {stage.stageLabel} ({stage.questions.length})
-          </h3>
-          <div className="grid md:grid-cols-2 gap-3">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-gray-900">Questions Analyzed</h3>
+            <div className="bg-green-100 border-2 border-green-300 rounded-xl px-4 py-2">
+              <div className="text-xs text-green-700 font-semibold">STATISTICALLY SIGNIFICANT</div>
+              <div className="text-2xl font-bold text-green-900">{stage.portrayal.totalAnswersAnalyzed} responses</div>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-4">
             {stage.questions.map((q: any, i: number) => (
-              <div key={i} className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200">
-                <div className="text-sm font-medium text-gray-900">{q.question}</div>
-                <div className="text-xs text-gray-500 mt-1">
-                  📊 {q.searchVolume?.toLocaleString()} searches/month
+              <div key={i} className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-100">
+                <div className="text-base font-semibold text-gray-900 mb-2">{q.question}</div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">📊 {q.searchVolume?.toLocaleString()} searches/mo</span>
+                  <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">{q.answersAnalyzed} AI responses analyzed</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-10"></div>
+        <div className="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-10"></div>
 
-        {/* Q1: How is [Brand] being portrayed? */}
+        {/* Q1: Portrayal */}
         <div className="mb-10">
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-xl mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-              <div className="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">1</div>
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-2xl mb-8 shadow-lg">
+            <h3 className="text-3xl font-bold flex items-center gap-3">
+              <div className="bg-white text-blue-600 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl">1</div>
               How is {brandName} being portrayed in the {stage.stage} stage?
             </h3>
           </div>
           
-          <div className="space-y-6 pl-4">
-            {/* Mention Rate */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 border border-blue-200">
-              <p className="text-lg text-gray-800 leading-relaxed">
-                <strong className="text-blue-700 text-2xl">{brandName}</strong> is mentioned in{" "}
-                <span className="inline-block bg-blue-600 text-white px-4 py-1 rounded-lg text-2xl font-bold mx-1">
-                  {stage.portrayal.mentionRate}%
-                </span>{" "}
-                of all AI responses across{" "}
-                <strong className="text-gray-900">{stage.portrayal.totalQuestions} {stage.stage}-stage questions</strong>{" "}
-                <span className="text-gray-600">({stage.portrayal.totalTests} total AI queries)</span>
-              </p>
+          <div className="space-y-8">
+            {/* Mention Rate & Position */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+                <div className="text-sm font-semibold text-blue-700 mb-2">MENTION RATE</div>
+                <div className="text-6xl font-bold text-blue-900 mb-2">{stage.portrayal.mentionRate}%</div>
+                <p className="text-gray-700 text-sm">
+                  {brandName} appears in <strong>{Math.round(stage.portrayal.totalAnswersAnalyzed * stage.portrayal.mentionRate / 100)} out of {stage.portrayal.totalAnswersAnalyzed}</strong> AI responses
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-200">
+                <div className="text-sm font-semibold text-purple-700 mb-2">AVERAGE POSITION</div>
+                <div className="text-6xl font-bold text-purple-900 mb-2">#{stage.portrayal.averagePosition}</div>
+                <p className="text-gray-700 text-sm">
+                  When mentioned, {brandName} appears as the <strong>{stage.portrayal.averagePosition === 1 ? '1st' : stage.portrayal.averagePosition === 2 ? '2nd' : stage.portrayal.averagePosition + 'th'}</strong> brand on average
+                </p>
+              </div>
             </div>
 
             {/* Sentiment Analysis */}
-            <div className="bg-white rounded-xl p-6 border-2 border-gray-200 shadow-sm">
-              <div className="font-bold text-gray-900 mb-4 text-lg">😊 Sentiment Analysis:</div>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className={`p-4 rounded-xl text-center transition-all ${
-                  stage.portrayal.sentiment.dominant === "positive" 
-                    ? "bg-green-500 text-white shadow-lg scale-105 ring-4 ring-green-200" 
-                    : "bg-green-50 text-green-700"
-                }`}>
-                  <div className="text-3xl mb-1">👍</div>
-                  <div className="text-2xl font-bold">{stage.portrayal.sentiment.positive}%</div>
-                  <div className="text-sm opacity-90">Positive</div>
-                </div>
-                <div className={`p-4 rounded-xl text-center transition-all ${
-                  stage.portrayal.sentiment.dominant === "neutral" 
-                    ? "bg-gray-500 text-white shadow-lg scale-105 ring-4 ring-gray-200" 
-                    : "bg-gray-50 text-gray-700"
-                }`}>
-                  <div className="text-3xl mb-1">😐</div>
-                  <div className="text-2xl font-bold">{stage.portrayal.sentiment.neutral}%</div>
-                  <div className="text-sm opacity-90">Neutral</div>
-                </div>
-                <div className={`p-4 rounded-xl text-center transition-all ${
-                  stage.portrayal.sentiment.dominant === "negative" 
-                    ? "bg-red-500 text-white shadow-lg scale-105 ring-4 ring-red-200" 
-                    : "bg-red-50 text-red-700"
-                }`}>
-                  <div className="text-3xl mb-1">👎</div>
-                  <div className="text-2xl font-bold">{stage.portrayal.sentiment.negative}%</div>
-                  <div className="text-sm opacity-90">Negative</div>
-                </div>
+            <div className="bg-white rounded-2xl p-6 border-4 border-gray-100 shadow-lg">
+              <div className="font-bold text-gray-900 mb-4 text-xl">😊 Sentiment Breakdown:</div>
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                {[
+                  { key: 'positive', emoji: '👍', color: 'green' },
+                  { key: 'neutral', emoji: '😐', color: 'gray' },
+                  { key: 'negative', emoji: '👎', color: 'red' }
+                ].map((sent) => {
+                  const value = stage.portrayal.sentiment[sent.key];
+                  const isDominant = stage.portrayal.sentiment.dominant === sent.key;
+                  return (
+                    <div key={sent.key} className={`p-6 rounded-xl text-center transition-all ${
+                      isDominant
+                        ? `bg-${sent.color}-500 text-white shadow-2xl scale-105 ring-4 ring-${sent.color}-200`
+                        : `bg-${sent.color}-50 text-${sent.color}-700 border-2 border-${sent.color}-200`
+                    }`}>
+                      <div className="text-4xl mb-2">{sent.emoji}</div>
+                      <div className="text-4xl font-bold mb-1">{value}%</div>
+                      <div className="text-sm font-semibold capitalize">{sent.key}</div>
+                      {isDominant && (
+                        <div className="mt-2 text-xs bg-white bg-opacity-20 px-2 py-1 rounded">DOMINANT</div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              <div className="text-center bg-gray-100 p-3 rounded-lg">
+              <div className="bg-gray-50 p-4 rounded-lg text-center">
                 <span className="text-gray-700">Overall Sentiment: </span>
-                <strong className={`text-lg capitalize ${
+                <strong className={`text-xl capitalize ${
                   stage.portrayal.sentiment.dominant === "positive" ? "text-green-600" :
-                  stage.portrayal.sentiment.dominant === "negative" ? "text-red-600" :
-                  "text-gray-600"
+                  stage.portrayal.sentiment.dominant === "negative" ? "text-red-600" : "text-gray-600"
                 }`}>
                   {stage.portrayal.sentiment.dominant}
                 </strong>
               </div>
             </div>
 
-            {/* Example Extract */}
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 border-l-4 border-yellow-500 p-6 rounded-r-xl shadow-sm">
-              <div className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="text-2xl">💬</span>
-                <span className="text-lg">Example AI Response:</span>
+            {/* AI Answer Examples - MULTIPLE */}
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-4 border-yellow-200">
+              <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-xl">
+                <span className="text-3xl">💬</span>
+                <span>Real AI Response Examples ({stage.portrayal.aiAnswerExamples.length} samples):</span>
               </div>
-              <blockquote className="text-gray-700 italic text-base leading-relaxed pl-4 border-l-2 border-yellow-400">
-                "{stage.portrayal.exampleExtract}"
-              </blockquote>
+              <div className="space-y-4">
+                {stage.portrayal.aiAnswerExamples.map((example: any, i: number) => (
+                  <div key={i} className="bg-white rounded-xl p-5 border-2 border-yellow-300 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold">
+                          {example.platform}
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          example.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                          example.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {example.sentiment}
+                        </div>
+                        <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">
+                          Position: #{example.brandPosition}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-600 mb-2 font-semibold">Question: "{example.question}"</div>
+                    <blockquote className="text-gray-800 text-sm leading-relaxed pl-4 border-l-4 border-yellow-400 italic">
+                      {example.excerpt}
+                    </blockquote>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            {/* Competitor Comparison */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200 shadow-sm">
-              <div className="font-bold text-gray-900 mb-4 flex items-center gap-2 text-lg">
-                <span className="text-2xl">🏆</span>
-                Competitor Comparison in {stage.stageLabel}:
+            {/* Competitor Comparison - VISUAL */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border-4 border-purple-200">
+              <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-2xl">
+                <span className="text-3xl">🏆</span>
+                Competitive Landscape in {stage.stageLabel}
               </div>
-              <div className="space-y-3">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-lg">{brandName} (You)</span>
+              
+              {/* Visual Bar Chart */}
+              <div className="space-y-4 mb-6">
+                {/* Your Brand */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-blue-700 text-lg">{brandName} (You) ⭐</span>
                     <div className="text-right">
-                      <div className="text-3xl font-bold">{stage.portrayal.mentionRate}%</div>
-                      <div className="text-sm opacity-90">mention rate</div>
+                      <span className="text-3xl font-bold text-blue-700">{stage.portrayal.mentionRate}%</span>
+                      <span className="text-sm text-gray-600 ml-2">• Position #{stage.portrayal.averagePosition}</span>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-8 relative overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-8 rounded-full flex items-center justify-end pr-3 text-white font-bold transition-all duration-1000"
+                      style={{ width: `${stage.portrayal.mentionRate}%` }}
+                    >
+                      {stage.portrayal.mentionRate}%
                     </div>
                   </div>
                 </div>
                 
+                {/* Competitors */}
                 {stage.portrayal.competitorComparison.map((comp: any, i: number) => (
-                  <div key={i} className="bg-white p-4 rounded-lg border-2 border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="font-semibold text-gray-900">{comp.competitorName}</span>
-                        <span className={`ml-3 px-2 py-1 rounded text-xs font-bold ${
-                          comp.sentiment === "positive" ? "bg-green-100 text-green-700" :
-                          comp.sentiment === "negative" ? "bg-red-100 text-red-700" :
-                          "bg-gray-100 text-gray-700"
-                        }`}>
-                          {comp.sentiment}
-                        </span>
-                      </div>
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-gray-900">{comp.competitorName}</span>
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-gray-900">{comp.mentionRate}%</div>
-                        <div className="text-sm text-gray-600">mention rate</div>
+                        <span className="text-2xl font-bold text-gray-700">{comp.mentionRate}%</span>
+                        <span className="text-sm text-gray-600 ml-2">• Position #{comp.avgPosition}</span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-6 relative overflow-hidden">
+                      <div 
+                        className="bg-gradient-to-r from-gray-400 to-gray-500 h-6 rounded-full flex items-center justify-end pr-3 text-white text-sm font-semibold transition-all duration-1000"
+                        style={{ width: `${comp.mentionRate}%` }}
+                      >
+                        {comp.mentionRate}%
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div className="mt-4 p-3 bg-white rounded-lg border border-purple-200">
-                <div className="text-sm text-gray-600">
-                  <strong>Gap Analysis:</strong> {brandName} is {
-                    stage.portrayal.mentionRate < stage.portrayal.competitorComparison[0]?.mentionRate
-                      ? `${(stage.portrayal.competitorComparison[0].mentionRate - stage.portrayal.mentionRate).toFixed(1)}% behind`
-                      : `${(stage.portrayal.mentionRate - stage.portrayal.competitorComparison[0].mentionRate).toFixed(1)}% ahead of`
-                  } top competitor in this stage.
+              {/* Gap Analysis */}
+              <div className="bg-white p-5 rounded-xl border-2 border-purple-300">
+                <div className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-purple-600" />
+                  Gap Analysis:
                 </div>
+                {stage.portrayal.competitorComparison.map((comp: any, i: number) => {
+                  const gap = comp.mentionRate - stage.portrayal.mentionRate;
+                  return (
+                    <div key={i} className="text-sm text-gray-700 mb-2">
+                      • {comp.competitorName} is <strong className={gap > 0 ? "text-red-600" : "text-green-600"}>
+                        {Math.abs(gap).toFixed(1)}% {gap > 0 ? "ahead" : "behind"}
+                      </strong> in mention rate
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent my-10"></div>
+        <div className="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent my-10"></div>
 
-        {/* Q2: What can I do to be more visible? */}
+        {/* Q2: Recommendations */}
         <div>
-          <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-xl mb-6">
-            <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-              <div className="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">2</div>
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl mb-8 shadow-lg">
+            <h3 className="text-3xl font-bold flex items-center gap-3">
+              <div className="bg-white text-green-600 w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl">2</div>
               What can I do to be more visible in the {stage.stage} stage?
             </h3>
           </div>
           
-          <div className="space-y-6 pl-4">
-            {/* Common Pattern */}
-            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-6 border-2 border-indigo-200">
+          <div className="space-y-6">
+            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 border-2 border-indigo-200">
               <div className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
                 <span className="text-2xl">🔍</span>
                 Common Pattern Identified:
               </div>
-              <p className="text-gray-800 text-base leading-relaxed pl-8">
+              <p className="text-gray-800 text-base leading-relaxed pl-10">
                 {stage.recommendation.commonPattern}
               </p>
             </div>
 
-            {/* Content Type */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
               <div className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
                 <span className="text-2xl">📚</span>
                 Content Type Needed:
               </div>
-              <p className="text-gray-800 text-base leading-relaxed pl-8">
+              <p className="text-gray-800 text-base leading-relaxed pl-10">
                 {stage.recommendation.contentType}
               </p>
             </div>
 
-            {/* Focused Action - HERO */}
+            {/* Hero Action */}
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-sm opacity-30"></div>
-              <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-white shadow-2xl">
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl blur-md opacity-40"></div>
+              <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-8 text-white shadow-2xl border-4 border-green-300">
                 <div className="flex items-start gap-4">
-                  <div className="bg-white bg-opacity-20 p-3 rounded-xl">
-                    <TrendingUp className="w-8 h-8" />
+                  <div className="bg-white bg-opacity-20 p-4 rounded-xl">
+                    <CheckCircle2 className="w-10 h-10" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-bold mb-3 text-xl">✅ Recommended Action:</div>
-                    <p className="text-xl leading-relaxed font-medium">
+                    <div className="font-bold mb-4 text-2xl">✅ Recommended Action:</div>
+                    <p className="text-xl leading-relaxed">
                       {stage.recommendation.focusedAction}
                     </p>
                   </div>
