@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart, ChevronDown } from "lucide-react";
 
+// Mock realistic data for Purina analysis
 const DEMO_DATA = {
   brandOrKeyword: "Purina",
   domain: "https://shop.purina.de",
@@ -11,12 +12,14 @@ const DEMO_DATA = {
   totalTests: 180,
   totalQuestions: 12,
   
+  // Scoring methodology
   scoringMethodology: {
     mentionRate: { weight: 50, description: "How often your brand appears in AI responses", yourScore: 65, calculation: "(Mentions ÷ Total Tests) × 100" },
     averagePosition: { weight: 30, description: "Where your brand is mentioned (1st = 100pts, 5th = 20pts)", yourScore: 72, calculation: "100 - ((Avg Position - 1) × 20)" },
     sentiment: { weight: 20, description: "How positively your brand is portrayed", yourScore: 64, calculation: "(Positive% - Negative%) normalized to 0-100" }
   },
   
+  // Sentiment definitions
   sentimentDefinitions: {
     positive: {
       label: "Positive",
@@ -305,6 +308,7 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
@@ -330,6 +334,7 @@ export default function DemoPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Prominent Analysis Effort Banner */}
         <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl shadow-2xl p-8 mb-8">
           <div className="grid md:grid-cols-4 gap-6 text-white text-center">
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
@@ -359,7 +364,7 @@ export default function DemoPage() {
             </div>
           </div>
         </div>
-
+        {/* Overall Score Card */}
         <div className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl shadow-2xl p-12 text-white mb-12">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-semibold mb-6 opacity-90">
@@ -371,6 +376,7 @@ export default function DemoPage() {
             </div>
           </div>
           
+          {/* Score Breakdown */}
           <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-2xl p-8">
             <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
               <Info className="w-5 h-5" />
@@ -395,12 +401,15 @@ export default function DemoPage() {
           </div>
         </div>
 
+        {/* Visual User Journey Map */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">The AI-Powered User Journey</h2>
           <p className="text-center text-gray-600 mb-8">Click on any stage to see detailed visibility analysis</p>
           <div className="relative">
+            {/* Journey Line */}
             <div className="absolute top-1/2 left-0 right-0 h-2 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full transform -translate-y-1/2 hidden md:block"></div>
             
+            {/* Journey Stages */}
             <div className="grid md:grid-cols-3 gap-8 relative z-10">
               {DEMO_DATA.journeyStages.map((stage, index) => {
                 const Icon = stage.icon;
@@ -425,13 +434,14 @@ export default function DemoPage() {
                       </div>
                       <button
                         onClick={() => toggleStage(stage.stage)}
-                        className={`w-full py-2 px-4 rounded-lg font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+                        className={`w-full py-3 px-4 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-lg ${
                           isExpanded
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                        }`}>
+                            ? 'bg-gray-700 text-white hover:bg-gray-800 border-2 border-gray-800'
+                            : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 border-2 border-blue-700'
+                        }`}
+                      >
                         {isExpanded ? 'Hide Details' : `See ${stage.stageLabel} Details`}
-                        <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                       </button>
                     </div>
                     {index < 2 && (
@@ -446,6 +456,7 @@ export default function DemoPage() {
           </div>
         </div>
 
+        {/* Sentiment Guide */}
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-xl p-8 mb-12 border-2 border-gray-200">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">📊 Understanding Sentiment Analysis</h2>
           <p className="text-center text-gray-600 mb-8">How we evaluate whether AI responses are favorable, neutral, or critical of your brand</p>
@@ -495,6 +506,7 @@ export default function DemoPage() {
           </div>
         </div>
 
+        {/* Journey Stages Detail */}
         <div className="space-y-12">
           {DEMO_DATA.journeyStages.map((stage, index) => (
             expandedStage === stage.stage && (
@@ -517,6 +529,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
 
   return (
     <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-100">
+      {/* Stage Header */}
       <div className={`bg-gradient-to-r ${stage.color} p-8 text-white`}>
         <div className="flex items-center gap-4 mb-4">
           <div className="bg-white bg-opacity-20 p-4 rounded-xl">
@@ -535,6 +548,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
       </div>
 
       <div className="p-8">
+        {/* Questions + Statistical Significance */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold text-gray-900">Questions Analyzed</h3>
@@ -558,6 +572,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
 
         <div className="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-10"></div>
 
+        {/* Q1: Portrayal */}
         <div className="mb-10">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-2xl mb-8 shadow-lg">
             <h3 className="text-3xl font-bold flex items-center gap-3">
@@ -567,6 +582,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
           </div>
           
           <div className="space-y-8">
+            {/* Mention Rate & Position */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
                 <div className="text-sm font-semibold text-blue-700 mb-2">MENTION RATE</div>
@@ -585,9 +601,11 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </div>
             </div>
 
+            {/* Sentiment Analysis */}
             <div className="bg-white rounded-2xl p-6 border-4 border-gray-100 shadow-lg">
               <div className="font-bold text-gray-900 mb-4 text-xl">😊 Sentiment Breakdown:</div>
               <div className="grid grid-cols-3 gap-4 mb-6">
+                {/* Positive */}
                 <div className={`p-6 rounded-xl text-center transition-all ${
                   stage.portrayal.sentiment.dominant === 'positive'
                     ? 'bg-green-500 text-white shadow-2xl scale-105 ring-4 ring-green-200'
@@ -601,6 +619,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                   )}
                 </div>
 
+                {/* Neutral */}
                 <div className={`p-6 rounded-xl text-center transition-all ${
                   stage.portrayal.sentiment.dominant === 'neutral'
                     ? 'bg-gray-500 text-white shadow-2xl scale-105 ring-4 ring-gray-200'
@@ -614,6 +633,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                   )}
                 </div>
 
+                {/* Negative */}
                 <div className={`p-6 rounded-xl text-center transition-all ${
                   stage.portrayal.sentiment.dominant === 'negative'
                     ? 'bg-red-500 text-white shadow-2xl scale-105 ring-4 ring-red-200'
@@ -638,6 +658,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </div>
             </div>
 
+            {/* AI Answer Examples - MULTIPLE */}
             <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-4 border-yellow-200">
               <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-xl">
                 <span className="text-3xl">💬</span>
@@ -672,13 +693,16 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </div>
             </div>
 
+            {/* Competitor Comparison - VISUAL */}
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border-4 border-purple-200">
               <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-2xl">
                 <span className="text-3xl">🏆</span>
                 Competitive Landscape in {stage.stageLabel}
               </div>
               
+              {/* Visual Bar Chart */}
               <div className="space-y-4 mb-6">
+                {/* Your Brand */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-bold text-blue-700 text-lg">{brandName} (You) ⭐</span>
@@ -690,12 +714,14 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                   <div className="w-full bg-gray-200 rounded-full h-8 relative overflow-hidden">
                     <div 
                       className="bg-gradient-to-r from-blue-500 to-blue-600 h-8 rounded-full flex items-center justify-end pr-3 text-white font-bold transition-all duration-1000"
-                      style={{ width: `${stage.portrayal.mentionRate}%` }}>
+                      style={{ width: `${stage.portrayal.mentionRate}%` }}
+                    >
                       {stage.portrayal.mentionRate}%
                     </div>
                   </div>
                 </div>
                 
+                {/* Competitors */}
                 {stage.portrayal.competitorComparison.map((comp: any, i: number) => (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-2">
@@ -708,7 +734,8 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                     <div className="w-full bg-gray-200 rounded-full h-6 relative overflow-hidden">
                       <div 
                         className="bg-gradient-to-r from-gray-400 to-gray-500 h-6 rounded-full flex items-center justify-end pr-3 text-white text-sm font-semibold transition-all duration-1000"
-                        style={{ width: `${comp.mentionRate}%` }}>
+                        style={{ width: `${comp.mentionRate}%` }}
+                      >
                         {comp.mentionRate}%
                       </div>
                     </div>
@@ -716,6 +743,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 ))}
               </div>
               
+              {/* Gap Analysis */}
               <div className="bg-white p-5 rounded-xl border-2 border-purple-300">
                 <div className="font-bold text-gray-900 mb-3 flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-purple-600" />
@@ -738,6 +766,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
 
         <div className="h-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent my-10"></div>
 
+        {/* Q2: Recommendations */}
         <div>
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-2xl mb-8 shadow-lg">
             <h3 className="text-3xl font-bold flex items-center gap-3">
@@ -767,6 +796,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </p>
             </div>
 
+            {/* Hero Action */}
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 rounded-3xl blur-md opacity-40"></div>
               <div className="relative bg-gradient-to-r from-green-500 to-emerald-600 rounded-3xl p-8 text-white shadow-2xl border-4 border-green-300">
