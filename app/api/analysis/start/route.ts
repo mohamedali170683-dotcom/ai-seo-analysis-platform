@@ -17,6 +17,27 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check for required API keys
+    if (!process.env.AHREFS_API_KEY) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "AHREFS_API_KEY is not configured. Please add it to your environment variables in Vercel." 
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "OPENAI_API_KEY is not configured. Please add it to your environment variables in Vercel." 
+        },
+        { status: 500 }
+      );
+    }
+
     // Convert competitors to array if it's a string
     let competitorsArray: string[] = [];
     if (competitors) {
@@ -49,16 +70,15 @@ export async function POST(request: Request) {
       },
     });
 
-    // Initialize pipeline with Ahrefs (faster!)
-    // If Ahrefs key is missing, it will use smart mock questions automatically
+    // Initialize pipeline with Ahrefs (required for real question discovery)
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
       domain,
       competitors: competitorsArray,
-      openaiApiKey: process.env.OPENAI_API_KEY!,
+      openaiApiKey: process.env.OPENAI_API_KEY,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      ahrefsApiKey: process.env.AHREFS_API_KEY || "",
+      ahrefsApiKey: process.env.AHREFS_API_KEY,
     });
 
     // Execute pipeline in background with proper error handling

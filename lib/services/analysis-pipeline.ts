@@ -81,12 +81,13 @@ export class AnalysisPipeline {
     try {
       console.log(`🔍 Starting question discovery for: ${this.config.brandOrKeyword}`);
       
-      const discoveryService = new AhrefsQuestionService(
-        this.config.ahrefsApiKey || "mock-key-will-use-fallback"
-      );
+      if (!this.config.ahrefsApiKey) {
+        throw new Error("AHREFS_API_KEY is required but not provided");
+      }
+
+      const discoveryService = new AhrefsQuestionService(this.config.ahrefsApiKey);
 
       // Use Ahrefs for fast discovery - get 12 questions (4 per stage)
-      // This will ALWAYS return questions (uses smart mock fallback)
       const questions = await discoveryService.discoverQuestions(
         this.config.brandOrKeyword,
         50, // min volume
@@ -116,7 +117,7 @@ export class AnalysisPipeline {
       return questions;
       
     } catch (error: any) {
-      console.error("❌ Question discovery failed:", error);
+      console.error("❌ Question discovery failed:", error.message);
       throw new Error(`Question discovery failed: ${error.message}`);
     }
   }

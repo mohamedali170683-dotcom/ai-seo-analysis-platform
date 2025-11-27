@@ -30,28 +30,28 @@ export class AhrefsQuestionService {
   ): Promise<DiscoveredQuestion[]> {
     const startTime = Date.now();
     
-    // Quick validation
-    if (!this.apiKey || this.apiKey === "your-ahrefs-api-key") {
-      console.log("⚠️ No Ahrefs API key configured, using mock questions");
-      return this.getSmartMockQuestions(brandOrKeyword);
+    // Validate API key
+    if (!this.apiKey || this.apiKey === "your-ahrefs-api-key" || this.apiKey === "" || this.apiKey === "mock-key-will-use-fallback") {
+      const error = "❌ AHREFS_API_KEY is not configured in environment variables. Please set it in Vercel.";
+      console.error(error);
+      throw new Error(error);
     }
 
     try {
-      console.log(`🔍 Attempting Ahrefs API for: ${brandOrKeyword}`);
+      console.log(`🔍 Using Ahrefs API for: ${brandOrKeyword}`);
 
-      // Try Ahrefs with short timeout
+      // Try Ahrefs with reasonable timeout
       const questions = await Promise.race([
         this.getQuestionsFromAhrefs(brandOrKeyword, maxQuestions * 3),
         new Promise<any[]>((_, reject) => 
-          setTimeout(() => reject(new Error("Ahrefs timeout")), 5000)
+          setTimeout(() => reject(new Error("Ahrefs API timeout after 10 seconds")), 10000)
         )
       ]);
 
-      console.log(`📊 Ahrefs returned ${questions.length} questions in ${Date.now() - startTime}ms`);
+      console.log(`📊 Ahrefs returned ${questions.length} raw questions in ${Date.now() - startTime}ms`);
 
       if (questions.length === 0) {
-        console.log("⚠️ Ahrefs returned no results, using smart mock questions");
-        return this.getSmartMockQuestions(brandOrKeyword);
+        throw new Error("Ahrefs returned 0 questions. The keyword may be too specific or have no data.");
       }
 
       // Filter, score, and categorize
@@ -68,9 +68,8 @@ export class AhrefsQuestionService {
       return balanced;
 
     } catch (error: any) {
-      console.error(`❌ Ahrefs error after ${Date.now() - startTime}ms:`, error.message);
-      console.log("⚠️ Falling back to smart mock questions immediately");
-      return this.getSmartMockQuestions(brandOrKeyword);
+      console.error(`❌ Ahrefs API failed after ${Date.now() - startTime}ms:`, error.message);
+      throw error; // Don't fallback, let the user know what's wrong
     }
   }
 
