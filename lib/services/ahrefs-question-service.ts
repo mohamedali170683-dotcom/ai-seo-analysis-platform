@@ -21,17 +21,33 @@ export class AhrefsQuestionService {
   /**
    * Fast question discovery using Ahrefs API
    * Much faster than DataForSEO - typically < 3 seconds
+   * ALWAYS returns questions (uses smart fallback)
    */
   async discoverQuestions(
     brandOrKeyword: string,
     minVolume: number = 50,
     maxQuestions: number = 12
   ): Promise<DiscoveredQuestion[]> {
-    try {
-      console.log(`🔍 Fast question discovery for: ${brandOrKeyword}`);
+    const startTime = Date.now();
+    
+    // Quick validation
+    if (!this.apiKey || this.apiKey === "your-ahrefs-api-key") {
+      console.log("⚠️ No Ahrefs API key configured, using mock questions");
+      return this.getSmartMockQuestions(brandOrKeyword);
+    }
 
-      // Get questions from Ahrefs (much faster!)
-      const questions = await this.getQuestionsFromAhrefs(brandOrKeyword, maxQuestions * 3);
+    try {
+      console.log(`🔍 Attempting Ahrefs API for: ${brandOrKeyword}`);
+
+      // Try Ahrefs with short timeout
+      const questions = await Promise.race([
+        this.getQuestionsFromAhrefs(brandOrKeyword, maxQuestions * 3),
+        new Promise<any[]>((_, reject) => 
+          setTimeout(() => reject(new Error("Ahrefs timeout")), 5000)
+        )
+      ]);
+
+      console.log(`📊 Ahrefs returned ${questions.length} questions in ${Date.now() - startTime}ms`);
 
       if (questions.length === 0) {
         console.log("⚠️ Ahrefs returned no results, using smart mock questions");
@@ -48,11 +64,12 @@ export class AhrefsQuestionService {
       // Ensure we have questions in each stage
       const balanced = this.balanceAcrossStages(categorizedQuestions, maxQuestions);
 
-      console.log(`✅ Discovered ${balanced.length} questions in ${Date.now()} ms`);
+      console.log(`✅ Discovered ${balanced.length} questions in ${Date.now() - startTime}ms`);
       return balanced;
 
     } catch (error: any) {
-      console.error("❌ Ahrefs error:", error.message);
+      console.error(`❌ Ahrefs error after ${Date.now() - startTime}ms:`, error.message);
+      console.log("⚠️ Falling back to smart mock questions immediately");
       return this.getSmartMockQuestions(brandOrKeyword);
     }
   }

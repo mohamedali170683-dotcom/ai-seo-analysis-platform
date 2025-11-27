@@ -50,6 +50,7 @@ export async function POST(request: Request) {
     });
 
     // Initialize pipeline with Ahrefs (faster!)
+    // If Ahrefs key is missing, it will use smart mock questions automatically
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
@@ -57,7 +58,7 @@ export async function POST(request: Request) {
       competitors: competitorsArray,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      ahrefsApiKey: process.env.AHREFS_API_KEY!,
+      ahrefsApiKey: process.env.AHREFS_API_KEY || "",
     });
 
     // Execute pipeline in background with proper error handling
