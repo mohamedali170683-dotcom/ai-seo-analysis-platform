@@ -49,16 +49,15 @@ export async function POST(request: Request) {
       },
     });
 
-    // Initialize pipeline
+    // Initialize pipeline with Ahrefs (faster!)
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
       domain,
       competitors: competitorsArray,
       openaiApiKey: process.env.OPENAI_API_KEY!,
-      geminiApiKey: process.env.GEMINI_API_KEY || "",
-      dataForSEOUsername: process.env.DATAFORSEO_LOGIN!,
-      dataForSEOPassword: process.env.DATAFORSEO_PASSWORD!,
+      geminiApiKey: process.env.GEMINI_API_KEY,
+      ahrefsApiKey: process.env.AHREFS_API_KEY!,
     });
 
     // Execute pipeline in background with proper error handling

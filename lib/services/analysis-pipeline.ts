@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db/prisma";
-import { QuestionDiscoveryService } from "./question-discovery-service";
+import { AhrefsQuestionService } from "./ahrefs-question-service";
 import { BatchAITestingService } from "./batch-ai-testing-service";
 import { AIAnalysisEngineJourney } from "./ai-analysis-engine-journey";
 
@@ -9,9 +9,8 @@ export interface AnalysisPipelineConfig {
   domain?: string;
   competitors?: string[];
   openaiApiKey: string;
-  geminiApiKey: string;
-  dataForSEOUsername: string;
-  dataForSEOPassword: string;
+  geminiApiKey?: string;
+  ahrefsApiKey: string;
 }
 
 export class AnalysisPipeline {
@@ -79,30 +78,31 @@ export class AnalysisPipeline {
   }
 
   private async discoverQuestions() {
-    const discoveryService = new QuestionDiscoveryService(
-      this.config.dataForSEOUsername,
-      this.config.dataForSEOPassword
-    );
+    const discoveryService = new AhrefsQuestionService(this.config.ahrefsApiKey);
 
+    // Use Ahrefs for fast discovery - get 12 questions (4 per stage)
     const questions = await discoveryService.discoverQuestions(
       this.config.brandOrKeyword,
-      100,
-      20
+      50, // min volume
+      12  // max questions (faster!)
     );
 
-    for (const q of questions) {
-      await prisma.discoveredQuestion.create({
-        data: {
-          analysisId: this.config.analysisId,
-          question: q.question,
-          searchVolume: q.searchVolume,
-          difficulty: q.difficulty,
-          intent: q.intent,
-          category: q.category,
-          score: q.score,
-        },
-      });
-    }
+    // Save to database in parallel
+    await Promise.all(
+      questions.map(q =>
+        prisma.discoveredQuestion.create({
+          data: {
+            analysisId: this.config.analysisId,
+            question: q.question,
+            searchVolume: q.searchVolume,
+            difficulty: q.difficulty,
+            intent: q.intent,
+            category: q.category,
+            score: q.score,
+          },
+        })
+      )
+    );
 
     return questions;
   }
@@ -136,39 +136,45 @@ export class AnalysisPipeline {
       this.config.geminiApiKey
     );
 
-    const questionsToTest = questions.slice(0, 20);
+    // Test all questions (already limited to 12)
+    const questionsToTest = questions;
+    const totalQuestions = questionsToTest.length;
 
-    for (let i = 0; i < questionsToTest.length; i++) {
+    for (let i = 0; i < totalQuestions; i++) {
       const question = questionsToTest[i];
-      const progress = 40 + Math.floor((i / questionsToTest.length) * 30);
+      const progress = 30 + Math.floor((i / totalQuestions) * 50);
       
       await this.updateProgress(
         progress,
-        `Testing question ${i + 1}/${questionsToTest.length}: ${question.question.substring(0, 50)}...`
+        `Testing question ${i + 1}/${totalQuestions}: ${question.question.substring(0, 40)}...`
       );
 
+      // Reduced from 5 to 3 tests per platform for speed
       const results = await testingService.testQuestion(
         question.question,
         this.config.brandOrKeyword,
-        5
+        3  // Faster! Was 5, now 3
       );
 
-      for (const result of results) {
-        await prisma.aITestResult.create({
-          data: {
-            analysisId: this.config.analysisId,
-            questionId: null,
-            question: question.question,
-            platform: result.platform,
-            brandMentioned: result.brandMentioned,
-            position: result.position,
-            sentiment: result.sentiment,
-            context: null,
-            fullResponse: result.fullResponse,
-            citations: [],
-          },
-        });
-      }
+      // Save results in parallel
+      await Promise.all(
+        results.map(result =>
+          prisma.aITestResult.create({
+            data: {
+              analysisId: this.config.analysisId,
+              questionId: null,
+              question: question.question,
+              platform: result.platform,
+              brandMentioned: result.brandMentioned,
+              position: result.position,
+              sentiment: result.sentiment,
+              context: null,
+              fullResponse: result.fullResponse,
+              citations: [],
+            },
+          })
+        )
+      );
     }
   }
 
