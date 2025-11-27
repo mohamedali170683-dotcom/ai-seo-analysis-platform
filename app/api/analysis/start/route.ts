@@ -60,15 +60,15 @@ export async function POST(request: Request) {
       },
     });
 
-    // Initialize pipeline with Ahrefs (required for real question discovery)
+    // Initialize pipeline (no external APIs needed - ultra fast!)
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
       domain,
       competitors: competitorsArray,
-      openaiApiKey: process.env.OPENAI_API_KEY,
+      openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      ahrefsApiKey: process.env.AHREFS_API_KEY,
+      ahrefsApiKey: process.env.AHREFS_API_KEY || "", // Not required anymore
     });
 
     // Execute pipeline in background with proper error handling
