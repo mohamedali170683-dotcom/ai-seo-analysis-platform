@@ -127,7 +127,7 @@ export class AhrefsQuestionService {
         question: kw.keyword || kw.term || kw.query || "",
         searchVolume: kw.volume || kw.search_volume || 0,
         difficulty: kw.keyword_difficulty || kw.difficulty || 50,
-      })).filter(q => q.question.length > 0);
+      })).filter((q: any) => q.question.length > 0);
 
     } catch (error: any) {
       console.error("❌ Ahrefs API error details:");
