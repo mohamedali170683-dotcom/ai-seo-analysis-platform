@@ -24,30 +24,26 @@ export class BatchAITestingService {
 
   /**
    * Test a single question multiple times for statistical significance
-   * OPTIMIZED for speed
+   * ULTRA FAST - minimal tests, no delays
    */
   async testQuestion(
     question: string,
     brandName: string,
-    testsPerPlatform: number = 3
+    testsPerPlatform: number = 2
   ): Promise<AITestResult[]> {
     const results: AITestResult[] = [];
 
-    // Test with ChatGPT only (faster, Gemini often has no key anyway)
+    // Test with ChatGPT only - JUST 2 TESTS for speed
     for (let i = 1; i <= testsPerPlatform; i++) {
       try {
         const result = await this.queryChatGPT(question, brandName, i);
         results.push(result);
 
-        // Reduced delay for speed (500ms instead of 1000ms)
-        await this.delay(500);
+        // NO DELAY - maximum speed!
       } catch (error) {
         console.error(`ChatGPT test ${i} failed:`, error);
       }
     }
-
-    // Skip Gemini for speed (can enable later if needed)
-    // Most users don't have Gemini API key anyway
 
     return results;
   }

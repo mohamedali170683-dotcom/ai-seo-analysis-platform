@@ -17,17 +17,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check for required API keys
-    if (!process.env.AHREFS_API_KEY) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "AHREFS_API_KEY is not configured. Please add it to your environment variables in Vercel." 
-        },
-        { status: 500 }
-      );
-    }
-
+    // Check for required API key (only OpenAI is required now)
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { 
