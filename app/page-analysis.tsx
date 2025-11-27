@@ -224,11 +224,20 @@ export default function AnalysisLandingPage() {
             </div>
           </div>
 
-          {/* Estimated Time */}
-          <div className="text-center mt-6 text-sm text-gray-600">
+          {/* Estimated Time and Demo Link */}
+          <div className="text-center mt-6 text-sm text-gray-600 space-y-3">
             <span className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow">
               ⏱️ Analysis takes 5-10 minutes
             </span>
+            <div>
+              <a
+                href="/demo"
+                className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold hover:underline"
+              >
+                <Sparkles className="w-4 h-4" />
+                View Sample Report
+              </a>
+            </div>
           </div>
         </div>
 

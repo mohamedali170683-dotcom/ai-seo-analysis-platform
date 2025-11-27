@@ -1,22 +1,25 @@
 # AI-Powered SEO & Search Visibility Analysis Platform
 
-A comprehensive web application that analyzes the impact of AI-driven search features (Google AI Overviews, ChatGPT, Gemini) on organic and paid search performance.
+A comprehensive web application that analyzes how AI platforms (ChatGPT, Gemini) mention and recommend your brand across the user journey, providing actionable insights to improve AI visibility.
 
 ## 🚀 Features
 
-### Module 1: AI Overview Impact Analysis
-- Google Search Console API integration
-- Ahrefs API integration  
-- Traffic impact analysis (before/after AI Overview)
-- Interactive visualizations
-- Export reports
+### Journey-Based AI Visibility Analysis
+- **Automated Testing**: 100+ AI queries across ChatGPT and Gemini
+- **User Journey Stages**: Analyze brand presence in Awareness, Consideration, and Decision stages
+- **Visibility Scoring**: Overall score (0-100) based on mention rate (50%), position (30%), and sentiment (20%)
+- **Real AI Examples**: See actual excerpts from AI responses mentioning your brand
+- **Sentiment Analysis**: Track positive, negative, and neutral brand portrayals
+- **Competitive Intelligence**: Compare your visibility against competitors
+- **Strategic Recommendations**: AI-generated insights on how to improve visibility
+- **Beautiful Reports**: Interactive, visually stunning analysis reports
 
-### Module 2: AI Chatbot Visibility Scoring
-- Automated ChatGPT & Gemini querying
-- Brand mention detection
-- Citation analysis
-- Visibility scoring (0-100)
-- Actionable recommendations
+### Key Capabilities
+- Question discovery using DataForSEO (finds relevant queries in your space)
+- Statistical significance (5-15 tests per question)
+- Real-time progress tracking
+- Database persistence of all results
+- Export-ready reports
 
 ## 📋 Tech Stack
 
@@ -26,12 +29,19 @@ A comprehensive web application that analyzes the impact of AI-driven search fea
 - **APIs**: Google Search Console, Ahrefs, OpenAI, Google Gemini
 - **Charts**: Recharts
 
+## 🎨 Demo
+
+Visit **http://localhost:3000/demo** to see a sample analysis report with mock data (Purina pet food example). This shows exactly what your real analysis results will look like.
+
 ## 🛠️ Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - PostgreSQL 14+
-- API Keys (GSC, Ahrefs, OpenAI, Gemini)
+- API Keys:
+  - OpenAI API Key (required for ChatGPT testing)
+  - DataForSEO credentials (required for question discovery)
+  - Google Gemini API Key (optional)
 
 ### Installation
 
@@ -45,7 +55,11 @@ npm install
 
 # Setup environment
 cp .env.example .env
-# Edit .env with your API keys and database URL
+# Edit .env with your API keys:
+# - POSTGRES_PRISMA_URL (database connection)
+# - OPENAI_API_KEY (for ChatGPT testing)
+# - DATAFORSEO_LOGIN and DATAFORSEO_PASSWORD (for question discovery)
+# - GEMINI_API_KEY (optional, for Gemini testing)
 
 # Initialize database
 npx prisma generate
@@ -53,7 +67,22 @@ npx prisma migrate dev
 
 # Start development server
 npm run dev
-Visit http://localhost:3000
+```
+
+Visit:
+- **http://localhost:3000** - Start a new analysis
+- **http://localhost:3000/demo** - View sample report
+
+### Running Your First Analysis
+
+1. Navigate to http://localhost:3000
+2. Enter:
+   - **Brand/Keyword**: e.g., "Nike", "Shopify", "project management software"
+   - **Domain**: e.g., "nike.com", "shopify.com"
+   - **Competitors** (optional): e.g., "Adidas, Puma"
+3. Click "Check AI Visibility"
+4. Wait 5-10 minutes for analysis to complete
+5. View your comprehensive journey-based report!
 
 📊 Project Structure
 ai-seo-analysis-platform/
@@ -74,12 +103,27 @@ GOOGLE_CLIENT_SECRET="your-google-client-secret"
 AHREFS_API_KEY="your-ahrefs-api-key"
 OPENAI_API_KEY="your-openai-api-key"
 GOOGLE_AI_API_KEY="your-google-ai-api-key"
-📖 Documentation
-Complete setup instructions
-System architecture details
-API endpoint reference
-🤝 Contributing
-Contributions welcome! Please open an issue or submit a pull request.
+## 📖 Documentation
+
+- **[IMPLEMENTATION.md](./IMPLEMENTATION.md)** - Complete technical implementation guide
+- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Summary of recent implementation work
+- **[API.md](./API.md)** - API endpoint reference
+- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contributing guidelines
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Deployment instructions
+
+### Key Documentation Topics
+
+- Data structure and interfaces
+- Scoring methodology
+- Journey stage analysis
+- AI testing service
+- Question discovery
+- Database schema
+- API endpoints
+
+## 🤝 Contributing
+
+Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) and open an issue or submit a pull request.
 
 📄 License
 MIT License - see LICENSE file

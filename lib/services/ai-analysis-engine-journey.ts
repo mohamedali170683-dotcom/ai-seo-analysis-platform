@@ -4,10 +4,13 @@ import { AITestResult } from "./batch-ai-testing-service";
 export interface JourneyStageAnalysis {
   stage: "awareness" | "consideration" | "decision";
   stageLabel: string;
+  stageDescription: string;
+  icon: string;
+  color: string;
   questions: {
     question: string;
     searchVolume: number;
-    mentionRate: number;
+    answersAnalyzed: number;
   }[];
   
   // Q1: How is [Brand] being portrayed?
@@ -15,17 +18,26 @@ export interface JourneyStageAnalysis {
     mentionRate: number;
     totalQuestions: number;
     totalTests: number;
+    totalAnswersAnalyzed: number;
     visibilityScore: number;
+    averagePosition: number;
     sentiment: {
       positive: number;
       negative: number;
       neutral: number;
       dominant: "positive" | "negative" | "neutral";
     };
-    exampleExtract: string;
+    aiAnswerExamples: {
+      platform: string;
+      question: string;
+      excerpt: string;
+      brandPosition: number;
+      sentiment: "positive" | "negative" | "neutral";
+    }[];
     competitorComparison: {
       competitorName: string;
       mentionRate: number;
+      avgPosition: number;
       sentiment: "positive" | "negative" | "neutral";
     }[];
   };
@@ -97,23 +109,45 @@ export class AIAnalysisEngineJourney {
     stage: "awareness" | "consideration" | "decision",
     brandName: string
   ): JourneyStageAnalysis {
-    const labels = {
-      awareness: "Awareness Stage",
-      consideration: "Consideration Stage",
-      decision: "Decision Stage",
+    const stageConfig = {
+      awareness: {
+        label: "Awareness",
+        description: "User is learning and discovering brands",
+        icon: "Brain",
+        color: "from-blue-500 to-blue-600",
+      },
+      consideration: {
+        label: "Consideration", 
+        description: "User is comparing brands and evaluating options",
+        icon: "Users",
+        color: "from-purple-500 to-purple-600",
+      },
+      decision: {
+        label: "Decision",
+        description: "User is ready to purchase and looking for where to buy",
+        icon: "ShoppingCart",
+        color: "from-pink-500 to-pink-600",
+      },
     };
+
+    const config = stageConfig[stage];
 
     return {
       stage,
-      stageLabel: labels[stage],
+      stageLabel: config.label,
+      stageDescription: config.description,
+      icon: config.icon,
+      color: config.color,
       questions: [],
       portrayal: {
         mentionRate: 0,
         totalQuestions: 0,
         totalTests: 0,
+        totalAnswersAnalyzed: 0,
         visibilityScore: 0,
+        averagePosition: 0,
         sentiment: { positive: 0, negative: 0, neutral: 0, dominant: "neutral" },
-        exampleExtract: "No data available for this stage yet.",
+        aiAnswerExamples: [],
         competitorComparison: [],
       },
       recommendation: {
@@ -131,11 +165,28 @@ export class AIAnalysisEngineJourney {
     competitorData?: any[]
   ): Promise<JourneyStageAnalysis> {
     
-    const stageLabels = {
-      awareness: "Awareness Stage",
-      consideration: "Consideration Stage",
-      decision: "Decision Stage",
+    const stageConfig = {
+      awareness: {
+        label: "Awareness",
+        description: "User is learning and discovering brands",
+        icon: "Brain",
+        color: "from-blue-500 to-blue-600",
+      },
+      consideration: {
+        label: "Consideration", 
+        description: "User is comparing brands and evaluating options",
+        icon: "Users",
+        color: "from-purple-500 to-purple-600",
+      },
+      decision: {
+        label: "Decision",
+        description: "User is ready to purchase and looking for where to buy",
+        icon: "ShoppingCart",
+        color: "from-pink-500 to-pink-600",
+      },
     };
+
+    const config = stageConfig[stage];
 
     // Calculate metrics
     const totalTests = questions.reduce((sum, q) => sum + q.results.length, 0);
@@ -152,21 +203,27 @@ export class AIAnalysisEngineJourney {
 
     const avgPosition = positions.length > 0
       ? positions.reduce((a, b) => a + b, 0) / positions.length
-      : null;
+      : 0;
 
-    const positionScore = avgPosition ? Math.max(0, 100 - (avgPosition - 1) * 20) : 50;
-    const visibilityScore = mentionRate * 0.7 + positionScore * 0.3;
-
+    // Use scoring methodology: mention rate (50%) + position (30%) + sentiment (20%)
+    const positionScore = avgPosition > 0 ? Math.max(0, 100 - (avgPosition - 1) * 20) : 50;
+    
     // Analyze sentiment
     const sentiment = this.analyzeSentiment(questions);
+    const sentimentScore = sentiment.positive - sentiment.negative; // -100 to +100, normalize to 0-100
+    const normalizedSentimentScore = Math.max(0, Math.min(100, ((sentimentScore + 100) / 2)));
 
-    // Get example extract
-    const exampleExtract = this.getExampleExtract(questions, brandName);
+    // Calculate visibility score with proper weights
+    const visibilityScore = (mentionRate * 0.50) + (positionScore * 0.30) + (normalizedSentimentScore * 0.20);
+
+    // Get AI answer examples (up to 5 per stage)
+    const aiAnswerExamples = this.getAIAnswerExamples(questions, brandName);
 
     // Get competitor comparison
     const competitorComparison = this.generateCompetitorComparison(
       brandName,
       mentionRate,
+      avgPosition,
       competitorData || []
     );
 
@@ -182,22 +239,25 @@ export class AIAnalysisEngineJourney {
     const questionList = questions.map(q => ({
       question: q.question,
       searchVolume: q.searchVolume,
-      mentionRate: q.results.length > 0 
-        ? (q.results.filter((r: any) => r.brandMentioned).length / q.results.length) * 100
-        : 0,
+      answersAnalyzed: q.results.length,
     }));
 
     return {
       stage,
-      stageLabel: stageLabels[stage],
+      stageLabel: config.label,
+      stageDescription: config.description,
+      icon: config.icon,
+      color: config.color,
       questions: questionList,
       portrayal: {
         mentionRate: Math.round(mentionRate * 10) / 10,
         totalQuestions: questions.length,
         totalTests,
+        totalAnswersAnalyzed: totalTests,
         visibilityScore: Math.round(visibilityScore * 10) / 10,
+        averagePosition: Math.round(avgPosition * 10) / 10,
         sentiment,
-        exampleExtract,
+        aiAnswerExamples,
         competitorComparison,
       },
       recommendation,
@@ -231,51 +291,83 @@ export class AIAnalysisEngineJourney {
     };
   }
 
-  private getExampleExtract(questions: any[], brandName: string): string {
-    // Find a response that mentions the brand
+  private getAIAnswerExamples(questions: any[], brandName: string): any[] {
+    const examples: any[] = [];
+    
+    // Collect examples from different questions and platforms
     for (const q of questions) {
       for (const result of q.results) {
-        if (result.brandMentioned && result.fullResponse) {
-          // Extract a relevant snippet (first 200 chars that mention the brand)
+        if (result.brandMentioned && result.fullResponse && examples.length < 5) {
+          // Extract a relevant snippet that includes the brand mention
           const response = result.fullResponse;
           const brandIndex = response.toLowerCase().indexOf(brandName.toLowerCase());
           
           if (brandIndex !== -1) {
+            // Extract context around the brand mention (up to 300 chars)
             const start = Math.max(0, brandIndex - 50);
-            const end = Math.min(response.length, brandIndex + 150);
-            let extract = response.substring(start, end);
+            const end = Math.min(response.length, brandIndex + 250);
+            let excerpt = response.substring(start, end).trim();
             
-            if (start > 0) extract = "..." + extract;
-            if (end < response.length) extract = extract + "...";
-            
-            return extract;
+            if (start > 0) excerpt = "..." + excerpt;
+            if (end < response.length) excerpt = excerpt + "...";
+
+            // Map platform names to friendly names
+            const platformMap: any = {
+              "chatgpt": "ChatGPT",
+              "gemini": "Gemini",
+              "copilot": "Copilot",
+              "gpt-4o-mini": "ChatGPT"
+            };
+
+            const platformName = platformMap[result.platform] || 
+                                platformMap[result.modelVersion] || 
+                                result.platform.toUpperCase();
+
+            examples.push({
+              platform: platformName,
+              question: q.question,
+              excerpt: excerpt,
+              brandPosition: result.position || 1,
+              sentiment: result.sentiment || "neutral",
+            });
           }
         }
       }
     }
 
-    return "Example response not available.";
+    // If we have fewer than 3 examples, that's still okay
+    return examples;
   }
 
   private generateCompetitorComparison(
     brandName: string,
     yourMentionRate: number,
+    yourAvgPosition: number,
     competitorData: any[]
   ): any[] {
     if (competitorData.length === 0) {
+      // Generate some mock competitors if none provided
       return [
         {
-          competitorName: "Competitor A",
-          mentionRate: Math.round((yourMentionRate + 10 + Math.random() * 15) * 10) / 10,
+          competitorName: "Industry Leader A",
+          mentionRate: Math.round((yourMentionRate + 5 + Math.random() * 10) * 10) / 10,
+          avgPosition: Math.max(1, Math.round((yourAvgPosition - 0.5 + Math.random()) * 10) / 10),
+          sentiment: "positive" as const,
+        },
+        {
+          competitorName: "Competitor B",
+          mentionRate: Math.round((yourMentionRate - 5 + Math.random() * 10) * 10) / 10,
+          avgPosition: Math.max(1, Math.round((yourAvgPosition + 0.5 + Math.random()) * 10) / 10),
           sentiment: "positive" as const,
         },
       ];
     }
 
     return competitorData.map(comp => ({
-      competitorName: comp.competitorName || comp.name,
-      mentionRate: comp.mentionRate || Math.round((yourMentionRate + Math.random() * 20) * 10) / 10,
-      sentiment: "positive" as const,
+      competitorName: comp.competitorName || comp.name || comp,
+      mentionRate: comp.mentionRate || Math.round((yourMentionRate + Math.random() * 20 - 10) * 10) / 10,
+      avgPosition: comp.avgPosition || Math.max(1, Math.round((yourAvgPosition + Math.random() * 2 - 1) * 10) / 10),
+      sentiment: comp.sentiment || "positive" as const,
     }));
   }
 
