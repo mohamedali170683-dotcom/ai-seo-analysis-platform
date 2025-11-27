@@ -75,21 +75,21 @@ export class AhrefsQuestionService {
 
   /**
    * Get related questions from Ahrefs API
+   * Using correct v3 endpoint for keyword ideas
    */
   private async getQuestionsFromAhrefs(keyword: string, limit: number): Promise<any[]> {
     try {
       console.log(`📡 Calling Ahrefs API with keyword: "${keyword}"`);
       
-      // Ahrefs Keywords Explorer API v3 endpoint
-      const endpoint = `${this.baseUrl}/site-explorer/related-keywords`;
+      // Correct Ahrefs API v3 endpoint for keyword ideas
+      // Ref: https://ahrefs.com/api/documentation/keywords-ideas
+      const endpoint = `https://api.ahrefs.com/v3/keywords-explorer/keyword-ideas`;
       
       const params = {
-        select: "keyword,volume,keyword_difficulty",
         target: keyword,
         country: "us",
-        mode: "phrase",
+        mode: "questions", // Get question-based keywords
         limit: limit,
-        order_by: "volume:desc",
       };
 
       console.log(`📡 Endpoint: ${endpoint}`);
@@ -105,35 +105,41 @@ export class AhrefsQuestionService {
       });
 
       console.log(`📡 Ahrefs response status: ${response.status}`);
-      console.log(`📡 Ahrefs response data:`, JSON.stringify(response.data).substring(0, 500));
+      console.log(`📡 Response keys:`, Object.keys(response.data || {}));
 
-      // Try different response structures
+      // Parse Ahrefs v3 response structure
       let keywords = [];
       
       if (response.data?.keywords) {
         keywords = response.data.keywords;
       } else if (response.data?.results) {
         keywords = response.data.results;
+      } else if (response.data?.items) {
+        keywords = response.data.items;
       } else if (Array.isArray(response.data)) {
         keywords = response.data;
       } else {
-        console.error("❌ Unexpected Ahrefs response structure:", response.data);
+        console.error("❌ Unexpected Ahrefs response structure:", JSON.stringify(response.data).substring(0, 300));
         throw new Error("Ahrefs returned unexpected data structure");
       }
 
       console.log(`📡 Found ${keywords.length} keywords from Ahrefs`);
 
-      return keywords.map((kw: any) => ({
-        question: kw.keyword || kw.term || kw.query || "",
-        searchVolume: kw.volume || kw.search_volume || 0,
-        difficulty: kw.keyword_difficulty || kw.difficulty || 50,
+      const mapped = keywords.map((kw: any) => ({
+        question: kw.keyword || kw.phrase || kw.term || kw.query || "",
+        searchVolume: kw.volume || kw.search_volume || kw.monthly_volume || 0,
+        difficulty: kw.keyword_difficulty || kw.difficulty || kw.kd || 50,
       })).filter((q: any) => q.question.length > 0);
+
+      console.log(`📡 Mapped ${mapped.length} valid questions`);
+      
+      return mapped;
 
     } catch (error: any) {
       console.error("❌ Ahrefs API error details:");
       console.error("  Message:", error.message);
       console.error("  Response status:", error.response?.status);
-      console.error("  Response data:", error.response?.data);
+      console.error("  Response data:", JSON.stringify(error.response?.data).substring(0, 500));
       console.error("  Request URL:", error.config?.url);
       throw new Error(`Ahrefs API failed: ${error.response?.data?.error || error.message}`);
     }
