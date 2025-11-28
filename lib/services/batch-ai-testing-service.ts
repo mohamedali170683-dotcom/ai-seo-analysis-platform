@@ -31,20 +31,24 @@ export class BatchAITestingService {
     brandName: string,
     testsPerPlatform: number = 2
   ): Promise<AITestResult[]> {
+    console.log(`🤖 [AI-TEST] Testing question: "${question}" for brand: "${brandName}"`);
     const results: AITestResult[] = [];
 
     // Test with ChatGPT only - JUST 2 TESTS for speed
     for (let i = 1; i <= testsPerPlatform; i++) {
       try {
+        console.log(`🤖 [AI-TEST] ChatGPT test ${i}/${testsPerPlatform}`);
         const result = await this.queryChatGPT(question, brandName, i);
         results.push(result);
+        console.log(`✅ [AI-TEST] ChatGPT test ${i} complete - Brand mentioned: ${result.brandMentioned}`);
 
         // NO DELAY - maximum speed!
-      } catch (error) {
-        console.error(`ChatGPT test ${i} failed:`, error);
+      } catch (error: any) {
+        console.error(`❌ [AI-TEST] ChatGPT test ${i} failed:`, error.message);
       }
     }
 
+    console.log(`✅ [AI-TEST] Question testing complete - ${results.length} results`);
     return results;
   }
 
@@ -56,22 +60,29 @@ export class BatchAITestingService {
     brandName: string,
     queryNumber: number
   ): Promise<AITestResult> {
-    const completion = await this.openaiClient.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: question }],
-      max_tokens: 500,
-      temperature: 0.7, // Add variation for statistical testing
-    });
+    try {
+      console.log(`🤖 [CHATGPT] Calling OpenAI API...`);
+      const completion = await this.openaiClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: question }],
+        max_tokens: 500,
+        temperature: 0.7, // Add variation for statistical testing
+      });
 
-    const response = completion.choices[0]?.message?.content || "";
+      const response = completion.choices[0]?.message?.content || "";
+      console.log(`✅ [CHATGPT] Got response (${response.length} chars)`);
 
-    return this.analyzeResponse(
-      response,
-      brandName,
-      "chatgpt",
-      completion.model,
-      queryNumber
-    );
+      return this.analyzeResponse(
+        response,
+        brandName,
+        "chatgpt",
+        completion.model,
+        queryNumber
+      );
+    } catch (error: any) {
+      console.error(`❌ [CHATGPT] API call failed:`, error.message);
+      throw error;
+    }
   }
 
   /**

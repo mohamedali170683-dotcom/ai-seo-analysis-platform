@@ -21,65 +21,100 @@ export class AnalysisPipeline {
   }
 
   async execute() {
-    try {
-      console.log(`🚀 Starting analysis pipeline for: ${this.config.brandOrKeyword}`);
+    const startTime = Date.now();
+    console.log(`🚀 [PIPELINE] Starting analysis for: ${this.config.brandOrKeyword} (ID: ${this.config.analysisId})`);
 
+    try {
+      // Step 1: Update status to running
+      console.log(`📊 [PIPELINE] Setting status to 'running', progress to 5%`);
       await prisma.analysis.update({
         where: { id: this.config.analysisId },
-        data: { status: "running", progress: 5 },
+        data: { status: "running", progress: 5, currentStep: "Initializing..." },
       });
+      console.log(`✅ [PIPELINE] Status updated successfully`);
 
+      // Step 2: Discover questions
+      console.log(`📊 [PIPELINE] Step 2/5: Discovering questions`);
       await this.updateProgress(10, "Discovering relevant questions");
       const questions = await this.discoverQuestions();
-      console.log(`✅ Discovered ${questions.length} questions`);
+      console.log(`✅ [PIPELINE] Discovered ${questions.length} questions in ${Date.now() - startTime}ms`);
 
+      // Step 3: Detect competitors
+      console.log(`📊 [PIPELINE] Step 3/5: Detecting competitors`);
       await this.updateProgress(20, "Detecting competitors");
       const competitors = await this.detectCompetitors();
-      console.log(`✅ Detected ${competitors.length} competitors`);
+      console.log(`✅ [PIPELINE] Detected ${competitors.length} competitors in ${Date.now() - startTime}ms`);
 
-      await this.updateProgress(40, "Testing with ChatGPT & Gemini");
+      // Step 4: Batch test questions
+      console.log(`📊 [PIPELINE] Step 4/5: Testing with ChatGPT`);
+      await this.updateProgress(30, "Testing with ChatGPT");
       await this.batchTestQuestions(questions);
-      console.log(`✅ Batch testing complete`);
+      console.log(`✅ [PIPELINE] Batch testing complete in ${Date.now() - startTime}ms`);
 
-      await this.updateProgress(70, "Analyzing patterns by user journey stage");
+      // Step 5: Journey stage analysis
+      console.log(`📊 [PIPELINE] Step 5/5: Analyzing patterns by user journey stage`);
+      await this.updateProgress(80, "Analyzing patterns by user journey stage");
       await this.runJourneyStageAnalysis(questions, competitors);
-      console.log(`✅ Journey stage analysis complete`);
+      console.log(`✅ [PIPELINE] Journey stage analysis complete in ${Date.now() - startTime}ms`);
 
+      // Final: Mark as completed
+      console.log(`📊 [PIPELINE] Marking as completed`);
       await this.updateProgress(100, "Analysis complete");
       await prisma.analysis.update({
         where: { id: this.config.analysisId },
         data: { 
           status: "completed",
           completedAt: new Date(),
+          progress: 100,
+          currentStep: "Complete!",
         },
       });
 
-      console.log(`🎉 Analysis pipeline completed for: ${this.config.brandOrKeyword}`);
+      const totalTime = (Date.now() - startTime) / 1000;
+      console.log(`🎉 [PIPELINE] Analysis completed successfully in ${totalTime.toFixed(1)}s for: ${this.config.brandOrKeyword}`);
 
     } catch (error: any) {
-      console.error("❌ Pipeline execution failed:", error);
-      await prisma.analysis.update({
-        where: { id: this.config.analysisId },
-        data: {
-          status: "failed",
-          progress: 0,
-          currentStep: `Failed: ${error.message}`,
-        },
-      });
+      const totalTime = (Date.now() - startTime) / 1000;
+      console.error(`❌ [PIPELINE] Execution failed after ${totalTime.toFixed(1)}s:`, error);
+      console.error(`❌ [PIPELINE] Error message:`, error.message);
+      console.error(`❌ [PIPELINE] Error stack:`, error.stack);
+      
+      try {
+        await prisma.analysis.update({
+          where: { id: this.config.analysisId },
+          data: {
+            status: "failed",
+            progress: 0,
+            currentStep: `Failed: ${error.message}`,
+          },
+        });
+        console.log(`✅ [PIPELINE] Error status saved to database`);
+      } catch (dbError: any) {
+        console.error(`❌ [PIPELINE] Failed to update error status in database:`, dbError);
+      }
+      
       throw error;
     }
   }
 
   private async updateProgress(progress: number, currentStep: string) {
-    await prisma.analysis.update({
-      where: { id: this.config.analysisId },
-      data: { progress, currentStep },
-    });
+    try {
+      console.log(`📊 [PROGRESS] ${progress}% - ${currentStep}`);
+      await prisma.analysis.update({
+        where: { id: this.config.analysisId },
+        data: { progress, currentStep },
+      });
+      console.log(`✅ [PROGRESS] Updated successfully`);
+    } catch (error: any) {
+      console.error(`❌ [PROGRESS] Failed to update progress:`, error);
+      throw error;
+    }
   }
 
   private async discoverQuestions() {
+    const stepStart = Date.now();
     try {
-      console.log(`⚡ Generating smart questions instantly for: ${this.config.brandOrKeyword}`);
+      console.log(`⚡ [QUESTIONS] Generating smart questions instantly for: ${this.config.brandOrKeyword}`);
       
       // INSTANT SMART QUESTIONS - No external APIs needed
       // These are brand-specific and cover all journey stages
@@ -163,9 +198,10 @@ export class AnalysisPipeline {
         },
       ];
 
-      console.log(`✅ Generated ${questions.length} questions INSTANTLY (< 1ms)`);
+      console.log(`✅ [QUESTIONS] Generated ${questions.length} questions INSTANTLY`);
 
       // Save to database in parallel
+      console.log(`📝 [QUESTIONS] Saving to database...`);
       await Promise.all(
         questions.map(q =>
           prisma.discoveredQuestion.create({
@@ -182,11 +218,13 @@ export class AnalysisPipeline {
         )
       );
 
-      console.log(`✅ Questions saved to database`);
+      const stepTime = Date.now() - stepStart;
+      console.log(`✅ [QUESTIONS] Questions saved to database in ${stepTime}ms`);
       return questions;
       
     } catch (error: any) {
-      console.error("❌ Question generation failed:", error.message);
+      console.error(`❌ [QUESTIONS] Question generation failed:`, error.message);
+      console.error(`❌ [QUESTIONS] Stack:`, error.stack);
       throw new Error(`Question generation failed: ${error.message}`);
     }
   }
@@ -215,6 +253,9 @@ export class AnalysisPipeline {
   }
 
   private async batchTestQuestions(questions: any[]) {
+    const stepStart = Date.now();
+    console.log(`🤖 [TESTING] Starting batch testing for ${questions.length} questions`);
+    
     const testingService = new BatchAITestingService(
       this.config.openaiApiKey,
       this.config.geminiApiKey
@@ -228,38 +269,52 @@ export class AnalysisPipeline {
       const question = questionsToTest[i];
       const progress = 30 + Math.floor((i / totalQuestions) * 50);
       
+      console.log(`🤖 [TESTING] Testing question ${i + 1}/${totalQuestions}: "${question.question}"`);
+      
       await this.updateProgress(
         progress,
         `Testing ${i + 1}/${totalQuestions}: ${question.question.substring(0, 35)}...`
       );
 
-      // Fast: 2 tests per question, no delays
-      const results = await testingService.testQuestion(
-        question.question,
-        this.config.brandOrKeyword,
-        2  // 2 tests for speed while maintaining quality
-      );
+      try {
+        // Fast: 2 tests per question, no delays
+        const results = await testingService.testQuestion(
+          question.question,
+          this.config.brandOrKeyword,
+          2  // 2 tests for speed while maintaining quality
+        );
 
-      // Save results in parallel
-      await Promise.all(
-        results.map(result =>
-          prisma.aITestResult.create({
-            data: {
-              analysisId: this.config.analysisId,
-              questionId: null,
-              question: question.question,
-              platform: result.platform,
-              brandMentioned: result.brandMentioned,
-              position: result.position,
-              sentiment: result.sentiment,
-              context: null,
-              fullResponse: result.fullResponse,
-              citations: [],
-            },
-          })
-        )
-      );
+        console.log(`✅ [TESTING] Got ${results.length} results for question ${i + 1}`);
+
+        // Save results in parallel
+        await Promise.all(
+          results.map(result =>
+            prisma.aITestResult.create({
+              data: {
+                analysisId: this.config.analysisId,
+                questionId: null,
+                question: question.question,
+                platform: result.platform,
+                brandMentioned: result.brandMentioned,
+                position: result.position,
+                sentiment: result.sentiment,
+                context: null,
+                fullResponse: result.fullResponse,
+                citations: [],
+              },
+            })
+          )
+        );
+
+        console.log(`✅ [TESTING] Saved results for question ${i + 1}`);
+      } catch (error: any) {
+        console.error(`❌ [TESTING] Failed to test question ${i + 1}:`, error.message);
+        // Continue with other questions even if one fails
+      }
     }
+
+    const stepTime = Date.now() - stepStart;
+    console.log(`✅ [TESTING] Batch testing complete in ${stepTime}ms`);
   }
 
   private async runJourneyStageAnalysis(questions: any[], competitors: string[]) {

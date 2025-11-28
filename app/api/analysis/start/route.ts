@@ -71,12 +71,20 @@ export async function POST(request: Request) {
       ahrefsApiKey: "", // Not used anymore
     });
 
-    // Execute pipeline in background with proper error handling
-    setImmediate(() => {
-      pipeline.execute().catch((error) => {
-        console.error("Pipeline execution failed:", error);
-      });
+    console.log(`🚀 [START] Executing pipeline for analysis: ${analysis.id}`);
+
+    // Execute pipeline WITHOUT awaiting - this allows function to continue
+    // The promise will keep the serverless function alive up to maxDuration (300s)
+    pipeline.execute().catch((error) => {
+      console.error(`❌ [FATAL] Pipeline execution failed for ${analysis.id}:`, error);
+      console.error(`❌ [FATAL] Stack trace:`, error.stack);
     });
+
+    // Give pipeline a moment to start and update progress to 5%
+    // This ensures the database update happens before we return
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    console.log(`✅ [START] Pipeline started successfully for analysis: ${analysis.id}`);
 
     return NextResponse.json({
       success: true,
