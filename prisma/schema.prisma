@@ -12,6 +12,7 @@ model User {
   email     String     @unique
   createdAt DateTime   @default(now())
   analyses  Analysis[]
+  projects  Project[]
 }
 
 model Analysis {
@@ -106,4 +107,66 @@ model AIInsight {
   @@index([analysisId])
   @@index([category])
   @@map("ai_insights")
+}
+
+// Forma & Attention Models
+model Project {
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id])
+  brandName        String
+  websiteUrl       String?
+  industry         String?
+  description      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  assessments      Assessment[]
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model Assessment {
+  id                    String   @id @default(cuid())
+  projectId             String
+  project               Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // Overall BSOS
+  bsosScore             Float    @default(0)
+  
+  // Website/Blog Component (0-33)
+  websiteScore          Float    @default(0)
+  websiteBiasScore      Float    @default(0)
+  websiteChoiceScore    Float    @default(0)
+  websiteJourneyScore   Float    @default(0)
+  
+  // Social Media Component (0-33)
+  socialScore           Float    @default(0)
+  socialContentScore    Float    @default(0)
+  socialTriggersScore   Float    @default(0)
+  socialVisualScore     Float    @default(0)
+  
+  // Paid Advertising Component (0-34)
+  adScore               Float    @default(0)
+  adCreativeScore       Float    @default(0)
+  adPersuasionScore     Float    @default(0)
+  adLandingScore        Float    @default(0)
+  
+  // Assessment Data (JSON)
+  websiteData           Json?
+  socialData            Json?
+  adData                Json?
+  
+  // Recommendations
+  recommendations       Json?
+  
+  // Status
+  status                String   @default("draft")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  completedAt           DateTime?
+
+  @@index([projectId])
+  @@index([status])
+  @@map("assessments")
 }

@@ -2,6 +2,21 @@
 
 A comprehensive web application that analyzes how AI platforms (ChatGPT, Gemini) mention and recommend your brand across the user journey, providing actionable insights to improve AI visibility.
 
+## 🆕 NEW: Forma & Attention - Behavioral Science Conversion Optimizer
+
+This repository now includes **Forma & Attention**, a behavioral science-based conversion optimization platform that measures and improves how brands capture and convert attention.
+
+**🚀 Quick Access:**
+- **Landing Page**: Visit `/forma` to see the product
+- **Documentation**: [FORMA_README.md](./FORMA_README.md) - Complete guide
+- **Quick Start**: [FORMA_QUICKSTART.md](./FORMA_QUICKSTART.md) - Deploy in 5 minutes
+
+**Key Features:**
+- 📊 Behavioral Science Optimization Score (BSOS) - 0-100 scale
+- 🎯 33-metric assessment across Website, Social Media, and Paid Ads
+- 💡 Personalized optimization recommendations
+- 📈 Beautiful results dashboard with component breakdowns
+
 ## 🚀 Features
 
 ### Journey-Based AI Visibility Analysis

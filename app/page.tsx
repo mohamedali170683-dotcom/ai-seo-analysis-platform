@@ -1,5 +1,5 @@
-import AnalysisLandingPage from "./page-analysis";
+import { redirect } from 'next/navigation';
 
 export default function HomePage() {
-  return <AnalysisLandingPage />;
+  redirect('/forma');
 }
