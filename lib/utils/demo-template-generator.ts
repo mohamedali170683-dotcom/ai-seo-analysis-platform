@@ -112,7 +112,7 @@ export function generateDemoData(params: DemoParams) {
           totalTests: 60,
           totalAnswersAnalyzed: 60,
           visibilityScore: 68.0 + Math.floor(Math.random() * 8),
-          averagePosition: 2.0 + (Math.random() * 0.5),
+          averagePosition: Math.round(2.0 + (Math.random() * 0.5)),
           sentiment: {
             positive: 60.0 + Math.floor(Math.random() * 10),
             negative: 5.0 + Math.floor(Math.random() * 5),
@@ -159,7 +159,7 @@ export function generateDemoData(params: DemoParams) {
           competitorComparison: competitorList.slice(0, 3).map((comp, idx) => ({
             competitorName: comp,
             mentionRate: 70.0 + Math.floor(Math.random() * 15) + (idx * 2),
-            avgPosition: 2.0 + (Math.random() * 0.8) + (idx * 0.2),
+            avgPosition: Math.round(2.0 + (Math.random() * 0.8) + (idx * 0.2)),
             sentiment: "positive" as const
           }))
         },
@@ -192,7 +192,7 @@ export function generateDemoData(params: DemoParams) {
           totalTests: 60,
           totalAnswersAnalyzed: 60,
           visibilityScore: 60.0 + Math.floor(Math.random() * 8),
-          averagePosition: 2.2 + (Math.random() * 0.6),
+          averagePosition: Math.round(2.2 + (Math.random() * 0.6)),
           sentiment: {
             positive: 68.0 + Math.floor(Math.random() * 8),
             negative: 4.0 + Math.floor(Math.random() * 4),
@@ -239,7 +239,7 @@ export function generateDemoData(params: DemoParams) {
           competitorComparison: competitorList.slice(0, 3).map((comp, idx) => ({
             competitorName: comp,
             mentionRate: 68.0 + Math.floor(Math.random() * 15) + (idx * 3),
-            avgPosition: 1.8 + (Math.random() * 0.8) + (idx * 0.3),
+            avgPosition: Math.round(1.8 + (Math.random() * 0.8) + (idx * 0.3)),
             sentiment: "positive" as const
           }))
         },
@@ -272,7 +272,7 @@ export function generateDemoData(params: DemoParams) {
           totalTests: 60,
           totalAnswersAnalyzed: 60,
           visibilityScore: 55.0 + Math.floor(Math.random() * 8),
-          averagePosition: 2.8 + (Math.random() * 0.6),
+          averagePosition: Math.round(2.8 + (Math.random() * 0.6)),
           sentiment: {
             positive: 52.0 + Math.floor(Math.random() * 8),
             negative: 8.0 + Math.floor(Math.random() * 4),
@@ -319,7 +319,7 @@ export function generateDemoData(params: DemoParams) {
           competitorComparison: competitorList.slice(0, 3).map((comp, idx) => ({
             competitorName: comp,
             mentionRate: 55.0 + Math.floor(Math.random() * 10) + (idx * 2),
-            avgPosition: 2.7 + (Math.random() * 0.6) + (idx * 0.2),
+            avgPosition: Math.round(2.7 + (Math.random() * 0.6) + (idx * 0.2)),
             sentiment: "positive" as const
           }))
         },
