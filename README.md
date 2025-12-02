@@ -44,9 +44,21 @@ This repository now includes **Forma & Attention**, a behavioral science-based c
 - **APIs**: Google Search Console, Ahrefs, OpenAI, Google Gemini
 - **Charts**: Recharts
 
-## 🎨 Demo
+## 🎨 Try It Now
 
-Visit **http://localhost:3000/demo** to see a sample analysis report with mock data (Purina pet food example). This shows exactly what your real analysis results will look like.
+### 🚀 **NEW: Full Functional Solution**
+Visit **http://localhost:3000/analysis/new** to create your own AI visibility analysis for any brand!
+
+**What's New:**
+- ✅ Start analyses for any brand or keyword
+- ✅ Real-time progress tracking (15-25 seconds)
+- ✅ Beautiful journey stage reports with real data
+- ✅ Export reports as PDF
+- ✅ Dashboard to manage all analyses
+- ✅ Database persistence for all results
+
+### 📊 Demo Report
+Visit **http://localhost:3000/demo** to see a sample analysis report with mock data (Purina pet food example).
 
 ## 🛠️ Quick Start
 
@@ -87,19 +99,24 @@ npm run dev
 ```
 
 Visit:
-- **http://localhost:3000** - Start a new analysis
-- **http://localhost:3000/demo** - View sample report
+- **http://localhost:3000/analysis/new** - ⚡ Create your own AI visibility analysis
+- **http://localhost:3000/dashboard** - 📊 View all analyses and manage results
+- **http://localhost:3000/demo** - 👀 View sample report (Purina example)
 
 ### Running Your First Analysis
 
-1. Navigate to http://localhost:3000
+1. Navigate to **http://localhost:3000/analysis/new**
 2. Enter:
    - **Brand/Keyword**: e.g., "Nike", "Shopify", "project management software"
-   - **Domain**: e.g., "nike.com", "shopify.com"
+   - **Domain** (optional): e.g., "nike.com", "shopify.com"
    - **Competitors** (optional): e.g., "Adidas, Puma"
-3. Click "Check AI Visibility"
-4. Wait 15-25 seconds for analysis to complete ⚡
-5. View your comprehensive journey-based report!
+3. Click **"Start Analysis"**
+4. Watch real-time progress (0% → 100%)
+5. Wait 15-25 seconds for analysis to complete ⚡
+6. View your comprehensive journey-based report with real data!
+7. Export as PDF with one click 📥
+
+**See all your analyses:** Visit **http://localhost:3000/dashboard**
 
 📊 Project Structure
 ai-seo-analysis-platform/
@@ -126,6 +143,12 @@ OPENAI_API_KEY="your-openai-api-key"
 That's all you need! No Ahrefs, no DataForSEO, no other external APIs.
 ## 📖 Documentation
 
+### 🆕 **Journey Analysis Platform** (Full Functional Solution)
+- **[QUICK_START.md](./QUICK_START.md)** - ⚡ Get started in 30 seconds
+- **[JOURNEY_ANALYSIS_GUIDE.md](./JOURNEY_ANALYSIS_GUIDE.md)** - Complete implementation guide
+- **[TRANSFORMATION_SUMMARY.md](./TRANSFORMATION_SUMMARY.md)** - What was built and how
+
+### Technical Documentation
 - **[INSTANT_MODE.md](./INSTANT_MODE.md)** - ⚡ How Instant Mode works (NO external APIs!)
 - **[IMPLEMENTATION.md](./IMPLEMENTATION.md)** - Complete technical implementation guide
 - **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Summary of recent implementation work

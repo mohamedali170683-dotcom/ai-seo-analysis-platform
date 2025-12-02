@@ -111,9 +111,12 @@ export function JourneyStageReport({
                 </h1>
                 {domain && <p className="text-gray-600 mt-1">{domain}</p>}
               </div>
-              <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
+              <button 
+                onClick={() => window.print()}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 print:hidden"
+              >
                 <Download className="w-4 h-4" />
-                Export Report
+                Print / Export PDF
               </button>
             </div>
           </div>

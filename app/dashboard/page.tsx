@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { TrendingUp, Bot, Search, ArrowRight, Plus } from "lucide-react";
+import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<any[]>([]);
+  const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -19,13 +20,36 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error loading projects:", error);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const loadAnalyses = async () => {
+    try {
+      const response = await fetch("/api/analysis/list");
+      const data = await response.json();
+      if (data.success) {
+        setAnalyses(data.analyses || []);
+      }
+    } catch (error) {
+      console.error("Error loading analyses:", error);
     }
   };
 
   useEffect(() => {
-    loadProjects();
+    const loadData = async () => {
+      await Promise.all([loadProjects(), loadAnalyses()]);
+      setLoading(false);
+    };
+    loadData();
+
+    // Poll for running analyses
+    const interval = setInterval(() => {
+      if (analyses.some((a) => a.status === "running" || a.status === "pending")) {
+        loadAnalyses();
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const stats = {
@@ -33,6 +57,36 @@ export default function DashboardPage() {
     totalKeywords: projects.reduce((sum, p) => sum + (p._count?.keywords || 0), 0),
     aiOverviewKeywords: projects.reduce((sum, p) => sum + (p._count?.aiOverviews || 0), 0),
     totalQueries: projects.reduce((sum, p) => sum + (p._count?.chatbotQueries || 0), 0),
+    totalAnalyses: analyses.length,
+    completedAnalyses: analyses.filter((a) => a.status === "completed").length,
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+      case "running":
+      case "pending":
+        return <Loader className="w-5 h-5 text-blue-600 animate-spin" />;
+      case "failed":
+        return <XCircle className="w-5 h-5 text-red-600" />;
+      default:
+        return <Clock className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const classes = {
+      completed: "bg-green-100 text-green-800",
+      running: "bg-blue-100 text-blue-800",
+      pending: "bg-yellow-100 text-yellow-800",
+      failed: "bg-red-100 text-red-800",
+    };
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${classes[status as keyof typeof classes] || "bg-gray-100 text-gray-800"}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
   };
 
   return (
@@ -41,28 +95,22 @@ export default function DashboardPage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-gray-900">
-              SEO Analysis Dashboard
+              AI Visibility Dashboard
             </h1>
             <div className="flex gap-4">
               <Link
-                href="/test/ai-overview"
+                href="/demo"
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                Test AI Overview
+                View Demo
               </Link>
               <Link
-                href="/test/chatbot"
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                href="/analysis/new"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 font-semibold shadow-lg"
               >
-                Test Chatbot
+                <Brain className="w-4 h-4" />
+                New Analysis
               </Link>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                New Project
-              </button>
             </div>
           </div>
         </div>
@@ -71,6 +119,15 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Stats Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold opacity-90">AI Visibility Analyses</span>
+              <Brain className="w-5 h-5 opacity-75" />
+            </div>
+            <div className="text-3xl font-bold">{stats.totalAnalyses}</div>
+            <div className="text-xs opacity-75 mt-1">{stats.completedAnalyses} completed</div>
+          </div>
+
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-600">Projects</span>
@@ -89,19 +146,125 @@ export default function DashboardPage() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">AI Overviews Tracked</span>
-              <TrendingUp className="w-4 h-4 text-gray-400" />
-            </div>
-            <div className="text-2xl font-bold">{stats.aiOverviewKeywords}</div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-600">Chatbot Queries</span>
               <Bot className="w-4 h-4 text-gray-400" />
             </div>
             <div className="text-2xl font-bold">{stats.totalQueries}</div>
           </div>
+        </div>
+
+        {/* AI Visibility Analyses */}
+        <div className="bg-white rounded-lg shadow p-8 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Brain className="w-6 h-6 text-blue-600" />
+                AI Visibility Analyses
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">Track how AI platforms mention your brands</p>
+            </div>
+            <Link
+              href="/analysis/new"
+              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
+            >
+              <Plus className="w-4 h-4" />
+              New Analysis
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="text-center py-12 text-gray-500">Loading analyses...</div>
+          ) : analyses.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+                <Brain className="w-8 h-8 text-blue-600" />
+              </div>
+              <p className="text-gray-500 mb-4">No analyses yet. Start your first AI visibility analysis!</p>
+              <Link
+                href="/analysis/new"
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 inline-flex items-center gap-2 font-semibold"
+              >
+                <Brain className="w-5 h-5" />
+                Start Your First Analysis
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {analyses.map((analysis) => (
+                <div
+                  key={analysis.id}
+                  className="border border-gray-200 rounded-lg p-5 hover:border-blue-300 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        {getStatusIcon(analysis.status)}
+                        <h3 className="font-semibold text-lg">{analysis.brandOrKeyword}</h3>
+                        {getStatusBadge(analysis.status)}
+                      </div>
+                      {analysis.domain && (
+                        <p className="text-sm text-gray-600 ml-8">{analysis.domain}</p>
+                      )}
+                      {analysis.status === "running" && (
+                        <div className="ml-8 mt-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden max-w-xs">
+                              <div
+                                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                                style={{ width: `${analysis.progress || 0}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs text-gray-600">{analysis.progress || 0}%</span>
+                          </div>
+                          {analysis.currentStep && (
+                            <p className="text-xs text-gray-500 mt-1">{analysis.currentStep}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <div className="font-semibold">{analysis.questionsCount || 0}</div>
+                        <div className="text-gray-500 text-xs">Questions</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold">{analysis.testsCount || 0}</div>
+                        <div className="text-gray-500 text-xs">AI Tests</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-semibold">{analysis.insightsCount || 0}</div>
+                        <div className="text-gray-500 text-xs">Insights</div>
+                      </div>
+                      {analysis.status === "completed" ? (
+                        <Link
+                          href={`/results/${analysis.id}`}
+                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-1 font-semibold"
+                        >
+                          View Report
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      ) : analysis.status === "running" || analysis.status === "pending" ? (
+                        <Link
+                          href={`/results/${analysis.id}`}
+                          className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+                        >
+                          View Progress
+                          <ArrowRight className="w-4 h-4" />
+                        </Link>
+                      ) : (
+                        <button
+                          disabled
+                          className="px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed"
+                        >
+                          Failed
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Projects List */}
@@ -167,37 +330,56 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-3 gap-6">
           <Link
-            href="/test/ai-overview"
-            className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
+            href="/analysis/new"
+            className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
+          >
+            <div className="flex items-center mb-4">
+              <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
+                <Brain className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">AI Visibility Analysis</h2>
+                <p className="text-blue-100 text-sm">Full journey-based brand analysis</p>
+              </div>
+            </div>
+            <div className="flex items-center text-sm font-semibold">
+              Start Analysis
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+
+          <Link
+            href="/demo"
+            className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
           >
             <div className="flex items-center mb-4">
               <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
                 <TrendingUp className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Test AI Overview Detection</h2>
-                <p className="text-blue-100 text-sm">Check if keywords trigger AI Overviews</p>
+                <h2 className="text-xl font-bold">View Demo Report</h2>
+                <p className="text-purple-100 text-sm">See sample analysis (Purina)</p>
               </div>
             </div>
             <div className="flex items-center text-sm">
-              Try it now
+              View Demo
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
           </Link>
 
           <Link
             href="/test/chatbot"
-            className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
+            className="bg-gradient-to-br from-pink-500 to-red-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
           >
             <div className="flex items-center mb-4">
               <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
                 <Bot className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Test Chatbot Visibility</h2>
-                <p className="text-purple-100 text-sm">Check brand mentions in ChatGPT</p>
+                <h2 className="text-xl font-bold">Quick Test</h2>
+                <p className="text-pink-100 text-sm">Test single question instantly</p>
               </div>
             </div>
             <div className="flex items-center text-sm">

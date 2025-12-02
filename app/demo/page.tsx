@@ -311,7 +311,7 @@ export default function DemoPage() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
+          <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Link>
@@ -325,10 +325,22 @@ export default function DemoPage() {
               </h1>
               <p className="text-gray-600 mt-1">{DEMO_DATA.domain}</p>
             </div>
-            <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              Export Report
-            </button>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/analysis/new"
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 font-semibold shadow-lg"
+              >
+                <TrendingUp className="w-4 h-4" />
+                Run Your Own Analysis
+              </Link>
+              <button 
+                onClick={() => window.print()}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 print:hidden"
+              >
+                <Download className="w-4 h-4" />
+                Print / Export PDF
+              </button>
+            </div>
           </div>
         </div>
       </header>
