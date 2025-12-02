@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart, ChevronDown } from "lucide-react";
+import { generateDemoData } from "@/lib/utils/demo-template-generator";
 
-// Mock realistic data for Purina analysis
-const DEMO_DATA = {
+// Default Purina data (used when no parameters provided)
+const DEFAULT_DEMO_DATA = {
   brandOrKeyword: "Purina",
   domain: "https://shop.purina.de",
   overallScore: 67,
@@ -300,11 +302,35 @@ const DEMO_DATA = {
 };
 
 export default function DemoPage() {
+  const searchParams = useSearchParams();
   const [expandedStage, setExpandedStage] = useState<string | null>(null);
+  const [demoData, setDemoData] = useState(DEFAULT_DEMO_DATA);
+
+  useEffect(() => {
+    // Check if URL parameters are provided
+    const brand = searchParams.get('brand');
+    const domain = searchParams.get('domain');
+    const competitors = searchParams.get('competitors');
+
+    // If brand parameter exists, generate dynamic data
+    if (brand) {
+      const dynamicData = generateDemoData({
+        brand,
+        domain: domain || undefined,
+        competitors: competitors || undefined
+      });
+      setDemoData(dynamicData);
+    } else {
+      // Use default Purina data
+      setDemoData(DEFAULT_DEMO_DATA);
+    }
+  }, [searchParams]);
 
   const toggleStage = (stage: string) => {
     setExpandedStage(expandedStage === stage ? null : stage);
   };
+
+  const DEMO_DATA = demoData;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -317,21 +343,36 @@ export default function DemoPage() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <div className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-2 shadow-lg">
-                ✨ DEMO REPORT - PROTOTYPE
-              </div>
+              {searchParams.get('brand') ? (
+                <div className="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-2 shadow-lg">
+                  ⚡ CUSTOM DEMO - Your Brand
+                </div>
+              ) : (
+                <div className="inline-block bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold mb-2 shadow-lg">
+                  ✨ DEMO REPORT - PROTOTYPE
+                </div>
+              )}
               <h1 className="text-3xl font-bold text-gray-900">
                 {DEMO_DATA.brandOrKeyword} - AI Visibility Journey Analysis
               </h1>
               <p className="text-gray-600 mt-1">{DEMO_DATA.domain}</p>
             </div>
             <div className="flex items-center gap-3">
+              {searchParams.get('brand') && (
+                <Link
+                  href="/demoui"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2 font-semibold shadow-lg"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Try Another Brand
+                </Link>
+              )}
               <Link
                 href="/analysis/new"
                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 font-semibold shadow-lg"
               >
                 <TrendingUp className="w-4 h-4" />
-                Run Your Own Analysis
+                Run Real Analysis
               </Link>
               <button 
                 onClick={() => window.print()}

@@ -330,7 +330,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-4 gap-6">
           <Link
             href="/analysis/new"
             className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
@@ -340,12 +340,31 @@ export default function DashboardPage() {
                 <Brain className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">AI Visibility Analysis</h2>
-                <p className="text-blue-100 text-sm">Full journey-based brand analysis</p>
+                <h2 className="text-xl font-bold">Real Analysis</h2>
+                <p className="text-blue-100 text-sm">Full AI testing (15-25s)</p>
               </div>
             </div>
             <div className="flex items-center text-sm font-semibold">
               Start Analysis
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+
+          <Link
+            href="/demoui"
+            className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
+          >
+            <div className="flex items-center mb-4">
+              <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
+                <TrendingUp className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Interactive Demo</h2>
+                <p className="text-green-100 text-sm">Instant results (your brand)</p>
+              </div>
+            </div>
+            <div className="flex items-center text-sm font-semibold">
+              Try Demo
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
           </Link>
@@ -359,12 +378,12 @@ export default function DashboardPage() {
                 <TrendingUp className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">View Demo Report</h2>
-                <p className="text-purple-100 text-sm">See sample analysis (Purina)</p>
+                <h2 className="text-xl font-bold">Sample Report</h2>
+                <p className="text-purple-100 text-sm">Purina example</p>
               </div>
             </div>
             <div className="flex items-center text-sm">
-              View Demo
+              View Sample
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
           </Link>
