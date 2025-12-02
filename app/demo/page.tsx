@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart, ChevronDown } from "lucide-react";
@@ -301,7 +301,7 @@ const DEFAULT_DEMO_DATA = {
   ]
 };
 
-export default function DemoPage() {
+function DemoPageContent() {
   const searchParams = useSearchParams();
   const [expandedStage, setExpandedStage] = useState<string | null>(null);
   const [demoData, setDemoData] = useState(DEFAULT_DEMO_DATA);
@@ -574,6 +574,21 @@ export default function DemoPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function DemoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-gray-500">Loading demo...</div>
+        </div>
+      </div>
+    }>
+      <DemoPageContent />
+    </Suspense>
   );
 }
 
