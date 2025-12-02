@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         adData: ads,
         
         // Recommendations
-        recommendations: result.recommendations,
+        recommendations: result.recommendations as any,
         
         // Status
         status: 'completed',
