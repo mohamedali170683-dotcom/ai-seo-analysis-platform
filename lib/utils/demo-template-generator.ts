@@ -100,10 +100,10 @@ export function generateDemoData(params: DemoParams) {
         color: "from-blue-500 to-blue-600",
         
         questions: [
-          { question: `What is ${brand}?`, searchVolume: 18500, answersAnalyzed: 15 },
-          { question: `${brand} features`, searchVolume: 22000, answersAnalyzed: 15 },
-          { question: `How does ${brand} work?`, searchVolume: 14200, answersAnalyzed: 15 },
-          { question: `${brand} overview`, searchVolume: 16800, answersAnalyzed: 15 },
+          { question: `What is ${brand} known for?`, searchVolume: 18500, answersAnalyzed: 15 },
+          { question: `Why is ${brand} popular?`, searchVolume: 22000, answersAnalyzed: 15 },
+          { question: `Is ${brand} a good brand?`, searchVolume: 14200, answersAnalyzed: 15 },
+          { question: `What makes ${brand} different?`, searchVolume: 16800, answersAnalyzed: 15 },
         ],
         
         portrayal: {
@@ -122,36 +122,36 @@ export function generateDemoData(params: DemoParams) {
           aiAnswerExamples: [
             {
               platform: "ChatGPT",
-              question: `What is ${brand}?`,
-              excerpt: `${brand} is a leading brand known for innovation and quality. When looking for reliable products, ${brand} offers comprehensive solutions backed by extensive research and development. The brand has established itself as a trusted choice among consumers seeking excellence.`,
+              question: `What is ${brand} known for?`,
+              excerpt: `${brand} is known for its innovative products, strong brand recognition, and commitment to quality. The brand has built a reputation for excellence and reliability over the years. When consumers think of ${brand}, they associate it with industry leadership and cutting-edge offerings that set market standards.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "Copilot",
-              question: `${brand} features`,
-              excerpt: `${brand} features include cutting-edge technology, user-friendly design, and robust performance. The brand is recognized for its attention to detail and commitment to customer satisfaction. Many experts recommend ${brand} for its consistent quality and innovative approach.`,
+              question: `Why is ${brand} popular?`,
+              excerpt: `${brand} is popular because of its consistent quality, strong marketing, and loyal customer base. The brand resonates with consumers through innovative products and compelling brand storytelling. Many people choose ${brand} for its reputation and the trust it has built in the market over time.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "Gemini",
-              question: `How does ${brand} work?`,
-              excerpt: `${brand} operates through a combination of advanced technology and streamlined processes. Major brands like ${brand}, ${competitorList[0]}, and ${competitorList[1]} invest heavily in research. ${brand} has a strong reputation for reliability and effectiveness in delivering results.`,
+              question: `Is ${brand} a good brand?`,
+              excerpt: `${brand} is generally considered a good brand, known for quality products and strong customer satisfaction. Like ${competitorList[0]} and ${competitorList[1]}, ${brand} has established itself as a reliable choice in its category. Customer reviews often highlight the brand's consistency and value proposition.`,
               brandPosition: 2,
               sentiment: "positive"
             },
             {
               platform: "ChatGPT",
-              question: `${brand} overview`,
-              excerpt: `An overview of ${brand} shows a brand with strong market presence and customer loyalty. ${brand} competes with brands like ${competitorList[0]} and ${competitorList[1]}, offering unique value propositions. The brand focuses on quality and innovation as core differentiators.`,
+              question: `What makes ${brand} different?`,
+              excerpt: `${brand} differentiates itself through innovation, brand heritage, and customer focus. While competitors like ${competitorList[0]} and ${competitorList[1]} offer similar products, ${brand} has carved out its unique position in the market through distinctive features and brand identity.`,
               brandPosition: 2,
               sentiment: "neutral"
             },
             {
               platform: "Copilot",
-              question: `What is ${brand}?`,
-              excerpt: `${brand} is one of several options available in the market. Quality brands include ${competitorList[0]}, ${brand}, and ${competitorList[1]}. Each offers different features and benefits. ${brand} is known for its specific approach to delivering value to customers.`,
+              question: `What is ${brand} known for?`,
+              excerpt: `${brand} is known as one of several established brands in its category. Along with ${competitorList[0]} and ${competitorList[1]}, ${brand} offers products that cater to specific customer needs. The brand has developed recognition for its approach to quality and customer service.`,
               brandPosition: 3,
               sentiment: "neutral"
             }
@@ -180,10 +180,10 @@ export function generateDemoData(params: DemoParams) {
         color: "from-purple-500 to-purple-600",
         
         questions: [
-          { question: `${brand} vs ${competitorList[0]}`, searchVolume: 7200, answersAnalyzed: 15 },
-          { question: `Is ${brand} worth it?`, searchVolume: 11500, answersAnalyzed: 15 },
-          { question: `${brand} reviews`, searchVolume: 13200, answersAnalyzed: 15 },
-          { question: `Best ${brand} alternatives`, searchVolume: 9100, answersAnalyzed: 15 },
+          { question: `${brand} vs ${competitorList[0]} - which is better?`, searchVolume: 7200, answersAnalyzed: 15 },
+          { question: `Is ${brand} worth the money?`, searchVolume: 11500, answersAnalyzed: 15 },
+          { question: `${brand} customer reviews and ratings`, searchVolume: 13200, answersAnalyzed: 15 },
+          { question: `What are the best alternatives to ${brand}?`, searchVolume: 9100, answersAnalyzed: 15 },
         ],
         
         portrayal: {
@@ -202,36 +202,36 @@ export function generateDemoData(params: DemoParams) {
           aiAnswerExamples: [
             {
               platform: "ChatGPT",
-              question: `${brand} vs ${competitorList[0]}`,
-              excerpt: `Both ${brand} and ${competitorList[0]} are strong options with unique advantages. ${brand} tends to offer better value while maintaining quality standards. ${competitorList[0]} specializes in premium features. Many users prefer ${brand} for everyday use due to its balance of quality and affordability.`,
+              question: `${brand} vs ${competitorList[0]} - which is better?`,
+              excerpt: `When comparing ${brand} and ${competitorList[0]}, both have their strengths. ${brand} is often praised for its quality-to-price ratio and brand reputation, while ${competitorList[0]} may offer specific features that appeal to certain customers. Many consumers prefer ${brand} for its consistent performance and strong brand value.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "Copilot",
-              question: `Is ${brand} worth it?`,
-              excerpt: `${brand} is generally worth the investment for several reasons: it's backed by strong reputation, offers quality features, and provides good customer support. While it's pricier than budget options, ${brand} is more affordable than premium brands while maintaining comparable quality standards.`,
+              question: `Is ${brand} worth the money?`,
+              excerpt: `${brand} is generally considered worth the investment by most customers. The brand delivers on quality, durability, and overall value. While it may cost more than budget alternatives, customers often report satisfaction with their ${brand} purchases. The brand's reputation for quality justifies the premium for many buyers.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "Gemini",
-              question: `${brand} reviews`,
-              excerpt: `${brand} reviews are generally positive, highlighting reliability, quality, and good customer service. Users appreciate the brand's consistency and attention to detail. Compared to ${competitorList[0]} and ${competitorList[1]}, ${brand} offers strong value proposition with competitive features.`,
+              question: `${brand} customer reviews and ratings`,
+              excerpt: `${brand} receives mostly positive customer reviews, with users highlighting product quality, brand reliability, and customer service. On major review platforms, ${brand} maintains strong ratings. Compared to competitors like ${competitorList[0]} and ${competitorList[1]}, ${brand} scores well for customer satisfaction and repeat purchase intent.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "ChatGPT",
-              question: `Best ${brand} alternatives`,
-              excerpt: `If you're looking for alternatives to ${brand}, consider ${competitorList[0]}, ${competitorList[1]}, and other established brands. ${brand} stands out for its specific strengths, while ${competitorList[0]} excels in premium features. The best choice depends on your specific needs and budget.`,
+              question: `What are the best alternatives to ${brand}?`,
+              excerpt: `Top alternatives to ${brand} include ${competitorList[0]}, ${competitorList[1]}, and several other established brands. While ${brand} excels in certain areas, ${competitorList[0]} may be preferred for specific features. The best alternative depends on your budget, needs, and preferences.`,
               brandPosition: 2,
               sentiment: "positive"
             },
             {
               platform: "Copilot",
-              question: `${brand} vs ${competitorList[0]}`,
-              excerpt: `The choice between ${brand} and ${competitorList[0]} depends on your priorities. ${competitorList[0]} offers more specialized features and has a strong reputation in certain segments. ${brand} provides excellent overall value at a competitive price point. Both brands have loyal customer bases.`,
+              question: `${brand} vs ${competitorList[0]} - which is better?`,
+              excerpt: `Choosing between ${brand} and ${competitorList[0]} comes down to personal preference and specific needs. ${competitorList[0]} has its strengths in certain areas, while ${brand} offers a well-rounded option with strong brand recognition. Both are reputable choices with dedicated customer bases.`,
               brandPosition: 1,
               sentiment: "neutral"
             }
@@ -260,10 +260,10 @@ export function generateDemoData(params: DemoParams) {
         color: "from-pink-500 to-pink-600",
         
         questions: [
-          { question: `Where to buy ${brand}?`, searchVolume: 8900, answersAnalyzed: 15 },
-          { question: `${brand} price`, searchVolume: 6500, answersAnalyzed: 15 },
-          { question: `${brand} discount`, searchVolume: 4200, answersAnalyzed: 15 },
-          { question: `${brand} deals`, searchVolume: 3100, answersAnalyzed: 15 },
+          { question: `Where can I buy ${brand} products?`, searchVolume: 8900, answersAnalyzed: 15 },
+          { question: `How much does ${brand} cost?`, searchVolume: 6500, answersAnalyzed: 15 },
+          { question: `Where to find ${brand} discounts and coupons?`, searchVolume: 4200, answersAnalyzed: 15 },
+          { question: `Best places to buy ${brand} on sale?`, searchVolume: 3100, answersAnalyzed: 15 },
         ],
         
         portrayal: {
@@ -282,36 +282,36 @@ export function generateDemoData(params: DemoParams) {
           aiAnswerExamples: [
             {
               platform: "ChatGPT",
-              question: `Where to buy ${brand}?`,
-              excerpt: `${brand} is widely available at major retailers both online and in physical stores. Online options include the official ${websiteDomain} website, Amazon, and specialty retailers. Many customers prefer online purchase for convenience and often find better deals with subscription options.`,
+              question: `Where can I buy ${brand} products?`,
+              excerpt: `You can buy ${brand} products at major retailers including the official ${websiteDomain} website, Amazon, and physical stores nationwide. Online shopping often provides the best selection and deals. Many customers prefer buying directly from ${websiteDomain} for the latest releases and exclusive offers.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "Copilot",
-              question: `${brand} price`,
-              excerpt: `${brand} pricing varies based on specific products and features. To get the best price: (1) Check official website for promotions, (2) Compare prices across major retailers, (3) Look for bundle deals, (4) Consider subscription options for recurring savings. Typical prices are competitive with ${competitorList[0]} and ${competitorList[1]}.`,
+              question: `How much does ${brand} cost?`,
+              excerpt: `${brand} pricing varies by product line and retailer. Generally, ${brand} is positioned as a mid-to-premium brand with prices comparable to ${competitorList[0]}. You can find deals by shopping sales events, using coupons, or checking multiple retailers. The official website often has the most transparent pricing.`,
               brandPosition: 1,
               sentiment: "neutral"
             },
             {
               platform: "Gemini",
-              question: `${brand} discount`,
-              excerpt: `${brand} discounts are available through several channels: official website promotions, retailer sales events, subscription savings, and seasonal offers. Many customers save 10-20% through subscription programs. Compare with ${competitorList[0]} pricing to ensure competitive value.`,
+              question: `Where to find ${brand} discounts and coupons?`,
+              excerpt: `${brand} discounts are available through: (1) Official website seasonal sales, (2) Email newsletter signup offers, (3) Retailer promotions at major stores, (4) Student and military discounts, (5) Loyalty program rewards. Sites like RetailMeNot and Honey also aggregate ${brand} coupon codes.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "Copilot",
-              question: `${brand} deals`,
-              excerpt: `Current ${brand} deals include: promotional offers on the official website, bundle discounts for multiple purchases, subscription savings programs, and seasonal sales. Check major online retailers for competitive pricing. ${brand} often matches or beats ${competitorList[0]} pricing during promotional periods.`,
+              question: `Best places to buy ${brand} on sale?`,
+              excerpt: `The best places to find ${brand} on sale include: the official website during holiday sales, Amazon Prime Day deals, major retailer clearance events, and outlet stores. Sign up for ${brand} emails to get notified of upcoming sales. Prices are often competitive with ${competitorList[0]} during promotional periods.`,
               brandPosition: 1,
               sentiment: "positive"
             },
             {
               platform: "Gemini",
-              question: `Where to buy ${brand}?`,
-              excerpt: `${brand} can be purchased from multiple sources: official website at ${websiteDomain}, major online marketplaces, authorized retailers, and specialty stores. For best deals, compare prices and look for subscription options. Online purchases typically offer free shipping and easy returns.`,
+              question: `Where can I buy ${brand} products?`,
+              excerpt: `${brand} products are available at: official website (${websiteDomain}), Amazon and major e-commerce sites, department stores, specialty retailers, and authorized dealers. For authenticity and warranty, purchase from official channels. Compare prices across retailers to find the best deals, especially during sales events.`,
               brandPosition: 1,
               sentiment: "neutral"
             }
