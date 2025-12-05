@@ -4,10 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Search, TrendingUp, DollarSign, Target } from "lucide-react";
 
+interface AIOverviewResult {
+  hasAIOverview: boolean;
+  searchIntent?: string;
+  estimatedTraffic?: number;
+  competitiveDifficulty?: string;
+}
+
 export default function AIOverviewTestPage() {
   const [keyword, setKeyword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<AIOverviewResult | null>(null);
   const [error, setError] = useState("");
 
   const handleCheck = async (e: React.FormEvent) => {
@@ -30,8 +37,8 @@ export default function AIOverviewTestPage() {
       } else {
         setError(data.error || "Failed to check AI Overview");
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }

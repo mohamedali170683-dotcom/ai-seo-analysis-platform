@@ -3,8 +3,70 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart, ChevronDown } from "lucide-react";
+import { ArrowLeft, Download, Brain, Users, ShoppingCart, TrendingUp, Info, ArrowRight, CheckCircle2, BarChart3, PieChart, ChevronDown, LucideIcon } from "lucide-react";
 import { generateDemoData } from "@/lib/utils/demo-template-generator";
+
+// Type definitions
+interface Question {
+  question: string;
+  searchVolume: number;
+  answersAnalyzed: number;
+}
+
+interface AIAnswerExample {
+  platform: string;
+  question: string;
+  excerpt: string;
+  brandPosition: number;
+  sentiment: string;
+}
+
+interface CompetitorComparison {
+  competitorName: string;
+  mentionRate: number;
+  avgPosition: number;
+  sentiment: string;
+}
+
+interface Portrayal {
+  mentionRate: number;
+  totalQuestions: number;
+  totalTests: number;
+  totalAnswersAnalyzed: number;
+  visibilityScore: number;
+  averagePosition: number;
+  sentiment: {
+    positive: number;
+    negative: number;
+    neutral: number;
+    dominant: string;
+  };
+  aiAnswerExamples: AIAnswerExample[];
+  competitorComparison: CompetitorComparison[];
+}
+
+interface Recommendation {
+  commonPattern: string;
+  contentType: string;
+  focusedAction: string;
+}
+
+interface JourneyStage {
+  stage: string;
+  stageLabel: string;
+  stageDescription: string;
+  icon: LucideIcon;
+  color: string;
+  questions: Question[];
+  portrayal: Portrayal;
+  recommendation: Recommendation;
+}
+
+interface JourneyStageCardProps {
+  stage: JourneyStage;
+  brandName: string;
+  stageNumber: number;
+}
 
 // Default Purina data (used when no parameters provided)
 const DEFAULT_DEMO_DATA = {
@@ -592,7 +654,7 @@ export default function DemoPage() {
   );
 }
 
-function JourneyStageCard({ stage, brandName, stageNumber }: any) {
+function JourneyStageCard({ stage, brandName, stageNumber }: JourneyStageCardProps) {
   const Icon = stage.icon;
 
   return (
@@ -626,7 +688,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
             </div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
-            {stage.questions.map((q: any, i: number) => (
+            {stage.questions.map((q: Question, i: number) => (
               <div key={i} className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-100">
                 <div className="text-base font-semibold text-gray-900 mb-2">{q.question}</div>
                 <div className="flex items-center justify-between text-sm">
@@ -733,7 +795,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 <span>Real AI Response Examples ({stage.portrayal.aiAnswerExamples.length} samples):</span>
               </div>
               <div className="space-y-4">
-                {stage.portrayal.aiAnswerExamples.map((example: any, i: number) => (
+                {stage.portrayal.aiAnswerExamples.map((example: AIAnswerExample, i: number) => (
                   <div key={i} className="bg-white rounded-xl p-5 border-2 border-yellow-300 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -790,7 +852,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 </div>
                 
                 {/* Competitors */}
-                {stage.portrayal.competitorComparison.map((comp: any, i: number) => (
+                {stage.portrayal.competitorComparison.map((comp: CompetitorComparison, i: number) => (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold text-gray-900">{comp.competitorName}</span>
@@ -817,7 +879,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                   <BarChart3 className="w-5 h-5 text-purple-600" />
                   Gap Analysis:
                 </div>
-                {stage.portrayal.competitorComparison.map((comp: any, i: number) => {
+                {stage.portrayal.competitorComparison.map((comp: CompetitorComparison, i: number) => {
                   const gap = comp.mentionRate - stage.portrayal.mentionRate;
                   return (
                     <div key={i} className="text-sm text-gray-700 mb-2">

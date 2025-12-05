@@ -4,11 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Bot, Send } from "lucide-react";
 
+interface ChatbotResult {
+  brandMentioned: boolean;
+  position?: number;
+  sentiment?: string;
+  context?: string;
+  fullResponse?: string;
+}
+
 export default function ChatbotTestPage() {
   const [question, setQuestion] = useState("");
   const [brandName, setBrandName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ChatbotResult | null>(null);
   const [error, setError] = useState("");
 
   const handleTest = async (e: React.FormEvent) => {
@@ -35,8 +43,8 @@ export default function ChatbotTestPage() {
       } else {
         setError(data.error || "Failed to test chatbot visibility");
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -222,7 +230,7 @@ export default function ChatbotTestPage() {
                       <li className="flex items-start">
                         <span className="mr-2">•</span>
                         <span>
-                          Your brand wasn't mentioned in this response
+                          Your brand wasn&apos;t mentioned in this response
                         </span>
                       </li>
                       <li className="flex items-start">
@@ -258,7 +266,7 @@ export default function ChatbotTestPage() {
           </ul>
           <p className="text-gray-600 text-sm mt-4">
             💡 Tip: Test multiple related questions to get a comprehensive view of
-            your brand's AI visibility
+            your brand&apos;s AI visibility
           </p>
         </div>
       </div>
