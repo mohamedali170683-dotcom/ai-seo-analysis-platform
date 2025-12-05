@@ -8,6 +8,7 @@ interface AIOverviewResult {
   hasAIOverview: boolean;
   position?: number;
   searchVolume?: number;
+  competition?: number;
   searchIntent?: string;
   estimatedTraffic?: number;
   competitiveDifficulty?: string;
