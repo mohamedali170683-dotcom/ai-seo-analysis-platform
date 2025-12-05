@@ -26,6 +26,9 @@ export async function POST(request: Request) {
     if (!process.env.POSTGRES_PRISMA_URL) {
       missingEnvVars.push("POSTGRES_PRISMA_URL");
     }
+    if (!process.env.AHREFS_API_KEY) {
+      missingEnvVars.push("AHREFS_API_KEY");
+    }
 
     if (missingEnvVars.length > 0) {
       const errorMsg = `Missing required environment variables: ${missingEnvVars.join(", ")}. Please add them in Vercel settings.`;
@@ -41,6 +44,7 @@ export async function POST(request: Request) {
 
     console.log(`✅ [START] Environment variables validated`);
     console.log(`✅ [START] OPENAI_API_KEY: ${process.env.OPENAI_API_KEY?.substring(0, 10)}...`);
+    console.log(`✅ [START] AHREFS_API_KEY: ${process.env.AHREFS_API_KEY?.substring(0, 10)}...`);
 
     // Convert competitors to array if it's a string
     let competitorsArray: string[] = [];
@@ -74,7 +78,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Initialize pipeline - no external keyword APIs needed!
+    // Initialize pipeline with real API keys
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
@@ -82,7 +86,7 @@ export async function POST(request: Request) {
       competitors: competitorsArray,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      ahrefsApiKey: "", // Not used anymore
+      ahrefsApiKey: process.env.AHREFS_API_KEY!, // Now using real Ahrefs API
     });
 
     console.log(`🚀 [START] Executing pipeline for analysis: ${analysis.id}`);

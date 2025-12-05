@@ -114,104 +114,42 @@ export class AnalysisPipeline {
   private async discoverQuestions() {
     const stepStart = Date.now();
     try {
-      console.log(`⚡ [QUESTIONS] Generating smart questions instantly for: ${this.config.brandOrKeyword}`);
+      console.log(`⚡ [QUESTIONS] Discovering real questions from Ahrefs API for: ${this.config.brandOrKeyword}`);
       console.log(`⚡ [QUESTIONS] Analysis ID: ${this.config.analysisId}`);
-      console.log(`⚡ [QUESTIONS] Checking database connection...`);
+      console.log(`⚡ [QUESTIONS] Domain: ${this.config.domain || 'not provided'}`);
 
-      // Test database connection
-      try {
-        const testQuery = await prisma.analysis.findUnique({
-          where: { id: this.config.analysisId },
-        });
-        console.log(`✅ [QUESTIONS] Database connection OK - Analysis found: ${!!testQuery}`);
-      } catch (dbError: any) {
-        console.error(`❌ [QUESTIONS] Database connection FAILED:`, dbError.message);
-        throw new Error(`Database connection failed: ${dbError.message}`);
-      }
+      // Initialize Ahrefs service
+      const ahrefsService = new AhrefsQuestionService(this.config.ahrefsApiKey);
 
-      // INSTANT SMART QUESTIONS - No external APIs needed
-      // These are brand-specific and cover all journey stages
-      const brand = this.config.brandOrKeyword;
-      
-      const questions = [
-        // Awareness (3 questions)
-        {
-          question: `What is ${brand}`,
-          searchVolume: 1500,
-          difficulty: 28,
-          intent: "informational" as const,
-          category: "awareness" as const,
-          score: 95,
-        },
-        {
-          question: `${brand} features`,
-          searchVolume: 1200,
-          difficulty: 30,
-          intent: "informational" as const,
-          category: "awareness" as const,
-          score: 90,
-        },
-        {
-          question: `How does ${brand} work`,
-          searchVolume: 1000,
-          difficulty: 32,
-          intent: "informational" as const,
-          category: "awareness" as const,
-          score: 88,
-        },
-        // Consideration (3 questions)
-        {
-          question: `${brand} vs competitors`,
-          searchVolume: 900,
-          difficulty: 42,
-          intent: "commercial" as const,
-          category: "consideration" as const,
-          score: 92,
-        },
-        {
-          question: `Is ${brand} worth it`,
-          searchVolume: 850,
-          difficulty: 38,
-          intent: "commercial" as const,
-          category: "consideration" as const,
-          score: 89,
-        },
-        {
-          question: `${brand} reviews`,
-          searchVolume: 800,
-          difficulty: 40,
-          intent: "commercial" as const,
-          category: "consideration" as const,
-          score: 87,
-        },
-        // Decision (3 questions)
-        {
-          question: `${brand} price`,
-          searchVolume: 750,
-          difficulty: 26,
-          intent: "commercial" as const,
-          category: "decision" as const,
-          score: 85,
-        },
-        {
-          question: `Where to buy ${brand}`,
-          searchVolume: 700,
-          difficulty: 24,
-          intent: "commercial" as const,
-          category: "decision" as const,
-          score: 84,
-        },
-        {
-          question: `${brand} discount`,
-          searchVolume: 650,
-          difficulty: 22,
-          intent: "commercial" as const,
-          category: "decision" as const,
-          score: 82,
-        },
-      ];
+      // Discover questions using Ahrefs API
+      // This will call the real API and categorize questions by journey stage
+      const discoveredQuestions = await ahrefsService.discoverQuestions(
+        this.config.brandOrKeyword,
+        50,  // Minimum search volume
+        9    // Get 9 questions total (3 per stage)
+      );
 
-      console.log(`✅ [QUESTIONS] Generated ${questions.length} questions INSTANTLY`);
+      console.log(`✅ [QUESTIONS] Discovered ${discoveredQuestions.length} real questions from Ahrefs`);
+
+      // Convert to the format expected by the pipeline
+      const questions = discoveredQuestions.map(q => ({
+        question: q.question,
+        searchVolume: q.searchVolume,
+        difficulty: q.difficulty,
+        intent: q.intent,
+        category: q.category,
+        score: q.score,
+      }));
+
+      console.log(`📊 [QUESTIONS] Questions by stage:`);
+      const byStage = {
+        awareness: questions.filter(q => q.category === 'awareness').length,
+        consideration: questions.filter(q => q.category === 'consideration').length,
+        decision: questions.filter(q => q.category === 'decision').length,
+      };
+      console.log(`   - Awareness: ${byStage.awareness} questions`);
+      console.log(`   - Consideration: ${byStage.consideration} questions`);
+      console.log(`   - Decision: ${byStage.decision} questions`);
 
       // Save to database in parallel
       console.log(`📝 [QUESTIONS] Saving ${questions.length} questions to database...`);
