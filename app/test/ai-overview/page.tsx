@@ -6,6 +6,7 @@ import { ArrowLeft, Search, TrendingUp, DollarSign, Target } from "lucide-react"
 
 interface AIOverviewResult {
   hasAIOverview: boolean;
+  position?: number;
   searchIntent?: string;
   estimatedTraffic?: number;
   competitiveDifficulty?: string;
