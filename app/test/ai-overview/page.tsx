@@ -12,6 +12,8 @@ interface AIOverviewResult {
   searchIntent?: string;
   estimatedTraffic?: number;
   competitiveDifficulty?: string;
+  cpc?: number;
+  contentLength?: number;
 }
 
 export default function AIOverviewTestPage() {
