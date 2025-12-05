@@ -10,6 +10,10 @@ interface ChatbotResult {
   sentiment?: string;
   context?: string;
   fullResponse?: string;
+  visibilityScore?: number;
+  citedUrls?: string[];
+  response?: string;
+  modelVersion?: string;
 }
 
 export default function ChatbotTestPage() {
@@ -142,7 +146,7 @@ export default function ChatbotTestPage() {
                       Brand Mentioned?
                     </div>
                     <div className="text-3xl font-bold">
-                      {result.hasBrandMention ? (
+                      {result.brandMentioned ? (
                         <span className="text-green-600">✓ YES</span>
                       ) : (
                         <span className="text-red-600">✗ NO</span>
@@ -157,9 +161,9 @@ export default function ChatbotTestPage() {
                     <div className="text-3xl font-bold text-purple-600">
                       {result.visibilityScore}/100
                     </div>
-                    {result.brandPosition && (
+                    {result.position && (
                       <div className="text-sm text-gray-600 mt-2">
-                        Mentioned in sentence #{result.brandPosition}
+                        Mentioned in sentence #{result.position}
                       </div>
                     )}
                   </div>
@@ -193,16 +197,16 @@ export default function ChatbotTestPage() {
               {/* Recommendations */}
               <div
                 className={`rounded-lg p-6 border-2 ${
-                  result.hasBrandMention
+                  result.brandMentioned
                     ? "bg-green-50 border-green-200"
                     : "bg-yellow-50 border-yellow-200"
                 }`}
               >
                 <h3 className="font-bold text-lg mb-3">
-                  {result.hasBrandMention ? "✓ Great News!" : "⚠️ Action Required"}
+                  {result.brandMentioned ? "✓ Great News!" : "⚠️ Action Required"}
                 </h3>
                 <ul className="space-y-2">
-                  {result.hasBrandMention ? (
+                  {result.brandMentioned ? (
                     <>
                       <li className="flex items-start">
                         <span className="mr-2">•</span>
@@ -214,7 +218,7 @@ export default function ChatbotTestPage() {
                       <li className="flex items-start">
                         <span className="mr-2">•</span>
                         <span>
-                          Position #{result.brandPosition} - Earlier mentions get more
+                          Position #{result.position} - Earlier mentions get more
                           attention
                         </span>
                       </li>
