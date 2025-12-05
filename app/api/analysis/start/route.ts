@@ -17,16 +17,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check for required API key (only OpenAI needed now!)
+    // Check for required environment variables
+    const missingEnvVars: string[] = [];
+
     if (!process.env.OPENAI_API_KEY) {
+      missingEnvVars.push("OPENAI_API_KEY");
+    }
+    if (!process.env.POSTGRES_PRISMA_URL) {
+      missingEnvVars.push("POSTGRES_PRISMA_URL");
+    }
+
+    if (missingEnvVars.length > 0) {
+      const errorMsg = `Missing required environment variables: ${missingEnvVars.join(", ")}. Please add them in Vercel settings.`;
+      console.error(`❌ [START] ${errorMsg}`);
       return NextResponse.json(
-        { 
-          success: false, 
-          error: "OPENAI_API_KEY is not configured. Please add it to your environment variables in Vercel." 
+        {
+          success: false,
+          error: errorMsg
         },
         { status: 500 }
       );
     }
+
+    console.log(`✅ [START] Environment variables validated`);
+    console.log(`✅ [START] OPENAI_API_KEY: ${process.env.OPENAI_API_KEY?.substring(0, 10)}...`);
 
     // Convert competitors to array if it's a string
     let competitorsArray: string[] = [];

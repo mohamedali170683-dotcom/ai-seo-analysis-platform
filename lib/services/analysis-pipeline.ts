@@ -115,7 +115,20 @@ export class AnalysisPipeline {
     const stepStart = Date.now();
     try {
       console.log(`⚡ [QUESTIONS] Generating smart questions instantly for: ${this.config.brandOrKeyword}`);
-      
+      console.log(`⚡ [QUESTIONS] Analysis ID: ${this.config.analysisId}`);
+      console.log(`⚡ [QUESTIONS] Checking database connection...`);
+
+      // Test database connection
+      try {
+        const testQuery = await prisma.analysis.findUnique({
+          where: { id: this.config.analysisId },
+        });
+        console.log(`✅ [QUESTIONS] Database connection OK - Analysis found: ${!!testQuery}`);
+      } catch (dbError: any) {
+        console.error(`❌ [QUESTIONS] Database connection FAILED:`, dbError.message);
+        throw new Error(`Database connection failed: ${dbError.message}`);
+      }
+
       // INSTANT SMART QUESTIONS - No external APIs needed
       // These are brand-specific and cover all journey stages
       const brand = this.config.brandOrKeyword;
@@ -201,9 +214,9 @@ export class AnalysisPipeline {
       console.log(`✅ [QUESTIONS] Generated ${questions.length} questions INSTANTLY`);
 
       // Save to database in parallel
-      console.log(`📝 [QUESTIONS] Saving to database...`);
-      await Promise.all(
-        questions.map(q =>
+      console.log(`📝 [QUESTIONS] Saving ${questions.length} questions to database...`);
+      try {
+        const savePromises = questions.map((q, index) =>
           prisma.discoveredQuestion.create({
             data: {
               analysisId: this.config.analysisId,
@@ -214,9 +227,22 @@ export class AnalysisPipeline {
               category: q.category,
               score: q.score,
             },
+          }).then(() => {
+            console.log(`✅ [QUESTIONS] Saved question ${index + 1}/${questions.length}: "${q.question}"`);
+            return true;
+          }).catch((err: any) => {
+            console.error(`❌ [QUESTIONS] Failed to save question ${index + 1}:`, err.message);
+            throw err;
           })
-        )
-      );
+        );
+
+        await Promise.all(savePromises);
+        console.log(`✅ [QUESTIONS] All ${questions.length} questions saved successfully`);
+      } catch (saveError: any) {
+        console.error(`❌ [QUESTIONS] Failed to save questions to database:`, saveError);
+        console.error(`❌ [QUESTIONS] Error stack:`, saveError.stack);
+        throw new Error(`Failed to save questions: ${saveError.message}`);
+      }
 
       const stepTime = Date.now() - stepStart;
       console.log(`✅ [QUESTIONS] Questions saved to database in ${stepTime}ms`);
