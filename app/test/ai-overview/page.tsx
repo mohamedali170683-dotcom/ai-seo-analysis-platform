@@ -166,11 +166,13 @@ export default function AIOverviewTestPage() {
                         : "N/A"}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      {result.competition > 0.7
-                        ? "High"
-                        : result.competition > 0.4
-                        ? "Medium"
-                        : "Low"}
+                      {result.competition !== undefined
+                        ? result.competition > 0.7
+                          ? "High"
+                          : result.competition > 0.4
+                          ? "Medium"
+                          : "Low"
+                        : "N/A"}
                     </div>
                   </div>
 
