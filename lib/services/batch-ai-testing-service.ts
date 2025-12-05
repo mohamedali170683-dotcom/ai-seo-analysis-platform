@@ -24,7 +24,7 @@ export class BatchAITestingService {
 
   /**
    * Test a single question multiple times for statistical significance
-   * ULTRA FAST - minimal tests, no delays
+   * ULTRA FAST - parallel execution, no delays
    */
   async testQuestion(
     question: string,
@@ -32,23 +32,23 @@ export class BatchAITestingService {
     testsPerPlatform: number = 2
   ): Promise<AITestResult[]> {
     console.log(`🤖 [AI-TEST] Testing question: "${question}" for brand: "${brandName}"`);
-    const results: AITestResult[] = [];
 
-    // Test with ChatGPT only - JUST 2 TESTS for speed
-    for (let i = 1; i <= testsPerPlatform; i++) {
-      try {
-        console.log(`🤖 [AI-TEST] ChatGPT test ${i}/${testsPerPlatform}`);
-        const result = await this.queryChatGPT(question, brandName, i);
-        results.push(result);
-        console.log(`✅ [AI-TEST] ChatGPT test ${i} complete - Brand mentioned: ${result.brandMentioned}`);
+    // PARALLEL EXECUTION - Run all tests simultaneously for maximum speed
+    const testPromises = Array.from({ length: testsPerPlatform }, (_, i) => {
+      const testNum = i + 1;
+      console.log(`🤖 [AI-TEST] Starting ChatGPT test ${testNum}/${testsPerPlatform} (parallel)`);
+      return this.queryChatGPT(question, brandName, testNum).then(result => {
+        console.log(`✅ [AI-TEST] ChatGPT test ${testNum} complete - Brand mentioned: ${result.brandMentioned}`);
+        return result;
+      }).catch((error: any) => {
+        console.error(`❌ [AI-TEST] ChatGPT test ${testNum} failed:`, error.message);
+        return null;
+      });
+    });
 
-        // NO DELAY - maximum speed!
-      } catch (error: any) {
-        console.error(`❌ [AI-TEST] ChatGPT test ${i} failed:`, error.message);
-      }
-    }
+    const results = (await Promise.all(testPromises)).filter((r): r is AITestResult => r !== null);
 
-    console.log(`✅ [AI-TEST] Question testing complete - ${results.length} results`);
+    console.log(`✅ [AI-TEST] Question testing complete - ${results.length}/${testsPerPlatform} results (parallel)`);
     return results;
   }
 

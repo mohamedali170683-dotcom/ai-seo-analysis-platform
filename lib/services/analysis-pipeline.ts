@@ -255,66 +255,92 @@ export class AnalysisPipeline {
   private async batchTestQuestions(questions: any[]) {
     const stepStart = Date.now();
     console.log(`🤖 [TESTING] Starting batch testing for ${questions.length} questions`);
-    
+
     const testingService = new BatchAITestingService(
       this.config.openaiApiKey,
       this.config.geminiApiKey
     );
 
-    // Test all 9 questions
     const questionsToTest = questions;
     const totalQuestions = questionsToTest.length;
 
-    for (let i = 0; i < totalQuestions; i++) {
-      const question = questionsToTest[i];
-      const progress = 30 + Math.floor((i / totalQuestions) * 50);
-      
-      console.log(`🤖 [TESTING] Testing question ${i + 1}/${totalQuestions}: "${question.question}"`);
-      
+    // PARALLEL BATCH PROCESSING - Process 3 questions at a time for optimal speed
+    const BATCH_SIZE = 3;
+    const batches: any[][] = [];
+
+    for (let i = 0; i < totalQuestions; i += BATCH_SIZE) {
+      batches.push(questionsToTest.slice(i, i + BATCH_SIZE));
+    }
+
+    console.log(`🤖 [TESTING] Processing ${totalQuestions} questions in ${batches.length} parallel batches of ${BATCH_SIZE}`);
+
+    let completedCount = 0;
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`🤖 [TESTING] Starting batch ${batchIndex + 1}/${batches.length} with ${batch.length} questions`);
+
+      // Process all questions in this batch in parallel
+      const batchPromises = batch.map(async (question, indexInBatch) => {
+        const questionNum = batchIndex * BATCH_SIZE + indexInBatch + 1;
+
+        try {
+          console.log(`🤖 [TESTING] Testing question ${questionNum}/${totalQuestions}: "${question.question}"`);
+
+          // Fast: 2 tests per question, running in parallel
+          const results = await testingService.testQuestion(
+            question.question,
+            this.config.brandOrKeyword,
+            2  // 2 tests for speed while maintaining quality
+          );
+
+          console.log(`✅ [TESTING] Got ${results.length} results for question ${questionNum}`);
+
+          // Save results in parallel
+          await Promise.all(
+            results.map(result =>
+              prisma.aITestResult.create({
+                data: {
+                  analysisId: this.config.analysisId,
+                  questionId: null,
+                  question: question.question,
+                  platform: result.platform,
+                  brandMentioned: result.brandMentioned,
+                  position: result.position,
+                  sentiment: result.sentiment,
+                  context: null,
+                  fullResponse: result.fullResponse,
+                  citations: [],
+                },
+              })
+            )
+          );
+
+          console.log(`✅ [TESTING] Saved results for question ${questionNum}`);
+          return { success: true, questionNum };
+        } catch (error: any) {
+          console.error(`❌ [TESTING] Failed to test question ${questionNum}:`, error.message);
+          return { success: false, questionNum, error: error.message };
+        }
+      });
+
+      // Wait for all questions in this batch to complete
+      const batchResults = await Promise.all(batchPromises);
+      completedCount += batchResults.filter(r => r.success).length;
+
+      // Update progress after each batch
+      const progress = 30 + Math.floor((completedCount / totalQuestions) * 50);
       await this.updateProgress(
         progress,
-        `Testing ${i + 1}/${totalQuestions}: ${question.question.substring(0, 35)}...`
+        `Tested ${completedCount}/${totalQuestions} questions`
       );
 
-      try {
-        // Fast: 2 tests per question, no delays
-        const results = await testingService.testQuestion(
-          question.question,
-          this.config.brandOrKeyword,
-          2  // 2 tests for speed while maintaining quality
-        );
-
-        console.log(`✅ [TESTING] Got ${results.length} results for question ${i + 1}`);
-
-        // Save results in parallel
-        await Promise.all(
-          results.map(result =>
-            prisma.aITestResult.create({
-              data: {
-                analysisId: this.config.analysisId,
-                questionId: null,
-                question: question.question,
-                platform: result.platform,
-                brandMentioned: result.brandMentioned,
-                position: result.position,
-                sentiment: result.sentiment,
-                context: null,
-                fullResponse: result.fullResponse,
-                citations: [],
-              },
-            })
-          )
-        );
-
-        console.log(`✅ [TESTING] Saved results for question ${i + 1}`);
-      } catch (error: any) {
-        console.error(`❌ [TESTING] Failed to test question ${i + 1}:`, error.message);
-        // Continue with other questions even if one fails
-      }
+      console.log(`✅ [TESTING] Batch ${batchIndex + 1}/${batches.length} complete - ${batchResults.filter(r => r.success).length}/${batch.length} successful`);
     }
 
     const stepTime = Date.now() - stepStart;
-    console.log(`✅ [TESTING] Batch testing complete in ${stepTime}ms`);
+    console.log(`✅ [TESTING] Batch testing complete in ${stepTime}ms (${(stepTime / 1000).toFixed(1)}s)`);
+    console.log(`✅ [TESTING] Successfully tested ${completedCount}/${totalQuestions} questions`);
   }
 
   private async runJourneyStageAnalysis(questions: any[], competitors: string[]) {
