@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, Broom } from "lucide-react";
+import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, Eraser } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
 
 export default function DashboardPage() {
@@ -237,7 +237,7 @@ export default function DashboardPage() {
                   {cleaning ? (
                     <Loader className="w-4 h-4 animate-spin" />
                   ) : (
-                    <Broom className="w-4 h-4" />
+                    <Eraser className="w-4 h-4" />
                   )}
                   Cleanup Failed ({analyses.filter(a => a.status !== "completed").length})
                 </button>
