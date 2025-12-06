@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader } from "lucide-react";
+import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, Broom } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
 
 export default function DashboardPage() {
@@ -10,6 +10,8 @@ export default function DashboardPage() {
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [cleaning, setCleaning] = useState(false);
 
   const loadProjects = async () => {
     try {
@@ -32,6 +34,68 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Error loading analyses:", error);
+    }
+  };
+
+  const handleDeleteAnalysis = async (id: string, brandName: string) => {
+    if (!confirm(`Delete analysis for "${brandName}"? This cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(id);
+
+    try {
+      const response = await fetch(`/api/analysis/${id}/delete`, {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setAnalyses(analyses.filter(a => a.id !== id));
+      } else {
+        alert(`Failed to delete: ${result.error}`);
+      }
+    } catch (error: any) {
+      console.error("Error deleting analysis:", error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const handleCleanupAll = async () => {
+    const failedCount = analyses.filter(a => a.status !== "completed").length;
+
+    if (failedCount === 0) {
+      alert("No failed or stuck analyses to clean up!");
+      return;
+    }
+
+    if (!confirm(`Delete all ${failedCount} failed/stuck analyses? This cannot be undone.`)) {
+      return;
+    }
+
+    setCleaning(true);
+
+    try {
+      const response = await fetch("/api/analysis/cleanup", {
+        method: "DELETE",
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Successfully deleted ${result.deletedCount} analyses`);
+        await loadAnalyses();
+      } else {
+        alert(`Failed to cleanup: ${result.error}`);
+      }
+    } catch (error: any) {
+      console.error("Error cleaning up analyses:", error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setCleaning(false);
     }
   };
 
@@ -163,13 +227,29 @@ export default function DashboardPage() {
               </h2>
               <p className="text-sm text-gray-600 mt-1">Track how AI platforms mention your brands</p>
             </div>
-            <Link
-              href="/analysis/new"
-              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
-            >
-              <Plus className="w-4 h-4" />
-              New Analysis
-            </Link>
+            <div className="flex items-center gap-3">
+              {analyses.filter(a => a.status !== "completed").length > 0 && (
+                <button
+                  onClick={handleCleanupAll}
+                  disabled={cleaning}
+                  className="text-sm px-4 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg flex items-center gap-2 font-semibold disabled:opacity-50"
+                >
+                  {cleaning ? (
+                    <Loader className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Broom className="w-4 h-4" />
+                  )}
+                  Cleanup Failed ({analyses.filter(a => a.status !== "completed").length})
+                </button>
+              )}
+              <Link
+                href="/analysis/new"
+                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
+              >
+                <Plus className="w-4 h-4" />
+                New Analysis
+              </Link>
+            </div>
           </div>
 
           {loading ? (
@@ -235,30 +315,44 @@ export default function DashboardPage() {
                         <div className="font-semibold">{analysis.insightsCount || 0}</div>
                         <div className="text-gray-500 text-xs">Insights</div>
                       </div>
-                      {analysis.status === "completed" ? (
-                        <Link
-                          href={`/results/${analysis.id}`}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-1 font-semibold"
-                        >
-                          View Report
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      ) : analysis.status === "running" || analysis.status === "pending" ? (
-                        <Link
-                          href={`/results/${analysis.id}`}
-                          className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-1"
-                        >
-                          View Progress
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      ) : (
+                      <div className="flex items-center gap-2">
+                        {analysis.status === "completed" ? (
+                          <Link
+                            href={`/results/${analysis.id}`}
+                            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-1 font-semibold"
+                          >
+                            View Report
+                            <ArrowRight className="w-4 h-4" />
+                          </Link>
+                        ) : analysis.status === "running" || analysis.status === "pending" ? (
+                          <Link
+                            href={`/results/${analysis.id}`}
+                            className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+                          >
+                            View Progress
+                            <ArrowRight className="w-4 h-4" />
+                          </Link>
+                        ) : (
+                          <button
+                            disabled
+                            className="px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed"
+                          >
+                            Failed
+                          </button>
+                        )}
                         <button
-                          disabled
-                          className="px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed"
+                          onClick={() => handleDeleteAnalysis(analysis.id, analysis.brandOrKeyword)}
+                          disabled={deleting === analysis.id}
+                          className="px-3 py-2 bg-red-100 text-red-700 hover:bg-red-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete this analysis"
                         >
-                          Failed
+                          {deleting === analysis.id ? (
+                            <Loader className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 </div>
