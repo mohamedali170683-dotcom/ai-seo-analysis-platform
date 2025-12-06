@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
 
 /**
  * GET /api/projects
- * Returns all projects
+ * Returns all projects (currently returns empty array as auth is not implemented)
  */
 export async function GET(request: Request) {
   try {
-    const projects = await prisma.project.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
+    // TODO: When authentication is implemented, fetch user-specific projects
+    // For now, return empty array to prevent 404 errors on dashboard
     return NextResponse.json({
       success: true,
-      projects,
+      projects: [],
     });
   } catch (error: any) {
     console.error("Error fetching projects:", error);
@@ -35,30 +30,14 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
-    const { name, description } = body;
-
-    if (!name) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Project name is required",
-        },
-        { status: 400 }
-      );
-    }
-
-    const project = await prisma.project.create({
-      data: {
-        name,
-        description: description || "",
+    // TODO: Implement when authentication is added
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Authentication required. Project creation will be enabled once auth is implemented.",
       },
-    });
-
-    return NextResponse.json({
-      success: true,
-      project,
-    });
+      { status: 501 }
+    );
   } catch (error: any) {
     console.error("Error creating project:", error);
     return NextResponse.json(
