@@ -6,24 +6,11 @@ import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, 
 import { ProjectModal } from "@/components/project-modal";
 
 export default function DashboardPage() {
-  const [projects, setProjects] = useState<any[]>([]);
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [cleaning, setCleaning] = useState(false);
-
-  const loadProjects = async () => {
-    try {
-      const response = await fetch("/api/projects");
-      const data = await response.json();
-      if (data.success) {
-        setProjects(data.projects);
-      }
-    } catch (error) {
-      console.error("Error loading projects:", error);
-    }
-  };
 
   const loadAnalyses = async () => {
     try {
@@ -101,7 +88,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([loadProjects(), loadAnalyses()]);
+      await loadAnalyses();
       setLoading(false);
     };
     loadData();
@@ -117,10 +104,10 @@ export default function DashboardPage() {
   }, []);
 
   const stats = {
-    totalProjects: projects.length,
-    totalKeywords: projects.reduce((sum, p) => sum + (p._count?.keywords || 0), 0),
-    aiOverviewKeywords: projects.reduce((sum, p) => sum + (p._count?.aiOverviews || 0), 0),
-    totalQueries: projects.reduce((sum, p) => sum + (p._count?.chatbotQueries || 0), 0),
+    totalProjects: 0, // TODO: Implement when projects feature is added
+    totalKeywords: 0, // TODO: Calculate from analyses when implemented
+    aiOverviewKeywords: 0, // TODO: Calculate from analyses when implemented
+    totalQueries: 0, // TODO: Calculate from analyses when implemented
     totalAnalyses: analyses.length,
     completedAnalyses: analyses.filter((a) => a.status === "completed").length,
   };
@@ -506,7 +493,7 @@ export default function DashboardPage() {
       <ProjectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSuccess={loadProjects}
+        onSuccess={loadAnalyses}
       />
     </div>
   );
