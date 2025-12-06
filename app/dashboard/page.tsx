@@ -348,68 +348,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Projects List */}
-        <div className="bg-white rounded-lg shadow p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Your Projects</h2>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Add Project
-            </button>
-          </div>
-
-          {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading projects...</div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">No projects yet. Create your first project to get started!</p>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Create Your First Project
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">{project.name}</h3>
-                      <p className="text-sm text-gray-600">{project.domain}</p>
-                    </div>
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="text-center">
-                        <div className="font-semibold">{project._count?.keywords || 0}</div>
-                        <div className="text-gray-500">Keywords</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold">{project._count?.aiOverviews || 0}</div>
-                        <div className="text-gray-500">AI Checks</div>
-                      </div>
-                      <Link
-                        href={`/project/${project.id}`}
-                        className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-1"
-                      >
-                        View
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Quick Actions */}
         <div className="grid md:grid-cols-4 gap-6">
           <Link
