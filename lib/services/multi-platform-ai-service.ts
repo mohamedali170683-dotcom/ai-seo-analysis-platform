@@ -48,17 +48,17 @@ export class MultiPlatformAIService {
   private openaiClient: OpenAI;
   private testsPerPlatform: number;
 
-  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 2) {
+  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 1) {
     this.openaiClient = new OpenAI({ 
       apiKey: openaiApiKey,
-      timeout: 30000, // 30 second client timeout
-      maxRetries: 2,
+      timeout: 25000,
+      maxRetries: 1,
     });
-    this.testsPerPlatform = Math.min(testsPerPlatform, 2);
+    this.testsPerPlatform = Math.min(testsPerPlatform, 1); // Just 1 test per platform for speed
   }
 
   /**
-   * Test a question across all AI platforms - SEQUENTIAL for reliability
+   * Test a question - PARALLEL platforms for speed
    */
   async testQuestion(
     question: string,
@@ -66,36 +66,30 @@ export class MultiPlatformAIService {
     competitors: string[] = [],
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
-    const numTests = Math.min(testsPerPlatform || this.testsPerPlatform, 2);
+    const numTests = Math.min(testsPerPlatform || this.testsPerPlatform, 1);
     console.log(`🤖 [AI] Testing: "${question.substring(0, 40)}..."`);
     const startTime = Date.now();
 
+    // Run all 3 platforms in PARALLEL using Promise.allSettled
+    const results = await Promise.allSettled([
+      this.testSinglePlatform("ChatGPT", question, brandName, competitors, numTests),
+      this.testSinglePlatform("Gemini", question, brandName, competitors, numTests),
+      this.testSinglePlatform("Copilot", question, brandName, competitors, numTests),
+    ]);
+
+    // Collect successful responses
     const allResponses: AIResponse[] = [];
-
-    // Test platforms SEQUENTIALLY to avoid rate limits
-    try {
-      const chatGPTResponses = await this.testWithPlatform("ChatGPT", question, brandName, competitors, numTests);
-      allResponses.push(...chatGPTResponses);
-    } catch (e: any) {
-      console.error(`  ⚠️ ChatGPT failed: ${e.message}`);
-    }
-
-    try {
-      const geminiResponses = await this.testWithPlatform("Gemini", question, brandName, competitors, numTests);
-      allResponses.push(...geminiResponses);
-    } catch (e: any) {
-      console.error(`  ⚠️ Gemini failed: ${e.message}`);
-    }
-
-    try {
-      const copilotResponses = await this.testWithPlatform("Copilot", question, brandName, competitors, numTests);
-      allResponses.push(...copilotResponses);
-    } catch (e: any) {
-      console.error(`  ⚠️ Copilot failed: ${e.message}`);
-    }
+    results.forEach((result, index) => {
+      const platform = ["ChatGPT", "Gemini", "Copilot"][index];
+      if (result.status === "fulfilled") {
+        allResponses.push(...result.value);
+      } else {
+        console.error(`  ⚠️ ${platform} failed: ${result.reason?.message || result.reason}`);
+      }
+    });
 
     const aggregated = this.calculateAggregatedStats(allResponses, competitors);
-    console.log(`✅ [AI] Done in ${Date.now() - startTime}ms - ${allResponses.length} responses, ${aggregated.mentionRate}% mention`);
+    console.log(`✅ [AI] Done in ${Date.now() - startTime}ms - ${allResponses.length} responses`);
 
     return {
       question,
@@ -107,10 +101,7 @@ export class MultiPlatformAIService {
     };
   }
 
-  /**
-   * Test with a specific platform
-   */
-  private async testWithPlatform(
+  private async testSinglePlatform(
     platform: "ChatGPT" | "Gemini" | "Copilot",
     question: string,
     brandName: string,
@@ -121,59 +112,42 @@ export class MultiPlatformAIService {
     
     const systemPrompts: Record<string, string> = {
       "ChatGPT": "",
-      "Gemini": "You are Google Gemini, a helpful AI assistant. Provide comprehensive, well-researched answers.",
-      "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers with a conversational tone.",
+      "Gemini": "You are Google Gemini. Provide comprehensive answers.",
+      "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers.",
     };
 
     for (let i = 1; i <= numTests; i++) {
-      try {
-        const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
-        
-        if (systemPrompts[platform]) {
-          messages.push({ role: "system", content: systemPrompts[platform] });
-        }
-        messages.push({ role: "user", content: question });
-
-        const completion = await this.openaiClient.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages,
-          max_tokens: 500,
-          temperature: 0.7 + (i * 0.1),
-        });
-
-        const fullResponse = completion.choices[0]?.message?.content || "";
-        
-        if (fullResponse) {
-          const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
-          responses.push({
-            platform,
-            modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-simulated`,
-            queryNumber: i,
-            question,
-            fullResponse,
-            ...analysis,
-          });
-        }
-      } catch (error: any) {
-        console.error(`    ⚠️ ${platform} test ${i} error: ${error.message}`);
+      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+      if (systemPrompts[platform]) {
+        messages.push({ role: "system", content: systemPrompts[platform] });
       }
+      messages.push({ role: "user", content: question });
+
+      const completion = await this.openaiClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages,
+        max_tokens: 400,
+        temperature: 0.7,
+      });
+
+      const fullResponse = completion.choices[0]?.message?.content || "";
       
-      // Small delay between calls to avoid rate limiting
-      if (i < numTests) {
-        await this.delay(200);
+      if (fullResponse) {
+        const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+        responses.push({
+          platform,
+          modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
+          queryNumber: i,
+          question,
+          fullResponse,
+          ...analysis,
+        });
       }
     }
 
     return responses;
   }
 
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Analyze a single AI response
-   */
   private analyzeResponse(
     response: string,
     brandName: string,
@@ -181,7 +155,6 @@ export class MultiPlatformAIService {
   ): Omit<AIResponse, 'platform' | 'modelVersion' | 'queryNumber' | 'question' | 'fullResponse'> {
     const lowerResponse = response.toLowerCase();
     const lowerBrand = brandName.toLowerCase();
-
     const brandMentioned = lowerResponse.includes(lowerBrand);
 
     let brandPosition: number | null = null;
@@ -214,54 +187,34 @@ export class MultiPlatformAIService {
     }
 
     const sentiment = this.analyzeSentiment(response, brandName, brandMentioned);
-    const recommendationType = brandMentioned ? "listed" : null;
-
-    const competitorsMentioned: string[] = [];
-    competitors.forEach((competitor) => {
-      if (lowerResponse.includes(competitor.toLowerCase())) {
-        competitorsMentioned.push(competitor);
-      }
-    });
-
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const citedUrls = response.match(urlRegex) || [];
+    const competitorsMentioned = competitors.filter(c => lowerResponse.includes(c.toLowerCase()));
+    const citedUrls = response.match(/(https?:\/\/[^\s]+)/g) || [];
 
     return {
       brandMentioned,
       brandPosition,
       contextExtract,
       sentiment,
-      recommendationType,
+      recommendationType: brandMentioned ? "listed" : null,
       competitorsMentioned,
       citedUrls,
     };
   }
 
-  private analyzeSentiment(
-    response: string,
-    brandName: string,
-    brandMentioned: boolean
-  ): "positive" | "neutral" | "negative" {
+  private analyzeSentiment(response: string, brandName: string, brandMentioned: boolean): "positive" | "neutral" | "negative" {
     if (!brandMentioned) return "neutral";
 
-    const lowerBrand = brandName.toLowerCase();
-    const sentences = response.split(/[.!?]+/);
-    const brandSentences = sentences.filter(s => s.toLowerCase().includes(lowerBrand));
+    const sentences = response.split(/[.!?]+/).filter(s => s.toLowerCase().includes(brandName.toLowerCase()));
+    if (sentences.length === 0) return "neutral";
 
-    if (brandSentences.length === 0) return "neutral";
+    const positiveWords = ["best", "excellent", "great", "recommended", "top", "leading", "popular", "trusted", "quality", "innovative"];
+    const negativeWords = ["expensive", "overpriced", "avoid", "poor", "disappointing", "concerns", "issues", "problems"];
 
-    const positiveWords = ["best", "excellent", "great", "recommended", "top", "leading", "popular",
-      "trusted", "reliable", "quality", "innovative", "superior", "outstanding"];
-    const negativeWords = ["expensive", "overpriced", "not recommended", "avoid", "poor", "disappointing",
-      "inferior", "concerns", "issues", "problems"];
-
-    let positiveScore = 0;
-    let negativeScore = 0;
-
-    brandSentences.forEach((sentence) => {
-      const lower = sentence.toLowerCase();
-      positiveWords.forEach((word) => { if (lower.includes(word)) positiveScore++; });
-      negativeWords.forEach((word) => { if (lower.includes(word)) negativeScore++; });
+    let positiveScore = 0, negativeScore = 0;
+    sentences.forEach(s => {
+      const lower = s.toLowerCase();
+      positiveWords.forEach(w => { if (lower.includes(w)) positiveScore++; });
+      negativeWords.forEach(w => { if (lower.includes(w)) negativeScore++; });
     });
 
     if (positiveScore > negativeScore) return "positive";
@@ -269,14 +222,11 @@ export class MultiPlatformAIService {
     return "neutral";
   }
 
-  private escapeRegex(string: string): string {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  private escapeRegex(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  private calculateAggregatedStats(
-    responses: AIResponse[],
-    competitors: string[]
-  ): QuestionAnalysis["aggregated"] {
+  private calculateAggregatedStats(responses: AIResponse[], competitors: string[]): QuestionAnalysis["aggregated"] {
     const total = responses.length;
     const mentioned = responses.filter(r => r.brandMentioned).length;
     const mentionRate = total > 0 ? (mentioned / total) * 100 : 0;
@@ -287,42 +237,43 @@ export class MultiPlatformAIService {
     const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
     responses.forEach(r => { sentimentCounts[r.sentiment]++; });
 
-    const sentimentTotal = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative;
-    const sentimentBreakdown = {
-      positive: sentimentTotal > 0 ? Math.round((sentimentCounts.positive / sentimentTotal) * 1000) / 10 : 0,
-      neutral: sentimentTotal > 0 ? Math.round((sentimentCounts.neutral / sentimentTotal) * 1000) / 10 : 0,
-      negative: sentimentTotal > 0 ? Math.round((sentimentCounts.negative / sentimentTotal) * 1000) / 10 : 0,
-      dominant: "neutral" as "positive" | "neutral" | "negative",
-    };
+    const sentimentTotal = Object.values(sentimentCounts).reduce((a, b) => a + b, 0);
+    let dominant: "positive" | "neutral" | "negative" = "neutral";
+    const positivePct = sentimentTotal > 0 ? Math.round((sentimentCounts.positive / sentimentTotal) * 1000) / 10 : 0;
+    const neutralPct = sentimentTotal > 0 ? Math.round((sentimentCounts.neutral / sentimentTotal) * 1000) / 10 : 0;
+    const negativePct = sentimentTotal > 0 ? Math.round((sentimentCounts.negative / sentimentTotal) * 1000) / 10 : 0;
 
-    if (sentimentBreakdown.positive > sentimentBreakdown.neutral && 
-        sentimentBreakdown.positive > sentimentBreakdown.negative) {
-      sentimentBreakdown.dominant = "positive";
-    } else if (sentimentBreakdown.negative > sentimentBreakdown.neutral) {
-      sentimentBreakdown.dominant = "negative";
+    if (positivePct > neutralPct && positivePct > negativePct) {
+      dominant = "positive";
+    } else if (negativePct > neutralPct) {
+      dominant = "negative";
     }
 
-    const competitorMentions: { [competitor: string]: number } = {};
-    competitors.forEach(comp => {
-      competitorMentions[comp] = responses.filter(r => r.competitorsMentioned.includes(comp)).length;
-    });
+    const sentimentBreakdown = {
+      positive: positivePct,
+      neutral: neutralPct,
+      negative: negativePct,
+      dominant,
+    };
+
+    const competitorMentions: { [c: string]: number } = {};
+    competitors.forEach(c => { competitorMentions[c] = responses.filter(r => r.competitorsMentioned.includes(c)).length; });
 
     const platforms: ("ChatGPT" | "Gemini" | "Copilot")[] = ["ChatGPT", "Gemini", "Copilot"];
-    const platformBreakdown: PlatformStats[] = platforms.map(platform => {
-      const platformResponses = responses.filter(r => r.platform === platform);
-      const platformMentioned = platformResponses.filter(r => r.brandMentioned).length;
-      const platformPositions = platformResponses.filter(r => r.brandPosition !== null).map(r => r.brandPosition as number);
-
+    const platformBreakdown = platforms.map(platform => {
+      const pr = responses.filter(r => r.platform === platform);
+      const pm = pr.filter(r => r.brandMentioned).length;
+      const pp = pr.filter(r => r.brandPosition !== null).map(r => r.brandPosition as number);
       return {
         platform,
-        totalTests: platformResponses.length,
-        mentionCount: platformMentioned,
-        mentionRate: platformResponses.length > 0 ? Math.round((platformMentioned / platformResponses.length) * 1000) / 10 : 0,
-        avgPosition: platformPositions.length > 0 ? Math.round((platformPositions.reduce((a, b) => a + b, 0) / platformPositions.length) * 10) / 10 : null,
+        totalTests: pr.length,
+        mentionCount: pm,
+        mentionRate: pr.length > 0 ? Math.round((pm / pr.length) * 1000) / 10 : 0,
+        avgPosition: pp.length > 0 ? Math.round((pp.reduce((a, b) => a + b, 0) / pp.length) * 10) / 10 : null,
         sentimentCounts: {
-          positive: platformResponses.filter(r => r.sentiment === "positive").length,
-          neutral: platformResponses.filter(r => r.sentiment === "neutral").length,
-          negative: platformResponses.filter(r => r.sentiment === "negative").length,
+          positive: pr.filter(r => r.sentiment === "positive").length,
+          neutral: pr.filter(r => r.sentiment === "neutral").length,
+          negative: pr.filter(r => r.sentiment === "negative").length,
         },
       };
     });

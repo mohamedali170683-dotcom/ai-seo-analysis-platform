@@ -91,15 +91,15 @@ async function executeAnalysis(
       }
     };
 
-    // Run analysis
+    // Run analysis (2 questions per stage × 3 platforms = 18 API calls total)
     const service = new ComprehensiveAnalysisService({
       brandName: brandOrKeyword,
       domain,
       competitors,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      testsPerPlatform: 2,
-      questionsPerStage: 3,
+      testsPerPlatform: 1,
+      questionsPerStage: 2,
       onProgress,
     });
 
