@@ -194,18 +194,40 @@ export default function ResultsPage() {
   }
 
   return (
-    <JourneyStageReport
-      brandName={reportData.brandOrKeyword}
-      domain={reportData.domain}
-      overallScore={reportData.overallScore}
-      totalTests={reportData.totalTests}
-      totalQuestions={reportData.totalQuestions}
-      scoringMethodology={reportData.scoringMethodology}
-      sentimentDefinitions={SENTIMENT_DEFINITIONS}
-      journeyStages={reportData.journeyStages}
-      showHeader={true}
-      backLink="/"
-    />
+    <div>
+      {/* Analysis Complete Banner */}
+      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4">
+        <div className="container mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">✅</span>
+            <span className="font-semibold">Analysis Complete</span>
+            <span className="text-green-100">|</span>
+            <span className="text-sm text-green-100">
+              {reportData.totalTests} AI responses analyzed across 3 platforms
+            </span>
+          </div>
+          <a
+            href="/demoui"
+            className="px-4 py-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-sm font-semibold transition-all"
+          >
+            Run Another Analysis
+          </a>
+        </div>
+      </div>
+      
+      <JourneyStageReport
+        brandName={reportData.brandOrKeyword}
+        domain={reportData.domain}
+        overallScore={reportData.overallScore}
+        totalTests={reportData.totalTests}
+        totalQuestions={reportData.totalQuestions}
+        scoringMethodology={reportData.scoringMethodology}
+        sentimentDefinitions={SENTIMENT_DEFINITIONS}
+        journeyStages={reportData.journeyStages}
+        showHeader={true}
+        backLink="/dashboard"
+      />
+    </div>
   );
 }
 

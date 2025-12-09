@@ -572,6 +572,34 @@ function DemoPageContent() {
             )
           ))}
         </div>
+
+        {/* CTA Section */}
+        <div className="mt-16 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-3xl p-12 text-white text-center">
+          <h2 className="text-4xl font-bold mb-4">Ready to Analyze Your Brand?</h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            {searchParams.get('brand') 
+              ? `This was a demo report for ${searchParams.get('brand')}. Run a real analysis with actual AI queries across ChatGPT, Gemini, and Copilot.`
+              : "This is sample data for Purina. Run a real analysis to see how YOUR brand appears in AI chatbots."
+            }
+          </p>
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <Link
+              href="/analysis/new"
+              className="px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-blue-50 font-bold text-lg shadow-xl transition-all hover:scale-105"
+            >
+              🚀 Run Real Analysis
+            </Link>
+            <Link
+              href="/demoui"
+              className="px-8 py-4 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl font-bold text-lg transition-all"
+            >
+              ⚡ Try Another Demo
+            </Link>
+          </div>
+          <p className="mt-6 text-sm text-blue-200">
+            Real analysis: 180 AI queries • 3 platforms • Statistically significant results
+          </p>
+        </div>
       </main>
     </div>
   );
