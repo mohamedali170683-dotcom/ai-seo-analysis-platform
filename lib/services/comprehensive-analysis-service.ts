@@ -86,89 +86,131 @@ export class ComprehensiveAnalysisService {
   constructor(config: AnalysisConfig) {
     this.config = config;
     this.questionService = new EnhancedQuestionService(config.ahrefsApiKey);
+    // Reduced tests per platform to 2 for speed (6 total per question)
     this.aiTestingService = new MultiPlatformAIService(
       config.openaiApiKey,
       config.geminiApiKey,
-      config.testsPerPlatform || 5
+      Math.min(config.testsPerPlatform || 2, 2)
     );
     this.openai = new OpenAI({ apiKey: config.openaiApiKey });
   }
 
   /**
-   * Run the full comprehensive analysis
+   * Run the full comprehensive analysis - OPTIMIZED FOR SPEED
    */
   async runAnalysis(): Promise<ComprehensiveAnalysisResult> {
     const startTime = Date.now();
-    console.log(`🚀 Starting comprehensive analysis for: ${this.config.brandName}`);
+    console.log(`🚀 [ANALYSIS] Starting for: ${this.config.brandName}`);
 
-    // Step 1: Discover questions
-    await this.reportProgress(5, "Discovering relevant questions...");
-    const questions = await this.questionService.discoverQuestions({
-      brandName: this.config.brandName,
-      domain: this.config.domain,
-      competitors: this.config.competitors,
-      ahrefsApiKey: this.config.ahrefsApiKey,
-      maxQuestionsPerStage: this.config.questionsPerStage || 4,
-    });
-    console.log(`✅ Discovered ${questions.length} questions in ${(Date.now() - startTime) / 1000}s`);
+    try {
+      // Step 1: Discover questions (INSTANT - no API calls)
+      await this.reportProgress(5, "Generating questions...");
+      const questions = await this.questionService.discoverQuestions({
+        brandName: this.config.brandName,
+        domain: this.config.domain,
+        competitors: this.config.competitors,
+        maxQuestionsPerStage: this.config.questionsPerStage || 3, // Reduced from 4 to 3
+      });
+      console.log(`✅ [ANALYSIS] Generated ${questions.length} questions in ${Date.now() - startTime}ms`);
 
-    // Step 2: Test all questions across AI platforms
-    await this.reportProgress(15, "Testing questions across AI platforms...");
+      // Step 2: Test questions in PARALLEL batches
+      await this.reportProgress(10, "Testing with AI platforms...");
+      const analyses = await this.testQuestionsInParallel(questions);
+      console.log(`✅ [ANALYSIS] AI testing completed in ${(Date.now() - startTime) / 1000}s`);
+
+      // Step 3: Analyze by journey stage (fast, local computation)
+      await this.reportProgress(85, "Analyzing journey stages...");
+      const journeyStages = await this.analyzeByJourneyStage(questions, analyses);
+
+      // Step 4: Calculate overall scores
+      await this.reportProgress(95, "Calculating final scores...");
+      const overallMetrics = this.calculateOverallMetrics(journeyStages);
+
+      // Step 5: Compile final result
+      const domain = this.config.domain || `${this.config.brandName.toLowerCase().replace(/\s+/g, '')}.com`;
+
+      const result: ComprehensiveAnalysisResult = {
+        brandOrKeyword: this.config.brandName,
+        domain: domain.startsWith("http") ? domain : `https://${domain}`,
+        overallScore: overallMetrics.overallScore,
+        totalTests: overallMetrics.totalTests,
+        totalQuestions: questions.length,
+        scoringMethodology: overallMetrics.scoringMethodology,
+        journeyStages,
+        rawData: { questions, analyses },
+      };
+
+      await this.reportProgress(100, "Analysis complete!");
+      console.log(`🎉 [ANALYSIS] Completed in ${(Date.now() - startTime) / 1000}s`);
+
+      return result;
+    } catch (error: any) {
+      console.error(`❌ [ANALYSIS] Failed:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Test questions in parallel batches for speed
+   */
+  private async testQuestionsInParallel(questions: DiscoveredQuestion[]): Promise<QuestionAnalysis[]> {
     const analyses: QuestionAnalysis[] = [];
-    
-    for (let i = 0; i < questions.length; i++) {
-      const question = questions[i];
-      const progress = 15 + Math.floor((i / questions.length) * 60);
-      await this.reportProgress(progress, `Testing: "${question.question.substring(0, 40)}..."`);
+    const BATCH_SIZE = 3; // Test 3 questions simultaneously
 
-      const analysis = await this.aiTestingService.testQuestion(
-        question.question,
-        this.config.brandName,
-        this.config.competitors || [],
-        this.config.testsPerPlatform || 5
+    for (let i = 0; i < questions.length; i += BATCH_SIZE) {
+      const batch = questions.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(questions.length / BATCH_SIZE);
+      
+      const progress = 10 + Math.floor((i / questions.length) * 70);
+      await this.reportProgress(progress, `Testing batch ${batchNum}/${totalBatches}...`);
+
+      // Run batch in parallel
+      const batchResults = await Promise.all(
+        batch.map(async (question) => {
+          try {
+            const analysis = await this.aiTestingService.testQuestion(
+              question.question,
+              this.config.brandName,
+              this.config.competitors || [],
+              2 // Force 2 tests per platform for speed
+            );
+            analysis.searchVolume = question.searchVolume;
+            analysis.category = question.category;
+            return analysis;
+          } catch (error: any) {
+            console.error(`  ⚠️ Failed to test "${question.question}": ${error.message}`);
+            // Return a partial result instead of failing
+            return this.createEmptyAnalysis(question);
+          }
+        })
       );
 
-      // Add metadata from question discovery
-      analysis.searchVolume = question.searchVolume;
-      analysis.category = question.category;
-
-      analyses.push(analysis);
-      console.log(`  ✅ Tested question ${i + 1}/${questions.length}: ${analysis.aggregated.mentionRate}% mention rate`);
+      analyses.push(...batchResults);
+      console.log(`  ✅ Batch ${batchNum}/${totalBatches} complete`);
     }
 
-    console.log(`✅ Tested all questions in ${(Date.now() - startTime) / 1000}s`);
+    return analyses;
+  }
 
-    // Step 3: Analyze by journey stage
-    await this.reportProgress(80, "Analyzing by journey stage...");
-    const journeyStages = await this.analyzeByJourneyStage(questions, analyses);
-
-    // Step 4: Calculate overall scores
-    await this.reportProgress(90, "Calculating final scores...");
-    const overallMetrics = this.calculateOverallMetrics(journeyStages);
-
-    // Step 5: Compile final result
-    await this.reportProgress(95, "Compiling report...");
-    
-    const domain = this.config.domain || `${this.config.brandName.toLowerCase().replace(/\s+/g, '')}.com`;
-
-    const result: ComprehensiveAnalysisResult = {
-      brandOrKeyword: this.config.brandName,
-      domain: domain.startsWith("http") ? domain : `https://${domain}`,
-      overallScore: overallMetrics.overallScore,
-      totalTests: overallMetrics.totalTests,
-      totalQuestions: questions.length,
-      scoringMethodology: overallMetrics.scoringMethodology,
-      journeyStages,
-      rawData: {
-        questions,
-        analyses,
+  /**
+   * Create empty analysis for failed questions
+   */
+  private createEmptyAnalysis(question: DiscoveredQuestion): QuestionAnalysis {
+    return {
+      question: question.question,
+      searchVolume: question.searchVolume,
+      category: question.category,
+      totalResponses: 0,
+      responses: [],
+      aggregated: {
+        mentionRate: 0,
+        avgPosition: null,
+        sentimentBreakdown: { positive: 0, neutral: 100, negative: 0, dominant: "neutral" },
+        competitorMentions: {},
+        platformBreakdown: [],
       },
     };
-
-    await this.reportProgress(100, "Analysis complete!");
-    console.log(`🎉 Analysis completed in ${(Date.now() - startTime) / 1000}s`);
-
-    return result;
   }
 
   /**
@@ -204,21 +246,18 @@ export class ComprehensiveAnalysisService {
 
     for (const stage of stages) {
       const stageQuestions = questions.filter(q => q.category === stage);
-      const stageAnalyses = analyses.filter((a, i) => questions[i]?.category === stage);
+      const stageAnalyses = analyses.filter(a => a.category === stage);
 
       if (stageQuestions.length === 0) {
-        // Add empty stage placeholder
         journeyStages.push(this.createEmptyStage(stage, stageConfig[stage]));
         continue;
       }
 
-      // Calculate stage metrics
       const allResponses = stageAnalyses.flatMap(a => a.responses);
       const totalTests = allResponses.length;
       const mentionCount = allResponses.filter(r => r.brandMentioned).length;
       const mentionRate = totalTests > 0 ? (mentionCount / totalTests) * 100 : 0;
 
-      // Calculate average position
       const positions = allResponses
         .filter(r => r.brandPosition !== null)
         .map(r => r.brandPosition as number);
@@ -226,11 +265,8 @@ export class ComprehensiveAnalysisService {
         ? positions.reduce((a, b) => a + b, 0) / positions.length
         : 0;
 
-      // Calculate sentiment
       const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
-      allResponses.forEach(r => {
-        sentimentCounts[r.sentiment]++;
-      });
+      allResponses.forEach(r => { sentimentCounts[r.sentiment]++; });
 
       const sentimentTotal = sentimentCounts.positive + sentimentCounts.neutral + sentimentCounts.negative;
       const sentiment = {
@@ -246,25 +282,14 @@ export class ComprehensiveAnalysisService {
         sentiment.dominant = "negative";
       }
 
-      // Calculate visibility score
       const positionScore = avgPosition > 0 ? Math.max(0, 100 - (avgPosition - 1) * 20) : 50;
       const sentimentScore = Math.max(0, Math.min(100, ((sentiment.positive - sentiment.negative + 100) / 2)));
-      const visibilityScore = Math.round(
-        (mentionRate * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2)
-      );
+      const visibilityScore = Math.round((mentionRate * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2));
 
-      // Get AI answer examples (best examples from each platform)
-      const aiAnswerExamples = this.getAIAnswerExamples(stageAnalyses, this.config.brandName);
-
-      // Generate competitor comparison
-      const competitorComparison = this.generateCompetitorComparison(
-        stageAnalyses,
-        mentionRate,
-        avgPosition
-      );
-
-      // Generate recommendations using AI
-      const recommendation = await this.generateRecommendation(stage, stageAnalyses);
+      const aiAnswerExamples = this.getAIAnswerExamples(stageAnalyses);
+      const competitorComparison = this.generateCompetitorComparison(stageAnalyses, mentionRate, avgPosition);
+      // Use fast default recommendations instead of AI-generated ones
+      const recommendation = this.getDefaultRecommendation(stage);
 
       journeyStages.push({
         stage,
@@ -295,9 +320,6 @@ export class ComprehensiveAnalysisService {
     return journeyStages;
   }
 
-  /**
-   * Create an empty stage placeholder
-   */
   private createEmptyStage(
     stage: "awareness" | "consideration" | "decision",
     config: { label: string; description: string; icon: string; color: string }
@@ -328,17 +350,10 @@ export class ComprehensiveAnalysisService {
     };
   }
 
-  /**
-   * Extract best AI answer examples from analyses
-   */
-  private getAIAnswerExamples(
-    analyses: QuestionAnalysis[],
-    brandName: string
-  ): JourneyStageData["portrayal"]["aiAnswerExamples"] {
+  private getAIAnswerExamples(analyses: QuestionAnalysis[]): JourneyStageData["portrayal"]["aiAnswerExamples"] {
     const examples: JourneyStageData["portrayal"]["aiAnswerExamples"] = [];
     const platforms = ["ChatGPT", "Gemini", "Copilot"];
 
-    // Get one good example from each platform for different questions
     for (const analysis of analyses) {
       for (const platform of platforms) {
         if (examples.length >= 5) break;
@@ -349,18 +364,10 @@ export class ComprehensiveAnalysisService {
 
         if (platformResponses.length > 0) {
           const response = platformResponses[0];
-          
-          // Extract a meaningful excerpt (up to 300 chars around brand mention)
           let excerpt = response.contextExtract || response.fullResponse.substring(0, 300);
-          if (excerpt.length > 300) {
-            excerpt = excerpt.substring(0, 297) + "...";
-          }
+          if (excerpt.length > 300) excerpt = excerpt.substring(0, 297) + "...";
 
-          // Check if we already have an example from this platform for this question
-          const exists = examples.some(
-            e => e.platform === platform && e.question === analysis.question
-          );
-
+          const exists = examples.some(e => e.platform === platform && e.question === analysis.question);
           if (!exists) {
             examples.push({
               platform,
@@ -377,9 +384,6 @@ export class ComprehensiveAnalysisService {
     return examples;
   }
 
-  /**
-   * Generate competitor comparison data
-   */
   private generateCompetitorComparison(
     analyses: QuestionAnalysis[],
     brandMentionRate: number,
@@ -388,7 +392,6 @@ export class ComprehensiveAnalysisService {
     const competitors = this.config.competitors || [];
     
     if (competitors.length === 0) {
-      // Generate placeholder competitors
       return [
         {
           competitorName: "Industry Leader A",
@@ -405,16 +408,11 @@ export class ComprehensiveAnalysisService {
       ];
     }
 
-    // Calculate actual competitor metrics from responses
     const allResponses = analyses.flatMap(a => a.responses);
     
     return competitors.slice(0, 3).map(competitor => {
-      const competitorMentions = allResponses.filter(r =>
-        r.competitorsMentioned.includes(competitor)
-      ).length;
-      const competitorMentionRate = allResponses.length > 0
-        ? (competitorMentions / allResponses.length) * 100
-        : 0;
+      const competitorMentions = allResponses.filter(r => r.competitorsMentioned.includes(competitor)).length;
+      const competitorMentionRate = allResponses.length > 0 ? (competitorMentions / allResponses.length) * 100 : 0;
 
       return {
         competitorName: competitor,
@@ -425,66 +423,6 @@ export class ComprehensiveAnalysisService {
     });
   }
 
-  /**
-   * Generate AI-powered recommendations for a stage
-   */
-  private async generateRecommendation(
-    stage: string,
-    analyses: QuestionAnalysis[]
-  ): Promise<JourneyStageData["recommendation"]> {
-    try {
-      // Gather sample responses for analysis
-      const sampleResponses = analyses
-        .flatMap(a => a.responses)
-        .filter(r => r.fullResponse)
-        .slice(0, 5)
-        .map(r => r.fullResponse.substring(0, 200));
-
-      if (sampleResponses.length === 0) {
-        return this.getDefaultRecommendation(stage);
-      }
-
-      const prompt = `Analyze these AI chatbot responses about "${this.config.brandName}" in the ${stage} stage of the user journey.
-
-Sample AI responses:
-${sampleResponses.map((r, i) => `${i + 1}. "${r}..."`).join("\n")}
-
-Based on these responses, provide:
-1. **Common Pattern**: What pattern do you see in how AI discusses this brand? (one sentence)
-2. **Content Type**: What specific type of content would help this brand appear more favorably? (one phrase)
-3. **Focused Action**: ONE specific, actionable recommendation for ${this.config.brandName} to improve their AI visibility in the ${stage} stage (one detailed sentence)
-
-Respond ONLY with valid JSON in this exact format:
-{"commonPattern": "...", "contentType": "...", "focusedAction": "..."}`;
-
-      const completion = await this.openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        temperature: 0.3,
-        max_tokens: 400,
-      });
-
-      const response = completion.choices[0]?.message?.content || "{}";
-      const jsonMatch = response.match(/\{[\s\S]*\}/);
-
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        return {
-          commonPattern: parsed.commonPattern || this.getDefaultRecommendation(stage).commonPattern,
-          contentType: parsed.contentType || this.getDefaultRecommendation(stage).contentType,
-          focusedAction: parsed.focusedAction || this.getDefaultRecommendation(stage).focusedAction,
-        };
-      }
-    } catch (error) {
-      console.error("Error generating recommendation:", error);
-    }
-
-    return this.getDefaultRecommendation(stage);
-  }
-
-  /**
-   * Get default recommendation for a stage
-   */
   private getDefaultRecommendation(stage: string): JourneyStageData["recommendation"] {
     const defaults: { [key: string]: JourneyStageData["recommendation"] } = {
       awareness: {
@@ -507,13 +445,9 @@ Respond ONLY with valid JSON in this exact format:
     return defaults[stage] || defaults.awareness;
   }
 
-  /**
-   * Calculate overall metrics across all stages
-   */
   private calculateOverallMetrics(journeyStages: JourneyStageData[]) {
     const totalTests = journeyStages.reduce((sum, s) => sum + s.portrayal.totalTests, 0);
     
-    // Calculate weighted averages
     const avgMentionRate = journeyStages.reduce((sum, s) => 
       sum + (s.portrayal.mentionRate * s.portrayal.totalTests), 0) / Math.max(totalTests, 1);
     
@@ -526,15 +460,11 @@ Respond ONLY with valid JSON in this exact format:
     const avgNegative = journeyStages.reduce((sum, s) => 
       sum + (s.portrayal.sentiment.negative * s.portrayal.totalTests), 0) / Math.max(totalTests, 1);
 
-    // Calculate component scores
     const mentionRateScore = Math.round(avgMentionRate);
     const positionScore = avgPosition > 0 ? Math.round(Math.max(0, 100 - (avgPosition - 1) * 20)) : 50;
     const sentimentScore = Math.round(Math.max(0, Math.min(100, ((avgPositive - avgNegative + 100) / 2))));
 
-    // Calculate overall score with weights
-    const overallScore = Math.round(
-      (mentionRateScore * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2)
-    );
+    const overallScore = Math.round((mentionRateScore * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2));
 
     return {
       totalTests,
@@ -562,13 +492,15 @@ Respond ONLY with valid JSON in this exact format:
     };
   }
 
-  /**
-   * Report progress to callback
-   */
   private async reportProgress(progress: number, step: string): Promise<void> {
     console.log(`📊 [${progress}%] ${step}`);
     if (this.config.onProgress) {
-      await this.config.onProgress(progress, step);
+      try {
+        await this.config.onProgress(progress, step);
+      } catch (error) {
+        console.error(`⚠️ Failed to report progress: ${error}`);
+        // Don't throw - continue with analysis
+      }
     }
   }
 }

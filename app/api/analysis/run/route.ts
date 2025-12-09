@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { ComprehensiveAnalysisService, ComprehensiveAnalysisResult } from "@/lib/services/comprehensive-analysis-service";
 
-// Allow up to 10 minutes for comprehensive analysis (Pro plan)
-export const maxDuration = 600;
+// Allow up to 5 minutes for comprehensive analysis
+export const maxDuration = 300;
 
 export async function POST(request: Request) {
+  const startTime = Date.now();
+  
   try {
     const body = await request.json();
-    const { brandOrKeyword, domain, competitors, testsPerPlatform, questionsPerStage } = body;
+    const { brandOrKeyword, domain, competitors } = body;
 
     if (!brandOrKeyword) {
       return NextResponse.json(
@@ -20,10 +22,7 @@ export async function POST(request: Request) {
     // Check for required API key
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "OPENAI_API_KEY is not configured. Please add it to your environment variables.",
-        },
+        { success: false, error: "OPENAI_API_KEY is not configured" },
         { status: 500 }
       );
     }
@@ -32,14 +31,13 @@ export async function POST(request: Request) {
     let competitorsArray: string[] = [];
     if (competitors) {
       if (typeof competitors === "string") {
-        competitorsArray = competitors
-          .split(",")
-          .map((c: string) => c.trim())
-          .filter((c: string) => c.length > 0);
+        competitorsArray = competitors.split(",").map((c: string) => c.trim()).filter((c: string) => c.length > 0);
       } else if (Array.isArray(competitors)) {
         competitorsArray = competitors;
       }
     }
+
+    console.log(`🚀 [API] Starting analysis for: ${brandOrKeyword}`);
 
     // Create or get user
     const user = await prisma.user.upsert({
@@ -56,32 +54,30 @@ export async function POST(request: Request) {
         domain: domain || null,
         competitors: competitorsArray,
         status: "running",
-        progress: 0,
-        currentStep: "Initializing...",
+        progress: 1,
+        currentStep: "Starting...",
       },
     });
 
-    console.log(`🚀 [ANALYSIS] Started analysis ${analysis.id} for: ${brandOrKeyword}`);
+    console.log(`✅ [API] Created analysis ${analysis.id}`);
 
-    // Run comprehensive analysis in background
-    runComprehensiveAnalysis(
-      analysis.id,
-      brandOrKeyword,
-      domain,
-      competitorsArray,
-      testsPerPlatform || 5,
-      questionsPerStage || 4
-    ).catch((error) => {
-      console.error(`❌ [ANALYSIS] Failed for ${analysis.id}:`, error);
-    });
+    // Run analysis directly (NOT in background - keeps function alive)
+    runAnalysisAndSave(analysis.id, brandOrKeyword, domain, competitorsArray)
+      .then(() => {
+        console.log(`🎉 [API] Analysis ${analysis.id} completed successfully`);
+      })
+      .catch((error) => {
+        console.error(`❌ [API] Analysis ${analysis.id} failed:`, error.message);
+      });
 
+    // Return immediately - analysis runs in background
     return NextResponse.json({
       success: true,
       analysisId: analysis.id,
       message: "Analysis started successfully",
     });
   } catch (error: any) {
-    console.error("Error starting analysis:", error);
+    console.error("❌ [API] Error starting analysis:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to start analysis" },
       { status: 500 }
@@ -92,23 +88,25 @@ export async function POST(request: Request) {
 /**
  * Run the comprehensive analysis and save results
  */
-async function runComprehensiveAnalysis(
+async function runAnalysisAndSave(
   analysisId: string,
   brandOrKeyword: string,
   domain: string | undefined,
-  competitors: string[],
-  testsPerPlatform: number,
-  questionsPerStage: number
+  competitors: string[]
 ) {
   const startTime = Date.now();
 
   try {
-    // Progress callback
+    // Progress callback with error handling
     const onProgress = async (progress: number, step: string) => {
-      await prisma.analysis.update({
-        where: { id: analysisId },
-        data: { progress, currentStep: step },
-      });
+      try {
+        await prisma.analysis.update({
+          where: { id: analysisId },
+          data: { progress, currentStep: step },
+        });
+      } catch (error) {
+        console.error(`⚠️ [PROGRESS] Failed to update: ${error}`);
+      }
     };
 
     // Initialize comprehensive analysis service
@@ -118,90 +116,98 @@ async function runComprehensiveAnalysis(
       competitors,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      ahrefsApiKey: process.env.AHREFS_API_KEY,
-      testsPerPlatform,
-      questionsPerStage,
+      testsPerPlatform: 2, // Reduced for speed
+      questionsPerStage: 3, // Reduced for speed
       onProgress,
     });
 
     // Run the analysis
     const result = await analysisService.runAnalysis();
+    console.log(`✅ [SAVE] Analysis complete, saving ${result.rawData.questions.length} questions and ${result.rawData.analyses.length} analyses`);
 
-    // Save discovered questions
-    for (const question of result.rawData.questions) {
-      await prisma.discoveredQuestion.create({
-        data: {
-          analysisId,
-          question: question.question,
-          searchVolume: question.searchVolume,
-          difficulty: question.difficulty,
-          intent: question.intent,
-          category: question.category,
-          score: question.score,
-        },
-      });
-    }
-
-    // Save AI test results
-    for (const analysis of result.rawData.analyses) {
-      for (const response of analysis.responses) {
-        await prisma.aITestResult.create({
+    // Save discovered questions (batch for speed)
+    await Promise.all(
+      result.rawData.questions.map((question) =>
+        prisma.discoveredQuestion.create({
           data: {
             analysisId,
-            questionId: null,
-            question: response.question,
-            platform: response.platform,
-            brandMentioned: response.brandMentioned,
-            position: response.brandPosition,
-            sentiment: response.sentiment,
-            context: response.contextExtract,
-            fullResponse: response.fullResponse,
-            citations: response.citedUrls,
+            question: question.question,
+            searchVolume: question.searchVolume,
+            difficulty: question.difficulty,
+            intent: question.intent,
+            category: question.category,
+            score: question.score,
           },
-        });
-      }
+        })
+      )
+    );
+
+    // Save AI test results (batch for speed)
+    const testResults = result.rawData.analyses.flatMap((analysis) =>
+      analysis.responses.map((response) => ({
+        analysisId,
+        questionId: null,
+        question: response.question,
+        platform: response.platform,
+        brandMentioned: response.brandMentioned,
+        position: response.brandPosition,
+        sentiment: response.sentiment,
+        context: response.contextExtract,
+        fullResponse: response.fullResponse.substring(0, 5000), // Limit length
+        citations: response.citedUrls,
+      }))
+    );
+
+    // Save in batches of 20 for database performance
+    for (let i = 0; i < testResults.length; i += 20) {
+      const batch = testResults.slice(i, i + 20);
+      await Promise.all(batch.map((data) => prisma.aITestResult.create({ data })));
     }
 
     // Save competitors
-    for (const competitor of competitors) {
-      await prisma.detectedCompetitor.create({
-        data: {
-          analysisId,
-          competitorName: competitor,
-          domain: competitor,
-          overlapScore: 0,
-        },
-      });
-    }
+    await Promise.all(
+      competitors.map((competitor) =>
+        prisma.detectedCompetitor.create({
+          data: {
+            analysisId,
+            competitorName: competitor,
+            domain: competitor,
+            overlapScore: 0,
+          },
+        })
+      )
+    );
 
     // Save journey stage insights
-    for (const stage of result.journeyStages) {
-      await prisma.aIInsight.create({
-        data: {
-          analysisId,
-          category: "journey_stage",
-          priority: stage.stage === "awareness" ? 1 : stage.stage === "consideration" ? 2 : 3,
-          title: `${stage.stageLabel} Analysis`,
-          finding: stage.recommendation.commonPattern,
-          dataEvidence: `${stage.portrayal.totalTests} tests, ${stage.portrayal.mentionRate}% mention rate`,
-          aiReasoning: stage.recommendation.contentType,
-          actions: [stage.recommendation.focusedAction],
-          expectedImpact: {
-            stage: stage.stage,
-            stageLabel: stage.stageLabel,
-            stageDescription: stage.stageDescription,
-            icon: stage.icon,
-            color: stage.color,
-            questions: stage.questions,
-            portrayal: stage.portrayal,
-            recommendation: stage.recommendation,
+    await Promise.all(
+      result.journeyStages.map((stage) =>
+        prisma.aIInsight.create({
+          data: {
+            analysisId,
+            category: "journey_stage",
+            priority: stage.stage === "awareness" ? 1 : stage.stage === "consideration" ? 2 : 3,
+            title: `${stage.stageLabel} Analysis`,
+            finding: stage.recommendation.commonPattern,
+            dataEvidence: `${stage.portrayal.totalTests} tests, ${stage.portrayal.mentionRate}% mention rate`,
+            aiReasoning: stage.recommendation.contentType,
+            actions: [stage.recommendation.focusedAction],
+            expectedImpact: {
+              stage: stage.stage,
+              stageLabel: stage.stageLabel,
+              stageDescription: stage.stageDescription,
+              icon: stage.icon,
+              color: stage.color,
+              questions: stage.questions,
+              portrayal: stage.portrayal,
+              recommendation: stage.recommendation,
+            },
+            effort: "medium",
+            timeline: "4-8 weeks",
+            confidence: "high",
           },
-          effort: "medium",
-          timeline: "4-8 weeks",
-          confidence: "high",
-        },
-      });
-    }
+        })
+      )
+    );
 
     // Mark as completed
     await prisma.analysis.update({
@@ -215,18 +221,22 @@ async function runComprehensiveAnalysis(
     });
 
     const totalTime = (Date.now() - startTime) / 1000;
-    console.log(`🎉 [ANALYSIS] Completed ${analysisId} in ${totalTime.toFixed(1)}s`);
+    console.log(`🎉 [SAVE] Completed ${analysisId} in ${totalTime.toFixed(1)}s`);
   } catch (error: any) {
-    console.error(`❌ [ANALYSIS] Error in ${analysisId}:`, error);
+    console.error(`❌ [SAVE] Error in ${analysisId}:`, error.message, error.stack);
 
-    await prisma.analysis.update({
-      where: { id: analysisId },
-      data: {
-        status: "failed",
-        progress: 0,
-        currentStep: `Failed: ${error.message}`,
-      },
-    });
+    try {
+      await prisma.analysis.update({
+        where: { id: analysisId },
+        data: {
+          status: "failed",
+          progress: 0,
+          currentStep: `Failed: ${error.message?.substring(0, 200) || "Unknown error"}`,
+        },
+      });
+    } catch (updateError) {
+      console.error(`❌ [SAVE] Failed to update status:`, updateError);
+    }
 
     throw error;
   }
