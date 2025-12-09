@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader } from "lucide-react";
+import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2 } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
 
 export default function DashboardPage() {
@@ -10,6 +10,27 @@ export default function DashboardPage() {
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const handleClearAll = async () => {
+    setClearing(true);
+    try {
+      const response = await fetch("/api/analysis/clear", { method: "DELETE" });
+      const data = await response.json();
+      if (data.success) {
+        setAnalyses([]);
+        setShowClearConfirm(false);
+      } else {
+        alert("Failed to clear analyses: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error clearing analyses:", error);
+      alert("Failed to clear analyses");
+    } finally {
+      setClearing(false);
+    }
+  };
 
   const loadProjects = async () => {
     try {
@@ -163,14 +184,63 @@ export default function DashboardPage() {
               </h2>
               <p className="text-sm text-gray-600 mt-1">Track how AI platforms mention your brands</p>
             </div>
-            <Link
-              href="/analysis/new"
-              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
-            >
-              <Plus className="w-4 h-4" />
-              New Analysis
-            </Link>
+            <div className="flex items-center gap-3">
+              {analyses.length > 0 && (
+                <button
+                  onClick={() => setShowClearConfirm(true)}
+                  className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1 font-semibold"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Clear All
+                </button>
+              )}
+              <Link
+                href="/analysis/new"
+                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
+              >
+                <Plus className="w-4 h-4" />
+                New Analysis
+              </Link>
+            </div>
           </div>
+
+          {/* Clear Confirmation Modal */}
+          {showClearConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Clear All Analyses?</h3>
+                <p className="text-gray-600 mb-6">
+                  This will permanently delete all {analyses.length} analyses and their data. This action cannot be undone.
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowClearConfirm(false)}
+                    disabled={clearing}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 font-semibold"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleClearAll}
+                    disabled={clearing}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold flex items-center gap-2"
+                  >
+                    {clearing ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        Clearing...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4" />
+                        Clear All
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="text-center py-12 text-gray-500">Loading analyses...</div>
