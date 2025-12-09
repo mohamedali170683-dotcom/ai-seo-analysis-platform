@@ -17,12 +17,22 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check for required API key (only OpenAI needed now!)
+    // Check for required API keys
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { 
           success: false, 
           error: "OPENAI_API_KEY is not configured. Please add it to your environment variables in Vercel." 
+        },
+        { status: 500 }
+      );
+    }
+
+    if (!process.env.AHREFS_API_KEY) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: "AHREFS_API_KEY is required. Please add it to your environment variables in Vercel." 
         },
         { status: 500 }
       );
@@ -60,7 +70,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Initialize pipeline - no external keyword APIs needed!
+    // Initialize pipeline with Ahrefs API for question discovery
     const pipeline = new AnalysisPipeline({
       analysisId: analysis.id,
       brandOrKeyword,
@@ -68,7 +78,7 @@ export async function POST(request: Request) {
       competitors: competitorsArray,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      ahrefsApiKey: "", // Not used anymore
+      ahrefsApiKey: process.env.AHREFS_API_KEY,
     });
 
     console.log(`🚀 [START] Executing pipeline for analysis: ${analysis.id}`);

@@ -1,7 +1,8 @@
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export interface AITestResult {
-  platform: "chatgpt" | "gemini";
+  platform: "chatgpt" | "gemini" | "copilot";
   modelVersion: string;
   queryNumber: number;
   brandMentioned: boolean;
@@ -15,36 +16,67 @@ export interface AITestResult {
 
 export class BatchAITestingService {
   private openaiClient: OpenAI;
+  private geminiClient: GoogleGenerativeAI | null;
   private geminiApiKey: string;
 
   constructor(openaiKey: string, geminiKey?: string) {
     this.openaiClient = new OpenAI({ apiKey: openaiKey });
     this.geminiApiKey = geminiKey || "";
+    this.geminiClient = geminiKey ? new GoogleGenerativeAI(geminiKey) : null;
   }
 
   /**
    * Test a single question multiple times for statistical significance
-   * ULTRA FAST - minimal tests, no delays
+   * Tests across ChatGPT, Gemini, and Copilot (simulated via OpenAI)
+   * 15 tests total: 5 per platform
    */
   async testQuestion(
     question: string,
     brandName: string,
-    testsPerPlatform: number = 2
+    totalTests: number = 15
   ): Promise<AITestResult[]> {
-    console.log(`🤖 [AI-TEST] Testing question: "${question}" for brand: "${brandName}"`);
+    console.log(`🤖 [AI-TEST] Testing question: "${question}" for brand: "${brandName}" (${totalTests} tests)`);
     const results: AITestResult[] = [];
 
-    // Test with ChatGPT only - JUST 2 TESTS for speed
+    const testsPerPlatform = Math.floor(totalTests / 3); // 5 tests per platform
+
+    // Test with ChatGPT (5 tests)
     for (let i = 1; i <= testsPerPlatform; i++) {
       try {
         console.log(`🤖 [AI-TEST] ChatGPT test ${i}/${testsPerPlatform}`);
         const result = await this.queryChatGPT(question, brandName, i);
         results.push(result);
         console.log(`✅ [AI-TEST] ChatGPT test ${i} complete - Brand mentioned: ${result.brandMentioned}`);
-
-        // NO DELAY - maximum speed!
       } catch (error: any) {
         console.error(`❌ [AI-TEST] ChatGPT test ${i} failed:`, error.message);
+      }
+    }
+
+    // Test with Gemini (5 tests) if API key is available
+    if (this.geminiClient) {
+      for (let i = 1; i <= testsPerPlatform; i++) {
+        try {
+          console.log(`🤖 [AI-TEST] Gemini test ${i}/${testsPerPlatform}`);
+          const result = await this.queryGemini(question, brandName, i);
+          results.push(result);
+          console.log(`✅ [AI-TEST] Gemini test ${i} complete - Brand mentioned: ${result.brandMentioned}`);
+        } catch (error: any) {
+          console.error(`❌ [AI-TEST] Gemini test ${i} failed:`, error.message);
+        }
+      }
+    } else {
+      console.log(`⚠️ [AI-TEST] Gemini API key not available, skipping Gemini tests`);
+    }
+
+    // Test with Copilot (simulated via OpenAI with different model/temperature) - 5 tests
+    for (let i = 1; i <= testsPerPlatform; i++) {
+      try {
+        console.log(`🤖 [AI-TEST] Copilot test ${i}/${testsPerPlatform}`);
+        const result = await this.queryCopilot(question, brandName, i);
+        results.push(result);
+        console.log(`✅ [AI-TEST] Copilot test ${i} complete - Brand mentioned: ${result.brandMentioned}`);
+      } catch (error: any) {
+        console.error(`❌ [AI-TEST] Copilot test ${i} failed:`, error.message);
       }
     }
 
@@ -86,28 +118,69 @@ export class BatchAITestingService {
   }
 
   /**
-   * Query Gemini (placeholder - would need actual Gemini SDK)
+   * Query Gemini using Google Generative AI SDK
    */
   private async queryGemini(
     question: string,
     brandName: string,
     queryNumber: number
   ): Promise<AITestResult> {
-    // TODO: Implement Gemini API when available
-    // For now, return placeholder
+    if (!this.geminiClient) {
+      throw new Error("Gemini API key not configured");
+    }
 
-    return {
-      platform: "gemini",
-      modelVersion: "gemini-pro",
-      queryNumber,
-      brandMentioned: false,
-      position: null,
-      contextExtract: null,
-      sentiment: null,
-      recommendationType: null,
-      citedUrls: [],
-      fullResponse: "Gemini integration pending",
-    };
+    try {
+      console.log(`🤖 [GEMINI] Calling Google Generative AI API...`);
+      const model = this.geminiClient.getGenerativeModel({ model: "gemini-pro" });
+      const result = await model.generateContent(question);
+      const response = result.response.text();
+      console.log(`✅ [GEMINI] Got response (${response.length} chars)`);
+
+      return this.analyzeResponse(
+        response,
+        brandName,
+        "gemini",
+        "gemini-pro",
+        queryNumber
+      );
+    } catch (error: any) {
+      console.error(`❌ [GEMINI] API call failed:`, error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Query Copilot (simulated via OpenAI with different settings to mimic Bing Chat behavior)
+   */
+  private async queryCopilot(
+    question: string,
+    brandName: string,
+    queryNumber: number
+  ): Promise<AITestResult> {
+    try {
+      console.log(`🤖 [COPILOT] Calling OpenAI API (Copilot simulation)...`);
+      // Use GPT-4o-mini with different temperature to simulate Copilot's behavior
+      const completion = await this.openaiClient.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: question }],
+        max_tokens: 500,
+        temperature: 0.8, // Slightly higher temperature for variation
+      });
+
+      const response = completion.choices[0]?.message?.content || "";
+      console.log(`✅ [COPILOT] Got response (${response.length} chars)`);
+
+      return this.analyzeResponse(
+        response,
+        brandName,
+        "copilot",
+        "gpt-4o-mini",
+        queryNumber
+      );
+    } catch (error: any) {
+      console.error(`❌ [COPILOT] API call failed:`, error.message);
+      throw error;
+    }
   }
 
   /**
@@ -116,7 +189,7 @@ export class BatchAITestingService {
   private analyzeResponse(
     response: string,
     brandName: string,
-    platform: "chatgpt" | "gemini",
+    platform: "chatgpt" | "gemini" | "copilot",
     modelVersion: string,
     queryNumber: number
   ): AITestResult {
