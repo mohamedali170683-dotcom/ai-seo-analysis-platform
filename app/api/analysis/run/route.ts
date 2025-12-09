@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { prisma } from "@/lib/db/prisma";
 import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analysis-service";
 
@@ -52,16 +53,17 @@ export async function POST(request: Request) {
 
     console.log(`✅ [API] Created analysis ${analysis.id}`);
 
-    // Run analysis in background (don't await)
-    executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray);
+    // Use waitUntil to keep function alive while returning early
+    waitUntil(executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray));
 
+    // Return immediately so frontend can start polling
     return NextResponse.json({
       success: true,
       analysisId: analysis.id,
       message: "Analysis started",
     });
   } catch (error: any) {
-    console.error("❌ [API] Error:", error);
+    console.error("❌ [API] Error:", error.message);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
@@ -83,6 +85,7 @@ async function executeAnalysis(
           where: { id: analysisId },
           data: { progress, currentStep: step },
         });
+        console.log(`📊 [EXEC] Progress: ${progress}% - ${step}`);
       } catch (e) {
         console.error(`⚠️ [EXEC] Progress update failed: ${e}`);
       }
@@ -105,89 +108,73 @@ async function executeAnalysis(
 
     // Save questions
     for (const q of result.rawData.questions) {
-      try {
-        await prisma.discoveredQuestion.create({
-          data: {
-            analysisId,
-            question: q.question,
-            searchVolume: q.searchVolume,
-            difficulty: q.difficulty,
-            intent: q.intent,
-            category: q.category,
-            score: q.score,
-          },
-        });
-      } catch (e) {
-        console.error(`⚠️ [EXEC] Failed to save question: ${e}`);
-      }
+      await prisma.discoveredQuestion.create({
+        data: {
+          analysisId,
+          question: q.question,
+          searchVolume: q.searchVolume,
+          difficulty: q.difficulty,
+          intent: q.intent,
+          category: q.category,
+          score: q.score,
+        },
+      });
     }
 
     // Save AI results
-    for (const analysis of result.rawData.analyses) {
-      for (const response of analysis.responses) {
-        try {
-          await prisma.aITestResult.create({
-            data: {
-              analysisId,
-              questionId: null,
-              question: response.question,
-              platform: response.platform,
-              brandMentioned: response.brandMentioned,
-              position: response.brandPosition,
-              sentiment: response.sentiment,
-              context: response.contextExtract,
-              fullResponse: response.fullResponse?.substring(0, 5000) || "",
-              citations: response.citedUrls,
-            },
-          });
-        } catch (e) {
-          console.error(`⚠️ [EXEC] Failed to save AI result: ${e}`);
-        }
+    for (const a of result.rawData.analyses) {
+      for (const response of a.responses) {
+        await prisma.aITestResult.create({
+          data: {
+            analysisId,
+            questionId: null,
+            question: response.question,
+            platform: response.platform,
+            brandMentioned: response.brandMentioned,
+            position: response.brandPosition,
+            sentiment: response.sentiment,
+            context: response.contextExtract,
+            fullResponse: response.fullResponse?.substring(0, 5000) || "",
+            citations: response.citedUrls,
+          },
+        });
       }
     }
 
     // Save competitors
     for (const comp of competitors) {
-      try {
-        await prisma.detectedCompetitor.create({
-          data: { analysisId, competitorName: comp, domain: comp, overlapScore: 0 },
-        });
-      } catch (e) {
-        console.error(`⚠️ [EXEC] Failed to save competitor: ${e}`);
-      }
+      await prisma.detectedCompetitor.create({
+        data: { analysisId, competitorName: comp, domain: comp, overlapScore: 0 },
+      });
     }
 
     // Save insights
     for (const stage of result.journeyStages) {
-      try {
-        await prisma.aIInsight.create({
-          data: {
-            analysisId,
-            category: "journey_stage",
-            priority: stage.stage === "awareness" ? 1 : stage.stage === "consideration" ? 2 : 3,
-            title: `${stage.stageLabel} Analysis`,
-            finding: stage.recommendation.commonPattern,
-            dataEvidence: `${stage.portrayal.totalTests} tests, ${stage.portrayal.mentionRate}% mention rate`,
-            aiReasoning: stage.recommendation.contentType,
-            actions: [stage.recommendation.focusedAction],
-            expectedImpact: {
-              stage: stage.stage,
-              stageLabel: stage.stageLabel,
-              stageDescription: stage.stageDescription,
-              icon: stage.icon,
-              color: stage.color,
-              questions: stage.questions,
-              portrayal: stage.portrayal,
-              recommendation: stage.recommendation,
-            },
-            effort: "medium",
-            timeline: "4-8 weeks",
-            confidence: "high",
+      await prisma.aIInsight.create({
+        data: {
+          analysisId,
+          category: "journey_stage",
+          priority: stage.stage === "awareness" ? 1 : stage.stage === "consideration" ? 2 : 3,
+          title: `${stage.stageLabel} Analysis`,
+          finding: stage.recommendation.commonPattern,
+          dataEvidence: `${stage.portrayal.totalTests} tests, ${stage.portrayal.mentionRate}% mention rate`,
+          aiReasoning: stage.recommendation.contentType,
+          actions: [stage.recommendation.focusedAction],
+          expectedImpact: {
+            stage: stage.stage,
+            stageLabel: stage.stageLabel,
+            stageDescription: stage.stageDescription,
+            icon: stage.icon,
+            color: stage.color,
+            questions: stage.questions,
+            portrayal: stage.portrayal,
+            recommendation: stage.recommendation,
           },
-        });
-      } catch (e) {
-        console.error(`⚠️ [EXEC] Failed to save insight: ${e}`);
-      }
+          effort: "medium",
+          timeline: "4-8 weeks",
+          confidence: "high",
+        },
+      });
     }
 
     // Mark completed
@@ -203,19 +190,15 @@ async function executeAnalysis(
 
     console.log(`🎉 [EXEC] Completed ${analysisId} in ${(Date.now() - startTime) / 1000}s`);
   } catch (error: any) {
-    console.error(`❌ [EXEC] Failed ${analysisId}:`, error.message, error.stack);
+    console.error(`❌ [EXEC] Failed ${analysisId}:`, error.message);
 
-    try {
-      await prisma.analysis.update({
-        where: { id: analysisId },
-        data: {
-          status: "failed",
-          progress: 0,
-          currentStep: `Failed: ${error.message?.substring(0, 200) || "Unknown error"}`,
-        },
-      });
-    } catch (e) {
-      console.error(`❌ [EXEC] Failed to update failure status: ${e}`);
-    }
+    await prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        status: "failed",
+        progress: 0,
+        currentStep: `Failed: ${error.message?.substring(0, 200) || "Unknown error"}`,
+      },
+    }).catch(e => console.error(`❌ [EXEC] Failed to update failure status: ${e}`));
   }
 }
