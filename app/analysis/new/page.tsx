@@ -21,12 +21,19 @@ export default function NewAnalysisPage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/analysis/start", {
+      // Use the comprehensive analysis endpoint
+      const response = await fetch("/api/analysis/run", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          brandOrKeyword: formData.brandOrKeyword,
+          domain: formData.domain || undefined,
+          competitors: formData.competitors || undefined,
+          testsPerPlatform: 5, // 5 tests per platform for statistical significance
+          questionsPerStage: 4, // 4 questions per funnel stage
+        }),
       });
 
       const data = await response.json();
@@ -74,19 +81,24 @@ export default function NewAnalysisPage() {
             AI Visibility Analysis
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Discover how AI platforms like ChatGPT and Gemini mention your brand across the entire user journey
+            Discover how AI platforms like ChatGPT, Gemini, and Copilot mention your brand across the entire user journey
           </p>
+          <div className="mt-4 inline-flex items-center gap-2 bg-blue-100 border-2 border-blue-200 rounded-xl px-4 py-2">
+            <span className="text-sm font-semibold text-blue-700">
+              🔬 180 AI queries across 3 platforms for statistically significant results
+            </span>
+          </div>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="grid md:grid-cols-4 gap-6 mb-12">
           <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-100">
             <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Search className="w-6 h-6 text-blue-600" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2">Smart Questions</h3>
+            <h3 className="font-bold text-gray-900 mb-2">12 Smart Questions</h3>
             <p className="text-sm text-gray-600">
-              9 brand-specific questions across awareness, consideration, and decision stages
+              Brand-specific questions across awareness, consideration, and decision stages
             </p>
           </div>
           
@@ -94,19 +106,29 @@ export default function NewAnalysisPage() {
             <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Brain className="w-6 h-6 text-purple-600" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2">Multi-Platform Testing</h3>
+            <h3 className="font-bold text-gray-900 mb-2">3 AI Platforms</h3>
             <p className="text-sm text-gray-600">
-              Test your brand visibility across ChatGPT and other AI platforms
+              Test across ChatGPT, Gemini, and Copilot for complete visibility
+            </p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-100">
+            <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
+              <TrendingUp className="w-6 h-6 text-green-600" />
+            </div>
+            <h3 className="font-bold text-gray-900 mb-2">180 AI Queries</h3>
+            <p className="text-sm text-gray-600">
+              5 tests per question per platform for statistical significance
             </p>
           </div>
           
           <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-pink-100">
             <div className="bg-pink-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
-              <TrendingUp className="w-6 h-6 text-pink-600" />
+              <Sparkles className="w-6 h-6 text-pink-600" />
             </div>
-            <h3 className="font-bold text-gray-900 mb-2">Actionable Insights</h3>
+            <h3 className="font-bold text-gray-900 mb-2">AI Insights</h3>
             <p className="text-sm text-gray-600">
-              Get AI-generated recommendations to improve your visibility
+              Actionable recommendations to improve your AI visibility
             </p>
           </div>
         </div>
@@ -204,7 +226,7 @@ export default function NewAnalysisPage() {
             </button>
 
             <p className="text-center text-sm text-gray-500">
-              Analysis typically completes in 15-25 seconds
+              Analysis typically completes in 3-5 minutes (180 AI queries across 3 platforms)
             </p>
           </form>
         </div>
