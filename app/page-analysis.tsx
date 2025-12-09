@@ -20,17 +20,23 @@ export default function AnalysisLandingPage() {
     setError("");
 
     try {
-      const response = await fetch("/api/analysis/start", {
+      const response = await fetch("/api/analysis/run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          brandOrKeyword: formData.brandOrKeyword,
+          domain: formData.domain || undefined,
+          competitors: formData.competitors || undefined,
+          testsPerPlatform: 5,
+          questionsPerStage: 4,
+        }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Redirect to analysis progress page
-        router.push(`/analysis/${data.analysisId}`);
+        // Redirect to results page
+        router.push(`/results/${data.analysisId}`);
       } else {
         setError(data.error || "Failed to start analysis");
       }
