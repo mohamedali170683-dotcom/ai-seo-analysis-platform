@@ -9,7 +9,7 @@ export const maxDuration = 300;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { brandOrKeyword, domain, competitors } = body;
+    const { brandOrKeyword, domain, competitors, category } = body;
 
     if (!brandOrKeyword) {
       return NextResponse.json({ success: false, error: "Brand is required" }, { status: 400 });
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       }
     }
 
-    console.log(`🚀 [API] Starting analysis for: ${brandOrKeyword}`);
+    console.log(`🚀 [API] Starting analysis for: ${brandOrKeyword}${category ? ` (category: ${category})` : ''}`);
 
     // Create user
     const user = await prisma.user.upsert({
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     console.log(`✅ [API] Created analysis ${analysis.id}`);
 
     // Use waitUntil to keep function alive while returning early
-    waitUntil(executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray));
+    waitUntil(executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category));
 
     // Return immediately so frontend can start polling
     return NextResponse.json({
@@ -72,7 +72,8 @@ async function executeAnalysis(
   analysisId: string,
   brandOrKeyword: string,
   domain: string | undefined,
-  competitors: string[]
+  competitors: string[],
+  category?: string
 ) {
   const startTime = Date.now();
   console.log(`🔄 [EXEC] Starting execution for ${analysisId}`);
@@ -96,8 +97,10 @@ async function executeAnalysis(
       brandName: brandOrKeyword,
       domain,
       competitors,
+      category, // NEW: Category/vertical for industry questions
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
+      ahrefsApiKey: process.env.AHREFS_API_KEY, // NEW: Use Ahrefs for real volume data
       testsPerPlatform: 1,
       questionsPerStage: 2,
       onProgress,

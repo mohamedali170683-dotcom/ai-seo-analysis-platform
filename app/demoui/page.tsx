@@ -11,6 +11,7 @@ export default function DemoUIPage() {
     brand: "",
     domain: "",
     competitors: "",
+    category: "", // NEW: Industry/vertical for category-level visibility
   });
   const [analysisMode, setAnalysisMode] = useState<"demo" | "real">("demo");
   const [isLoading, setIsLoading] = useState(false);
@@ -42,8 +43,9 @@ export default function DemoUIPage() {
           brandOrKeyword: formData.brand,
           domain: formData.domain || undefined,
           competitors: formData.competitors || undefined,
-          testsPerPlatform: 5, // 5 tests per platform for statistical significance
-          questionsPerStage: 4, // 4 questions per funnel stage
+          category: formData.category || undefined, // NEW: Include category
+          testsPerPlatform: 1,
+          questionsPerStage: 2,
         }),
       });
 
@@ -298,6 +300,26 @@ export default function DemoUIPage() {
               />
               <p className="text-sm text-gray-500 mt-2">
                 Comma-separated list of competitors (up to 3 recommended)
+              </p>
+            </div>
+
+            {/* Category/Vertical - NEW */}
+            <div>
+              <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4" />
+                Category / Vertical <span className="text-gray-400">(Recommended for category-level visibility)</span>
+              </label>
+              <input
+                type="text"
+                id="category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                placeholder="e.g., running shoes, electric cars, pet food, coffee machines"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                disabled={isLoading}
+              />
+              <p className="text-sm text-gray-500 mt-2">
+                The product category or industry. This helps discover how visible your brand is when people search for your category (not just your brand name).
               </p>
             </div>
 
