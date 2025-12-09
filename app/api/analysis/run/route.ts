@@ -1,33 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
-import { ComprehensiveAnalysisService, ComprehensiveAnalysisResult } from "@/lib/services/comprehensive-analysis-service";
+import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analysis-service";
 
-// Allow up to 5 minutes for comprehensive analysis
+// Allow up to 5 minutes for analysis
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
-  const startTime = Date.now();
-  
   try {
     const body = await request.json();
     const { brandOrKeyword, domain, competitors } = body;
 
     if (!brandOrKeyword) {
-      return NextResponse.json(
-        { success: false, error: "Brand or keyword is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Brand is required" }, { status: 400 });
     }
 
-    // Check for required API key
     if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { success: false, error: "OPENAI_API_KEY is not configured" },
-        { status: 500 }
-      );
+      return NextResponse.json({ success: false, error: "OPENAI_API_KEY not configured" }, { status: 500 });
     }
 
-    // Parse competitors to array
+    // Parse competitors
     let competitorsArray: string[] = [];
     if (competitors) {
       if (typeof competitors === "string") {
@@ -39,7 +30,7 @@ export async function POST(request: Request) {
 
     console.log(`🚀 [API] Starting analysis for: ${brandOrKeyword}`);
 
-    // Create or get user
+    // Create user
     const user = await prisma.user.upsert({
       where: { email: "demo@example.com" },
       update: {},
@@ -61,127 +52,115 @@ export async function POST(request: Request) {
 
     console.log(`✅ [API] Created analysis ${analysis.id}`);
 
-    // Run analysis directly (NOT in background - keeps function alive)
-    runAnalysisAndSave(analysis.id, brandOrKeyword, domain, competitorsArray)
-      .then(() => {
-        console.log(`🎉 [API] Analysis ${analysis.id} completed successfully`);
-      })
-      .catch((error) => {
-        console.error(`❌ [API] Analysis ${analysis.id} failed:`, error.message);
-      });
+    // Run analysis in background (don't await)
+    executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray);
 
-    // Return immediately - analysis runs in background
     return NextResponse.json({
       success: true,
       analysisId: analysis.id,
-      message: "Analysis started successfully",
+      message: "Analysis started",
     });
   } catch (error: any) {
-    console.error("❌ [API] Error starting analysis:", error);
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to start analysis" },
-      { status: 500 }
-    );
+    console.error("❌ [API] Error:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-/**
- * Run the comprehensive analysis and save results
- */
-async function runAnalysisAndSave(
+async function executeAnalysis(
   analysisId: string,
   brandOrKeyword: string,
   domain: string | undefined,
   competitors: string[]
 ) {
   const startTime = Date.now();
+  console.log(`🔄 [EXEC] Starting execution for ${analysisId}`);
 
   try {
-    // Progress callback with error handling
+    // Progress callback
     const onProgress = async (progress: number, step: string) => {
       try {
         await prisma.analysis.update({
           where: { id: analysisId },
           data: { progress, currentStep: step },
         });
-      } catch (error) {
-        console.error(`⚠️ [PROGRESS] Failed to update: ${error}`);
+      } catch (e) {
+        console.error(`⚠️ [EXEC] Progress update failed: ${e}`);
       }
     };
 
-    // Initialize comprehensive analysis service
-    const analysisService = new ComprehensiveAnalysisService({
+    // Run analysis
+    const service = new ComprehensiveAnalysisService({
       brandName: brandOrKeyword,
       domain,
       competitors,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      testsPerPlatform: 2, // Reduced for speed
-      questionsPerStage: 3, // Reduced for speed
+      testsPerPlatform: 2,
+      questionsPerStage: 3,
       onProgress,
     });
 
-    // Run the analysis
-    const result = await analysisService.runAnalysis();
-    console.log(`✅ [SAVE] Analysis complete, saving ${result.rawData.questions.length} questions and ${result.rawData.analyses.length} analyses`);
+    const result = await service.runAnalysis();
+    console.log(`✅ [EXEC] Analysis complete, saving results...`);
 
-    // Save discovered questions (batch for speed)
-    await Promise.all(
-      result.rawData.questions.map((question) =>
-        prisma.discoveredQuestion.create({
+    // Save questions
+    for (const q of result.rawData.questions) {
+      try {
+        await prisma.discoveredQuestion.create({
           data: {
             analysisId,
-            question: question.question,
-            searchVolume: question.searchVolume,
-            difficulty: question.difficulty,
-            intent: question.intent,
-            category: question.category,
-            score: question.score,
+            question: q.question,
+            searchVolume: q.searchVolume,
+            difficulty: q.difficulty,
+            intent: q.intent,
+            category: q.category,
+            score: q.score,
           },
-        })
-      )
-    );
+        });
+      } catch (e) {
+        console.error(`⚠️ [EXEC] Failed to save question: ${e}`);
+      }
+    }
 
-    // Save AI test results (batch for speed)
-    const testResults = result.rawData.analyses.flatMap((analysis) =>
-      analysis.responses.map((response) => ({
-        analysisId,
-        questionId: null,
-        question: response.question,
-        platform: response.platform,
-        brandMentioned: response.brandMentioned,
-        position: response.brandPosition,
-        sentiment: response.sentiment,
-        context: response.contextExtract,
-        fullResponse: response.fullResponse.substring(0, 5000), // Limit length
-        citations: response.citedUrls,
-      }))
-    );
-
-    // Save in batches of 20 for database performance
-    for (let i = 0; i < testResults.length; i += 20) {
-      const batch = testResults.slice(i, i + 20);
-      await Promise.all(batch.map((data) => prisma.aITestResult.create({ data })));
+    // Save AI results
+    for (const analysis of result.rawData.analyses) {
+      for (const response of analysis.responses) {
+        try {
+          await prisma.aITestResult.create({
+            data: {
+              analysisId,
+              questionId: null,
+              question: response.question,
+              platform: response.platform,
+              brandMentioned: response.brandMentioned,
+              position: response.brandPosition,
+              sentiment: response.sentiment,
+              context: response.contextExtract,
+              fullResponse: response.fullResponse?.substring(0, 5000) || "",
+              citations: response.citedUrls,
+            },
+          });
+        } catch (e) {
+          console.error(`⚠️ [EXEC] Failed to save AI result: ${e}`);
+        }
+      }
     }
 
     // Save competitors
-    await Promise.all(
-      competitors.map((competitor) =>
-        prisma.detectedCompetitor.create({
-          data: {
-            analysisId,
-            competitorName: competitor,
-            domain: competitor,
-            overlapScore: 0,
-          },
-        })
-      )
-    );
+    for (const comp of competitors) {
+      try {
+        await prisma.detectedCompetitor.create({
+          data: { analysisId, competitorName: comp, domain: comp, overlapScore: 0 },
+        });
+      } catch (e) {
+        console.error(`⚠️ [EXEC] Failed to save competitor: ${e}`);
+      }
+    }
 
-    // Save journey stage insights
-    await Promise.all(
-      result.journeyStages.map((stage) =>
-        prisma.aIInsight.create({
+    // Save insights
+    for (const stage of result.journeyStages) {
+      try {
+        await prisma.aIInsight.create({
           data: {
             analysisId,
             category: "journey_stage",
@@ -205,11 +184,13 @@ async function runAnalysisAndSave(
             timeline: "4-8 weeks",
             confidence: "high",
           },
-        })
-      )
-    );
+        });
+      } catch (e) {
+        console.error(`⚠️ [EXEC] Failed to save insight: ${e}`);
+      }
+    }
 
-    // Mark as completed
+    // Mark completed
     await prisma.analysis.update({
       where: { id: analysisId },
       data: {
@@ -220,10 +201,9 @@ async function runAnalysisAndSave(
       },
     });
 
-    const totalTime = (Date.now() - startTime) / 1000;
-    console.log(`🎉 [SAVE] Completed ${analysisId} in ${totalTime.toFixed(1)}s`);
+    console.log(`🎉 [EXEC] Completed ${analysisId} in ${(Date.now() - startTime) / 1000}s`);
   } catch (error: any) {
-    console.error(`❌ [SAVE] Error in ${analysisId}:`, error.message, error.stack);
+    console.error(`❌ [EXEC] Failed ${analysisId}:`, error.message, error.stack);
 
     try {
       await prisma.analysis.update({
@@ -234,10 +214,8 @@ async function runAnalysisAndSave(
           currentStep: `Failed: ${error.message?.substring(0, 200) || "Unknown error"}`,
         },
       });
-    } catch (updateError) {
-      console.error(`❌ [SAVE] Failed to update status:`, updateError);
+    } catch (e) {
+      console.error(`❌ [EXEC] Failed to update failure status: ${e}`);
     }
-
-    throw error;
   }
 }
