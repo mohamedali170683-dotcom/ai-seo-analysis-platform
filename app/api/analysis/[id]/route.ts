@@ -47,45 +47,58 @@ export async function GET(
     );
 
     // Format journey stages for the report
-    const journeyStages = journeyStageInsights.map((insight) => {
-      const expectedImpact = insight.expectedImpact as any;
-      if (expectedImpact && typeof expectedImpact === "object") {
-        // Ensure all required fields are present with defaults
-        const portrayal = expectedImpact.portrayal || {};
-        const recommendation = expectedImpact.recommendation || {};
-        
-        return {
-          stage: expectedImpact.stage || "awareness",
-          stageLabel: expectedImpact.stageLabel || "Awareness",
-          stageDescription: expectedImpact.stageDescription || "User is learning and discovering brands",
-          icon: expectedImpact.icon || "Brain",
-          color: expectedImpact.color || "from-blue-500 to-blue-600",
-          questions: expectedImpact.questions || [],
-          portrayal: {
-            mentionRate: portrayal.mentionRate || 0,
-            totalQuestions: portrayal.totalQuestions || 0,
-            totalTests: portrayal.totalTests || 0,
-            totalAnswersAnalyzed: portrayal.totalAnswersAnalyzed || 0,
-            visibilityScore: portrayal.visibilityScore || 0,
-            averagePosition: portrayal.averagePosition || 0,
-            sentiment: portrayal.sentiment || {
-              positive: 0,
-              negative: 0,
-              neutral: 100,
-              dominant: "neutral" as const,
+    type JourneyStage = {
+      stage: string;
+      stageLabel: string;
+      stageDescription: string;
+      icon: string;
+      color: string;
+      questions: any[];
+      portrayal: any;
+      recommendation: any;
+    };
+
+    const journeyStages: JourneyStage[] = journeyStageInsights
+      .map((insight) => {
+        const expectedImpact = insight.expectedImpact as any;
+        if (expectedImpact && typeof expectedImpact === "object") {
+          // Ensure all required fields are present with defaults
+          const portrayal = expectedImpact.portrayal || {};
+          const recommendation = expectedImpact.recommendation || {};
+          
+          return {
+            stage: expectedImpact.stage || "awareness",
+            stageLabel: expectedImpact.stageLabel || "Awareness",
+            stageDescription: expectedImpact.stageDescription || "User is learning and discovering brands",
+            icon: expectedImpact.icon || "Brain",
+            color: expectedImpact.color || "from-blue-500 to-blue-600",
+            questions: expectedImpact.questions || [],
+            portrayal: {
+              mentionRate: portrayal.mentionRate || 0,
+              totalQuestions: portrayal.totalQuestions || 0,
+              totalTests: portrayal.totalTests || 0,
+              totalAnswersAnalyzed: portrayal.totalAnswersAnalyzed || 0,
+              visibilityScore: portrayal.visibilityScore || 0,
+              averagePosition: portrayal.averagePosition || 0,
+              sentiment: portrayal.sentiment || {
+                positive: 0,
+                negative: 0,
+                neutral: 100,
+                dominant: "neutral" as const,
+              },
+              aiAnswerExamples: portrayal.aiAnswerExamples || [],
+              competitorComparison: portrayal.competitorComparison || [],
             },
-            aiAnswerExamples: portrayal.aiAnswerExamples || [],
-            competitorComparison: portrayal.competitorComparison || [],
-          },
-          recommendation: {
-            commonPattern: recommendation.commonPattern || "Analysis in progress.",
-            contentType: recommendation.contentType || "Data pending",
-            focusedAction: recommendation.focusedAction || "Generate more stage-specific content.",
-          },
-        };
-      }
-      return null;
-    }).filter(Boolean);
+            recommendation: {
+              commonPattern: recommendation.commonPattern || "Analysis in progress.",
+              contentType: recommendation.contentType || "Data pending",
+              focusedAction: recommendation.focusedAction || "Generate more stage-specific content.",
+            },
+          };
+        }
+        return null;
+      })
+      .filter((stage): stage is JourneyStage => stage !== null);
 
     // Ensure we have all three stages (create empty ones if missing)
     const stageOrder = ["awareness", "consideration", "decision"];
