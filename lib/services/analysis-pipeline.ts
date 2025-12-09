@@ -114,91 +114,23 @@ export class AnalysisPipeline {
   private async discoverQuestions() {
     const stepStart = Date.now();
     try {
-      console.log(`⚡ [QUESTIONS] Generating smart questions instantly for: ${this.config.brandOrKeyword}`);
+      console.log(`🔍 [QUESTIONS] Discovering questions using Ahrefs API for: ${this.config.brandOrKeyword}`);
       
-      // INSTANT SMART QUESTIONS - No external APIs needed
-      // These are brand-specific and cover all journey stages
-      const brand = this.config.brandOrKeyword;
-      
-      const questions = [
-        // Awareness (3 questions)
-        {
-          question: `What is ${brand}`,
-          searchVolume: 1500,
-          difficulty: 28,
-          intent: "informational" as const,
-          category: "awareness" as const,
-          score: 95,
-        },
-        {
-          question: `${brand} features`,
-          searchVolume: 1200,
-          difficulty: 30,
-          intent: "informational" as const,
-          category: "awareness" as const,
-          score: 90,
-        },
-        {
-          question: `How does ${brand} work`,
-          searchVolume: 1000,
-          difficulty: 32,
-          intent: "informational" as const,
-          category: "awareness" as const,
-          score: 88,
-        },
-        // Consideration (3 questions)
-        {
-          question: `${brand} vs competitors`,
-          searchVolume: 900,
-          difficulty: 42,
-          intent: "commercial" as const,
-          category: "consideration" as const,
-          score: 92,
-        },
-        {
-          question: `Is ${brand} worth it`,
-          searchVolume: 850,
-          difficulty: 38,
-          intent: "commercial" as const,
-          category: "consideration" as const,
-          score: 89,
-        },
-        {
-          question: `${brand} reviews`,
-          searchVolume: 800,
-          difficulty: 40,
-          intent: "commercial" as const,
-          category: "consideration" as const,
-          score: 87,
-        },
-        // Decision (3 questions)
-        {
-          question: `${brand} price`,
-          searchVolume: 750,
-          difficulty: 26,
-          intent: "commercial" as const,
-          category: "decision" as const,
-          score: 85,
-        },
-        {
-          question: `Where to buy ${brand}`,
-          searchVolume: 700,
-          difficulty: 24,
-          intent: "commercial" as const,
-          category: "decision" as const,
-          score: 84,
-        },
-        {
-          question: `${brand} discount`,
-          searchVolume: 650,
-          difficulty: 22,
-          intent: "commercial" as const,
-          category: "decision" as const,
-          score: 82,
-        },
-      ];
+      // Use Ahrefs API to discover questions with search volume
+      if (!this.config.ahrefsApiKey || this.config.ahrefsApiKey === "") {
+        throw new Error("AHREFS_API_KEY is required. Please set it in your environment variables.");
+      }
 
-      console.log(`✅ [QUESTIONS] Generated ${questions.length} questions INSTANTLY`);
+      const ahrefsService = new AhrefsQuestionService(this.config.ahrefsApiKey);
+      
+      // Discover questions - get top 12 questions with highest search volume, grouped by stage
+      const questions = await ahrefsService.discoverQuestions(
+        this.config.brandOrKeyword,
+        50, // minVolume
+        12  // maxQuestions (4 per stage)
+      );
+
+      console.log(`✅ [QUESTIONS] Discovered ${questions.length} questions from Ahrefs in ${Date.now() - stepStart}ms`);
 
       // Save to database in parallel
       console.log(`📝 [QUESTIONS] Saving to database...`);
@@ -223,9 +155,9 @@ export class AnalysisPipeline {
       return questions;
       
     } catch (error: any) {
-      console.error(`❌ [QUESTIONS] Question generation failed:`, error.message);
+      console.error(`❌ [QUESTIONS] Question discovery failed:`, error.message);
       console.error(`❌ [QUESTIONS] Stack:`, error.stack);
-      throw new Error(`Question generation failed: ${error.message}`);
+      throw new Error(`Question discovery failed: ${error.message}`);
     }
   }
 
@@ -277,11 +209,11 @@ export class AnalysisPipeline {
       );
 
       try {
-        // Fast: 2 tests per question, no delays
+        // Statistical significance: 15 tests per question across 3 platforms (5 per platform)
         const results = await testingService.testQuestion(
           question.question,
           this.config.brandOrKeyword,
-          2  // 2 tests for speed while maintaining quality
+          15  // 15 tests total (5 ChatGPT + 5 Gemini + 5 Copilot)
         );
 
         console.log(`✅ [TESTING] Got ${results.length} results for question ${i + 1}`);
@@ -361,6 +293,9 @@ export class AnalysisPipeline {
           expectedImpact: {
             stage: stageAnalysis.stage,
             stageLabel: stageAnalysis.stageLabel,
+            stageDescription: stageAnalysis.stageDescription,
+            icon: stageAnalysis.icon,
+            color: stageAnalysis.color,
             questions: stageAnalysis.questions,
             portrayal: stageAnalysis.portrayal,
             recommendation: stageAnalysis.recommendation,

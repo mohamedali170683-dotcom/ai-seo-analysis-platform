@@ -65,7 +65,7 @@ export default function AnalysisResultsPage({ params }: PageProps) {
     );
   }
 
-  if (!data || !data.analysis) {
+  if (!data || !data.success || !data.analysis) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -129,17 +129,23 @@ export default function AnalysisResultsPage({ params }: PageProps) {
     );
   }
 
-  // Parse journey stage data from AI insights
+  // Parse journey stage data from analysis
   const journeyStages = analysis.journeyStages || [];
-  const overallScore = analysis.stats?.visibilityScore ? Math.round(analysis.stats.visibilityScore) : 0;
+  const overallScore = analysis.stats?.visibilityScore 
+    ? Math.round(analysis.stats.visibilityScore) 
+    : 0;
+  const totalTests = analysis.stats?.totalTests || 0;
+  const totalQuestions = analysis.stats?.totalQuestions || 0;
+  const scoringMethodology = analysis.scoringMethodology;
 
   return (
     <JourneyStageReport
       brandName={analysis.brandOrKeyword}
       domain={analysis.domain}
       overallScore={overallScore}
-      totalTests={analysis.stats?.totalTests || 0}
-      totalQuestions={analysis.stats?.totalQuestions || 0}
+      totalTests={totalTests}
+      totalQuestions={totalQuestions}
+      scoringMethodology={scoringMethodology}
       journeyStages={journeyStages}
       showHeader={true}
       backLink="/"
