@@ -219,12 +219,13 @@ export class AIAnalysisEngineJourney {
     // Get AI answer examples (up to 5 per stage)
     const aiAnswerExamples = this.getAIAnswerExamples(questions, brandName);
 
-    // Get competitor comparison
-    const competitorComparison = this.generateCompetitorComparison(
+    // Get competitor comparison - analyze actual mentions from AI responses
+    const competitorComparison = await this.analyzeCompetitorsFromResponses(
       brandName,
+      questions,
+      competitorData || [],
       mentionRate,
-      avgPosition,
-      competitorData || []
+      avgPosition
     );
 
     // Generate recommendation using AI
@@ -339,36 +340,143 @@ export class AIAnalysisEngineJourney {
     return examples;
   }
 
-  private generateCompetitorComparison(
+  private async analyzeCompetitorsFromResponses(
     brandName: string,
+    questions: any[],
+    competitorData: any[],
     yourMentionRate: number,
-    yourAvgPosition: number,
-    competitorData: any[]
-  ): any[] {
+    yourAvgPosition: number
+  ): Promise<any[]> {
     if (competitorData.length === 0) {
-      // Generate some mock competitors if none provided
-      return [
-        {
-          competitorName: "Industry Leader A",
-          mentionRate: Math.round((yourMentionRate + 5 + Math.random() * 10) * 10) / 10,
-          avgPosition: Math.max(1, Math.round((yourAvgPosition - 0.5 + Math.random()) * 10) / 10),
-          sentiment: "positive" as const,
-        },
-        {
-          competitorName: "Competitor B",
-          mentionRate: Math.round((yourMentionRate - 5 + Math.random() * 10) * 10) / 10,
-          avgPosition: Math.max(1, Math.round((yourAvgPosition + 0.5 + Math.random()) * 10) / 10),
-          sentiment: "positive" as const,
-        },
-      ];
+      // If no competitors provided, analyze common competitors mentioned in responses
+      const allResponses = questions.flatMap(q => q.results.map((r: any) => r.fullResponse || ""));
+      const commonCompetitors = this.extractCommonCompetitors(allResponses, brandName);
+      
+      if (commonCompetitors.length === 0) {
+        return [
+          {
+            competitorName: "Industry Leader A",
+            mentionRate: Math.round((yourMentionRate + 5 + Math.random() * 10) * 10) / 10,
+            avgPosition: Math.max(1, Math.round((yourAvgPosition - 0.5 + Math.random()) * 10) / 10),
+            sentiment: "positive" as const,
+          },
+        ];
+      }
+      
+      competitorData = commonCompetitors.map(name => ({ competitorName: name }));
     }
 
-    return competitorData.map(comp => ({
-      competitorName: comp.competitorName || comp.name || comp,
-      mentionRate: comp.mentionRate || Math.round((yourMentionRate + Math.random() * 20 - 10) * 10) / 10,
-      avgPosition: comp.avgPosition || Math.max(1, Math.round((yourAvgPosition + Math.random() * 2 - 1) * 10) / 10),
-      sentiment: comp.sentiment || "positive" as const,
-    }));
+    // Analyze each competitor from actual AI responses
+    const competitorAnalyses = competitorData.map(comp => {
+      const competitorName = comp.competitorName || comp.name || comp;
+      const allResults = questions.flatMap(q => q.results);
+      
+      // Count mentions of this competitor
+      const competitorMentions = allResults.filter((r: any) => {
+        const response = (r.fullResponse || "").toLowerCase();
+        return response.includes(competitorName.toLowerCase());
+      });
+      
+      const competitorMentionRate = allResults.length > 0
+        ? (competitorMentions.length / allResults.length) * 100
+        : 0;
+      
+      // Calculate average position when mentioned
+      const competitorPositions: number[] = [];
+      competitorMentions.forEach((r: any) => {
+        const response = (r.fullResponse || "").toLowerCase();
+        const sentences = response.split(/[.!?]+/).filter((s: string) => s.trim());
+        for (let i = 0; i < sentences.length; i++) {
+          if (sentences[i].includes(competitorName.toLowerCase())) {
+            competitorPositions.push(i + 1);
+            break;
+          }
+        }
+      });
+      
+      const competitorAvgPosition = competitorPositions.length > 0
+        ? competitorPositions.reduce((a, b) => a + b, 0) / competitorPositions.length
+        : yourAvgPosition + 1;
+      
+      // Determine sentiment for competitor
+      const competitorSentiment = this.analyzeCompetitorSentiment(
+        competitorMentions.map((r: any) => r.fullResponse || ""),
+        competitorName
+      );
+      
+      return {
+        competitorName,
+        mentionRate: Math.round(competitorMentionRate * 10) / 10,
+        avgPosition: Math.round(competitorAvgPosition * 10) / 10,
+        sentiment: competitorSentiment,
+      };
+    });
+
+    return competitorAnalyses;
+  }
+
+  private extractCommonCompetitors(responses: string[], brandName: string): string[] {
+    // Extract brand names that appear frequently in responses (potential competitors)
+    const brandMentions = new Map<string, number>();
+    const commonBrandPatterns = [
+      /\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\b/g, // Capitalized words (potential brand names)
+    ];
+    
+    responses.forEach(response => {
+      const lowerResponse = response.toLowerCase();
+      const brandLower = brandName.toLowerCase();
+      
+      // Look for capitalized sequences that might be brand names
+      commonBrandPatterns.forEach(pattern => {
+        const matches = response.match(pattern);
+        if (matches) {
+          matches.forEach(match => {
+            const matchLower = match.toLowerCase();
+            // Skip if it's the brand itself or common words
+            if (matchLower !== brandLower && 
+                matchLower.length > 2 &&
+                !['The', 'This', 'That', 'These', 'Those', 'When', 'Where', 'What', 'How', 'Why'].includes(match)) {
+              brandMentions.set(match, (brandMentions.get(match) || 0) + 1);
+            }
+          });
+        }
+      });
+    });
+    
+    // Return top 3 most mentioned potential competitors
+    return Array.from(brandMentions.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([name]) => name);
+  }
+
+  private analyzeCompetitorSentiment(responses: string[], competitorName: string): "positive" | "neutral" | "negative" {
+    if (responses.length === 0) return "neutral";
+    
+    const positiveWords = ["best", "excellent", "great", "recommended", "top", "leading", "quality"];
+    const negativeWords = ["expensive", "overpriced", "not recommended", "avoid", "poor"];
+    
+    let positiveCount = 0;
+    let negativeCount = 0;
+    
+    responses.forEach(response => {
+      const lowerResponse = response.toLowerCase();
+      const competitorLower = competitorName.toLowerCase();
+      
+      if (lowerResponse.includes(competitorLower)) {
+        const context = lowerResponse.substring(
+          Math.max(0, lowerResponse.indexOf(competitorLower) - 50),
+          Math.min(lowerResponse.length, lowerResponse.indexOf(competitorLower) + 100)
+        );
+        
+        if (positiveWords.some(word => context.includes(word))) positiveCount++;
+        if (negativeWords.some(word => context.includes(word))) negativeCount++;
+      }
+    });
+    
+    if (positiveCount > negativeCount) return "positive";
+    if (negativeCount > positiveCount) return "negative";
+    return "neutral";
   }
 
   private async generateStageRecommendation(

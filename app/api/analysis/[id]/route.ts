@@ -50,19 +50,105 @@ export async function GET(
     const journeyStages = journeyStageInsights.map((insight) => {
       const expectedImpact = insight.expectedImpact as any;
       if (expectedImpact && typeof expectedImpact === "object") {
+        // Ensure all required fields are present with defaults
+        const portrayal = expectedImpact.portrayal || {};
+        const recommendation = expectedImpact.recommendation || {};
+        
         return {
-          stage: expectedImpact.stage,
-          stageLabel: expectedImpact.stageLabel,
-          stageDescription: expectedImpact.stageDescription || "",
+          stage: expectedImpact.stage || "awareness",
+          stageLabel: expectedImpact.stageLabel || "Awareness",
+          stageDescription: expectedImpact.stageDescription || "User is learning and discovering brands",
           icon: expectedImpact.icon || "Brain",
           color: expectedImpact.color || "from-blue-500 to-blue-600",
           questions: expectedImpact.questions || [],
-          portrayal: expectedImpact.portrayal || {},
-          recommendation: expectedImpact.recommendation || {},
+          portrayal: {
+            mentionRate: portrayal.mentionRate || 0,
+            totalQuestions: portrayal.totalQuestions || 0,
+            totalTests: portrayal.totalTests || 0,
+            totalAnswersAnalyzed: portrayal.totalAnswersAnalyzed || 0,
+            visibilityScore: portrayal.visibilityScore || 0,
+            averagePosition: portrayal.averagePosition || 0,
+            sentiment: portrayal.sentiment || {
+              positive: 0,
+              negative: 0,
+              neutral: 100,
+              dominant: "neutral" as const,
+            },
+            aiAnswerExamples: portrayal.aiAnswerExamples || [],
+            competitorComparison: portrayal.competitorComparison || [],
+          },
+          recommendation: {
+            commonPattern: recommendation.commonPattern || "Analysis in progress.",
+            contentType: recommendation.contentType || "Data pending",
+            focusedAction: recommendation.focusedAction || "Generate more stage-specific content.",
+          },
         };
       }
       return null;
     }).filter(Boolean);
+
+    // Ensure we have all three stages (create empty ones if missing)
+    const stageOrder = ["awareness", "consideration", "decision"];
+    const stageLabels = {
+      awareness: "Awareness",
+      consideration: "Consideration",
+      decision: "Decision",
+    };
+    const stageDescriptions = {
+      awareness: "User is learning and discovering brands",
+      consideration: "User is comparing brands and evaluating options",
+      decision: "User is ready to purchase and looking for where to buy",
+    };
+    const stageIcons = {
+      awareness: "Brain",
+      consideration: "Users",
+      decision: "ShoppingCart",
+    };
+    const stageColors = {
+      awareness: "from-blue-500 to-blue-600",
+      consideration: "from-purple-500 to-purple-600",
+      decision: "from-pink-500 to-pink-600",
+    };
+
+    const existingStages = new Set(journeyStages.map((s: any) => s.stage));
+    stageOrder.forEach((stage) => {
+      if (!existingStages.has(stage)) {
+        journeyStages.push({
+          stage,
+          stageLabel: stageLabels[stage as keyof typeof stageLabels],
+          stageDescription: stageDescriptions[stage as keyof typeof stageDescriptions],
+          icon: stageIcons[stage as keyof typeof stageIcons],
+          color: stageColors[stage as keyof typeof stageColors],
+          questions: [],
+          portrayal: {
+            mentionRate: 0,
+            totalQuestions: 0,
+            totalTests: 0,
+            totalAnswersAnalyzed: 0,
+            visibilityScore: 0,
+            averagePosition: 0,
+            sentiment: {
+              positive: 0,
+              negative: 0,
+              neutral: 100,
+              dominant: "neutral" as const,
+            },
+            aiAnswerExamples: [],
+            competitorComparison: [],
+          },
+          recommendation: {
+            commonPattern: "Insufficient data to identify patterns.",
+            contentType: "N/A",
+            focusedAction: `Generate more ${stage}-stage content to improve visibility.`,
+          },
+        });
+      }
+    });
+
+    // Sort stages in correct order
+    journeyStages.sort((a: any, b: any) => {
+      return stageOrder.indexOf(a.stage) - stageOrder.indexOf(b.stage);
+    });
 
     // Calculate overall stats
     const totalTests = analysis.aiTestResults.length;
