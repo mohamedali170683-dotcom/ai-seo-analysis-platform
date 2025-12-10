@@ -89,17 +89,26 @@ export async function POST(request: Request) {
         process.env.DATAFORSEO_PASSWORD
       );
 
-      const questions = await dataForSEO.getBrandQuestions(brand, 10);
+      // Get ALL keywords first (not just questions) to see what's available
+      const allKeywords = await dataForSEO.getBrandQuestions(brand, 15, false);
+      // Also try with question filter
+      const questions = await dataForSEO.getBrandQuestions(brand, 15, true);
+      
       results.dataforseo = {
+        allKeywordsFound: allKeywords.length,
         questionsFound: questions.length,
-        questions: questions.slice(0, 5).map(q => ({
+        sampleKeywords: allKeywords.slice(0, 8).map(q => ({
+          keyword: q.question,
+          searchVolume: q.searchVolume,
+          category: q.category,
+        })),
+        sampleQuestions: questions.slice(0, 5).map(q => ({
           question: q.question,
           searchVolume: q.searchVolume,
-          difficulty: q.difficulty,
           category: q.category,
         })),
       };
-      console.log(`✅ DataForSEO returned ${questions.length} questions`);
+      console.log(`✅ DataForSEO: ${allKeywords.length} keywords, ${questions.length} questions`);
     }
 
     // Quick test - just verify services are initialized

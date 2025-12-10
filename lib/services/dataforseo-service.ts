@@ -30,13 +30,14 @@ export class DataForSEOService {
 
   /**
    * Get questions for a brand with search volumes
+   * Set questionsOnly=false to get all keywords (useful for debugging)
    */
-  async getBrandQuestions(brandName: string, limit: number = 20): Promise<DataForSEOQuestion[]> {
-    console.log(`🔍 [DATAFORSEO] Fetching brand questions for: ${brandName}`);
+  async getBrandQuestions(brandName: string, limit: number = 20, questionsOnly: boolean = false): Promise<DataForSEOQuestion[]> {
+    console.log(`🔍 [DATAFORSEO] Fetching brand keywords for: ${brandName} (questionsOnly=${questionsOnly})`);
     
     try {
-      const questions = await this.fetchKeywordIdeas(brandName, limit, true);
-      console.log(`✅ [DATAFORSEO] Got ${questions.length} brand questions`);
+      const questions = await this.fetchKeywordIdeas(brandName, limit, questionsOnly);
+      console.log(`✅ [DATAFORSEO] Got ${questions.length} keywords`);
       return questions.map(q => ({ ...q, type: "brand" as const }));
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Brand questions failed: ${error.message}`);
