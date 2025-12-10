@@ -236,43 +236,20 @@ async function executeSelectedAnalysis(
     // Calculate aggregate metrics
     const successfulResults = allResults.filter(r => !r.error);
     const totalResponses = successfulResults.reduce((sum, r) => sum + (r.totalResponses || 0), 0);
-    const totalMentions = successfulResults.reduce((sum, r) => {
-      return sum + (r.responses?.filter((resp: any) => resp.brandMentioned)?.length || 0);
-    }, 0);
 
-    const overallMentionRate = totalResponses > 0 ? (totalMentions / totalResponses) * 100 : 0;
+    // Group results by journey stage
+    const stageGroups: Record<string, typeof allResults> = {
+      awareness: [],
+      consideration: [],
+      decision: [],
+    };
 
-    // Calculate sentiment
-    let positiveCount = 0, neutralCount = 0, negativeCount = 0;
-    successfulResults.forEach(r => {
-      r.responses?.forEach((resp: any) => {
-        if (resp.sentiment === "positive") positiveCount++;
-        else if (resp.sentiment === "negative") negativeCount++;
-        else neutralCount++;
-      });
+    allResults.forEach(result => {
+      const stage = result.questionCategory || "awareness";
+      if (stageGroups[stage]) {
+        stageGroups[stage].push(result);
+      }
     });
-
-    const totalSentiment = positiveCount + neutralCount + negativeCount;
-    const sentimentBreakdown = {
-      positive: totalSentiment > 0 ? Math.round((positiveCount / totalSentiment) * 100) : 0,
-      neutral: totalSentiment > 0 ? Math.round((neutralCount / totalSentiment) * 100) : 0,
-      negative: totalSentiment > 0 ? Math.round((negativeCount / totalSentiment) * 100) : 0,
-    };
-
-    // Build report
-    const report = {
-      overallVisibility: Math.round(overallMentionRate),
-      mentionRate: Math.round(overallMentionRate),
-      totalQuestionsAnalyzed: selectedQuestions.length,
-      totalAIResponses: totalResponses,
-      platformsTested: selectedPlatforms,
-      sentimentSummary: {
-        ...sentimentBreakdown,
-        dominant: positiveCount >= neutralCount && positiveCount >= negativeCount ? "positive" :
-                  negativeCount >= neutralCount ? "negative" : "neutral",
-      },
-      questionResults: allResults,
-    };
 
     // Save to database
     await updateProgress(95, "Saving results...");
@@ -311,6 +288,166 @@ async function executeSelectedAnalysis(
       }
     }
 
+    // Create journey stage insights (REQUIRED for results page)
+    const stageLabels: Record<string, string> = {
+      awareness: "Awareness",
+      consideration: "Consideration", 
+      decision: "Decision",
+    };
+
+    const stageDescriptions: Record<string, string> = {
+      awareness: "How users first discover and learn about your brand through AI",
+      consideration: "How AI compares your brand against alternatives",
+      decision: "How AI influences final purchase decisions",
+    };
+
+    let overallMentionRate = 0;
+    let totalStageResponses = 0;
+
+    for (const [stage, results] of Object.entries(stageGroups)) {
+      const stageResults = results.filter((r: any) => !r.error);
+      const stageResponses = stageResults.reduce((sum: number, r: any) => sum + (r.totalResponses || 0), 0);
+      const stageMentions = stageResults.reduce((sum: number, r: any) => {
+        return sum + (r.responses?.filter((resp: any) => resp.brandMentioned)?.length || 0);
+      }, 0);
+
+      const mentionRate = stageResponses > 0 ? Math.round((stageMentions / stageResponses) * 100) : 0;
+      totalStageResponses += stageResponses;
+      overallMentionRate += mentionRate;
+
+      // Calculate stage sentiment
+      let positive = 0, neutral = 0, negative = 0;
+      stageResults.forEach((r: any) => {
+        r.responses?.forEach((resp: any) => {
+          if (resp.sentiment === "positive") positive++;
+          else if (resp.sentiment === "negative") negative++;
+          else neutral++;
+        });
+      });
+      const totalSent = positive + neutral + negative;
+      const sentimentBreakdown = {
+        positive: totalSent > 0 ? Math.round((positive / totalSent) * 100) : 0,
+        neutral: totalSent > 0 ? Math.round((neutral / totalSent) * 100) : 0,
+        negative: totalSent > 0 ? Math.round((negative / totalSent) * 100) : 0,
+        dominant: positive >= neutral && positive >= negative ? "positive" :
+                  negative >= neutral ? "negative" : "neutral",
+      };
+
+      // Calculate average position
+      const positions = stageResults.flatMap((r: any) => 
+        r.responses?.filter((resp: any) => resp.brandMentioned && resp.brandPosition > 0)
+          .map((resp: any) => resp.brandPosition) || []
+      );
+      const avgPosition = positions.length > 0 
+        ? Math.round(positions.reduce((a: number, b: number) => a + b, 0) / positions.length) 
+        : 0;
+
+      // Calculate visibility score (weighted)
+      const positionScore = avgPosition > 0 ? Math.max(0, 100 - (avgPosition - 1) * 20) : 50;
+      const sentimentScore = Math.max(0, Math.min(100, ((sentimentBreakdown.positive - sentimentBreakdown.negative + 100) / 2)));
+      const visibilityScore = Math.round((mentionRate * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2));
+
+      // Get AI answer examples
+      const aiAnswerExamples = stageResults.flatMap((r: any) => 
+        r.responses?.filter((resp: any) => resp.brandMentioned).slice(0, 2).map((resp: any) => ({
+          platform: resp.platform,
+          question: r.questionText,
+          excerpt: resp.contextExtract || resp.fullResponse?.substring(0, 300) + "...",
+          sentiment: resp.sentiment,
+          brandPosition: resp.brandPosition || 0,
+        })) || []
+      ).slice(0, 4);
+
+      // Get competitor data
+      const competitorMentions: Record<string, { count: number; positions: number[] }> = {};
+      stageResults.forEach((r: any) => {
+        r.responses?.forEach((resp: any) => {
+          const competitorsMentioned = resp.competitorsMentioned || [];
+          competitorsMentioned.forEach((comp: any) => {
+            if (!competitorMentions[comp.name]) {
+              competitorMentions[comp.name] = { count: 0, positions: [] };
+            }
+            competitorMentions[comp.name].count++;
+            if (comp.position > 0) {
+              competitorMentions[comp.name].positions.push(comp.position);
+            }
+          });
+        });
+      });
+
+      const competitorComparison = Object.entries(competitorMentions).map(([name, data]) => ({
+        competitorName: name,
+        mentionRate: stageResponses > 0 ? Math.round((data.count / stageResponses) * 100) : 0,
+        avgPosition: data.positions.length > 0 
+          ? Math.round(data.positions.reduce((a, b) => a + b, 0) / data.positions.length)
+          : 0,
+      })).slice(0, 3);
+
+      // Build questions for this stage
+      const stageQuestions = stageResults.map((r: any) => ({
+        question: r.questionText,
+        searchVolume: r.questionSearchVolume || 0,
+        answersAnalyzed: r.totalResponses || 0,
+      }));
+
+      // Create journey_stage insight (THIS IS WHAT THE RESULTS PAGE EXPECTS)
+      const priorityMap: Record<string, number> = { awareness: 1, consideration: 2, decision: 3 };
+      
+      await prisma.aIInsight.create({
+        data: {
+          analysisId,
+          category: "journey_stage",
+          priority: priorityMap[stage] || 1,
+          title: `${stageLabels[stage]} Stage`,
+          finding: `${mentionRate}% mention rate in ${stageLabels[stage].toLowerCase()} stage`,
+          dataEvidence: JSON.stringify({ stageResults: stageResults.length }),
+          aiReasoning: `Analyzed ${stageResponses} AI responses for ${stageResults.length} questions`,
+          actions: [
+            mentionRate < 50 ? `Improve ${stageLabels[stage].toLowerCase()} stage visibility` : `Maintain ${stageLabels[stage].toLowerCase()} stage presence`,
+            sentimentBreakdown.negative > 20 ? "Address negative sentiment in AI responses" : "Continue positive engagement",
+          ],
+          expectedImpact: {
+            stage,
+            stageLabel: stageLabels[stage],
+            stageDescription: stageDescriptions[stage],
+            questions: stageQuestions,
+            portrayal: {
+              mentionRate,
+              totalQuestions: stageResults.length,
+              totalTests: stageResponses,
+              totalAnswersAnalyzed: stageResponses,
+              visibilityScore,
+              averagePosition: avgPosition,
+              sentiment: sentimentBreakdown,
+              aiAnswerExamples,
+              competitorComparison,
+            },
+            recommendation: {
+              commonPattern: mentionRate > 50 
+                ? `${brandName} is well-represented in ${stageLabels[stage].toLowerCase()} queries with ${mentionRate}% visibility.`
+                : `${brandName} has limited visibility (${mentionRate}%) in ${stageLabels[stage].toLowerCase()} queries - opportunity for improvement.`,
+              contentType: stage === "awareness" 
+                ? "Educational content, brand story, unique value propositions"
+                : stage === "consideration"
+                ? "Comparison guides, reviews, feature highlights, expert endorsements"
+                : "Purchase guides, pricing information, availability, trust signals",
+              focusedAction: mentionRate < 50
+                ? `Create authoritative content targeting ${stageLabels[stage].toLowerCase()}-stage queries to improve AI visibility from ${mentionRate}% to 70%+`
+                : `Maintain and optimize current content strategy for ${stageLabels[stage].toLowerCase()} stage`,
+            },
+          },
+          effort: mentionRate < 50 ? "high" : "low",
+          timeline: mentionRate < 50 ? "3-6 months" : "ongoing",
+          confidence: stageResponses > 10 ? "high" : "medium",
+        },
+      });
+    }
+
+    // Calculate overall score
+    const avgMentionRate = Object.keys(stageGroups).length > 0 
+      ? Math.round(overallMentionRate / Object.keys(stageGroups).length) 
+      : 0;
+
     // Update final status
     const duration = Math.round((Date.now() - startTime) / 1000);
     
@@ -319,32 +456,14 @@ async function executeSelectedAnalysis(
       data: {
         status: "completed",
         progress: 100,
-        currentStep: `Analysis complete! Visibility: ${report.overallVisibility}%`,
+        currentStep: `Analysis complete! Visibility: ${avgMentionRate}%`,
         completedAt: new Date(),
-      },
-    });
-    
-    // Store report as an insight
-    await prisma.aIInsight.create({
-      data: {
-        analysisId,
-        category: "overall",
-        priority: 1,
-        title: "Analysis Report",
-        finding: `Overall AI Visibility: ${report.overallVisibility}%`,
-        dataEvidence: JSON.stringify(report),
-        aiReasoning: `Analyzed ${report.totalQuestionsAnalyzed} questions across ${report.platformsTested.join(", ")}`,
-        actions: ["Review individual question results", "Address low-visibility areas"],
-        expectedImpact: { visibility: report.overallVisibility },
-        effort: "medium",
-        timeline: "ongoing",
-        confidence: report.totalAIResponses > 10 ? "high" : "medium",
       },
     });
 
     console.log(`✅ [EXEC] Analysis completed in ${duration}s`);
-    console.log(`   Visibility: ${report.overallVisibility}%`);
-    console.log(`   Mention Rate: ${report.mentionRate}%`);
+    console.log(`   Overall Visibility: ${avgMentionRate}%`);
+    console.log(`   Total Responses: ${totalStageResponses}`);
 
   } catch (error: any) {
     console.error(`❌ [EXEC] Analysis failed: ${error.message}`);
