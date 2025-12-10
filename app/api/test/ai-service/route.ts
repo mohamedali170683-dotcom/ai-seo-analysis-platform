@@ -84,31 +84,45 @@ export async function POST(request: Request) {
       }
 
       console.log("🔍 Testing DataForSEO API directly...");
-      const dataForSEO = new DataForSEOService(
-        process.env.DATAFORSEO_LOGIN,
-        process.env.DATAFORSEO_PASSWORD
-      );
-
-      // Get ALL keywords first (not just questions) to see what's available
-      const allKeywords = await dataForSEO.getBrandQuestions(brand, 15, false);
-      // Also try with question filter
-      const questions = await dataForSEO.getBrandQuestions(brand, 15, true);
       
-      results.dataforseo = {
-        allKeywordsFound: allKeywords.length,
-        questionsFound: questions.length,
-        sampleKeywords: allKeywords.slice(0, 8).map(q => ({
-          keyword: q.question,
-          searchVolume: q.searchVolume,
-          category: q.category,
-        })),
-        sampleQuestions: questions.slice(0, 5).map(q => ({
-          question: q.question,
-          searchVolume: q.searchVolume,
-          category: q.category,
-        })),
-      };
-      console.log(`✅ DataForSEO: ${allKeywords.length} keywords, ${questions.length} questions`);
+      // Test the raw API call
+      const auth = Buffer.from(`${process.env.DATAFORSEO_LOGIN}:${process.env.DATAFORSEO_PASSWORD}`).toString('base64');
+      
+      try {
+        const rawResponse = await fetch("https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live", {
+          method: 'POST',
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([{
+            keywords: [brand],
+            location_code: 2840,
+            language_code: "en",
+            include_seed_keyword: true,
+            limit: 20,
+          }]),
+        });
+
+        const rawData = await rawResponse.json();
+        
+        results.dataforseo = {
+          httpStatus: rawResponse.status,
+          apiStatusCode: rawData.status_code,
+          apiStatusMessage: rawData.status_message,
+          tasksCount: rawData.tasks?.length || 0,
+          taskStatusCode: rawData.tasks?.[0]?.status_code,
+          taskStatusMessage: rawData.tasks?.[0]?.status_message,
+          resultCount: rawData.tasks?.[0]?.result?.length || 0,
+          itemsCount: rawData.tasks?.[0]?.result?.[0]?.items?.length || 0,
+          sampleItems: rawData.tasks?.[0]?.result?.[0]?.items?.slice(0, 3) || [],
+          rawResponsePreview: JSON.stringify(rawData).substring(0, 500),
+        };
+      } catch (error: any) {
+        results.dataforseo = {
+          error: error.message,
+        };
+      }
     }
 
     // Quick test - just verify services are initialized
