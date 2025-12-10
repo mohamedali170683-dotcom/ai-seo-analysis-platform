@@ -106,19 +106,26 @@ export async function POST(request: Request) {
 
         const rawData = await rawResponse.json();
         
-        // Keywords are in result[0].keywords (not items)
-        const keywords = rawData.tasks?.[0]?.result?.[0]?.keywords || [];
+        // Debug: Check the actual structure
+        const taskResult = rawData.tasks?.[0]?.result || [];
+        const firstResult = taskResult[0] || {};
+        
+        // Try different possible locations for keywords
+        const keywords = 
+          firstResult.keywords ||  // keywords_for_keywords
+          firstResult.items ||     // keyword_ideas  
+          taskResult;              // result array itself might be keywords
         
         results.dataforseo = {
           httpStatus: rawResponse.status,
           apiStatusCode: rawData.status_code,
-          apiStatusMessage: rawData.status_message,
-          keywordsFound: keywords.length,
-          sampleKeywords: keywords.slice(0, 5).map((k: any) => ({
-            keyword: k.keyword,
-            searchVolume: k.search_volume,
-            competition: k.competition,
-            cpc: k.cpc,
+          resultCount: taskResult.length,
+          resultKeys: Object.keys(firstResult),
+          keywordsFound: Array.isArray(keywords) ? keywords.length : 0,
+          sampleData: taskResult.slice(0, 3).map((r: any) => ({
+            keyword: r.keyword,
+            searchVolume: r.search_volume,
+            keys: Object.keys(r).slice(0, 10),
           })),
           cost: rawData.cost,
         };
