@@ -51,8 +51,8 @@ export class MultiPlatformAIService {
   constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 5) {
     this.openaiClient = new OpenAI({ 
       apiKey: openaiApiKey,
-      timeout: 30000, // 30 second timeout
-      maxRetries: 2,
+      timeout: 15000, // 15 second timeout (reduced from 30)
+      maxRetries: 1,  // Only 1 retry (reduced from 2)
     });
     // Allow up to 10 tests per platform for statistical significance
     this.testsPerPlatform = Math.min(testsPerPlatform, 10);
@@ -118,8 +118,8 @@ export class MultiPlatformAIService {
     console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × ${platforms.length} platforms)`);
     const startTime = Date.now();
 
-    // Overall timeout for this question (90 seconds max)
-    const questionTimeout = 90000;
+    // Overall timeout for this question (60 seconds max)
+    const questionTimeout = 60000;
     
     // Run selected platforms in PARALLEL with timeout
     const platformPromises = platforms.map(platform => 
@@ -183,9 +183,9 @@ export class MultiPlatformAIService {
         }
         messages.push({ role: "user", content: question });
 
-        // Create a timeout promise (20 seconds per API call)
+        // Create a timeout promise (12 seconds per API call)
         const timeoutPromise = new Promise<null>((_, reject) => {
-          setTimeout(() => reject(new Error(`${platform} API timeout`)), 20000);
+          setTimeout(() => reject(new Error(`${platform} API timeout`)), 12000);
         });
 
         // Race between API call and timeout

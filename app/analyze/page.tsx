@@ -646,11 +646,9 @@ export default function AnalyzePage() {
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 h-4 rounded-full transition-all duration-500 relative"
+                    className="bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 h-4 rounded-full transition-all duration-500"
                     style={{ width: `${analysisProgress}%` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
-                  </div>
+                  />
                 </div>
               </div>
 
@@ -711,10 +709,10 @@ export default function AnalyzePage() {
                         {item.step}
                       </span>
                       {isCurrent && (
-                        <div className="flex gap-1">
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                        <div className="flex gap-1 items-center">
+                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-purple-300 rounded-full animate-pulse"></div>
                         </div>
                       )}
                       {isComplete && (
