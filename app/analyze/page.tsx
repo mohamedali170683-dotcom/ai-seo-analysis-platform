@@ -173,7 +173,7 @@ export default function AnalyzePage() {
             type: q.type,
           })),
           selectedPlatforms,
-          testsPerPlatform: 5,
+          testsPerPlatform: 3,
         }),
       });
 
@@ -671,7 +671,7 @@ export default function AnalyzePage() {
                   <div className="text-xs text-gray-500">AI Platforms</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-cyan-400">135</div>
+                  <div className="text-2xl font-bold text-cyan-400">81</div>
                   <div className="text-xs text-gray-500">Total Tests</div>
                 </div>
               </div>
@@ -755,9 +755,9 @@ export default function AnalyzePage() {
 
             {/* Estimated Time */}
             <div className="text-center text-sm text-gray-500">
-              <p>Estimated completion: 6-8 minutes</p>
+              <p>Estimated completion: 3-5 minutes</p>
               <p className="text-xs text-gray-600 mt-1">
-                Each question is tested 5 times per platform for statistical reliability
+                Each question is tested 3 times per platform (81 total AI responses)
               </p>
             </div>
           </div>

@@ -48,7 +48,7 @@ export class MultiPlatformAIService {
   private openaiClient: OpenAI;
   private testsPerPlatform: number;
 
-  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 5) {
+  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 3) {
     this.openaiClient = new OpenAI({ 
       apiKey: openaiApiKey,
       timeout: 15000, // 15 second timeout (reduced from 30)

@@ -20,7 +20,7 @@ interface AnalysisRequest {
   category: string;
   selectedQuestions: SelectedQuestion[];
   selectedPlatforms: ("ChatGPT" | "Gemini" | "Copilot")[];
-  testsPerPlatform?: number; // Default 5 for statistical significance
+  testsPerPlatform?: number; // Default 3 for faster analysis
 }
 
 /**
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       category,
       selectedQuestions,
       selectedPlatforms,
-      testsPerPlatform = 5,
+      testsPerPlatform = 3,
     } = body;
 
     // Validation

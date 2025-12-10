@@ -62,9 +62,9 @@ Strategic Recommendations: Get specific, justified actions with correlations exp
 
 Multiple AI Platform Analysis: By querying several AI assistants, we reduce the risk of skewed results from any single platform. It's like conducting focus groups with different demographic segments rather than relying on just one.
 
-Statistical Reliability: Each question is tested 5 times per platform (5 × 3 platforms = 15 tests per question), creating a dataset of 135 total AI responses across 9 questions. This repetition accounts for AI response variability and provides more reliable percentage calculations.
+Statistical Reliability: Each question is tested 3 times per platform (3 × 3 platforms = 9 tests per question), creating a dataset of 81 total AI responses across 9 questions. This repetition accounts for AI response variability.
 
-Why 5 tests per platform works: Unlike human surveys (which need n≥30), AI models are relatively deterministic—the same question yields 80-90% consistent responses. With 5 tests, we can confidently detect patterns while balancing analysis time (~6-8 minutes).
+Why 3 tests per platform works: Unlike human surveys (which need n≥30), AI models are relatively deterministic—the same question yields 80-90% consistent responses. With 3 tests, we can detect clear patterns while keeping analysis fast (~3-5 minutes).
 
 Real Search Data: Questions are sourced from actual search volume data, ensuring you're testing queries real consumers actually ask.
 
@@ -250,8 +250,8 @@ export default function DashboardPage() {
               <span className="text-sm font-semibold opacity-90">AI Responses Analyzed</span>
               <Bot className="w-5 h-5 opacity-75" />
             </div>
-            <div className="text-3xl font-bold">{stats.totalAnalyses * 135}</div>
-            <div className="text-xs opacity-75 mt-1">5 tests × 3 platforms × 9 questions</div>
+            <div className="text-3xl font-bold">{stats.totalAnalyses * 81}</div>
+            <div className="text-xs opacity-75 mt-1">3 tests × 3 platforms × 9 questions</div>
           </div>
         </div>
 
