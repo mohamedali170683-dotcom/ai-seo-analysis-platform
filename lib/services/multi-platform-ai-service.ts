@@ -118,9 +118,20 @@ export class MultiPlatformAIService {
     console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × ${platforms.length} platforms)`);
     const startTime = Date.now();
 
-    // Run selected platforms in PARALLEL
+    // Overall timeout for this question (90 seconds max)
+    const questionTimeout = 90000;
+    
+    // Run selected platforms in PARALLEL with timeout
     const platformPromises = platforms.map(platform => 
-      this.testSinglePlatform(platform, question, brandName, competitors, numTests)
+      Promise.race([
+        this.testSinglePlatform(platform, question, brandName, competitors, numTests),
+        new Promise<AIResponse[]>((resolve) => {
+          setTimeout(() => {
+            console.warn(`⚠️ [AI] ${platform} overall timeout for question`);
+            resolve([]);
+          }, questionTimeout);
+        }),
+      ])
     );
     
     const results = await Promise.allSettled(platformPromises);
@@ -165,31 +176,45 @@ export class MultiPlatformAIService {
     };
 
     for (let i = 1; i <= numTests; i++) {
-      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
-      if (systemPrompts[platform]) {
-        messages.push({ role: "system", content: systemPrompts[platform] });
-      }
-      messages.push({ role: "user", content: question });
+      try {
+        const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
+        if (systemPrompts[platform]) {
+          messages.push({ role: "system", content: systemPrompts[platform] });
+        }
+        messages.push({ role: "user", content: question });
 
-      const completion = await this.openaiClient.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages,
-        max_tokens: 400,
-        temperature: 0.7,
-      });
-
-      const fullResponse = completion.choices[0]?.message?.content || "";
-      
-      if (fullResponse) {
-        const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
-        responses.push({
-          platform,
-          modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
-          queryNumber: i,
-          question,
-          fullResponse,
-          ...analysis,
+        // Create a timeout promise (20 seconds per API call)
+        const timeoutPromise = new Promise<null>((_, reject) => {
+          setTimeout(() => reject(new Error(`${platform} API timeout`)), 20000);
         });
+
+        // Race between API call and timeout
+        const completion = await Promise.race([
+          this.openaiClient.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages,
+            max_tokens: 400,
+            temperature: 0.7,
+          }),
+          timeoutPromise,
+        ]) as OpenAI.Chat.Completions.ChatCompletion;
+
+        const fullResponse = completion?.choices?.[0]?.message?.content || "";
+        
+        if (fullResponse) {
+          const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+          responses.push({
+            platform,
+            modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
+            queryNumber: i,
+            question,
+            fullResponse,
+            ...analysis,
+          });
+        }
+      } catch (error: any) {
+        console.warn(`⚠️ [AI] ${platform} test ${i} failed: ${error.message}`);
+        // Continue with remaining tests instead of failing entirely
       }
     }
 
