@@ -32,14 +32,8 @@ export class EnhancedQuestionService {
     const login = dataForSEOLogin || process.env.DATAFORSEO_LOGIN;
     const password = dataForSEOPassword || process.env.DATAFORSEO_PASSWORD;
     
-    console.log(`🔧 [QUESTIONS] Initializing - passed login: ${!!dataForSEOLogin}, env login: ${!!process.env.DATAFORSEO_LOGIN}`);
-    console.log(`🔧 [QUESTIONS] Final DataForSEO configured: ${!!login && !!password}`);
-    
     if (login && password) {
       this.dataForSEOService = new DataForSEOService(login, password);
-      console.log(`✅ [QUESTIONS] DataForSEO service created`);
-    } else {
-      console.log(`⚠️ [QUESTIONS] No DataForSEO credentials, will use Google Autocomplete`);
     }
     this.googleService = new GoogleAutocompleteService();
   }
@@ -65,28 +59,20 @@ export class EnhancedQuestionService {
     let allQuestions: DiscoveredQuestion[] = [];
 
     // PRIORITY 1: DataForSEO (real volumes)
-    console.log(`🔍 [QUESTIONS] DataForSEO service available: ${!!this.dataForSEOService}`);
     if (this.dataForSEOService) {
-      // Get BRAND keywords (include non-questions too - volumes are valuable)
       try {
-        console.log(`📡 [QUESTIONS] Fetching brand keywords from DataForSEO...`);
-        // Get ALL keywords first (questionsOnly=false) to maximize data
-        let brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 30, false);
-        console.log(`📡 [QUESTIONS] DataForSEO returned ${brandQuestions.length} brand keywords`);
+        // Get ALL keywords (questionsOnly=false) for maximum data
+        const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 30, false);
         
         if (brandQuestions.length > 0) {
-          console.log(`📡 [QUESTIONS] Sample: ${brandQuestions[0].question} (${brandQuestions[0].searchVolume} vol)`);
           const converted = brandQuestions
             .filter(q => q.searchVolume >= minSearchVolume)
             .map(q => this.convertDataForSEOQuestion(q, "brand"));
           allQuestions.push(...converted);
-          console.log(`✅ [QUESTIONS] Added ${converted.length} brand keywords from DataForSEO (real volumes!)`);
-        } else {
-          console.log(`⚠️ [QUESTIONS] DataForSEO returned 0 brand keywords`);
+          console.log(`✅ [QUESTIONS] Got ${converted.length} keywords from DataForSEO with real volumes`);
         }
       } catch (error: any) {
-        console.error(`⚠️ [QUESTIONS] DataForSEO brand questions failed: ${error.message}`);
-        console.error(`⚠️ [QUESTIONS] Error stack: ${error.stack}`);
+        console.warn(`⚠️ [QUESTIONS] DataForSEO failed, using Google Autocomplete: ${error.message}`);
       }
 
       // Get CATEGORY keywords (if category provided)

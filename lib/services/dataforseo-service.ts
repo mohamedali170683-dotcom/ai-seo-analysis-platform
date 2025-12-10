@@ -104,6 +104,10 @@ export class DataForSEOService {
       console.log(`📡 [DATAFORSEO] Response status: ${response.status}`);
 
       if (!response.ok) {
+        if (response.status === 402) {
+          console.warn(`⚠️ [DATAFORSEO] Payment Required (HTTP 402) - account needs credits. Falling back to Google Autocomplete.`);
+          return [];
+        }
         const errorText = await response.text();
         console.error(`❌ [DATAFORSEO] Error: ${errorText.substring(0, 500)}`);
         throw new Error(`DataForSEO API error ${response.status}`);
