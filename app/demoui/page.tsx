@@ -11,11 +11,16 @@ export default function DemoUIPage() {
     brand: "",
     domain: "",
     competitors: "",
-    category: "", // NEW: Industry/vertical for category-level visibility
+    category: "",
   });
   const [analysisMode, setAnalysisMode] = useState<"demo" | "real">("demo");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Redirect to new 2-phase analysis with question selection
+  const handleAdvancedAnalysis = () => {
+    router.push("/analyze");
+  };
 
   const handleDemoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,32 +143,32 @@ export default function DemoUIPage() {
               </ul>
             </button>
 
-            {/* Real Analysis Mode */}
+            {/* Advanced Analysis Mode - NEW */}
             <button
-              onClick={() => setAnalysisMode("real")}
-              className={`p-6 rounded-xl border-2 transition-all text-left ${
-                analysisMode === "real"
-                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200"
-                  : "border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-              }`}
+              onClick={handleAdvancedAnalysis}
+              className="p-6 rounded-xl border-2 transition-all text-left border-purple-300 bg-gradient-to-br from-purple-50 to-blue-50 hover:border-purple-500 hover:ring-2 hover:ring-purple-200"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className={`p-2 rounded-lg ${analysisMode === "real" ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-600"}`}>
-                  <BarChart3 className="w-6 h-6" />
+                <div className="p-2 rounded-lg bg-purple-500 text-white">
+                  <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Real Analysis</h3>
-                  <span className="text-xs text-blue-600 font-semibold">AI-POWERED</span>
+                  <h3 className="font-bold text-gray-900">Advanced Analysis</h3>
+                  <span className="text-xs text-purple-600 font-semibold">YOU CHOOSE QUESTIONS</span>
                 </div>
               </div>
               <p className="text-sm text-gray-600">
-                Run actual AI queries across ChatGPT, Gemini, and Copilot for real visibility data.
+                Select which questions to test based on real search volume data.
               </p>
               <ul className="mt-3 text-xs text-gray-500 space-y-1">
-                <li>✓ 180 real AI queries (12 questions × 5 tests × 3 platforms)</li>
-                <li>✓ Statistically significant results</li>
-                <li>✓ Actual AI response excerpts</li>
+                <li>✓ See questions with search volumes (e.g., 60K/mo)</li>
+                <li>✓ Choose which 4 questions to test</li>
+                <li>✓ Select AI platforms (ChatGPT, Gemini, Copilot)</li>
+                <li>✓ Full control over your analysis</li>
               </ul>
+              <div className="mt-3 text-xs text-purple-600 font-medium">
+                → Click to start
+              </div>
             </button>
           </div>
         </div>
