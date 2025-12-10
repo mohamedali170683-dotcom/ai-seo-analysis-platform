@@ -28,9 +28,15 @@ export class EnhancedQuestionService {
   private googleService: GoogleAutocompleteService;
 
   constructor(dataForSEOLogin?: string, dataForSEOPassword?: string) {
-    console.log(`🔧 [QUESTIONS] Initializing with DataForSEO: ${!!dataForSEOLogin && !!dataForSEOPassword}`);
-    if (dataForSEOLogin && dataForSEOPassword) {
-      this.dataForSEOService = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
+    // Try passed credentials first, then fall back to env vars
+    const login = dataForSEOLogin || process.env.DATAFORSEO_LOGIN;
+    const password = dataForSEOPassword || process.env.DATAFORSEO_PASSWORD;
+    
+    console.log(`🔧 [QUESTIONS] Initializing - passed login: ${!!dataForSEOLogin}, env login: ${!!process.env.DATAFORSEO_LOGIN}`);
+    console.log(`🔧 [QUESTIONS] Final DataForSEO configured: ${!!login && !!password}`);
+    
+    if (login && password) {
+      this.dataForSEOService = new DataForSEOService(login, password);
       console.log(`✅ [QUESTIONS] DataForSEO service created`);
     } else {
       console.log(`⚠️ [QUESTIONS] No DataForSEO credentials, will use Google Autocomplete`);
