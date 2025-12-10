@@ -227,6 +227,163 @@ export default function ResultsPage() {
         showHeader={true}
         backLink="/dashboard"
       />
+      
+      {/* Website Technical Audit Section */}
+      {reportData.websiteAudit && (
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                  🔧 Website Technical Audit
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  Technical factors that impact your AI visibility
+                </p>
+              </div>
+              <div className={`text-center p-4 rounded-xl ${
+                reportData.websiteAudit.technicalScore >= 70 ? "bg-green-100" :
+                reportData.websiteAudit.technicalScore >= 40 ? "bg-yellow-100" : "bg-red-100"
+              }`}>
+                <div className={`text-4xl font-bold ${
+                  reportData.websiteAudit.technicalScore >= 70 ? "text-green-700" :
+                  reportData.websiteAudit.technicalScore >= 40 ? "text-yellow-700" : "text-red-700"
+                }`}>
+                  {reportData.websiteAudit.technicalScore}/100
+                </div>
+                <div className="text-sm text-gray-600">Tech Score</div>
+              </div>
+            </div>
+
+            {/* Schema Markup Status */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">📋 Schema Markup Status</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { name: "Organization", has: reportData.websiteAudit.schemas?.hasOrganization },
+                  { name: "Product", has: reportData.websiteAudit.schemas?.hasProduct },
+                  { name: "FAQ", has: reportData.websiteAudit.schemas?.hasFAQ },
+                  { name: "Review", has: reportData.websiteAudit.schemas?.hasReview },
+                ].map((schema) => (
+                  <div key={schema.name} className={`p-4 rounded-xl text-center ${
+                    schema.has ? "bg-green-50 border-2 border-green-200" : "bg-gray-50 border-2 border-gray-200"
+                  }`}>
+                    <div className="text-2xl mb-1">{schema.has ? "✅" : "❌"}</div>
+                    <div className="font-semibold text-gray-900">{schema.name}</div>
+                    <div className="text-xs text-gray-600">{schema.has ? "Found" : "Missing"}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Analysis */}
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">📝 Content Analysis</h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 rounded-xl p-4">
+                  <div className="text-3xl font-bold text-blue-700">{reportData.websiteAudit.content?.wordCount || 0}</div>
+                  <div className="text-sm text-gray-600">Words on Homepage</div>
+                  <div className="text-xs text-blue-600 mt-1">
+                    {(reportData.websiteAudit.content?.wordCount || 0) >= 1500 ? "✓ Good depth" : 
+                     (reportData.websiteAudit.content?.wordCount || 0) >= 500 ? "⚠️ Could be deeper" : "❌ Too thin"}
+                  </div>
+                </div>
+                <div className={`rounded-xl p-4 ${
+                  reportData.websiteAudit.faqContent?.hasFAQSection ? "bg-green-50" : "bg-red-50"
+                }`}>
+                  <div className="text-3xl font-bold">
+                    {reportData.websiteAudit.faqContent?.hasFAQSection ? "✅" : "❌"}
+                  </div>
+                  <div className="text-sm text-gray-600">FAQ Section</div>
+                  <div className="text-xs mt-1">
+                    {reportData.websiteAudit.faqContent?.hasFAQSection 
+                      ? `${reportData.websiteAudit.faqContent.questions?.length || 0} questions found` 
+                      : "No FAQ content detected"}
+                  </div>
+                </div>
+                <div className={`rounded-xl p-4 ${
+                  reportData.websiteAudit.robotsAllowsAI ? "bg-green-50" : "bg-red-50"
+                }`}>
+                  <div className="text-3xl font-bold">
+                    {reportData.websiteAudit.robotsAllowsAI ? "✅" : "🚫"}
+                  </div>
+                  <div className="text-sm text-gray-600">AI Bot Access</div>
+                  <div className="text-xs mt-1">
+                    {reportData.websiteAudit.robotsAllowsAI 
+                      ? "AI crawlers allowed" 
+                      : "AI crawlers may be blocked!"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Technical Recommendations */}
+            {reportData.websiteAudit.recommendations && reportData.websiteAudit.recommendations.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">🎯 Technical Recommendations</h3>
+                <div className="space-y-4">
+                  {reportData.websiteAudit.recommendations.slice(0, 5).map((rec: any, index: number) => (
+                    <div key={index} className={`rounded-xl p-5 border-l-4 ${
+                      rec.priority === "high" ? "bg-red-50 border-red-500" :
+                      rec.priority === "medium" ? "bg-yellow-50 border-yellow-500" :
+                      "bg-blue-50 border-blue-500"
+                    }`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-bold text-gray-900">{rec.recommendation}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                          rec.priority === "high" ? "bg-red-200 text-red-800" :
+                          rec.priority === "medium" ? "bg-yellow-200 text-yellow-800" :
+                          "bg-blue-200 text-blue-800"
+                        }`}>
+                          {rec.priority.toUpperCase()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-3">{rec.rationale}</p>
+                      <details className="text-sm">
+                        <summary className="cursor-pointer text-blue-600 font-semibold hover:text-blue-800">
+                          View Implementation Guide
+                        </summary>
+                        <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200">
+                          <pre className="whitespace-pre-wrap text-xs text-gray-700 font-mono">
+                            {rec.implementationGuide}
+                          </pre>
+                          <div className="mt-2 text-xs text-green-700 font-semibold">
+                            Expected Impact: {rec.expectedImpact}
+                          </div>
+                        </div>
+                      </details>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Issues */}
+            {reportData.websiteAudit.issues && reportData.websiteAudit.issues.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">⚠️ Issues Detected</h3>
+                <div className="grid md:grid-cols-2 gap-3">
+                  {reportData.websiteAudit.issues.map((issue: any, index: number) => (
+                    <div key={index} className={`p-4 rounded-lg flex items-start gap-3 ${
+                      issue.severity === "critical" ? "bg-red-50" :
+                      issue.severity === "warning" ? "bg-yellow-50" : "bg-blue-50"
+                    }`}>
+                      <span className="text-xl">
+                        {issue.severity === "critical" ? "🔴" :
+                         issue.severity === "warning" ? "🟡" : "🔵"}
+                      </span>
+                      <div>
+                        <div className="font-semibold text-gray-900">{issue.issue}</div>
+                        <div className="text-sm text-gray-600">{issue.impact}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -234,6 +391,10 @@ export default function ResultsPage() {
 // Transform database analysis data to report format
 function transformAnalysisData(data: any) {
   const insights = data.aiInsights || [];
+  
+  // Extract website audit insight
+  const websiteAuditInsight = insights.find((i: any) => i.category === "website_audit");
+  const websiteAudit = websiteAuditInsight?.expectedImpact || null;
   
   // Extract journey stage insights
   const journeyStageInsights = insights.filter((i: any) => i.category === "journey_stage");
@@ -332,5 +493,6 @@ function transformAnalysisData(data: any) {
     totalQuestions: totalQuestions || 9, // Default to 9
     scoringMethodology,
     journeyStages,
+    websiteAudit,
   };
 }

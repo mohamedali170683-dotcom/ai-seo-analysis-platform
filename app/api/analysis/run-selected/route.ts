@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { prisma } from "@/lib/db/prisma";
 import { MultiPlatformAIService } from "@/lib/services/multi-platform-ai-service";
+import { WebsiteAuditService, WebsiteAuditResult } from "@/lib/services/website-audit-service";
 
 export const maxDuration = 300; // 5 minutes for longer analyses
 
@@ -121,6 +122,7 @@ export async function POST(request: Request) {
       executeSelectedAnalysis(
         analysis.id,
         brandName,
+        domain,
         competitors,
         category,
         selectedQuestions,
@@ -155,6 +157,7 @@ export async function POST(request: Request) {
 async function executeSelectedAnalysis(
   analysisId: string,
   brandName: string,
+  domain: string | undefined,
   competitors: string[],
   category: string,
   selectedQuestions: SelectedQuestion[],
@@ -166,12 +169,13 @@ async function executeSelectedAnalysis(
   console.log(`🔄 [EXEC] Starting execution for ${analysisId}`);
 
   try {
-    // Initialize AI service
+    // Initialize services
     const aiService = new MultiPlatformAIService(
       envVars.openaiApiKey,
       envVars.geminiApiKey,
       testsPerPlatform
     );
+    const auditService = new WebsiteAuditService(30000);
 
     // Progress tracking
     const updateProgress = async (progress: number, step: string) => {
@@ -185,7 +189,18 @@ async function executeSelectedAnalysis(
       }
     };
 
-    await updateProgress(5, "Initializing...");
+    await updateProgress(3, "Initializing...");
+
+    // Start website audit in parallel (if domain provided)
+    let websiteAuditPromise: Promise<WebsiteAuditResult | null> = Promise.resolve(null);
+    if (domain) {
+      console.log(`🔍 [EXEC] Starting website audit for: ${domain}`);
+      await updateProgress(5, "Auditing website technical factors...");
+      websiteAuditPromise = auditService.auditWebsite(domain).catch(err => {
+        console.error(`⚠️ [EXEC] Website audit failed: ${err.message}`);
+        return null;
+      });
+    }
 
     // Test each question
     const allResults: any[] = [];
@@ -471,6 +486,69 @@ async function executeSelectedAnalysis(
       ? Math.round(overallMentionRate / Object.keys(stageGroups).length) 
       : 0;
 
+    // Wait for website audit to complete and save results
+    await updateProgress(92, "Completing website technical audit...");
+    const websiteAudit = await websiteAuditPromise;
+    
+    if (websiteAudit) {
+      console.log(`📊 [EXEC] Website audit complete - Score: ${websiteAudit.technicalScore}/100`);
+      
+      // Save website audit as an insight
+      await prisma.aIInsight.create({
+        data: {
+          analysisId,
+          category: "website_audit",
+          priority: 0, // Show first
+          title: "Website Technical Audit",
+          finding: `Technical SEO Score: ${websiteAudit.technicalScore}/100`,
+          dataEvidence: JSON.stringify({
+            url: websiteAudit.url,
+            schemas: websiteAudit.schemas,
+            contentStats: {
+              h1Count: websiteAudit.h1Count,
+              h2Count: websiteAudit.h2Count,
+              wordCount: websiteAudit.wordCount,
+            },
+            faq: {
+              hasFAQSection: websiteAudit.hasFAQSection,
+              faqQuestions: websiteAudit.faqQuestions,
+            },
+            robots: {
+              accessible: websiteAudit.robotsTxtAccessible,
+              allowsAIBots: websiteAudit.allowsAIBots,
+            },
+          }),
+          aiReasoning: `Analyzed ${websiteAudit.url} for technical SEO factors affecting AI visibility`,
+          actions: websiteAudit.issues.map(i => `${i.severity.toUpperCase()}: ${i.issue}`),
+          expectedImpact: JSON.parse(JSON.stringify({
+            technicalScore: websiteAudit.technicalScore,
+            issues: websiteAudit.issues,
+            recommendations: websiteAudit.recommendations,
+            schemas: {
+              hasOrganization: websiteAudit.hasOrganizationSchema,
+              hasProduct: websiteAudit.hasProductSchema,
+              hasFAQ: websiteAudit.hasFAQSchema,
+              hasReview: websiteAudit.hasReviewSchema,
+            },
+            content: {
+              title: websiteAudit.title,
+              description: websiteAudit.description,
+              h1Text: websiteAudit.h1Text,
+              wordCount: websiteAudit.wordCount,
+            },
+            faqContent: {
+              hasFAQSection: websiteAudit.hasFAQSection,
+              questions: websiteAudit.faqQuestions,
+            },
+            robotsAllowsAI: websiteAudit.allowsAIBots,
+          })),
+          effort: websiteAudit.technicalScore < 50 ? "high" : "medium",
+          timeline: "1-2 weeks",
+          confidence: "high",
+        },
+      });
+    }
+
     // Update final status
     const duration = Math.round((Date.now() - startTime) / 1000);
     
@@ -479,7 +557,7 @@ async function executeSelectedAnalysis(
       data: {
         status: "completed",
         progress: 100,
-        currentStep: `Analysis complete! Visibility: ${avgMentionRate}%`,
+        currentStep: `Analysis complete! Visibility: ${avgMentionRate}%${websiteAudit ? ` | Tech Score: ${websiteAudit.technicalScore}/100` : ""}`,
         completedAt: new Date(),
       },
     });
@@ -487,6 +565,9 @@ async function executeSelectedAnalysis(
     console.log(`✅ [EXEC] Analysis completed in ${duration}s`);
     console.log(`   Overall Visibility: ${avgMentionRate}%`);
     console.log(`   Total Responses: ${totalStageResponses}`);
+    if (websiteAudit) {
+      console.log(`   Technical Score: ${websiteAudit.technicalScore}/100`);
+    }
 
   } catch (error: any) {
     console.error(`❌ [EXEC] Analysis failed: ${error.message}`);
