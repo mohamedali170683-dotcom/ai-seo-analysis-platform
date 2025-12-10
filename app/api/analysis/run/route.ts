@@ -92,6 +92,12 @@ async function executeAnalysis(
       }
     };
 
+    // Log environment for debugging
+    console.log(`🔧 [EXEC] Environment check:`);
+    console.log(`🔧 [EXEC] - OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [EXEC] - DATAFORSEO_LOGIN: ${process.env.DATAFORSEO_LOGIN ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [EXEC] - DATAFORSEO_PASSWORD: ${process.env.DATAFORSEO_PASSWORD ? 'SET' : 'NOT SET'}`);
+    
     // Run analysis (2 questions per stage × 3 platforms = 18 API calls total)
     const service = new ComprehensiveAnalysisService({
       brandName: brandOrKeyword,

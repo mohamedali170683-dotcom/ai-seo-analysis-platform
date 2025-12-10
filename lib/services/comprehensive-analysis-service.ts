@@ -59,7 +59,12 @@ export class ComprehensiveAnalysisService {
 
   constructor(config: AnalysisConfig) {
     this.config = config;
-    console.log(`🔧 [ANALYSIS] DataForSEO configured: ${!!config.dataForSEOLogin && !!config.dataForSEOPassword}`);
+    console.log(`🔧 [ANALYSIS] Creating service with:`);
+    console.log(`🔧 [ANALYSIS] - brandName: ${config.brandName}`);
+    console.log(`🔧 [ANALYSIS] - category: ${config.category}`);
+    console.log(`🔧 [ANALYSIS] - DataForSEO Login: ${config.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [ANALYSIS] - DataForSEO Password: ${config.dataForSEOPassword ? 'SET' : 'NOT SET'}`);
+    
     this.questionService = new EnhancedQuestionService(
       config.dataForSEOLogin,
       config.dataForSEOPassword
@@ -92,6 +97,18 @@ export class ComprehensiveAnalysisService {
         minSearchVolume: 100,
       });
       console.log(`✅ [ANALYSIS] Generated ${questions.length} questions`);
+      
+      // Log sources for debugging
+      const sources = questions.reduce((acc, q) => {
+        acc[q.source || 'unknown'] = (acc[q.source || 'unknown'] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+      console.log(`📊 [ANALYSIS] Question sources: ${JSON.stringify(sources)}`);
+      
+      // Log sample questions
+      if (questions.length > 0) {
+        console.log(`📝 [ANALYSIS] Sample: "${questions[0].question}" (vol: ${questions[0].searchVolume}, source: ${questions[0].source})`);
+      }
     } catch (error: any) {
       console.error(`❌ [ANALYSIS] Question generation failed: ${error.message}`);
       throw new Error(`Question generation failed: ${error.message}`);
