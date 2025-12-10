@@ -97,28 +97,20 @@ export class EnhancedQuestionService {
       // Get CATEGORY keywords (if category provided)
       if (category) {
         try {
-          console.log(`📡 [QUESTIONS] Fetching category keywords from DataForSEO...`);
-          let categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 20, true);
-          
-          if (categoryQuestions.length < 6) {
-            categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 20, false);
-          }
+          const categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 10);
           
           if (categoryQuestions.length > 0) {
+            const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
             const converted = categoryQuestions
               .filter(q => q.searchVolume >= minSearchVolume)
+              .filter(q => !existing.has(q.question.toLowerCase()))
               .map(q => this.convertDataForSEOQuestion(q, "category"));
             
-            const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
-            for (const q of converted) {
-              if (!existing.has(q.question.toLowerCase())) {
-                allQuestions.push(q);
-              }
-            }
-            console.log(`✅ [QUESTIONS] Got ${converted.length} category keywords from DataForSEO`);
+            allQuestions.push(...converted);
+            console.log(`✅ [QUESTIONS] Got ${converted.length} category questions from DataForSEO`);
           }
         } catch (error: any) {
-          console.error(`⚠️ [QUESTIONS] DataForSEO category questions failed: ${error.message}`);
+          console.warn(`⚠️ [QUESTIONS] DataForSEO category questions failed: ${error.message}`);
         }
       }
     }

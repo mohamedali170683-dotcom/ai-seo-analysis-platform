@@ -61,11 +61,12 @@ export class DataForSEOService {
       const questions = await this.getSearchVolumes(generatedQuestions.slice(0, limit));
       
       console.log(`✅ [DATAFORSEO] Got ${questions.length} brand questions with volumes`);
-      return questions.map(q => ({ ...q, type: "brand" as const }));
+      return questions.map(q => ({ ...q, type: "brand" as const } as DataForSEOQuestion));
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Brand questions failed: ${error.message}`);
       // Return questions with estimated volumes
-      return this.generateQuestionsWithEstimatedVolumes(brandName, "brand", limit);
+      return this.generateQuestionsWithEstimatedVolumes(brandName, "brand", limit)
+        .map(q => ({ ...q, type: "brand" as const } as DataForSEOQuestion));
     }
   }
   
@@ -199,10 +200,11 @@ export class DataForSEOService {
       const questions = await this.getSearchVolumes(generatedQuestions.slice(0, limit));
       
       console.log(`✅ [DATAFORSEO] Got ${questions.length} category questions with volumes`);
-      return questions.map(q => ({ ...q, type: "category" as const }));
+      return questions.map(q => ({ ...q, type: "category" as const } as DataForSEOQuestion));
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Category questions failed: ${error.message}`);
-      return this.generateQuestionsWithEstimatedVolumes(category, "category", limit);
+      return this.generateQuestionsWithEstimatedVolumes(category, "category", limit)
+        .map(q => ({ ...q, type: "category" as const } as DataForSEOQuestion));
     }
   }
 
@@ -348,8 +350,13 @@ export class DataForSEOService {
         return b.searchVolume - a.searchVolume;
       })
       .slice(0, limit)
-      .map(({ question, searchVolume, difficulty, cpc, competition, category }) => ({
-        question, searchVolume, difficulty, cpc, competition, category
+      .map((item: { question: string; searchVolume: number; difficulty: number; cpc: number; competition: number; category: "awareness" | "consideration" | "decision" }) => ({
+        question: item.question, 
+        searchVolume: item.searchVolume, 
+        difficulty: item.difficulty, 
+        cpc: item.cpc, 
+        competition: item.competition, 
+        category: item.category
       }));
 
     console.log(`📡 [DATAFORSEO] Returning ${questions.length} questions with volumes`);
