@@ -83,9 +83,10 @@ export class DataForSEOService {
     }];
 
     const auth = Buffer.from(`${this.login}:${this.password}`).toString('base64');
-    const url = `${this.baseUrl}/keywords_data/google/keyword_ideas/live`;
+    // Use the google_ads/keywords_for_keywords endpoint (this is the working one!)
+    const url = `${this.baseUrl}/keywords_data/google_ads/keywords_for_keywords/live`;
     
-    console.log(`📡 [DATAFORSEO] Calling keyword ideas API for: ${keyword}`);
+    console.log(`📡 [DATAFORSEO] Calling keywords_for_keywords API for: ${keyword}`);
 
     try {
       const response = await fetch(url, {
