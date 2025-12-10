@@ -103,6 +103,52 @@ export class MultiPlatformAIService {
     };
   }
 
+  /**
+   * Test a question on SELECTED platforms only
+   * Allows user to choose which chatbots to test
+   */
+  async testQuestionOnPlatforms(
+    question: string,
+    brandName: string,
+    competitors: string[] = [],
+    platforms: ("ChatGPT" | "Gemini" | "Copilot")[],
+    testsPerPlatform?: number
+  ): Promise<QuestionAnalysis> {
+    const numTests = testsPerPlatform || this.testsPerPlatform;
+    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × ${platforms.length} platforms)`);
+    const startTime = Date.now();
+
+    // Run selected platforms in PARALLEL
+    const platformPromises = platforms.map(platform => 
+      this.testSinglePlatform(platform, question, brandName, competitors, numTests)
+    );
+    
+    const results = await Promise.allSettled(platformPromises);
+
+    // Collect successful responses
+    const allResponses: AIResponse[] = [];
+    results.forEach((result, index) => {
+      const platform = platforms[index];
+      if (result.status === "fulfilled") {
+        allResponses.push(...result.value);
+      } else {
+        console.error(`  ⚠️ ${platform} failed: ${result.reason?.message || result.reason}`);
+      }
+    });
+
+    const aggregated = this.calculateAggregatedStats(allResponses, competitors);
+    console.log(`✅ [AI] Done in ${Date.now() - startTime}ms - ${allResponses.length} responses`);
+
+    return {
+      question,
+      searchVolume: 0,
+      category: "awareness",
+      totalResponses: allResponses.length,
+      responses: allResponses,
+      aggregated,
+    };
+  }
+
   private async testSinglePlatform(
     platform: "ChatGPT" | "Gemini" | "Copilot",
     question: string,
