@@ -73,7 +73,7 @@ export interface TechnicalRecommendation {
 export class WebsiteAuditService {
   private timeout: number;
 
-  constructor(timeout: number = 30000) {
+  constructor(timeout: number = 15000) { // Reduced default timeout to 15 seconds
     this.timeout = timeout;
   }
 
@@ -252,11 +252,16 @@ export class WebsiteAuditService {
     content: string | null;
     allowsAIBots: boolean;
   }> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
     try {
       const robotsUrl = new URL("/robots.txt", baseUrl).toString();
       const response = await fetch(robotsUrl, {
+        signal: controller.signal,
         headers: { "User-Agent": "VercelAuditBot/1.0" },
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         return { accessible: false, content: null, allowsAIBots: true };
@@ -283,6 +288,7 @@ export class WebsiteAuditService {
         allowsAIBots: !blocksAI,
       };
     } catch {
+      clearTimeout(timeoutId);
       return { accessible: false, content: null, allowsAIBots: true };
     }
   }

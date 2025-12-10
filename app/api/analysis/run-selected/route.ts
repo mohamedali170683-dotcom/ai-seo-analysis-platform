@@ -191,15 +191,27 @@ async function executeSelectedAnalysis(
 
     await updateProgress(3, "Initializing...");
 
-    // Start website audit in parallel (if domain provided)
+    // Start website audit in parallel (if domain provided) with timeout
     let websiteAuditPromise: Promise<WebsiteAuditResult | null> = Promise.resolve(null);
     if (domain) {
       console.log(`🔍 [EXEC] Starting website audit for: ${domain}`);
-      await updateProgress(5, "Auditing website technical factors...");
-      websiteAuditPromise = auditService.auditWebsite(domain).catch(err => {
-        console.error(`⚠️ [EXEC] Website audit failed: ${err.message}`);
-        return null;
+      
+      // Create a timeout promise (45 seconds max for audit)
+      const auditTimeout = new Promise<null>((resolve) => {
+        setTimeout(() => {
+          console.warn(`⚠️ [EXEC] Website audit timed out after 45s`);
+          resolve(null);
+        }, 45000);
       });
+      
+      // Race between audit and timeout
+      websiteAuditPromise = Promise.race([
+        auditService.auditWebsite(domain).catch(err => {
+          console.error(`⚠️ [EXEC] Website audit failed: ${err.message}`);
+          return null;
+        }),
+        auditTimeout
+      ]);
     }
 
     // Test each question
@@ -486,9 +498,17 @@ async function executeSelectedAnalysis(
       ? Math.round(overallMentionRate / Object.keys(stageGroups).length) 
       : 0;
 
-    // Wait for website audit to complete and save results
+    // Wait for website audit to complete (with safety timeout)
     await updateProgress(92, "Completing website technical audit...");
-    const websiteAudit = await websiteAuditPromise;
+    let websiteAudit: WebsiteAuditResult | null = null;
+    try {
+      // Additional safety timeout in case the race didn't work
+      const safetyTimeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 10000));
+      websiteAudit = await Promise.race([websiteAuditPromise, safetyTimeout]);
+    } catch (auditError: any) {
+      console.error(`⚠️ [EXEC] Website audit error: ${auditError.message}`);
+      websiteAudit = null;
+    }
     
     if (websiteAudit) {
       console.log(`📊 [EXEC] Website audit complete - Score: ${websiteAudit.technicalScore}/100`);
