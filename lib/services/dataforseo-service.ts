@@ -111,9 +111,25 @@ export class DataForSEOService {
 
       const data = await response.json();
       
+      // Log the full response structure for debugging
+      console.log(`📡 [DATAFORSEO] Response status_code: ${data.status_code}`);
+      console.log(`📡 [DATAFORSEO] Response status_message: ${data.status_message}`);
+      console.log(`📡 [DATAFORSEO] Tasks count: ${data.tasks?.length || 0}`);
+      
       if (data.status_code !== 20000) {
         console.error(`❌ [DATAFORSEO] API error: ${data.status_message}`);
+        // Log the full response for debugging
+        console.error(`❌ [DATAFORSEO] Full response: ${JSON.stringify(data).substring(0, 1000)}`);
         throw new Error(data.status_message || 'DataForSEO API error');
+      }
+
+      if (data.tasks && data.tasks.length > 0) {
+        const task = data.tasks[0];
+        console.log(`📡 [DATAFORSEO] Task status: ${task.status_code} - ${task.status_message}`);
+        console.log(`📡 [DATAFORSEO] Task result count: ${task.result?.length || 0}`);
+        if (task.result && task.result.length > 0) {
+          console.log(`📡 [DATAFORSEO] Items count: ${task.result[0]?.items?.length || 0}`);
+        }
       }
 
       return this.parseResponse(data, questionsOnly, limit);
