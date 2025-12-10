@@ -88,10 +88,24 @@ export async function POST(request: Request) {
     const totalCalls = selectedQuestions.length * selectedPlatforms.length * testsPerPlatform;
     console.log(`   Total AI calls: ${totalCalls}`);
 
+    // Get or create anonymous user for unauthenticated requests
+    let user = await prisma.user.findFirst({
+      where: { email: "anonymous@ai-seo-analysis.com" }
+    });
+    
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: "anonymous@ai-seo-analysis.com",
+          name: "Anonymous User",
+        }
+      });
+    }
+    
     // Create analysis record
     const analysis = await prisma.analysis.create({
       data: {
-        userId: "anonymous", // TODO: Add auth
+        userId: user.id,
         brandOrKeyword: brandName,
         domain: domain || "",
         competitors: competitors,
