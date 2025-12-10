@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { MultiPlatformAIService } from "@/lib/services/multi-platform-ai-service";
 import { EnhancedQuestionService } from "@/lib/services/enhanced-question-service";
+import { DataForSEOService } from "@/lib/services/dataforseo-service";
 
 export const maxDuration = 60;
 
@@ -69,12 +70,44 @@ export async function POST(request: Request) {
       console.log(`✅ AI test complete - ${analysis.aggregated.mentionRate}% mention rate`);
     }
 
+    // Test DataForSEO directly
+    if (testType === "dataforseo") {
+      if (!process.env.DATAFORSEO_LOGIN || !process.env.DATAFORSEO_PASSWORD) {
+        return NextResponse.json({
+          success: false,
+          error: "DataForSEO credentials not configured",
+          configured: {
+            login: !!process.env.DATAFORSEO_LOGIN,
+            password: !!process.env.DATAFORSEO_PASSWORD,
+          }
+        }, { status: 500 });
+      }
+
+      console.log("🔍 Testing DataForSEO API directly...");
+      const dataForSEO = new DataForSEOService(
+        process.env.DATAFORSEO_LOGIN,
+        process.env.DATAFORSEO_PASSWORD
+      );
+
+      const questions = await dataForSEO.getBrandQuestions(brand, 10);
+      results.dataforseo = {
+        questionsFound: questions.length,
+        questions: questions.slice(0, 5).map(q => ({
+          question: q.question,
+          searchVolume: q.searchVolume,
+          difficulty: q.difficulty,
+          category: q.category,
+        })),
+      };
+      console.log(`✅ DataForSEO returned ${questions.length} questions`);
+    }
+
     // Quick test - just verify services are initialized
     if (testType === "quick") {
       results.status = "Services initialized successfully";
       results.openaiConfigured = !!process.env.OPENAI_API_KEY;
       results.geminiConfigured = !!process.env.GEMINI_API_KEY;
-      results.ahrefsConfigured = !!process.env.AHREFS_API_KEY;
+      results.dataForSEOConfigured = !!(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD);
     }
 
     return NextResponse.json({
