@@ -2,8 +2,89 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { TrendingUp, Bot, Search, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2 } from "lucide-react";
+import { TrendingUp, Bot, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
+
+// FAQ Data
+const FAQ_DATA = [
+  {
+    question: "How does AI Visibility Analyzer measure brand visibility across AI platforms?",
+    answer: `AI Visibility Analyzer uses advanced technology to understand how AI assistants like ChatGPT, Google Gemini, and Microsoft Copilot discuss your brand. Think of it as market research for the AI age.
+
+Here's how it works: The system discovers real questions that consumers search for about products in your category, combined with strategic questions designed to reveal brand positioning. For example, instead of directly asking "What do you think of [Your Brand]?", it asks questions like "Which brands would you recommend for [category]?" or "What should I consider when buying [product type]?" This approach reveals how AI naturally positions your brand without prompting.
+
+The system then sends these questions to multiple AI platforms simultaneously and analyzes their responses to understand how often your brand is mentioned, in what context, and with what sentiment. You choose which questions to test and which platforms to analyze, giving you full control over your analysis.`
+  },
+  {
+    question: "Which AI platforms does AI Visibility Analyzer analyze, and why does this matter?",
+    answer: `AI Visibility Analyzer currently analyzes the three major AI assistants that consumers use most:
+• OpenAI's ChatGPT
+• Google's Gemini
+• Microsoft's Copilot
+
+This matters because these platforms collectively serve more than one billion users who increasingly rely on AI for product research and purchase decisions. When someone asks ChatGPT "What's the best laptop for graphic design?" or queries Gemini about "reliable car brands", your brand's presence (or absence) in these responses directly impacts purchase decisions.
+
+Our unique approach lets YOU select which platforms to test, ensuring your analysis is focused on the channels that matter most to your audience.`
+  },
+  {
+    question: "What makes AI Visibility Analyzer different from traditional SEO or social media monitoring?",
+    answer: `Traditional SEO tools tell you how visible your website is in Google search results. Social media monitoring tracks what people say. AI Visibility Analyzer does something entirely different: it measures how AI assistants discuss your brand when providing advice to consumers.
+
+What sets us apart:
+1. User-Controlled Analysis: You select which questions to test from real search data and strategic questions
+2. Multi-Platform Coverage: Test across ChatGPT, Gemini, and Copilot simultaneously
+3. Journey Stage Analysis: See how AI portrays your brand at Awareness, Consideration, and Decision stages
+4. Data-Driven Recommendations: Get actionable insights based on actual AI response patterns, not generic advice
+5. Competitive Positioning: Understand where you stand versus competitors in AI-generated recommendations
+
+It's about understanding how your brand appears in this new, rapidly growing channel for consumer discovery.`
+  },
+  {
+    question: "What insights does AI Visibility Analyzer provide, and how can I use them?",
+    answer: `AI Visibility Analyzer transforms complex AI response data into clear, actionable insights:
+
+Brand Mention Analysis: See how often each AI platform mentions your brand across different types of questions. If your brand appears less frequently than competitors in recommendation queries, you know there's an opportunity to improve.
+
+Sentiment Scoring: Understand whether AI assistants speak positively, negatively, or neutrally about your brand. We show you actual AI response examples so you can see exactly how your brand is being portrayed.
+
+Pattern Recognition: Our system analyzes AI responses to identify common themes, keywords, and descriptors associated with your brand—revealing what AI "thinks" about you.
+
+Funnel Stage Analysis: See how your brand performs at each stage of the customer journey:
+• Awareness: Does AI mention your brand when asked about the category?
+• Consideration: How does AI compare you to competitors?
+• Decision: Does AI recommend your brand for purchase?
+
+Strategic Recommendations: Get specific, justified actions with correlations explaining WHY they'll improve your AI visibility.`
+  },
+  {
+    question: "How reliable and accurate are the results?",
+    answer: `AI Visibility Analyzer ensures reliable results through several methods:
+
+Multiple AI Platform Analysis: By querying several AI assistants, we reduce the risk of skewed results from any single platform. It's like conducting focus groups with different demographic segments rather than relying on just one.
+
+Statistical Significance: Each question is tested multiple times per platform (3 tests each), creating a meaningful dataset that accounts for AI response variability.
+
+Real Search Data: Questions are sourced from actual search volume data, ensuring you're testing queries real consumers actually ask.
+
+Consistent Methodology: Every brand is evaluated using the same analysis methods, ensuring fair and comparable results. When you see that your competitor scores higher in certain areas, you can trust that this reflects a real difference in AI visibility.
+
+Transparent Results: We show you the actual AI responses, not just scores—so you can verify and understand exactly how conclusions were reached.`
+  },
+  {
+    question: "What types of businesses benefit most from AI Visibility Analyzer?",
+    answer: `While any brand can benefit from understanding their AI visibility, certain businesses see particularly high value:
+
+Ideal Candidates:
+• Consumer brands in competitive categories (electronics, fashion, beauty, automotive)
+• B2B companies where buyers research solutions via AI
+• E-commerce brands competing for online discovery
+• New market entrants trying to build awareness quickly
+• Premium brands needing to justify their value proposition
+• International brands expanding into new markets
+
+Marketing leaders who recognize that AI assistants are becoming a primary discovery channel for their customers will find AI Visibility Analyzer invaluable for maintaining a competitive advantage in this new landscape.`
+  }
+];
 
 export default function DashboardPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -12,6 +93,7 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const handleClearAll = async () => {
     setClearing(true);
@@ -115,9 +197,12 @@ export default function DashboardPage() {
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">
-              AI Visibility Dashboard
-            </h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                AI Visibility Analyzer
+              </h1>
+              <p className="text-sm text-gray-600">Measure how AI platforms discuss your brand</p>
+            </div>
             <div className="flex gap-4">
               <Link
                 href="/demo"
@@ -139,7 +224,7 @@ export default function DashboardPage() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold opacity-90">AI Visibility Analyses</span>
@@ -149,38 +234,79 @@ export default function DashboardPage() {
             <div className="text-xs opacity-75 mt-1">{stats.completedAnalyses} completed</div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">Projects</span>
-              <Search className="w-4 h-4 text-gray-400" />
+              <span className="text-sm font-semibold opacity-90">Questions Tested</span>
+              <HelpCircle className="w-5 h-5 opacity-75" />
             </div>
-            <div className="text-2xl font-bold">{stats.totalProjects}</div>
+            <div className="text-3xl font-bold">{stats.totalAnalyses * 9}</div>
+            <div className="text-xs opacity-75 mt-1">Across all analyses</div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">Keywords</span>
-              <TrendingUp className="w-4 h-4 text-gray-400" />
+              <span className="text-sm font-semibold opacity-90">AI Responses Analyzed</span>
+              <Bot className="w-5 h-5 opacity-75" />
             </div>
-            <div className="text-2xl font-bold">{stats.totalKeywords}</div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-600">Chatbot Queries</span>
-              <Bot className="w-4 h-4 text-gray-400" />
-            </div>
-            <div className="text-2xl font-bold">{stats.totalQueries}</div>
+            <div className="text-3xl font-bold">{stats.totalAnalyses * 81}</div>
+            <div className="text-xs opacity-75 mt-1">ChatGPT, Gemini, Copilot</div>
           </div>
         </div>
 
+        {/* Quick Actions - Simplified */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          <Link
+            href="/analyze"
+            className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all hover:scale-[1.02]"
+          >
+            <div className="flex items-center mb-4">
+              <div className="bg-white bg-opacity-20 p-4 rounded-xl mr-4">
+                <Brain className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">New Analysis</h2>
+                <p className="text-blue-100">You choose the questions & platforms</p>
+              </div>
+            </div>
+            <p className="text-sm text-blue-100 mb-4">
+              Select from real search data questions and strategic questions. Test on ChatGPT, Gemini, and Copilot. Get data-driven recommendations.
+            </p>
+            <div className="flex items-center text-sm font-semibold">
+              Start Analysis
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+
+          <Link
+            href="/demo"
+            className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all hover:scale-[1.02]"
+          >
+            <div className="flex items-center mb-4">
+              <div className="bg-white bg-opacity-20 p-4 rounded-xl mr-4">
+                <TrendingUp className="w-8 h-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Interactive Demo</h2>
+                <p className="text-green-100">See sample results for [Your Brand]</p>
+              </div>
+            </div>
+            <p className="text-sm text-green-100 mb-4">
+              Explore a complete AI visibility report. See how visibility scores, sentiment analysis, and recommendations work.
+            </p>
+            <div className="flex items-center text-sm font-semibold">
+              Try Demo
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+        </div>
+
         {/* AI Visibility Analyses */}
-        <div className="bg-white rounded-lg shadow p-8 mb-8">
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Brain className="w-6 h-6 text-blue-600" />
-                AI Visibility Analyses
+                Your Analyses
               </h2>
               <p className="text-sm text-gray-600 mt-1">Track how AI platforms mention your brands</p>
             </div>
@@ -337,145 +463,38 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Projects List */}
-        <div className="bg-white rounded-lg shadow p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold">Your Projects</h2>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-            >
-              <Plus className="w-4 h-4" />
-              Add Project
-            </button>
+        {/* FAQ Section */}
+        <div className="bg-white rounded-xl shadow-lg p-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Frequently Asked Questions</h2>
+            <p className="text-gray-600">Learn how AI Visibility Analyzer helps you understand your brand's presence in AI conversations</p>
           </div>
-
-          {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading projects...</div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">No projects yet. Create your first project to get started!</p>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-flex items-center gap-2"
+          
+          <div className="space-y-4 max-w-4xl mx-auto">
+            {FAQ_DATA.map((faq, index) => (
+              <div 
+                key={index}
+                className="border border-gray-200 rounded-xl overflow-hidden"
               >
-                <Plus className="w-5 h-5" />
-                Create Your First Project
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {projects.map((project) => (
-                <div
-                  key={project.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors"
+                <button
+                  onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                  className="w-full px-6 py-4 text-left flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">{project.name}</h3>
-                      <p className="text-sm text-gray-600">{project.domain}</p>
-                    </div>
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="text-center">
-                        <div className="font-semibold">{project._count?.keywords || 0}</div>
-                        <div className="text-gray-500">Keywords</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold">{project._count?.aiOverviews || 0}</div>
-                        <div className="text-gray-500">AI Checks</div>
-                      </div>
-                      <Link
-                        href={`/project/${project.id}`}
-                        className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-1"
-                      >
-                        View
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
+                  <span className="font-semibold text-gray-900 pr-4">{faq.question}</span>
+                  {expandedFaq === index ? (
+                    <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                  )}
+                </button>
+                {expandedFaq === index && (
+                  <div className="px-6 py-4 bg-white">
+                    <p className="text-gray-700 whitespace-pre-line leading-relaxed">{faq.answer}</p>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid md:grid-cols-4 gap-6">
-          <Link
-            href="/analyze"
-            className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
-          >
-            <div className="flex items-center mb-4">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
-                <Brain className="w-6 h-6" />
+                )}
               </div>
-              <div>
-                <h2 className="text-xl font-bold">New Analysis</h2>
-                <p className="text-blue-100 text-sm">You choose questions</p>
-              </div>
-            </div>
-            <div className="flex items-center text-sm font-semibold">
-              Start Analysis
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </div>
-          </Link>
-
-          <Link
-            href="/demo"
-            className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
-          >
-            <div className="flex items-center mb-4">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Interactive Demo</h2>
-                <p className="text-green-100 text-sm">Instant results (your brand)</p>
-              </div>
-            </div>
-            <div className="flex items-center text-sm font-semibold">
-              Try Demo
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </div>
-          </Link>
-
-          <Link
-            href="/demo"
-            className="bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
-          >
-            <div className="flex items-center mb-4">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
-                <TrendingUp className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Sample Report</h2>
-                <p className="text-purple-100 text-sm">Purina example</p>
-              </div>
-            </div>
-            <div className="flex items-center text-sm">
-              View Sample
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </div>
-          </Link>
-
-          <Link
-            href="/test/chatbot"
-            className="bg-gradient-to-br from-pink-500 to-red-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
-          >
-            <div className="flex items-center mb-4">
-              <div className="bg-white bg-opacity-20 p-3 rounded-lg mr-4">
-                <Bot className="w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Quick Test</h2>
-                <p className="text-pink-100 text-sm">Test single question instantly</p>
-              </div>
-            </div>
-            <div className="flex items-center text-sm">
-              Try it now
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </div>
-          </Link>
+            ))}
+          </div>
         </div>
       </main>
 
