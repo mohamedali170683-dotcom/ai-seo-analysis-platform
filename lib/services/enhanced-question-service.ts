@@ -28,8 +28,12 @@ export class EnhancedQuestionService {
   private googleService: GoogleAutocompleteService;
 
   constructor(dataForSEOLogin?: string, dataForSEOPassword?: string) {
+    console.log(`🔧 [QUESTIONS] Initializing with DataForSEO: ${!!dataForSEOLogin && !!dataForSEOPassword}`);
     if (dataForSEOLogin && dataForSEOPassword) {
       this.dataForSEOService = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
+      console.log(`✅ [QUESTIONS] DataForSEO service created`);
+    } else {
+      console.log(`⚠️ [QUESTIONS] No DataForSEO credentials, will use Google Autocomplete`);
     }
     this.googleService = new GoogleAutocompleteService();
   }

@@ -59,6 +59,7 @@ export class ComprehensiveAnalysisService {
 
   constructor(config: AnalysisConfig) {
     this.config = config;
+    console.log(`🔧 [ANALYSIS] DataForSEO configured: ${!!config.dataForSEOLogin && !!config.dataForSEOPassword}`);
     this.questionService = new EnhancedQuestionService(
       config.dataForSEOLogin,
       config.dataForSEOPassword
