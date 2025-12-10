@@ -233,19 +233,39 @@ export class DataForSEOService {
       console.log(`📡 [DATAFORSEO] Filtered to ${keywords.length} questions`);
     }
 
-    // Parse and sort by volume
+    // Parse, filter for questions, and sort by volume
     const questions = keywords
       .filter((k: any) => (k.search_volume || 0) > 0)
-      .map((k: any) => ({
-        question: k.keyword || '',
-        searchVolume: k.search_volume || 0,
-        difficulty: k.competition_index || 50,
-        cpc: k.cpc || 0,
-        competition: k.competition || 0,
-        category: this.categorizeQuestion(k.keyword || ''),
-      }))
-      .sort((a: any, b: any) => b.searchVolume - a.searchVolume)
-      .slice(0, limit);
+      .map((k: any) => {
+        const keyword = k.keyword || '';
+        // Convert to proper question format
+        const questionText = this.isQuestion(keyword) 
+          ? (keyword.charAt(0).toUpperCase() + keyword.slice(1) + (keyword.endsWith('?') ? '' : '?'))
+          : this.convertToQuestion(keyword);
+        
+        return {
+          question: questionText,
+          originalKeyword: keyword,
+          searchVolume: k.search_volume || 0,
+          difficulty: k.competition_index || 50,
+          cpc: k.cpc || 0,
+          competition: k.competition || 0,
+          category: this.categorizeQuestion(keyword),
+          isNativeQuestion: this.isQuestion(keyword),
+        };
+      })
+      // Prioritize native questions (actual question format in search data)
+      .sort((a: any, b: any) => {
+        // Native questions first
+        if (a.isNativeQuestion && !b.isNativeQuestion) return -1;
+        if (!a.isNativeQuestion && b.isNativeQuestion) return 1;
+        // Then by volume
+        return b.searchVolume - a.searchVolume;
+      })
+      .slice(0, limit)
+      .map(({ question, searchVolume, difficulty, cpc, competition, category }) => ({
+        question, searchVolume, difficulty, cpc, competition, category
+      }));
 
     console.log(`📡 [DATAFORSEO] Returning ${questions.length} questions with volumes`);
     if (questions.length > 0) {
@@ -262,27 +282,57 @@ export class DataForSEOService {
   private isQuestion(text: string): boolean {
     const lower = text.toLowerCase().trim();
     
-    // Must start with a question word or be a comparison/recommendation query
+    // Must start with a question word
     const startsWithQuestion = [
       'what ', 'why ', 'how ', 'which ', 'where ', 'when ', 'who ',
       'is ', 'are ', 'can ', 'does ', 'do ', 'should ', 'will ', 'would ',
       'could ', 'has ', 'have ', 'was ', 'were '
     ].some(w => lower.startsWith(w));
     
-    // Or contains comparison/recommendation patterns
-    const isComparisonOrRec = [
-      ' vs ', ' versus ', ' or ', ' compared to ',
-      'best ', 'top ', 'recommend', 'difference between',
-      'pros and cons', 'worth ', 'better '
+    // Or contains comparison patterns
+    const isComparison = [
+      ' vs ', ' versus ', ' compared to ', ' or better',
+      'difference between', 'pros and cons'
     ].some(w => lower.includes(w));
     
     // Or ends with a question mark
     const endsWithQuestion = lower.endsWith('?');
     
-    // Minimum length to be a meaningful question
+    // Or is a "best" recommendation query (these are implicitly questions)
+    const isBestQuery = lower.startsWith('best ') && lower.split(' ').length >= 3;
+    
+    // Minimum length
     const hasMinLength = lower.split(' ').length >= 3;
     
-    return (startsWithQuestion || isComparisonOrRec || endsWithQuestion) && hasMinLength;
+    return (startsWithQuestion || isComparison || endsWithQuestion || isBestQuery) && hasMinLength;
+  }
+  
+  /**
+   * Convert a keyword to question format for AI prompting
+   */
+  private convertToQuestion(keyword: string): string {
+    const lower = keyword.toLowerCase().trim();
+    
+    // Already a question
+    if (this.isQuestion(keyword)) {
+      let q = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+      if (!q.endsWith('?')) q += '?';
+      return q;
+    }
+    
+    // Convert keyword to question format
+    if (lower.includes(' vs ') || lower.includes(' versus ')) {
+      return `Which is better: ${keyword}?`;
+    }
+    if (lower.startsWith('best ')) {
+      return `What are the ${keyword}?`;
+    }
+    if (lower.includes(' review')) {
+      return `What are the ${keyword}?`;
+    }
+    
+    // Generic conversion for brand keywords
+    return `What is ${keyword}?`;
   }
 
   /**
