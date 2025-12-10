@@ -8,16 +8,16 @@ import { ProjectModal } from "@/components/project-modal";
 // FAQ Data
 const FAQ_DATA = [
   {
-    question: "How does AI Visibility Analyzer measure brand visibility across AI platforms?",
-    answer: `AI Visibility Analyzer uses advanced technology to understand how AI assistants like ChatGPT, Google Gemini, and Microsoft Copilot discuss your brand. Think of it as market research for the AI age.
+    question: "How does Vercel measure brand visibility across AI platforms?",
+    answer: `Vercel uses advanced technology to understand how AI assistants like ChatGPT, Google Gemini, and Microsoft Copilot discuss your brand. Think of it as market research for the AI age.
 
 Here's how it works: The system discovers real questions that consumers search for about products in your category, combined with strategic questions designed to reveal brand positioning. For example, instead of directly asking "What do you think of [Your Brand]?", it asks questions like "Which brands would you recommend for [category]?" or "What should I consider when buying [product type]?" This approach reveals how AI naturally positions your brand without prompting.
 
 The system then sends these questions to multiple AI platforms simultaneously and analyzes their responses to understand how often your brand is mentioned, in what context, and with what sentiment. You choose which questions to test and which platforms to analyze, giving you full control over your analysis.`
   },
   {
-    question: "Which AI platforms does AI Visibility Analyzer analyze, and why does this matter?",
-    answer: `AI Visibility Analyzer currently analyzes the three major AI assistants that consumers use most:
+    question: "Which AI platforms does Vercel analyze, and why does this matter?",
+    answer: `Vercel currently analyzes the three major AI assistants that consumers use most:
 • OpenAI's ChatGPT
 • Google's Gemini
 • Microsoft's Copilot
@@ -27,8 +27,8 @@ This matters because these platforms collectively serve more than one billion us
 Our unique approach lets YOU select which platforms to test, ensuring your analysis is focused on the channels that matter most to your audience.`
   },
   {
-    question: "What makes AI Visibility Analyzer different from traditional SEO or social media monitoring?",
-    answer: `Traditional SEO tools tell you how visible your website is in Google search results. Social media monitoring tracks what people say. AI Visibility Analyzer does something entirely different: it measures how AI assistants discuss your brand when providing advice to consumers.
+    question: "What makes Vercel different from traditional SEO or social media monitoring?",
+    answer: `Traditional SEO tools tell you how visible your website is in Google search results. Social media monitoring tracks what people say. Vercel does something entirely different: it measures how AI assistants discuss your brand when providing advice to consumers.
 
 What sets us apart:
 1. User-Controlled Analysis: You select which questions to test from real search data and strategic questions
@@ -40,8 +40,8 @@ What sets us apart:
 It's about understanding how your brand appears in this new, rapidly growing channel for consumer discovery.`
   },
   {
-    question: "What insights does AI Visibility Analyzer provide, and how can I use them?",
-    answer: `AI Visibility Analyzer transforms complex AI response data into clear, actionable insights:
+    question: "What insights does Vercel provide, and how can I use them?",
+    answer: `Vercel transforms complex AI response data into clear, actionable insights:
 
 Brand Mention Analysis: See how often each AI platform mentions your brand across different types of questions. If your brand appears less frequently than competitors in recommendation queries, you know there's an opportunity to improve.
 
@@ -58,7 +58,7 @@ Strategic Recommendations: Get specific, justified actions with correlations exp
   },
   {
     question: "How reliable and accurate are the results?",
-    answer: `AI Visibility Analyzer ensures reliable results through several methods:
+    answer: `Vercel ensures reliable results through several methods:
 
 Multiple AI Platform Analysis: By querying several AI assistants, we reduce the risk of skewed results from any single platform. It's like conducting focus groups with different demographic segments rather than relying on just one.
 
@@ -71,7 +71,7 @@ Consistent Methodology: Every brand is evaluated using the same analysis methods
 Transparent Results: We show you the actual AI responses, not just scores—so you can verify and understand exactly how conclusions were reached.`
   },
   {
-    question: "What types of businesses benefit most from AI Visibility Analyzer?",
+    question: "What types of businesses benefit most from Vercel?",
     answer: `While any brand can benefit from understanding their AI visibility, certain businesses see particularly high value:
 
 Ideal Candidates:
@@ -82,7 +82,7 @@ Ideal Candidates:
 • Premium brands needing to justify their value proposition
 • International brands expanding into new markets
 
-Marketing leaders who recognize that AI assistants are becoming a primary discovery channel for their customers will find AI Visibility Analyzer invaluable for maintaining a competitive advantage in this new landscape.`
+Marketing leaders who recognize that AI assistants are becoming a primary discovery channel for their customers will find Vercel invaluable for maintaining a competitive advantage in this new landscape.`
   }
 ];
 
@@ -199,9 +199,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                AI Visibility Analyzer
+                Vercel
               </h1>
-              <p className="text-sm text-gray-600">Measure how AI platforms discuss your brand</p>
+              <p className="text-sm text-gray-600">AI Visibility Analysis Platform</p>
             </div>
             <div className="flex gap-4">
               <Link
@@ -467,7 +467,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Frequently Asked Questions</h2>
-            <p className="text-gray-600">Learn how AI Visibility Analyzer helps you understand your brand's presence in AI conversations</p>
+            <p className="text-gray-600">Learn how Vercel helps you understand your brand's presence in AI conversations</p>
           </div>
           
           <div className="space-y-4 max-w-4xl mx-auto">

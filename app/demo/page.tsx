@@ -353,7 +353,7 @@ function DemoPageContent() {
                 </div>
               )}
               <h1 className="text-3xl font-bold text-gray-900">
-                {DEMO_DATA.brandOrKeyword} - AI Visibility Journey Analysis
+                {DEMO_DATA.brandOrKeyword} - Vercel Analysis Report
               </h1>
               <p className="text-gray-600 mt-1">{DEMO_DATA.domain}</p>
             </div>
@@ -456,7 +456,7 @@ function DemoPageContent() {
 
         {/* Visual User Journey Map */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">The AI-Powered User Journey</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Your Brand's AI Journey</h2>
           <p className="text-center text-gray-600 mb-8">Click on any stage to see detailed visibility analysis</p>
           <div className="relative">
             {/* Journey Line */}

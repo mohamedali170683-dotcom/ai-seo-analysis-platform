@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI-Powered SEO & Search Visibility Analysis Platform",
-  description: "Analyze the impact of AI-driven search features on organic and paid search performance",
+  title: "Vercel - AI Visibility Analysis Platform",
+  description: "Measure how AI platforms like ChatGPT, Gemini, and Copilot discuss your brand. Get data-driven insights to improve your AI visibility.",
 };
 
 export default function RootLayout({

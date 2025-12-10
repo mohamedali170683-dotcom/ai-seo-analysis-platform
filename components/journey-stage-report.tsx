@@ -107,7 +107,7 @@ export function JourneyStageReport({
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {brandName} - AI Visibility Journey Analysis
+                  {brandName} - Vercel Analysis Report
                 </h1>
                 {domain && <p className="text-gray-600 mt-1">{domain}</p>}
               </div>
@@ -188,7 +188,7 @@ export function JourneyStageReport({
         {/* Visual User Journey Map */}
         <div className="bg-white rounded-3xl shadow-xl p-8 mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
-            The AI-Powered User Journey
+            Your Brand's AI Journey
           </h2>
           <p className="text-center text-gray-600 mb-8">
             Click on any stage to see detailed visibility analysis
