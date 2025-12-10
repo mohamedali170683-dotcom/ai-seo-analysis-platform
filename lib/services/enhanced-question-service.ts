@@ -58,24 +58,30 @@ export class EnhancedQuestionService {
     const startTime = Date.now();
     let allQuestions: DiscoveredQuestion[] = [];
 
-    // PRIORITY 1: DataForSEO (real questions with volumes)
+    // PRIORITY 1: DataForSEO (REAL questions with ACTUAL search volumes)
     if (this.dataForSEOService) {
-      // Get BRAND questions (questions users ask about the brand)
+      // Get BRAND questions - real questions people actually search
       try {
-        const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 15);
+        const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 20);
         
         if (brandQuestions.length > 0) {
           const converted = brandQuestions
             .filter(q => q.searchVolume >= minSearchVolume)
             .map(q => this.convertDataForSEOQuestion(q, "brand"));
+          
           allQuestions.push(...converted);
-          console.log(`✅ [QUESTIONS] Got ${converted.length} brand questions from DataForSEO`);
+          
+          console.log(`✅ [QUESTIONS] Got ${converted.length} brand questions (min ${minSearchVolume} vol)`);
+          // Show top questions by volume
+          converted.slice(0, 3).forEach(q => {
+            console.log(`   📊 "${q.question}" - ${q.searchVolume.toLocaleString()}/mo`);
+          });
         }
       } catch (error: any) {
         console.warn(`⚠️ [QUESTIONS] DataForSEO brand questions failed: ${error.message}`);
       }
       
-      // Get CATEGORY questions (questions about the industry/vertical)
+      // Get CATEGORY questions - real questions about the industry
       if (category) {
         try {
           const categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 15);
@@ -86,28 +92,13 @@ export class EnhancedQuestionService {
               .filter(q => q.searchVolume >= minSearchVolume)
               .filter(q => !existing.has(q.question.toLowerCase()))
               .map(q => this.convertDataForSEOQuestion(q, "category"));
-            allQuestions.push(...converted);
-            console.log(`✅ [QUESTIONS] Got ${converted.length} category questions from DataForSEO`);
-          }
-        } catch (error: any) {
-          console.warn(`⚠️ [QUESTIONS] DataForSEO category questions failed: ${error.message}`);
-        }
-      }
-
-      // Get CATEGORY keywords (if category provided)
-      if (category) {
-        try {
-          const categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 10);
-          
-          if (categoryQuestions.length > 0) {
-            const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
-            const converted = categoryQuestions
-              .filter(q => q.searchVolume >= minSearchVolume)
-              .filter(q => !existing.has(q.question.toLowerCase()))
-              .map(q => this.convertDataForSEOQuestion(q, "category"));
             
             allQuestions.push(...converted);
-            console.log(`✅ [QUESTIONS] Got ${converted.length} category questions from DataForSEO`);
+            
+            console.log(`✅ [QUESTIONS] Got ${converted.length} category questions (min ${minSearchVolume} vol)`);
+            converted.slice(0, 3).forEach(q => {
+              console.log(`   📊 "${q.question}" - ${q.searchVolume.toLocaleString()}/mo`);
+            });
           }
         } catch (error: any) {
           console.warn(`⚠️ [QUESTIONS] DataForSEO category questions failed: ${error.message}`);

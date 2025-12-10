@@ -29,45 +29,153 @@ export class DataForSEOService {
   }
 
   /**
-   * Get high-value QUESTIONS for a brand
-   * Generates relevant questions and fetches search volume data
+   * Get REAL questions for a brand from search data
+   * Fetches actual questions people search for, ranked by search volume
    */
   async getBrandQuestions(brandName: string, limit: number = 20): Promise<DataForSEOQuestion[]> {
-    console.log(`🔍 [DATAFORSEO] Generating brand questions for: ${brandName}`);
+    console.log(`🔍 [DATAFORSEO] Fetching REAL brand questions for: ${brandName}`);
     
     try {
-      // Generate relevant questions users would ask AI about this brand
+      // Step 1: Get related keywords that are questions
+      const questionKeywords = await this.fetchQuestionKeywords(brandName, limit * 3);
+      
+      // Step 2: If we got real questions, use them
+      if (questionKeywords.length >= 3) {
+        console.log(`✅ [DATAFORSEO] Got ${questionKeywords.length} real questions from search data`);
+        return questionKeywords
+          .slice(0, limit)
+          .map(q => ({ ...q, type: "brand" as const } as DataForSEOQuestion));
+      }
+      
+      // Step 3: Fallback - generate questions and get their volumes
+      console.log(`⚠️ [DATAFORSEO] Few real questions found, using generated + volume lookup`);
       const generatedQuestions = [
-        // Awareness stage questions
-        `What is ${brandName}?`,
-        `What is ${brandName} known for?`,
-        `Who owns ${brandName}?`,
-        `Where is ${brandName} from?`,
-        `Is ${brandName} a good brand?`,
-        // Consideration stage questions
-        `Is ${brandName} worth it?`,
-        `${brandName} vs competitors`,
-        `What makes ${brandName} different?`,
-        `${brandName} quality review`,
-        `Pros and cons of ${brandName}`,
-        // Decision stage questions
-        `Should I buy ${brandName}?`,
-        `Best ${brandName} products`,
-        `Where to buy ${brandName}?`,
-        `${brandName} recommendations`,
+        `what is ${brandName}`,
+        `is ${brandName} good`,
+        `${brandName} review`,
+        `${brandName} vs`,
+        `best ${brandName}`,
+        `should i buy ${brandName}`,
+        `${brandName} worth it`,
+        `${brandName} pros and cons`,
       ];
       
-      // Get search volumes for these questions
-      const questions = await this.getSearchVolumes(generatedQuestions.slice(0, limit));
-      
-      console.log(`✅ [DATAFORSEO] Got ${questions.length} brand questions with volumes`);
-      return questions.map(q => ({ ...q, type: "brand" as const } as DataForSEOQuestion));
+      const withVolumes = await this.getSearchVolumes(generatedQuestions);
+      return withVolumes
+        .sort((a, b) => b.searchVolume - a.searchVolume)
+        .slice(0, limit)
+        .map(q => ({ ...q, type: "brand" as const } as DataForSEOQuestion));
+        
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Brand questions failed: ${error.message}`);
-      // Return questions with estimated volumes
       return this.generateQuestionsWithEstimatedVolumes(brandName, "brand", limit)
         .map(q => ({ ...q, type: "brand" as const } as DataForSEOQuestion));
     }
+  }
+  
+  /**
+   * Fetch REAL question-format keywords from DataForSEO
+   * Uses keyword_suggestions to find actual questions people search
+   */
+  private async fetchQuestionKeywords(
+    seed: string, 
+    limit: number
+  ): Promise<Omit<DataForSEOQuestion, 'type'>[]> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    
+    const auth = Buffer.from(`${this.login}:${this.password}`).toString('base64');
+    
+    // Use keywords_for_keywords to get related searches
+    const url = `${this.baseUrl}/keywords_data/google_ads/keywords_for_keywords/live`;
+    
+    // Search for question-oriented seeds
+    const questionSeeds = [
+      `what is ${seed}`,
+      `how ${seed}`,
+      `why ${seed}`,
+      `is ${seed}`,
+      `best ${seed}`,
+    ];
+    
+    const requestBody = [{
+      keywords: questionSeeds,
+      location_code: 2840,
+      language_code: "en",
+      include_seed_keyword: true,
+      limit: limit,
+    }];
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        if (response.status === 402) {
+          console.warn(`⚠️ [DATAFORSEO] Payment Required (402)`);
+          return [];
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const keywords = data.tasks?.[0]?.result || [];
+      
+      console.log(`📡 [DATAFORSEO] Got ${keywords.length} related keywords`);
+      
+      // Filter for question-format keywords and sort by volume
+      const questions = keywords
+        .filter((k: any) => {
+          const kw = (k.keyword || '').toLowerCase();
+          return this.isQuestion(kw) && k.search_volume > 0;
+        })
+        .map((k: any) => ({
+          question: this.formatQuestion(k.keyword),
+          searchVolume: k.search_volume || 0,
+          difficulty: k.competition_index || 50,
+          cpc: k.cpc || 0,
+          competition: k.competition || 0,
+          category: this.categorizeQuestion(k.keyword),
+        }))
+        .sort((a: any, b: any) => b.searchVolume - a.searchVolume);
+      
+      console.log(`📡 [DATAFORSEO] Filtered to ${questions.length} actual questions`);
+      
+      // Log top questions for visibility
+      questions.slice(0, 5).forEach((q: any) => {
+        console.log(`  📝 "${q.question}" - ${q.searchVolume.toLocaleString()} monthly searches`);
+      });
+      
+      return questions;
+      
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      console.error(`❌ [DATAFORSEO] fetchQuestionKeywords failed: ${error.message}`);
+      return [];
+    }
+  }
+  
+  /**
+   * Format keyword as a proper question
+   */
+  private formatQuestion(keyword: string): string {
+    let q = keyword.trim();
+    // Capitalize first letter
+    q = q.charAt(0).toUpperCase() + q.slice(1);
+    // Add question mark if it's a question
+    if (!q.endsWith('?') && this.isQuestion(keyword)) {
+      q += '?';
+    }
+    return q;
   }
   
   /**
@@ -169,38 +277,43 @@ export class DataForSEOService {
   }
 
   /**
-   * Get high-value QUESTIONS for a category/vertical
-   * These are questions users ask AI about the industry (brand-agnostic)
+   * Get REAL questions for a category/vertical from search data
+   * These are questions users actually search about the industry
    */
   async getCategoryQuestions(category: string, limit: number = 20): Promise<DataForSEOQuestion[]> {
-    console.log(`🔍 [DATAFORSEO] Generating category questions for: ${category}`);
+    console.log(`🔍 [DATAFORSEO] Fetching REAL category questions for: ${category}`);
     
     try {
-      // Generate relevant category questions users would ask AI
+      // Step 1: Get real question keywords for the category
+      const questionKeywords = await this.fetchQuestionKeywords(category, limit * 3);
+      
+      // Step 2: If we got real questions, use them
+      if (questionKeywords.length >= 3) {
+        console.log(`✅ [DATAFORSEO] Got ${questionKeywords.length} real category questions`);
+        return questionKeywords
+          .slice(0, limit)
+          .map(q => ({ ...q, type: "category" as const } as DataForSEOQuestion));
+      }
+      
+      // Step 3: Fallback - generate questions and get their volumes
+      console.log(`⚠️ [DATAFORSEO] Few real questions found, using generated + volume lookup`);
       const generatedQuestions = [
-        // Awareness stage
-        `What is ${category}?`,
-        `What are the different types of ${category}?`,
-        `How does ${category} work?`,
-        // Consideration stage  
-        `What is the best ${category}?`,
-        `How to choose the right ${category}?`,
-        `What to look for when buying ${category}?`,
-        `Top ${category} brands`,
-        `${category} comparison`,
-        `Best ${category} for the money`,
-        // Decision stage
+        `best ${category}`,
+        `what is the best ${category}`,
         `${category} recommendations`,
-        `Where to buy ${category}?`,
-        `Best ${category} deals`,
+        `how to choose ${category}`,
         `${category} buying guide`,
+        `top ${category}`,
+        `${category} comparison`,
+        `${category} reviews`,
       ];
       
-      // Get search volumes for these questions
-      const questions = await this.getSearchVolumes(generatedQuestions.slice(0, limit));
-      
-      console.log(`✅ [DATAFORSEO] Got ${questions.length} category questions with volumes`);
-      return questions.map(q => ({ ...q, type: "category" as const } as DataForSEOQuestion));
+      const withVolumes = await this.getSearchVolumes(generatedQuestions);
+      return withVolumes
+        .sort((a, b) => b.searchVolume - a.searchVolume)
+        .slice(0, limit)
+        .map(q => ({ ...q, type: "category" as const } as DataForSEOQuestion));
+        
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Category questions failed: ${error.message}`);
       return this.generateQuestionsWithEstimatedVolumes(category, "category", limit)
