@@ -29,16 +29,39 @@ export async function POST(request: Request) {
     // Test question discovery
     if (testType === "questions" || testType === "full") {
       console.log("🔍 Testing question discovery...");
+      
+      // First, test DataForSEO directly
+      const dataForSEODebug: any = {
+        loginConfigured: !!process.env.DATAFORSEO_LOGIN,
+        passwordConfigured: !!process.env.DATAFORSEO_PASSWORD,
+      };
+      
+      if (process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD) {
+        const directService = new DataForSEOService(
+          process.env.DATAFORSEO_LOGIN,
+          process.env.DATAFORSEO_PASSWORD
+        );
+        const directKeywords = await directService.getBrandQuestions(brand, 10, false);
+        dataForSEODebug.directKeywordsFound = directKeywords.length;
+        dataForSEODebug.directSample = directKeywords.slice(0, 3).map(k => ({
+          keyword: k.question,
+          volume: k.searchVolume,
+        }));
+      }
+      
+      // Now test through EnhancedQuestionService
       const questionService = new EnhancedQuestionService(
         process.env.DATAFORSEO_LOGIN,
         process.env.DATAFORSEO_PASSWORD
       );
       const questions = await questionService.discoverQuestions({
         brandName: brand,
-        category: "general", // Include category
+        category: "general",
         maxQuestionsPerStage: 3,
         minSearchVolume: 100,
       });
+      
+      results.dataForSEODebug = dataForSEODebug;
       results.questions = questions.map(q => ({
         question: q.question,
         searchVolume: q.searchVolume,
