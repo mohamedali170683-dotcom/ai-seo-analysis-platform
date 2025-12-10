@@ -49,6 +49,9 @@ export default function AnalyzePage() {
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [analysisStatus, setAnalysisStatus] = useState<string>("");
   const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [analysisStartTime, setAnalysisStartTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [currentStep, setCurrentStep] = useState<string>("");
 
   // Phase 1: Discover questions
   const handleDiscoverQuestions = async () => {
@@ -144,6 +147,9 @@ export default function AnalyzePage() {
 
     setLoading(true);
     setPhase(3);
+    setAnalysisStartTime(Date.now());
+    setElapsedTime(0);
+    setCurrentStep("Starting analysis...");
 
     const allQuestions = [
       ...selectedQuestions.awareness,
@@ -178,10 +184,12 @@ export default function AnalyzePage() {
       } else {
         alert(data.error || "Failed to start analysis");
         setPhase(2);
+        setAnalysisStartTime(null);
       }
     } catch (error) {
       alert("Error starting analysis");
       setPhase(2);
+      setAnalysisStartTime(null);
     } finally {
       setLoading(false);
     }
@@ -189,27 +197,45 @@ export default function AnalyzePage() {
 
   // Poll for analysis status
   const pollAnalysisStatus = async (id: string) => {
+    const startTime = Date.now();
+    
+    // Timer interval to update elapsed time every second
+    const timerInterval = setInterval(() => {
+      setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    
     const poll = async () => {
       try {
         const response = await fetch(`/api/analysis/${id}`);
         const data = await response.json();
 
         setAnalysisStatus(data.currentStep || "Processing...");
+        setCurrentStep(data.currentStep || "Processing...");
         setAnalysisProgress(data.progress || 0);
 
         if (data.status === "completed") {
+          clearInterval(timerInterval);
           window.location.href = `/results/${id}`;
         } else if (data.status === "failed") {
+          clearInterval(timerInterval);
           alert("Analysis failed: " + data.currentStep);
           setPhase(2);
+          setAnalysisStartTime(null);
         } else {
-          setTimeout(poll, 3000);
+          setTimeout(poll, 2000); // Poll every 2 seconds for more responsive updates
         }
       } catch (error) {
-        setTimeout(poll, 5000);
+        setTimeout(poll, 3000);
       }
     };
     poll();
+  };
+  
+  // Format elapsed time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   // Format search volume
@@ -589,23 +615,152 @@ export default function AnalyzePage() {
 
         {/* Phase 3: Running Analysis */}
         {phase === 3 && (
-          <div className="bg-white/5 rounded-xl p-8 text-center max-w-2xl mx-auto">
-            <div className="text-6xl mb-6">🔬</div>
-            <h2 className="text-2xl font-bold mb-4">Vercel Analysis in Progress</h2>
-            <p className="text-gray-400 mb-6">{analysisStatus}</p>
-            
-            <div className="w-full bg-white/10 rounded-full h-4 mb-4">
-              <div
-                className="bg-gradient-to-r from-purple-600 to-blue-600 h-4 rounded-full transition-all duration-500"
-                style={{ width: `${analysisProgress}%` }}
-              />
-            </div>
-            <p className="text-purple-400 text-lg font-semibold">{analysisProgress}% complete</p>
+          <div className="max-w-3xl mx-auto space-y-6">
+            {/* Main Progress Card */}
+            <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 rounded-2xl p-8 border border-purple-500/30">
+              {/* Header with Timer */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <div className="text-5xl animate-pulse">🔬</div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold">Analysis Running</h2>
+                    <p className="text-gray-400">Querying AI platforms...</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-4xl font-mono font-bold text-purple-400">
+                    {formatTime(elapsedTime)}
+                  </div>
+                  <div className="text-xs text-gray-500">elapsed time</div>
+                </div>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Progress</span>
+                  <span className="text-purple-400 font-bold">{analysisProgress}%</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 h-4 rounded-full transition-all duration-500 relative"
+                    style={{ width: `${analysisProgress}%` }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"></div>
+                  </div>
+                </div>
+              </div>
 
-            <div className="mt-8 text-sm text-gray-500 space-y-1">
-              <p>Testing 9 questions across {selectedPlatforms.join(", ")}</p>
-              <p>Each question tested 5 times per platform for statistical reliability</p>
-              <p className="text-xs text-gray-400">Total: 135 AI responses analyzed</p>
+              {/* Current Step */}
+              <div className="bg-black/20 rounded-xl p-4 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-gray-300 font-mono">{currentStep || analysisStatus}</span>
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="bg-white/5 rounded-lg p-3">
+                  <div className="text-2xl font-bold text-blue-400">9</div>
+                  <div className="text-xs text-gray-500">Questions</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-3">
+                  <div className="text-2xl font-bold text-purple-400">{selectedPlatforms.length}</div>
+                  <div className="text-xs text-gray-500">AI Platforms</div>
+                </div>
+                <div className="bg-white/5 rounded-lg p-3">
+                  <div className="text-2xl font-bold text-cyan-400">135</div>
+                  <div className="text-xs text-gray-500">Total Tests</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step-by-Step Progress */}
+            <div className="bg-white/5 rounded-xl p-6">
+              <h3 className="text-sm font-semibold text-gray-400 mb-4">ANALYSIS PIPELINE</h3>
+              <div className="space-y-3">
+                {[
+                  { step: "Initialize", icon: "⚡", threshold: 5 },
+                  { step: "Website Technical Audit", icon: "🔍", threshold: 10 },
+                  { step: "Testing Awareness Questions", icon: "🧠", threshold: 35 },
+                  { step: "Testing Consideration Questions", icon: "⚖️", threshold: 60 },
+                  { step: "Testing Decision Questions", icon: "✅", threshold: 85 },
+                  { step: "Analyzing Patterns", icon: "📊", threshold: 92 },
+                  { step: "Generating Recommendations", icon: "💡", threshold: 98 },
+                  { step: "Complete!", icon: "🎉", threshold: 100 },
+                ].map((item, index) => {
+                  const isComplete = analysisProgress >= item.threshold;
+                  const isCurrent = analysisProgress >= (index > 0 ? [5, 10, 35, 60, 85, 92, 98, 100][index - 1] : 0) && analysisProgress < item.threshold;
+                  
+                  return (
+                    <div key={item.step} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                      isCurrent ? "bg-purple-500/20 border border-purple-500/50" : 
+                      isComplete ? "opacity-100" : "opacity-40"
+                    }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg ${
+                        isComplete ? "bg-green-500/20" : 
+                        isCurrent ? "bg-purple-500/20 animate-pulse" : "bg-white/5"
+                      }`}>
+                        {isComplete ? "✓" : item.icon}
+                      </div>
+                      <span className={`flex-1 text-sm ${isCurrent ? "text-white font-medium" : ""}`}>
+                        {item.step}
+                      </span>
+                      {isCurrent && (
+                        <div className="flex gap-1">
+                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                          <div className="w-1.5 h-1.5 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                        </div>
+                      )}
+                      {isComplete && (
+                        <span className="text-green-500 text-sm">✓</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Platforms Being Tested */}
+            <div className="bg-white/5 rounded-xl p-6">
+              <h3 className="text-sm font-semibold text-gray-400 mb-4">PLATFORMS BEING TESTED</h3>
+              <div className="flex justify-center gap-6">
+                {selectedPlatforms.map((platform) => (
+                  <div key={platform} className="flex flex-col items-center gap-2">
+                    <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-white/10 ${
+                      analysisProgress > 10 ? "animate-pulse" : ""
+                    }`}>
+                      {platform === "ChatGPT" && "🤖"}
+                      {platform === "Gemini" && "✨"}
+                      {platform === "Copilot" && "🔷"}
+                    </div>
+                    <span className="text-sm text-gray-400">{platform}</span>
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((dot) => (
+                        <div 
+                          key={dot} 
+                          className={`w-1.5 h-1.5 rounded-full transition-all ${
+                            analysisProgress > 10 + (dot * 10) ? "bg-green-500" : "bg-gray-600"
+                          }`}
+                        ></div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Estimated Time */}
+            <div className="text-center text-sm text-gray-500">
+              <p>Estimated completion: 6-8 minutes</p>
+              <p className="text-xs text-gray-600 mt-1">
+                Each question is tested 5 times per platform for statistical reliability
+              </p>
             </div>
           </div>
         )}
