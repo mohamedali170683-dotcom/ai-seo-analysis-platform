@@ -106,17 +106,21 @@ export async function POST(request: Request) {
 
         const rawData = await rawResponse.json();
         
+        // Keywords are in result[0].keywords (not items)
+        const keywords = rawData.tasks?.[0]?.result?.[0]?.keywords || [];
+        
         results.dataforseo = {
           httpStatus: rawResponse.status,
           apiStatusCode: rawData.status_code,
           apiStatusMessage: rawData.status_message,
-          tasksCount: rawData.tasks?.length || 0,
-          taskStatusCode: rawData.tasks?.[0]?.status_code,
-          taskStatusMessage: rawData.tasks?.[0]?.status_message,
-          resultCount: rawData.tasks?.[0]?.result?.length || 0,
-          itemsCount: rawData.tasks?.[0]?.result?.[0]?.items?.length || 0,
-          sampleItems: rawData.tasks?.[0]?.result?.[0]?.items?.slice(0, 3) || [],
-          rawResponsePreview: JSON.stringify(rawData).substring(0, 500),
+          keywordsFound: keywords.length,
+          sampleKeywords: keywords.slice(0, 5).map((k: any) => ({
+            keyword: k.keyword,
+            searchVolume: k.search_volume,
+            competition: k.competition,
+            cpc: k.cpc,
+          })),
+          cost: rawData.cost,
         };
       } catch (error: any) {
         results.dataforseo = {

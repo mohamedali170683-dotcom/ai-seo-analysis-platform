@@ -163,8 +163,8 @@ export class DataForSEOService {
       return [];
     }
 
-    // Get keyword ideas
-    let keywords = result[0]?.items || [];
+    // Get keywords - DataForSEO puts them in 'keywords' not 'items' for keywords_for_keywords endpoint
+    let keywords = result[0]?.keywords || result[0]?.items || [];
     console.log(`📡 [DATAFORSEO] Found ${keywords.length} total keywords`);
 
     // Filter for questions if needed
@@ -174,14 +174,15 @@ export class DataForSEOService {
     }
 
     // Parse and sort by volume
+    // DataForSEO keywords_for_keywords returns flat structure: {keyword, search_volume, competition, cpc}
     const questions = keywords
-      .filter((k: any) => (k.keyword_info?.search_volume || 0) > 0)
+      .filter((k: any) => (k.search_volume || k.keyword_info?.search_volume || 0) > 0)
       .map((k: any) => ({
         question: k.keyword || '',
-        searchVolume: k.keyword_info?.search_volume || 0,
-        difficulty: k.keyword_info?.keyword_difficulty || k.keyword_properties?.keyword_difficulty || 50,
-        cpc: k.keyword_info?.cpc || 0,
-        competition: k.keyword_info?.competition || 0,
+        searchVolume: k.search_volume || k.keyword_info?.search_volume || 0,
+        difficulty: k.competition_index || k.keyword_info?.keyword_difficulty || 50,
+        cpc: k.cpc || k.keyword_info?.cpc || 0,
+        competition: k.competition || k.keyword_info?.competition || 0,
         category: this.categorizeQuestion(k.keyword || ''),
       }))
       .sort((a: any, b: any) => b.searchVolume - a.searchVolume)
