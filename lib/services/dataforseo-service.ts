@@ -73,14 +73,13 @@ export class DataForSEOService {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-    // Prepare request body
+    // Prepare request body - DataForSEO requires 'keywords' as an array
     const requestBody = [{
-      keyword: keyword,
+      keywords: [keyword], // Must be an array
       location_code: 2840, // United States
       language_code: "en",
-      include_serp_info: false,
       include_seed_keyword: true,
-      limit: limit * 2, // Get more to filter
+      limit: limit * 3, // Get more to filter for questions
     }];
 
     const auth = Buffer.from(`${this.login}:${this.password}`).toString('base64');
