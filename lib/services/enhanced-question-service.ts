@@ -59,28 +59,28 @@ export class EnhancedQuestionService {
     let allQuestions: DiscoveredQuestion[] = [];
 
     // PRIORITY 1: DataForSEO (real volumes)
+    console.log(`🔍 [QUESTIONS] DataForSEO service available: ${!!this.dataForSEOService}`);
     if (this.dataForSEOService) {
       // Get BRAND keywords (include non-questions too - volumes are valuable)
       try {
         console.log(`📡 [QUESTIONS] Fetching brand keywords from DataForSEO...`);
-        // Get questions first (questionsOnly=true)
-        let brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 20, true);
-        
-        // If not enough questions, get all keywords
-        if (brandQuestions.length < 6) {
-          console.log(`📡 [QUESTIONS] Only ${brandQuestions.length} questions, getting all keywords...`);
-          brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 20, false);
-        }
+        // Get ALL keywords first (questionsOnly=false) to maximize data
+        let brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 30, false);
+        console.log(`📡 [QUESTIONS] DataForSEO returned ${brandQuestions.length} brand keywords`);
         
         if (brandQuestions.length > 0) {
+          console.log(`📡 [QUESTIONS] Sample: ${brandQuestions[0].question} (${brandQuestions[0].searchVolume} vol)`);
           const converted = brandQuestions
             .filter(q => q.searchVolume >= minSearchVolume)
             .map(q => this.convertDataForSEOQuestion(q, "brand"));
           allQuestions.push(...converted);
-          console.log(`✅ [QUESTIONS] Got ${converted.length} brand keywords from DataForSEO (real volumes!)`);
+          console.log(`✅ [QUESTIONS] Added ${converted.length} brand keywords from DataForSEO (real volumes!)`);
+        } else {
+          console.log(`⚠️ [QUESTIONS] DataForSEO returned 0 brand keywords`);
         }
       } catch (error: any) {
         console.error(`⚠️ [QUESTIONS] DataForSEO brand questions failed: ${error.message}`);
+        console.error(`⚠️ [QUESTIONS] Error stack: ${error.stack}`);
       }
 
       // Get CATEGORY keywords (if category provided)
