@@ -167,7 +167,7 @@ export default function AnalyzePage() {
             type: q.type,
           })),
           selectedPlatforms,
-          testsPerPlatform: 3,
+          testsPerPlatform: 5,
         }),
       });
 
@@ -604,7 +604,8 @@ export default function AnalyzePage() {
 
             <div className="mt-8 text-sm text-gray-500 space-y-1">
               <p>Testing 9 questions across {selectedPlatforms.join(", ")}</p>
-              <p>Each question tested 3 times per platform for statistical significance</p>
+              <p>Each question tested 5 times per platform for statistical reliability</p>
+              <p className="text-xs text-gray-400">Total: 135 AI responses analyzed</p>
             </div>
           </div>
         )}

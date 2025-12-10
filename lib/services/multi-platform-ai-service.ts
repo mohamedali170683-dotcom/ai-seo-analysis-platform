@@ -48,14 +48,14 @@ export class MultiPlatformAIService {
   private openaiClient: OpenAI;
   private testsPerPlatform: number;
 
-  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 3) {
+  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 5) {
     this.openaiClient = new OpenAI({ 
       apiKey: openaiApiKey,
       timeout: 30000, // 30 second timeout
       maxRetries: 2,
     });
-    // Allow up to 5 tests per platform for statistical significance
-    this.testsPerPlatform = Math.min(testsPerPlatform, 5);
+    // Allow up to 10 tests per platform for statistical significance
+    this.testsPerPlatform = Math.min(testsPerPlatform, 10);
   }
 
   /**
