@@ -30,44 +30,37 @@ export async function POST(request: Request) {
     if (testType === "questions" || testType === "full") {
       console.log("🔍 Testing question discovery...");
       
-      // First, test DataForSEO directly
-      const dataForSEODebug: any = {
-        loginConfigured: !!process.env.DATAFORSEO_LOGIN,
-        passwordConfigured: !!process.env.DATAFORSEO_PASSWORD,
-      };
-      
-      if (process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD) {
-        const directService = new DataForSEOService(
-          process.env.DATAFORSEO_LOGIN,
-          process.env.DATAFORSEO_PASSWORD
-        );
-        const directKeywords = await directService.getBrandQuestions(brand, 10, false);
-        dataForSEODebug.directKeywordsFound = directKeywords.length;
-        dataForSEODebug.directSample = directKeywords.slice(0, 3).map(k => ({
-          keyword: k.question,
-          volume: k.searchVolume,
-        }));
-      }
-      
-      // Now test through EnhancedQuestionService
       const questionService = new EnhancedQuestionService(
         process.env.DATAFORSEO_LOGIN,
         process.env.DATAFORSEO_PASSWORD
       );
+      
       const questions = await questionService.discoverQuestions({
         brandName: brand,
-        category: "general",
+        category: "sportswear", // Example category
         maxQuestionsPerStage: 3,
-        minSearchVolume: 100,
+        minSearchVolume: 50,
       });
       
-      results.dataForSEODebug = dataForSEODebug;
       results.questions = questions.map(q => ({
         question: q.question,
         searchVolume: q.searchVolume,
         category: q.category,
         source: q.source,
+        type: q.questionType,
       }));
+      results.summary = {
+        total: questions.length,
+        byCategory: {
+          awareness: questions.filter(q => q.category === "awareness").length,
+          consideration: questions.filter(q => q.category === "consideration").length,
+          decision: questions.filter(q => q.category === "decision").length,
+        },
+        bySource: questions.reduce((acc, q) => {
+          acc[q.source || 'unknown'] = (acc[q.source || 'unknown'] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>),
+      };
       console.log(`✅ Discovered ${questions.length} questions`);
     }
 
@@ -103,64 +96,40 @@ export async function POST(request: Request) {
       console.log(`✅ AI test complete - ${analysis.aggregated.mentionRate}% mention rate`);
     }
 
-    // Test DataForSEO directly
+    // Test DataForSEO question generation
     if (testType === "dataforseo") {
       if (!process.env.DATAFORSEO_LOGIN || !process.env.DATAFORSEO_PASSWORD) {
         return NextResponse.json({
           success: false,
           error: "DataForSEO credentials not configured",
-          configured: {
-            login: !!process.env.DATAFORSEO_LOGIN,
-            password: !!process.env.DATAFORSEO_PASSWORD,
-          }
         }, { status: 500 });
       }
 
-      console.log("🔍 Testing DataForSEO API directly...");
-      
-      // Test the raw API call
-      const auth = Buffer.from(`${process.env.DATAFORSEO_LOGIN}:${process.env.DATAFORSEO_PASSWORD}`).toString('base64');
+      console.log("🔍 Testing DataForSEO question generation...");
       
       try {
-        const rawResponse = await fetch("https://api.dataforseo.com/v3/keywords_data/google_ads/keywords_for_keywords/live", {
-          method: 'POST',
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify([{
-            keywords: [brand],
-            location_code: 2840,
-            language_code: "en",
-            include_seed_keyword: true,
-            limit: 20,
-          }]),
-        });
-
-        const rawData = await rawResponse.json();
+        const dataForSEO = new DataForSEOService(
+          process.env.DATAFORSEO_LOGIN,
+          process.env.DATAFORSEO_PASSWORD
+        );
         
-        // Debug: Check the actual structure
-        const taskResult = rawData.tasks?.[0]?.result || [];
-        const firstResult = taskResult[0] || {};
+        // Test brand questions
+        const brandQuestions = await dataForSEO.getBrandQuestions(brand, 8);
         
-        // Try different possible locations for keywords
-        const keywords = 
-          firstResult.keywords ||  // keywords_for_keywords
-          firstResult.items ||     // keyword_ideas  
-          taskResult;              // result array itself might be keywords
+        // Test category questions
+        const categoryQuestions = await dataForSEO.getCategoryQuestions("general products", 5);
         
         results.dataforseo = {
-          httpStatus: rawResponse.status,
-          apiStatusCode: rawData.status_code,
-          resultCount: taskResult.length,
-          resultKeys: Object.keys(firstResult),
-          keywordsFound: Array.isArray(keywords) ? keywords.length : 0,
-          sampleData: taskResult.slice(0, 3).map((r: any) => ({
-            keyword: r.keyword,
-            searchVolume: r.search_volume,
-            keys: Object.keys(r).slice(0, 10),
+          brandQuestions: brandQuestions.map(q => ({
+            question: q.question,
+            searchVolume: q.searchVolume,
+            category: q.category,
           })),
-          cost: rawData.cost,
+          categoryQuestions: categoryQuestions.map(q => ({
+            question: q.question,
+            searchVolume: q.searchVolume,
+            category: q.category,
+          })),
         };
       } catch (error: any) {
         results.dataforseo = {
