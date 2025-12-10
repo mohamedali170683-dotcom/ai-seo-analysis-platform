@@ -388,20 +388,53 @@ function JourneyStageDetailCard({ stage, brandName, stageNumber }: any) {
             </div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
-            {stage.questions.map((q: any, i: number) => (
-              <div
-                key={i}
-                className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-100"
-              >
-                <div className="text-base font-semibold text-gray-900 mb-2">{q.question}</div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">📊 {q.searchVolume?.toLocaleString()} searches/mo</span>
-                  <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-                    {q.answersAnalyzed} AI responses
-                  </span>
+            {stage.questions.map((q: any, i: number) => {
+              // Check if question contains brand name (case-insensitive)
+              const isBrandQuestion = q.type === "brand" || 
+                (brandName && q.question?.toLowerCase().includes(brandName.toLowerCase()));
+              
+              return (
+                <div
+                  key={i}
+                  className={`rounded-xl p-4 border-2 ${
+                    isBrandQuestion 
+                      ? "bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200" 
+                      : "bg-gradient-to-br from-blue-50 to-green-50 border-green-200"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="text-base font-semibold text-gray-900">{q.question}</div>
+                    <span className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
+                      isBrandQuestion 
+                        ? "bg-purple-100 text-purple-700" 
+                        : "bg-green-100 text-green-700"
+                    }`}>
+                      {isBrandQuestion ? "Brand Q" : "Category Q"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">
+                      {q.searchVolume > 0 ? `📊 ${q.searchVolume?.toLocaleString()}/mo` : "🎯 Strategic"}
+                    </span>
+                    <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">
+                      {q.answersAnalyzed} AI responses
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+          </div>
+          
+          {/* Legend */}
+          <div className="mt-4 flex gap-4 text-xs text-gray-600">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-purple-200"></div>
+              <span><strong>Brand Q:</strong> Includes brand name (higher mention expected)</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded-full bg-green-200"></div>
+              <span><strong>Category Q:</strong> Generic query (true organic visibility)</span>
+            </div>
           </div>
         </div>
 
@@ -434,6 +467,12 @@ function JourneyStageDetailCard({ stage, brandName, stageNumber }: any) {
                   </strong>{" "}
                   AI responses
                 </p>
+                <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-xs text-amber-800">
+                    <strong>📊 Note:</strong> Questions that include your brand name naturally have higher mention rates. 
+                    Category questions (without brand name) better reflect organic AI visibility.
+                  </p>
+                </div>
               </div>
 
               <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-200">
