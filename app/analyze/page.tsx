@@ -376,85 +376,164 @@ export default function AnalyzePage() {
 
         {/* Phase 2: Select Questions */}
         {phase === 2 && (
-          <div className="space-y-6">
-            {/* Selection summary */}
-            <div className="bg-white/5 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold">Select Questions to Test</h2>
-                <p className="text-gray-400">Choose 3 questions per funnel stage (9 total)</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className={`px-4 py-2 rounded-lg ${getTotalSelected() === 9 ? "bg-green-600" : "bg-gray-700"}`}>
-                  {getTotalSelected()}/9 selected
+          <div className="space-y-0">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-20 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-4 pt-2">
+              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-xl">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold">Select Questions to Test</h2>
+                    <p className="text-gray-300">Choose 3 questions per funnel stage (9 total)</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className={`px-5 py-2.5 rounded-xl font-bold text-lg ${
+                      getTotalSelected() === 9 
+                        ? "bg-green-600 text-white" 
+                        : "bg-white/20 text-white"
+                    }`}>
+                      {getTotalSelected()}/9 selected
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Legend */}
+                <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-white/10">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-gray-300">📊 <strong>Real Search Data</strong> - Questions people actually search (with monthly volume)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                    <span className="text-sm text-gray-300">🎯 <strong>Strategic Questions</strong> - AI-crafted to understand brand positioning</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Question groups by stage */}
-            {questionGroups.map((group) => {
-              const stageSelected = selectedQuestions[group.stage]?.length || 0;
-              const allQuestions = [...group.brandQuestions, ...group.categoryQuestions];
-              
-              return (
-                <div key={group.stage} className="bg-white/5 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold">{stageInfo[group.stage].label}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      stageSelected === 3 ? "bg-green-600" : "bg-gray-700"
-                    }`}>
-                      {stageSelected}/3 selected
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-4">{group.stageDescription}</p>
-                  
-                  <div className="grid gap-2">
-                    {allQuestions.map((q) => {
-                      const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
-                      
-                      return (
-                        <div
-                          key={q.id}
-                          onClick={() => toggleQuestion(q, group.stage)}
-                          className={`p-4 rounded-lg cursor-pointer transition-all ${
-                            isSelected
-                              ? "bg-purple-600/30 border-2 border-purple-500"
-                              : "bg-white/5 hover:bg-white/10 border-2 border-transparent"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <span className="font-medium">{q.question}</span>
-                              <div className="flex gap-2 mt-1">
+            {/* 3-Column Grid for Questions */}
+            <div className="grid md:grid-cols-3 gap-4 mt-4">
+              {questionGroups.map((group) => {
+                const stageSelected = selectedQuestions[group.stage]?.length || 0;
+                const allQuestions = [...group.brandQuestions, ...group.categoryQuestions];
+                const isComplete = stageSelected === 3;
+                
+                return (
+                  <div 
+                    key={group.stage} 
+                    className={`rounded-xl border-2 transition-all ${
+                      isComplete 
+                        ? "border-green-500/50 bg-green-500/5" 
+                        : "border-white/10 bg-white/5"
+                    }`}
+                  >
+                    {/* Column Header */}
+                    <div className={`p-4 border-b ${
+                      isComplete ? "border-green-500/30 bg-green-500/10" : "border-white/10 bg-white/5"
+                    } rounded-t-xl`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-lg font-bold">{stageInfo[group.stage].label}</h3>
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          isComplete ? "bg-green-600 text-white" : "bg-white/20"
+                        }`}>
+                          {stageSelected}/3
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400">{group.stageDescription}</p>
+                    </div>
+                    
+                    {/* Questions List */}
+                    <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
+                      {/* Real Data Questions Section */}
+                      <div className="mb-3">
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          <span className="text-xs font-semibold text-green-400 uppercase tracking-wide">Real Search Data</span>
+                        </div>
+                        {allQuestions.filter(q => q.source === "real_data").map((q) => {
+                          const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
+                          
+                          return (
+                            <div
+                              key={q.id}
+                              onClick={() => toggleQuestion(q, group.stage)}
+                              className={`p-3 rounded-lg cursor-pointer transition-all mb-2 ${
+                                isSelected
+                                  ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
+                                  : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className={`text-sm ${isSelected ? "text-white font-medium" : "text-gray-200"}`}>
+                                  {q.question}
+                                </span>
+                                {isSelected && (
+                                  <span className="text-purple-300 text-lg">✓</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
                                 <span className={`text-xs px-2 py-0.5 rounded ${
                                   q.type === "brand" ? "bg-purple-500/30 text-purple-300" : "bg-blue-500/30 text-blue-300"
                                 }`}>
                                   {q.type === "brand" ? "Brand" : "Category"}
                                 </span>
-                                <span className={`text-xs px-2 py-0.5 rounded ${
-                                  q.source === "real_data" ? "bg-green-500/30 text-green-300" : "bg-yellow-500/30 text-yellow-300"
-                                }`}>
-                                  {q.source === "real_data" ? "📊 Real Data" : "🎯 Strategic"}
+                                <span className="text-xs text-green-400 font-semibold">
+                                  {formatVolume(q.searchVolume)}
                                 </span>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <span className={`text-sm font-medium ${
-                                q.searchVolume > 0 ? "text-green-400" : "text-gray-400"
-                              }`}>
-                                {formatVolume(q.searchVolume)}
-                              </span>
-                            </div>
-                          </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Strategic Questions Section */}
+                      <div>
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                          <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                          <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Strategic Questions</span>
                         </div>
-                      );
-                    })}
+                        {allQuestions.filter(q => q.source === "strategic").map((q) => {
+                          const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
+                          
+                          return (
+                            <div
+                              key={q.id}
+                              onClick={() => toggleQuestion(q, group.stage)}
+                              className={`p-3 rounded-lg cursor-pointer transition-all mb-2 ${
+                                isSelected
+                                  ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
+                                  : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className={`text-sm ${isSelected ? "text-white font-medium" : "text-gray-200"}`}>
+                                  {q.question}
+                                </span>
+                                {isSelected && (
+                                  <span className="text-purple-300 text-lg">✓</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className={`text-xs px-2 py-0.5 rounded ${
+                                  q.type === "brand" ? "bg-purple-500/30 text-purple-300" : "bg-blue-500/30 text-blue-300"
+                                }`}>
+                                  {q.type === "brand" ? "Brand" : "Category"}
+                                </span>
+                                <span className="text-xs text-amber-400/70">
+                                  AI-crafted
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
 
             {/* Platform selection */}
-            <div className="bg-white/5 rounded-xl p-6">
+            <div className="bg-white/5 rounded-xl p-6 mt-6 border border-white/10">
               <h3 className="text-lg font-semibold mb-4">Select AI Platforms to Test</h3>
               
               <div className="grid grid-cols-3 gap-4">
@@ -479,26 +558,31 @@ export default function AnalyzePage() {
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-4">
-              <Button
-                onClick={() => setPhase(1)}
-                variant="outline"
-                className="flex-1 py-4 border-gray-600"
-              >
-                ← Back
-              </Button>
-              <Button
-                onClick={handleRunAnalysis}
-                disabled={!canRunAnalysis()}
-                className={`flex-1 py-4 ${
-                  canRunAnalysis() 
-                    ? "bg-purple-600 hover:bg-purple-700" 
-                    : "bg-gray-700 cursor-not-allowed"
-                }`}
-              >
-                Run Analysis (9 questions × {selectedPlatforms.length} platforms) →
-              </Button>
+            {/* Actions - Also Sticky at Bottom */}
+            <div className="sticky bottom-0 z-20 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent pt-6 pb-4 mt-6">
+              <div className="flex gap-4">
+                <Button
+                  onClick={() => setPhase(1)}
+                  variant="outline"
+                  className="flex-1 py-4 border-gray-600 bg-white/5"
+                >
+                  ← Back
+                </Button>
+                <Button
+                  onClick={handleRunAnalysis}
+                  disabled={!canRunAnalysis()}
+                  className={`flex-1 py-4 text-lg font-semibold ${
+                    canRunAnalysis() 
+                      ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30" 
+                      : "bg-gray-700 cursor-not-allowed"
+                  }`}
+                >
+                  {canRunAnalysis() 
+                    ? `🚀 Run Analysis (9 questions × ${selectedPlatforms.length} platforms)` 
+                    : `Select ${9 - getTotalSelected()} more questions`
+                  }
+                </Button>
+              </div>
             </div>
           </div>
         )}
