@@ -120,7 +120,8 @@ async function executeAnalysis(
     console.log(`🔧 [EXEC] - DATAFORSEO_LOGIN: ${dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [EXEC] - DATAFORSEO_PASSWORD: ${dataForSEOPassword ? 'SET' : 'NOT SET'}`);
     
-    // Run analysis (2 questions per stage × 3 platforms = 18 API calls total)
+    // Run analysis with statistical significance
+    // 3 questions per stage × 3 platforms × 3 tests = 27 AI calls per stage = 81 total
     const service = new ComprehensiveAnalysisService({
       brandName: brandOrKeyword,
       domain,
@@ -130,8 +131,8 @@ async function executeAnalysis(
       geminiApiKey: geminiKey,
       dataForSEOLogin,
       dataForSEOPassword,
-      testsPerPlatform: 1,
-      questionsPerStage: 2,
+      testsPerPlatform: 3,    // 3 tests per platform for statistical significance
+      questionsPerStage: 3,   // 3 questions per funnel stage
       onProgress,
     });
 

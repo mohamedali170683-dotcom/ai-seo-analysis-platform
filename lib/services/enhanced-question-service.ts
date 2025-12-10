@@ -58,29 +58,40 @@ export class EnhancedQuestionService {
     const startTime = Date.now();
     let allQuestions: DiscoveredQuestion[] = [];
 
-    // PRIORITY 1: DataForSEO (real volumes)
+    // PRIORITY 1: DataForSEO (real questions with volumes)
     if (this.dataForSEOService) {
+      // Get BRAND questions (questions users ask about the brand)
       try {
-        // Get ALL keywords (questionsOnly=false) for maximum data
-        const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 30, false);
+        const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 15);
         
         if (brandQuestions.length > 0) {
-          // Track seen keywords to avoid duplicates (case-insensitive)
-          const seen = new Set<string>();
           const converted = brandQuestions
             .filter(q => q.searchVolume >= minSearchVolume)
-            .filter(q => {
-              const key = q.question.toLowerCase().trim();
-              if (seen.has(key)) return false;
-              seen.add(key);
-              return true;
-            })
             .map(q => this.convertDataForSEOQuestion(q, "brand"));
           allQuestions.push(...converted);
-          console.log(`✅ [QUESTIONS] Got ${converted.length} keywords from DataForSEO with real volumes`);
+          console.log(`✅ [QUESTIONS] Got ${converted.length} brand questions from DataForSEO`);
         }
       } catch (error: any) {
-        console.warn(`⚠️ [QUESTIONS] DataForSEO failed, using Google Autocomplete: ${error.message}`);
+        console.warn(`⚠️ [QUESTIONS] DataForSEO brand questions failed: ${error.message}`);
+      }
+      
+      // Get CATEGORY questions (questions about the industry/vertical)
+      if (category) {
+        try {
+          const categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 15);
+          
+          if (categoryQuestions.length > 0) {
+            const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
+            const converted = categoryQuestions
+              .filter(q => q.searchVolume >= minSearchVolume)
+              .filter(q => !existing.has(q.question.toLowerCase()))
+              .map(q => this.convertDataForSEOQuestion(q, "category"));
+            allQuestions.push(...converted);
+            console.log(`✅ [QUESTIONS] Got ${converted.length} category questions from DataForSEO`);
+          }
+        } catch (error: any) {
+          console.warn(`⚠️ [QUESTIONS] DataForSEO category questions failed: ${error.message}`);
+        }
       }
 
       // Get CATEGORY keywords (if category provided)

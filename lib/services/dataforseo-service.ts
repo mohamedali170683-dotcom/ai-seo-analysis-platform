@@ -29,16 +29,46 @@ export class DataForSEOService {
   }
 
   /**
-   * Get questions for a brand with search volumes
-   * Set questionsOnly=false to get all keywords (useful for debugging)
+   * Get QUESTIONS for a brand with search volumes
+   * Uses question-focused seed keywords to find actual questions users ask
    */
-  async getBrandQuestions(brandName: string, limit: number = 20, questionsOnly: boolean = false): Promise<DataForSEOQuestion[]> {
-    console.log(`🔍 [DATAFORSEO] Fetching brand keywords for: ${brandName} (questionsOnly=${questionsOnly})`);
+  async getBrandQuestions(brandName: string, limit: number = 20): Promise<DataForSEOQuestion[]> {
+    console.log(`🔍 [DATAFORSEO] Fetching brand QUESTIONS for: ${brandName}`);
     
     try {
-      const questions = await this.fetchKeywordIdeas(brandName, limit, questionsOnly);
-      console.log(`✅ [DATAFORSEO] Got ${questions.length} keywords`);
-      return questions.map(q => ({ ...q, type: "brand" as const }));
+      // Use question-focused seed keywords to get actual questions
+      const questionSeeds = [
+        `what is ${brandName}`,
+        `is ${brandName}`,
+        `how ${brandName}`,
+        `why ${brandName}`,
+        `${brandName} vs`,
+        `best ${brandName}`,
+        `${brandName} review`,
+      ];
+      
+      const allQuestions: Omit<DataForSEOQuestion, 'type'>[] = [];
+      
+      // Fetch from multiple question-focused seeds
+      for (const seed of questionSeeds.slice(0, 3)) { // Limit API calls
+        const questions = await this.fetchKeywordIdeas(seed, Math.ceil(limit / 2), true);
+        allQuestions.push(...questions);
+      }
+      
+      // Deduplicate and sort by volume
+      const seen = new Set<string>();
+      const unique = allQuestions
+        .filter(q => {
+          const key = q.question.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a, b) => b.searchVolume - a.searchVolume)
+        .slice(0, limit);
+      
+      console.log(`✅ [DATAFORSEO] Got ${unique.length} brand questions`);
+      return unique.map(q => ({ ...q, type: "brand" as const }));
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Brand questions failed: ${error.message}`);
       return [];
@@ -46,15 +76,45 @@ export class DataForSEOService {
   }
 
   /**
-   * Get questions for a category/vertical with search volumes
+   * Get QUESTIONS for a category/vertical with search volumes
+   * These are questions users ask about the industry (brand-agnostic)
    */
-  async getCategoryQuestions(category: string, limit: number = 20, questionsOnly: boolean = false): Promise<DataForSEOQuestion[]> {
-    console.log(`🔍 [DATAFORSEO] Fetching category keywords for: ${category} (questionsOnly=${questionsOnly})`);
+  async getCategoryQuestions(category: string, limit: number = 20): Promise<DataForSEOQuestion[]> {
+    console.log(`🔍 [DATAFORSEO] Fetching category QUESTIONS for: ${category}`);
     
     try {
-      const questions = await this.fetchKeywordIdeas(category, limit, questionsOnly);
-      console.log(`✅ [DATAFORSEO] Got ${questions.length} category keywords`);
-      return questions.map(q => ({ ...q, type: "category" as const }));
+      // Use question-focused seed keywords for the category
+      const questionSeeds = [
+        `what is the best ${category}`,
+        `how to choose ${category}`,
+        `${category} recommendations`,
+        `best ${category} for`,
+        `${category} comparison`,
+        `which ${category}`,
+      ];
+      
+      const allQuestions: Omit<DataForSEOQuestion, 'type'>[] = [];
+      
+      // Fetch from multiple question-focused seeds
+      for (const seed of questionSeeds.slice(0, 3)) { // Limit API calls
+        const questions = await this.fetchKeywordIdeas(seed, Math.ceil(limit / 2), true);
+        allQuestions.push(...questions);
+      }
+      
+      // Deduplicate and sort by volume
+      const seen = new Set<string>();
+      const unique = allQuestions
+        .filter(q => {
+          const key = q.question.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .sort((a, b) => b.searchVolume - a.searchVolume)
+        .slice(0, limit);
+      
+      console.log(`✅ [DATAFORSEO] Got ${unique.length} category questions`);
+      return unique.map(q => ({ ...q, type: "category" as const }));
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Category questions failed: ${error.message}`);
       return [];
@@ -196,17 +256,33 @@ export class DataForSEOService {
   }
 
   /**
-   * Check if a keyword is a question
+   * Check if a keyword is a proper question that can be asked to an AI chatbot
+   * We want actual questions users would type into ChatGPT/Gemini
    */
   private isQuestion(text: string): boolean {
-    const lower = text.toLowerCase();
-    const questionWords = [
-      'what', 'why', 'how', 'which', 'where', 'when', 'who', 
-      'is', 'are', 'can', 'does', 'do', 'should', 'will', 'would',
-      'best', 'top', 'vs', 'versus', 'review', 'compare', 'difference',
-      'pros', 'cons', 'worth', 'good', 'bad'
-    ];
-    return questionWords.some(w => lower.includes(w)) || lower.includes('?');
+    const lower = text.toLowerCase().trim();
+    
+    // Must start with a question word or be a comparison/recommendation query
+    const startsWithQuestion = [
+      'what ', 'why ', 'how ', 'which ', 'where ', 'when ', 'who ',
+      'is ', 'are ', 'can ', 'does ', 'do ', 'should ', 'will ', 'would ',
+      'could ', 'has ', 'have ', 'was ', 'were '
+    ].some(w => lower.startsWith(w));
+    
+    // Or contains comparison/recommendation patterns
+    const isComparisonOrRec = [
+      ' vs ', ' versus ', ' or ', ' compared to ',
+      'best ', 'top ', 'recommend', 'difference between',
+      'pros and cons', 'worth ', 'better '
+    ].some(w => lower.includes(w));
+    
+    // Or ends with a question mark
+    const endsWithQuestion = lower.endsWith('?');
+    
+    // Minimum length to be a meaningful question
+    const hasMinLength = lower.split(' ').length >= 3;
+    
+    return (startsWithQuestion || isComparisonOrRec || endsWithQuestion) && hasMinLength;
   }
 
   /**

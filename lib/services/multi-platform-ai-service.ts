@@ -48,13 +48,14 @@ export class MultiPlatformAIService {
   private openaiClient: OpenAI;
   private testsPerPlatform: number;
 
-  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 1) {
+  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 3) {
     this.openaiClient = new OpenAI({ 
       apiKey: openaiApiKey,
-      timeout: 25000,
-      maxRetries: 1,
+      timeout: 30000, // 30 second timeout
+      maxRetries: 2,
     });
-    this.testsPerPlatform = Math.min(testsPerPlatform, 1); // Just 1 test per platform for speed
+    // Allow up to 5 tests per platform for statistical significance
+    this.testsPerPlatform = Math.min(testsPerPlatform, 5);
   }
 
   /**
@@ -66,11 +67,12 @@ export class MultiPlatformAIService {
     competitors: string[] = [],
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
-    const numTests = Math.min(testsPerPlatform || this.testsPerPlatform, 1);
-    console.log(`🤖 [AI] Testing: "${question.substring(0, 40)}..."`);
+    const numTests = testsPerPlatform || this.testsPerPlatform;
+    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × 3 platforms)`);
     const startTime = Date.now();
 
     // Run all 3 platforms in PARALLEL using Promise.allSettled
+    // Each platform will run numTests times for statistical significance
     const results = await Promise.allSettled([
       this.testSinglePlatform("ChatGPT", question, brandName, competitors, numTests),
       this.testSinglePlatform("Gemini", question, brandName, competitors, numTests),
