@@ -360,7 +360,7 @@ function DemoPageContent() {
             <div className="flex items-center gap-3">
               {searchParams.get('brand') && (
                 <Link
-                  href="/demoui"
+                  href="/analyze"
                   className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center gap-2 font-semibold shadow-lg"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -368,7 +368,7 @@ function DemoPageContent() {
                 </Link>
               )}
               <Link
-                href="/analysis/new"
+                href="/analyze"
                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 font-semibold shadow-lg"
               >
                 <TrendingUp className="w-4 h-4" />
@@ -584,16 +584,16 @@ function DemoPageContent() {
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link
-              href="/analysis/new"
+              href="/analyze"
               className="px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-blue-50 font-bold text-lg shadow-xl transition-all hover:scale-105"
             >
               🚀 Run Real Analysis
             </Link>
             <Link
-              href="/demoui"
+              href="/analyze"
               className="px-8 py-4 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-xl font-bold text-lg transition-all"
             >
-              ⚡ Try Another Demo
+              ⚡ Analyze Your Brand
             </Link>
           </div>
           <p className="mt-6 text-sm text-blue-200">

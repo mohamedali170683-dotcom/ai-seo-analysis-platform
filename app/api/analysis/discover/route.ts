@@ -9,12 +9,15 @@ interface DiscoveredQuestion {
   searchVolume: number;
   category: "awareness" | "consideration" | "decision";
   type: "brand" | "category";
+  source: "real_data" | "strategic"; // NEW: Indicate if from search data or generated
 }
 
 interface QuestionGroup {
   stage: "awareness" | "consideration" | "decision";
+  stageDescription: string;
   brandQuestions: DiscoveredQuestion[];
   categoryQuestions: DiscoveredQuestion[];
+  requiredSelections: number;
 }
 
 /**
@@ -55,44 +58,92 @@ export async function POST(request: Request) {
 
     const dataForSEO = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
 
-    // Fetch brand questions (questions that include the brand name)
-    console.log(`📡 [DISCOVER] Fetching brand questions...`);
-    const brandQuestions = await dataForSEO.getBrandQuestions(brandName, 30);
+    // Fetch REAL brand questions from search data
+    console.log(`📡 [DISCOVER] Fetching real brand questions...`);
+    const realBrandQuestions = await dataForSEO.getBrandQuestions(brandName, 20);
 
-    // Fetch category questions (questions about the vertical/industry)
-    console.log(`📡 [DISCOVER] Fetching category questions...`);
-    const categoryQuestions = await dataForSEO.getCategoryQuestions(category, 30);
+    // Fetch REAL category questions from search data
+    console.log(`📡 [DISCOVER] Fetching real category questions...`);
+    const realCategoryQuestions = await dataForSEO.getCategoryQuestions(category, 20);
 
-    // Group questions by funnel stage
+    // Generate STRATEGIC questions for comprehensive brand positioning analysis
+    const strategicQuestions = generateStrategicQuestions(brandName, category, competitors || []);
+
+    // Stage descriptions for UI
+    const stageDescriptions = {
+      awareness: "Questions people ask when first learning about your brand or category",
+      consideration: "Questions people ask when evaluating and comparing options",
+      decision: "Questions people ask when ready to make a purchase decision",
+    };
+
+    // Group questions by funnel stage - 6 per stage (3 real + 3 strategic)
     const stages: ("awareness" | "consideration" | "decision")[] = [
       "awareness",
       "consideration", 
       "decision"
     ];
 
-    const questionGroups: QuestionGroup[] = stages.map(stage => ({
-      stage,
-      brandQuestions: brandQuestions
+    const questionGroups: QuestionGroup[] = stages.map(stage => {
+      // Get top 3 REAL brand questions for this stage
+      const realBrand = realBrandQuestions
         .filter(q => q.category === stage)
-        .slice(0, 5) // Top 5 per stage
+        .slice(0, 3)
         .map((q, i) => ({
-          id: `brand-${stage}-${i}`,
+          id: `brand-real-${stage}-${i}`,
           question: q.question,
           searchVolume: q.searchVolume,
           category: q.category,
           type: "brand" as const,
-        })),
-      categoryQuestions: categoryQuestions
+          source: "real_data" as const,
+        }));
+
+      // Get top 3 REAL category questions for this stage
+      const realCategory = realCategoryQuestions
         .filter(q => q.category === stage)
-        .slice(0, 5) // Top 5 per stage
+        .slice(0, 3)
         .map((q, i) => ({
-          id: `category-${stage}-${i}`,
+          id: `category-real-${stage}-${i}`,
           question: q.question,
           searchVolume: q.searchVolume,
           category: q.category,
           type: "category" as const,
-        })),
-    }));
+          source: "real_data" as const,
+        }));
+
+      // Get 3 STRATEGIC brand questions for this stage
+      const strategicBrand = strategicQuestions.brand
+        .filter(q => q.category === stage)
+        .slice(0, 3)
+        .map((q, i) => ({
+          id: `brand-strategic-${stage}-${i}`,
+          question: q.question,
+          searchVolume: q.searchVolume,
+          category: q.category,
+          type: "brand" as const,
+          source: "strategic" as const,
+        }));
+
+      // Get 3 STRATEGIC category questions for this stage
+      const strategicCategory = strategicQuestions.category
+        .filter(q => q.category === stage)
+        .slice(0, 3)
+        .map((q, i) => ({
+          id: `category-strategic-${stage}-${i}`,
+          question: q.question,
+          searchVolume: q.searchVolume,
+          category: q.category,
+          type: "category" as const,
+          source: "strategic" as const,
+        }));
+
+      return {
+        stage,
+        stageDescription: stageDescriptions[stage],
+        brandQuestions: [...realBrand, ...strategicBrand],
+        categoryQuestions: [...realCategory, ...strategicCategory],
+        requiredSelections: 3, // User must select 3 from this stage
+      };
+    });
 
     // Calculate totals
     const totalBrandQuestions = questionGroups.reduce(
@@ -114,8 +165,9 @@ export async function POST(request: Request) {
         totalBrandQuestions,
         totalCategoryQuestions,
         totalQuestions: totalBrandQuestions + totalCategoryQuestions,
+        requiredSelections: 9, // 3 per stage × 3 stages
       },
-      instructions: "Select up to 4 questions to test on AI chatbots. Mix of brand and category questions recommended.",
+      instructions: "Select 3 questions per funnel stage (9 total). Mix real search data questions with strategic ones for comprehensive analysis.",
     });
 
   } catch (error: any) {
@@ -125,4 +177,60 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+}
+
+/**
+ * Generate strategic questions for comprehensive brand positioning analysis
+ * These questions are designed to understand AI's perception of the brand
+ */
+function generateStrategicQuestions(
+  brandName: string, 
+  category: string, 
+  competitors: string[]
+): {
+  brand: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
+  category: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
+} {
+  const mainCompetitor = competitors[0] || "competitors";
+  
+  return {
+    brand: [
+      // Awareness - Understanding brand perception
+      { question: `What is ${brandName} known for?`, searchVolume: 0, category: "awareness" },
+      { question: `Is ${brandName} a premium brand?`, searchVolume: 0, category: "awareness" },
+      { question: `What makes ${brandName} unique?`, searchVolume: 0, category: "awareness" },
+      { question: `Who is ${brandName}'s target audience?`, searchVolume: 0, category: "awareness" },
+      
+      // Consideration - Comparison and evaluation
+      { question: `Is ${brandName} better than ${mainCompetitor}?`, searchVolume: 0, category: "consideration" },
+      { question: `What are the pros and cons of ${brandName}?`, searchVolume: 0, category: "consideration" },
+      { question: `Is ${brandName} worth the price?`, searchVolume: 0, category: "consideration" },
+      { question: `How does ${brandName} compare to alternatives?`, searchVolume: 0, category: "consideration" },
+      
+      // Decision - Purchase intent
+      { question: `Should I buy ${brandName}?`, searchVolume: 0, category: "decision" },
+      { question: `What is the best ${brandName} product to buy?`, searchVolume: 0, category: "decision" },
+      { question: `Where can I buy ${brandName}?`, searchVolume: 0, category: "decision" },
+      { question: `Is ${brandName} recommended by experts?`, searchVolume: 0, category: "decision" },
+    ],
+    category: [
+      // Awareness - Category understanding
+      { question: `What should I know about ${category}?`, searchVolume: 0, category: "awareness" },
+      { question: `What are the different types of ${category}?`, searchVolume: 0, category: "awareness" },
+      { question: `How do I choose ${category}?`, searchVolume: 0, category: "awareness" },
+      { question: `What features matter most in ${category}?`, searchVolume: 0, category: "awareness" },
+      
+      // Consideration - Category evaluation
+      { question: `What is the best ${category} brand?`, searchVolume: 0, category: "consideration" },
+      { question: `What ${category} do experts recommend?`, searchVolume: 0, category: "consideration" },
+      { question: `What is the best value ${category}?`, searchVolume: 0, category: "consideration" },
+      { question: `${category} comparison: which brand is best?`, searchVolume: 0, category: "consideration" },
+      
+      // Decision - Category purchase
+      { question: `Best ${category} to buy right now?`, searchVolume: 0, category: "decision" },
+      { question: `Top rated ${category} recommendations?`, searchVolume: 0, category: "decision" },
+      { question: `Where to buy quality ${category}?`, searchVolume: 0, category: "decision" },
+      { question: `Is it worth investing in premium ${category}?`, searchVolume: 0, category: "decision" },
+    ],
+  };
 }

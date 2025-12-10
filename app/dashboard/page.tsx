@@ -126,7 +126,7 @@ export default function DashboardPage() {
                 View Demo
               </Link>
               <Link
-                href="/analysis/new"
+                href="/analyze"
                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 font-semibold shadow-lg"
               >
                 <Brain className="w-4 h-4" />
@@ -195,7 +195,7 @@ export default function DashboardPage() {
                 </button>
               )}
               <Link
-                href="/analysis/new"
+                href="/analyze"
                 className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
               >
                 <Plus className="w-4 h-4" />
@@ -251,7 +251,7 @@ export default function DashboardPage() {
               </div>
               <p className="text-gray-500 mb-4">No analyses yet. Start your first AI visibility analysis!</p>
               <Link
-                href="/analysis/new"
+                href="/analyze"
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 inline-flex items-center gap-2 font-semibold"
               >
                 <Brain className="w-5 h-5" />
@@ -402,7 +402,7 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <div className="grid md:grid-cols-4 gap-6">
           <Link
-            href="/analysis/new"
+            href="/analyze"
             className="bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
           >
             <div className="flex items-center mb-4">
@@ -410,8 +410,8 @@ export default function DashboardPage() {
                 <Brain className="w-6 h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Real Analysis</h2>
-                <p className="text-blue-100 text-sm">Full AI testing (15-25s)</p>
+                <h2 className="text-xl font-bold">New Analysis</h2>
+                <p className="text-blue-100 text-sm">You choose questions</p>
               </div>
             </div>
             <div className="flex items-center text-sm font-semibold">
@@ -421,7 +421,7 @@ export default function DashboardPage() {
           </Link>
 
           <Link
-            href="/demoui"
+            href="/demo"
             className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg p-8 text-white hover:shadow-xl transition-shadow"
           >
             <div className="flex items-center mb-4">

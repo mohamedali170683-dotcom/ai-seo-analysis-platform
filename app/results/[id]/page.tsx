@@ -207,7 +207,7 @@ export default function ResultsPage() {
             </span>
           </div>
           <a
-            href="/demoui"
+            href="/analyze"
             className="px-4 py-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-sm font-semibold transition-all"
           >
             Run Another Analysis
