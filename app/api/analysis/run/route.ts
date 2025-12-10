@@ -53,8 +53,18 @@ export async function POST(request: Request) {
 
     console.log(`✅ [API] Created analysis ${analysis.id}`);
 
+    // Capture env vars NOW before waitUntil (they might not be available later)
+    const envVars = {
+      openaiApiKey: process.env.OPENAI_API_KEY!,
+      geminiApiKey: process.env.GEMINI_API_KEY,
+      dataForSEOLogin: process.env.DATAFORSEO_LOGIN,
+      dataForSEOPassword: process.env.DATAFORSEO_PASSWORD,
+    };
+    
+    console.log(`🔧 [API] Captured env vars: DATAFORSEO_LOGIN=${envVars.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
+    
     // Use waitUntil to keep function alive while returning early
-    waitUntil(executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category));
+    waitUntil(executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, envVars));
 
     // Return immediately so frontend can start polling
     return NextResponse.json({
@@ -73,10 +83,17 @@ async function executeAnalysis(
   brandOrKeyword: string,
   domain: string | undefined,
   competitors: string[],
-  category?: string
+  category?: string,
+  envVars?: {
+    openaiApiKey: string;
+    geminiApiKey?: string;
+    dataForSEOLogin?: string;
+    dataForSEOPassword?: string;
+  }
 ) {
   const startTime = Date.now();
   console.log(`🔄 [EXEC] Starting execution for ${analysisId}`);
+  console.log(`🔧 [EXEC] envVars passed: DATAFORSEO_LOGIN=${envVars?.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
 
   try {
     // Progress callback
@@ -92,11 +109,16 @@ async function executeAnalysis(
       }
     };
 
-    // Log environment for debugging
-    console.log(`🔧 [EXEC] Environment check:`);
-    console.log(`🔧 [EXEC] - OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'}`);
-    console.log(`🔧 [EXEC] - DATAFORSEO_LOGIN: ${process.env.DATAFORSEO_LOGIN ? 'SET' : 'NOT SET'}`);
-    console.log(`🔧 [EXEC] - DATAFORSEO_PASSWORD: ${process.env.DATAFORSEO_PASSWORD ? 'SET' : 'NOT SET'}`);
+    // Use passed env vars (from closure before waitUntil)
+    const apiKey = envVars?.openaiApiKey || process.env.OPENAI_API_KEY!;
+    const geminiKey = envVars?.geminiApiKey || process.env.GEMINI_API_KEY;
+    const dataForSEOLogin = envVars?.dataForSEOLogin || process.env.DATAFORSEO_LOGIN;
+    const dataForSEOPassword = envVars?.dataForSEOPassword || process.env.DATAFORSEO_PASSWORD;
+    
+    console.log(`🔧 [EXEC] Using credentials:`);
+    console.log(`🔧 [EXEC] - OPENAI: ${apiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [EXEC] - DATAFORSEO_LOGIN: ${dataForSEOLogin ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [EXEC] - DATAFORSEO_PASSWORD: ${dataForSEOPassword ? 'SET' : 'NOT SET'}`);
     
     // Run analysis (2 questions per stage × 3 platforms = 18 API calls total)
     const service = new ComprehensiveAnalysisService({
@@ -104,10 +126,10 @@ async function executeAnalysis(
       domain,
       competitors,
       category,
-      openaiApiKey: process.env.OPENAI_API_KEY!,
-      geminiApiKey: process.env.GEMINI_API_KEY,
-      dataForSEOLogin: process.env.DATAFORSEO_LOGIN,
-      dataForSEOPassword: process.env.DATAFORSEO_PASSWORD,
+      openaiApiKey: apiKey,
+      geminiApiKey: geminiKey,
+      dataForSEOLogin,
+      dataForSEOPassword,
       testsPerPlatform: 1,
       questionsPerStage: 2,
       onProgress,
