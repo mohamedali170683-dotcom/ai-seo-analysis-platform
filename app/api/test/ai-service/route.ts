@@ -105,6 +105,7 @@ export async function GET() {
     configured: {
       openai: !!process.env.OPENAI_API_KEY,
       gemini: !!process.env.GEMINI_API_KEY,
+      dataforseo: !!(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD),
       ahrefs: !!process.env.AHREFS_API_KEY,
     },
   });

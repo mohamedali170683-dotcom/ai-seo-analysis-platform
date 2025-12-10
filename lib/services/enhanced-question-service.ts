@@ -1,4 +1,4 @@
-import { AhrefsService, AhrefsQuestion } from "./ahrefs-service";
+import { DataForSEOService, DataForSEOQuestion } from "./dataforseo-service";
 import { GoogleAutocompleteService } from "./google-autocomplete-service";
 
 export interface DiscoveredQuestion {
@@ -7,33 +7,35 @@ export interface DiscoveredQuestion {
   difficulty: number;
   intent: "informational" | "commercial" | "navigational";
   category: "awareness" | "consideration" | "decision";
-  questionType: "brand" | "category"; // NEW: Is this about the brand or its category?
+  questionType: "brand" | "category";
   score: number;
-  source: "ahrefs" | "google_autocomplete" | "generated";
+  source: "dataforseo" | "ahrefs" | "google_autocomplete" | "generated";
 }
 
 export interface QuestionDiscoveryConfig {
   brandName: string;
   domain?: string;
   competitors?: string[];
-  category?: string; // NEW: The vertical/industry (e.g., "running shoes", "electric cars")
-  ahrefsApiKey?: string;
+  category?: string;
+  dataForSEOLogin?: string;
+  dataForSEOPassword?: string;
   maxQuestionsPerStage?: number;
   minSearchVolume?: number;
 }
 
 export class EnhancedQuestionService {
-  private ahrefsService: AhrefsService | null;
+  private dataForSEOService: DataForSEOService | null = null;
   private googleService: GoogleAutocompleteService;
 
-  constructor(ahrefsApiKey?: string) {
-    this.ahrefsService = ahrefsApiKey ? new AhrefsService(ahrefsApiKey) : null;
+  constructor(dataForSEOLogin?: string, dataForSEOPassword?: string) {
+    if (dataForSEOLogin && dataForSEOPassword) {
+      this.dataForSEOService = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
+    }
     this.googleService = new GoogleAutocompleteService();
   }
 
   /**
    * Discover questions with REAL volume data
-   * Returns both brand questions AND category questions
    */
   async discoverQuestions(config: QuestionDiscoveryConfig): Promise<DiscoveredQuestion[]> {
     const { 
@@ -41,7 +43,7 @@ export class EnhancedQuestionService {
       competitors = [], 
       category,
       maxQuestionsPerStage = 2,
-      minSearchVolume = 100 
+      minSearchVolume = 50 
     } = config;
 
     console.log(`🔍 [QUESTIONS] Discovering questions for: ${brandName}`);
@@ -52,72 +54,79 @@ export class EnhancedQuestionService {
     const startTime = Date.now();
     let allQuestions: DiscoveredQuestion[] = [];
 
-    // STEP 1: Try Ahrefs for BRAND questions (with real volumes)
-    if (this.ahrefsService) {
+    // PRIORITY 1: DataForSEO (real volumes)
+    if (this.dataForSEOService) {
+      // Get BRAND questions
       try {
-        console.log(`📡 [QUESTIONS] Fetching brand questions from Ahrefs...`);
-        const brandQuestions = await this.ahrefsService.getBrandQuestions(brandName, 15);
+        console.log(`📡 [QUESTIONS] Fetching brand questions from DataForSEO...`);
+        const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 15);
         
         if (brandQuestions.length > 0) {
           const converted = brandQuestions
             .filter(q => q.searchVolume >= minSearchVolume)
-            .map(q => this.convertAhrefsQuestion(q, "brand"));
+            .map(q => this.convertDataForSEOQuestion(q, "brand"));
           allQuestions.push(...converted);
-          console.log(`✅ [QUESTIONS] Got ${converted.length} brand questions from Ahrefs`);
+          console.log(`✅ [QUESTIONS] Got ${converted.length} brand questions from DataForSEO`);
         }
       } catch (error: any) {
-        console.error(`⚠️ [QUESTIONS] Ahrefs brand questions failed: ${error.message}`);
+        console.error(`⚠️ [QUESTIONS] DataForSEO brand questions failed: ${error.message}`);
+      }
+
+      // Get CATEGORY questions (if category provided)
+      if (category) {
+        try {
+          console.log(`📡 [QUESTIONS] Fetching category questions from DataForSEO...`);
+          const categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 15);
+          
+          if (categoryQuestions.length > 0) {
+            const converted = categoryQuestions
+              .filter(q => q.searchVolume >= minSearchVolume)
+              .map(q => this.convertDataForSEOQuestion(q, "category"));
+            
+            // Add only non-duplicates
+            const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
+            for (const q of converted) {
+              if (!existing.has(q.question.toLowerCase())) {
+                allQuestions.push(q);
+              }
+            }
+            console.log(`✅ [QUESTIONS] Got ${converted.length} category questions from DataForSEO`);
+          }
+        } catch (error: any) {
+          console.error(`⚠️ [QUESTIONS] DataForSEO category questions failed: ${error.message}`);
+        }
       }
     }
 
-    // STEP 2: Try Ahrefs for CATEGORY questions (with real volumes)
-    if (this.ahrefsService && category) {
-      try {
-        console.log(`📡 [QUESTIONS] Fetching category questions from Ahrefs...`);
-        const categoryQuestions = await this.ahrefsService.getCategoryQuestions(category, 15);
-        
-        if (categoryQuestions.length > 0) {
-          const converted = categoryQuestions
-            .filter(q => q.searchVolume >= minSearchVolume)
-            .map(q => this.convertAhrefsQuestion(q, "category"));
-          allQuestions.push(...converted);
-          console.log(`✅ [QUESTIONS] Got ${converted.length} category questions from Ahrefs`);
-        }
-      } catch (error: any) {
-        console.error(`⚠️ [QUESTIONS] Ahrefs category questions failed: ${error.message}`);
-      }
-    }
-
-    // STEP 3: Fallback to Google Autocomplete if Ahrefs didn't return enough
+    // PRIORITY 2: Google Autocomplete (fallback - free but no volumes)
     if (allQuestions.length < maxQuestionsPerStage * 3) {
       console.log(`📝 [QUESTIONS] Using Google Autocomplete as fallback...`);
       try {
         const googleSuggestions = await this.googleService.getQuestions(brandName, competitors[0]);
         const googleQuestions = googleSuggestions.map((s, i) => ({
           question: this.formatAsQuestion(s.query),
-          searchVolume: Math.max(500, 10000 - (i * 300)), // Estimated
+          searchVolume: Math.max(100, 5000 - (i * 200)), // Estimated
           difficulty: 35,
           intent: s.type === "decision" ? "commercial" as const : "informational" as const,
           category: s.type,
           questionType: "brand" as const,
-          score: 80 - i,
+          score: 70 - i,
           source: "google_autocomplete" as const,
         }));
         
-        // Add only non-duplicate questions
         const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
         for (const q of googleQuestions) {
           if (!existing.has(q.question.toLowerCase())) {
             allQuestions.push(q);
           }
         }
-        console.log(`✅ [QUESTIONS] Added ${googleQuestions.length} questions from Google`);
+        console.log(`✅ [QUESTIONS] Added questions from Google Autocomplete`);
       } catch (error: any) {
         console.error(`⚠️ [QUESTIONS] Google Autocomplete failed: ${error.message}`);
       }
     }
 
-    // STEP 4: Final fallback - generate questions
+    // PRIORITY 3: Generated questions (final fallback)
     if (allQuestions.length < maxQuestionsPerStage * 3) {
       console.log(`📝 [QUESTIONS] Adding generated questions as final fallback...`);
       const generated = this.generateFallbackQuestions(brandName, competitors, category);
@@ -136,15 +145,16 @@ export class EnhancedQuestionService {
     const balanced = this.balanceAcrossStages(allQuestions, maxQuestionsPerStage);
 
     console.log(`✅ [QUESTIONS] Final: ${balanced.length} questions in ${Date.now() - startTime}ms`);
-    console.log(`   📊 By volume: ${balanced.map(q => `${q.searchVolume}`).join(', ')}`);
+    console.log(`   📊 Sources: ${[...new Set(balanced.map(q => q.source))].join(', ')}`);
+    console.log(`   📊 Volumes: ${balanced.map(q => q.searchVolume).join(', ')}`);
     
     return balanced;
   }
 
   /**
-   * Convert Ahrefs question to our format
+   * Convert DataForSEO question to our format
    */
-  private convertAhrefsQuestion(q: AhrefsQuestion, questionType: "brand" | "category"): DiscoveredQuestion {
+  private convertDataForSEOQuestion(q: DataForSEOQuestion, questionType: "brand" | "category"): DiscoveredQuestion {
     return {
       question: this.formatAsQuestion(q.question),
       searchVolume: q.searchVolume,
@@ -152,8 +162,8 @@ export class EnhancedQuestionService {
       intent: q.category === "decision" ? "commercial" : q.category === "consideration" ? "commercial" : "informational",
       category: q.category,
       questionType,
-      score: Math.min(100, Math.floor(q.searchVolume / 100) + (100 - q.difficulty)),
-      source: "ahrefs",
+      score: Math.min(100, Math.floor(Math.log10(q.searchVolume + 1) * 20) + (100 - q.difficulty)),
+      source: "dataforseo",
     };
   }
 
@@ -185,7 +195,7 @@ export class EnhancedQuestionService {
       { question: `${brandName} price`, searchVolume: 7000, difficulty: 25, intent: "commercial", category: "decision", questionType: "brand", score: 82, source: "generated" },
     );
 
-    // Category questions (if category provided)
+    // Category questions
     if (category) {
       questions.push(
         { question: `Best ${category}`, searchVolume: 12000, difficulty: 50, intent: "commercial", category: "awareness", questionType: "category", score: 90, source: "generated" },
@@ -200,7 +210,6 @@ export class EnhancedQuestionService {
 
   /**
    * Balance questions across funnel stages
-   * Ensures mix of brand AND category questions at each stage
    */
   private balanceAcrossStages(questions: DiscoveredQuestion[], perStage: number): DiscoveredQuestion[] {
     const result: DiscoveredQuestion[] = [];
@@ -208,23 +217,16 @@ export class EnhancedQuestionService {
     for (const stage of ["awareness", "consideration", "decision"] as const) {
       const stageQuestions = questions.filter(q => q.category === stage);
       
-      // Prioritize: 1 brand question + 1 category question per stage (if available)
+      // Prioritize: mix of brand and category questions
       const brandQs = stageQuestions.filter(q => q.questionType === "brand");
       const categoryQs = stageQuestions.filter(q => q.questionType === "category");
 
-      // Add brand questions first (up to half of perStage)
-      const brandToAdd = Math.min(Math.ceil(perStage / 2), brandQs.length);
-      result.push(...brandQs.slice(0, brandToAdd));
-
-      // Fill rest with category questions
-      const remaining = perStage - brandToAdd;
-      result.push(...categoryQs.slice(0, remaining));
-
-      // If still need more, add more brand questions
-      if (result.filter(q => q.category === stage).length < perStage) {
-        const stillNeeded = perStage - result.filter(q => q.category === stage).length;
-        result.push(...brandQs.slice(brandToAdd, brandToAdd + stillNeeded));
-      }
+      // Add highest volume questions first
+      const combined = [...brandQs, ...categoryQs]
+        .sort((a, b) => b.searchVolume - a.searchVolume)
+        .slice(0, perStage);
+      
+      result.push(...combined);
     }
 
     return result;

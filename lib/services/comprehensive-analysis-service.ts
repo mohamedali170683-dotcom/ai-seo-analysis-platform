@@ -42,10 +42,11 @@ export interface AnalysisConfig {
   brandName: string;
   domain?: string;
   competitors?: string[];
-  category?: string; // NEW: The vertical/industry (e.g., "running shoes", "electric cars")
+  category?: string; // The vertical/industry (e.g., "running shoes", "electric cars")
   openaiApiKey: string;
   geminiApiKey?: string;
-  ahrefsApiKey?: string;
+  dataForSEOLogin?: string;
+  dataForSEOPassword?: string;
   testsPerPlatform?: number;
   questionsPerStage?: number;
   onProgress?: (progress: number, step: string) => Promise<void>;
@@ -58,7 +59,10 @@ export class ComprehensiveAnalysisService {
 
   constructor(config: AnalysisConfig) {
     this.config = config;
-    this.questionService = new EnhancedQuestionService(config.ahrefsApiKey);
+    this.questionService = new EnhancedQuestionService(
+      config.dataForSEOLogin,
+      config.dataForSEOPassword
+    );
     this.aiTestingService = new MultiPlatformAIService(
       config.openaiApiKey,
       config.geminiApiKey,
@@ -82,8 +86,7 @@ export class ComprehensiveAnalysisService {
         brandName: this.config.brandName,
         domain: this.config.domain,
         competitors: this.config.competitors,
-        category: this.config.category, // NEW: Include category for vertical questions
-        ahrefsApiKey: this.config.ahrefsApiKey,
+        category: this.config.category,
         maxQuestionsPerStage: this.config.questionsPerStage || 3,
         minSearchVolume: 100,
       });

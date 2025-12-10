@@ -97,10 +97,11 @@ async function executeAnalysis(
       brandName: brandOrKeyword,
       domain,
       competitors,
-      category, // NEW: Category/vertical for industry questions
+      category,
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
-      ahrefsApiKey: process.env.AHREFS_API_KEY, // NEW: Use Ahrefs for real volume data
+      dataForSEOLogin: process.env.DATAFORSEO_LOGIN,
+      dataForSEOPassword: process.env.DATAFORSEO_PASSWORD,
       testsPerPlatform: 1,
       questionsPerStage: 2,
       onProgress,
