@@ -29,12 +29,22 @@ export async function POST(request: Request) {
     // Test question discovery
     if (testType === "questions" || testType === "full") {
       console.log("🔍 Testing question discovery...");
-      const questionService = new EnhancedQuestionService(process.env.AHREFS_API_KEY);
+      const questionService = new EnhancedQuestionService(
+        process.env.DATAFORSEO_LOGIN,
+        process.env.DATAFORSEO_PASSWORD
+      );
       const questions = await questionService.discoverQuestions({
         brandName: brand,
-        maxQuestionsPerStage: 2, // Just 2 per stage for quick test
+        category: "general", // Include category
+        maxQuestionsPerStage: 3,
+        minSearchVolume: 100,
       });
-      results.questions = questions;
+      results.questions = questions.map(q => ({
+        question: q.question,
+        searchVolume: q.searchVolume,
+        category: q.category,
+        source: q.source,
+      }));
       console.log(`✅ Discovered ${questions.length} questions`);
     }
 
