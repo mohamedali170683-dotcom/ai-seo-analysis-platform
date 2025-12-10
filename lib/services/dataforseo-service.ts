@@ -48,12 +48,12 @@ export class DataForSEOService {
   /**
    * Get questions for a category/vertical with search volumes
    */
-  async getCategoryQuestions(category: string, limit: number = 20): Promise<DataForSEOQuestion[]> {
-    console.log(`🔍 [DATAFORSEO] Fetching category questions for: ${category}`);
+  async getCategoryQuestions(category: string, limit: number = 20, questionsOnly: boolean = false): Promise<DataForSEOQuestion[]> {
+    console.log(`🔍 [DATAFORSEO] Fetching category keywords for: ${category} (questionsOnly=${questionsOnly})`);
     
     try {
-      const questions = await this.fetchKeywordIdeas(category, limit, true);
-      console.log(`✅ [DATAFORSEO] Got ${questions.length} category questions`);
+      const questions = await this.fetchKeywordIdeas(category, limit, questionsOnly);
+      console.log(`✅ [DATAFORSEO] Got ${questions.length} category keywords`);
       return questions.map(q => ({ ...q, type: "category" as const }));
     } catch (error: any) {
       console.error(`❌ [DATAFORSEO] Category questions failed: ${error.message}`);

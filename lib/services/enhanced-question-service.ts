@@ -56,41 +56,51 @@ export class EnhancedQuestionService {
 
     // PRIORITY 1: DataForSEO (real volumes)
     if (this.dataForSEOService) {
-      // Get BRAND questions
+      // Get BRAND keywords (include non-questions too - volumes are valuable)
       try {
-        console.log(`📡 [QUESTIONS] Fetching brand questions from DataForSEO...`);
-        const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 15);
+        console.log(`📡 [QUESTIONS] Fetching brand keywords from DataForSEO...`);
+        // Get questions first (questionsOnly=true)
+        let brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 20, true);
+        
+        // If not enough questions, get all keywords
+        if (brandQuestions.length < 6) {
+          console.log(`📡 [QUESTIONS] Only ${brandQuestions.length} questions, getting all keywords...`);
+          brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 20, false);
+        }
         
         if (brandQuestions.length > 0) {
           const converted = brandQuestions
             .filter(q => q.searchVolume >= minSearchVolume)
             .map(q => this.convertDataForSEOQuestion(q, "brand"));
           allQuestions.push(...converted);
-          console.log(`✅ [QUESTIONS] Got ${converted.length} brand questions from DataForSEO`);
+          console.log(`✅ [QUESTIONS] Got ${converted.length} brand keywords from DataForSEO (real volumes!)`);
         }
       } catch (error: any) {
         console.error(`⚠️ [QUESTIONS] DataForSEO brand questions failed: ${error.message}`);
       }
 
-      // Get CATEGORY questions (if category provided)
+      // Get CATEGORY keywords (if category provided)
       if (category) {
         try {
-          console.log(`📡 [QUESTIONS] Fetching category questions from DataForSEO...`);
-          const categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 15);
+          console.log(`📡 [QUESTIONS] Fetching category keywords from DataForSEO...`);
+          let categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 20, true);
+          
+          if (categoryQuestions.length < 6) {
+            categoryQuestions = await this.dataForSEOService.getCategoryQuestions(category, 20, false);
+          }
           
           if (categoryQuestions.length > 0) {
             const converted = categoryQuestions
               .filter(q => q.searchVolume >= minSearchVolume)
               .map(q => this.convertDataForSEOQuestion(q, "category"));
             
-            // Add only non-duplicates
             const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
             for (const q of converted) {
               if (!existing.has(q.question.toLowerCase())) {
                 allQuestions.push(q);
               }
             }
-            console.log(`✅ [QUESTIONS] Got ${converted.length} category questions from DataForSEO`);
+            console.log(`✅ [QUESTIONS] Got ${converted.length} category keywords from DataForSEO`);
           }
         } catch (error: any) {
           console.error(`⚠️ [QUESTIONS] DataForSEO category questions failed: ${error.message}`);
