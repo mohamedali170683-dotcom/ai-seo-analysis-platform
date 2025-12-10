@@ -65,8 +65,16 @@ export class EnhancedQuestionService {
         const brandQuestions = await this.dataForSEOService.getBrandQuestions(brandName, 30, false);
         
         if (brandQuestions.length > 0) {
+          // Track seen keywords to avoid duplicates (case-insensitive)
+          const seen = new Set<string>();
           const converted = brandQuestions
             .filter(q => q.searchVolume >= minSearchVolume)
+            .filter(q => {
+              const key = q.question.toLowerCase().trim();
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            })
             .map(q => this.convertDataForSEOQuestion(q, "brand"));
           allQuestions.push(...converted);
           console.log(`✅ [QUESTIONS] Got ${converted.length} keywords from DataForSEO with real volumes`);
