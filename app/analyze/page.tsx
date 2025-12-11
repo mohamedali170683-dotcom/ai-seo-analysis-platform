@@ -45,6 +45,9 @@ export default function AnalyzePage() {
   // Platform selection
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["ChatGPT", "Gemini", "Copilot"]);
 
+  // Confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
   // Analysis state
   const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [analysisStatus, setAnalysisStatus] = useState<string>("");
@@ -86,7 +89,7 @@ export default function AnalyzePage() {
     }
   };
 
-  // Toggle question selection (max 3 per stage)
+  // Toggle question selection (max 6 per stage for flexibility)
   const toggleQuestion = (question: Question, stage: "awareness" | "consideration" | "decision") => {
     setSelectedQuestions(prev => {
       const stageQuestions = prev[stage] || [];
@@ -99,8 +102,9 @@ export default function AnalyzePage() {
         };
       }
       
-      if (stageQuestions.length >= 3) {
-        alert(`Maximum 3 questions per stage. Deselect one first.`);
+      // Allow up to 6 per stage for flexibility
+      if (stageQuestions.length >= 6) {
+        alert(`Maximum 6 questions per stage. Deselect one first.`);
         return prev;
       }
       
@@ -130,21 +134,34 @@ export default function AnalyzePage() {
     return Object.values(selectedQuestions).reduce((sum, qs) => sum + qs.length, 0);
   };
 
-  // Check if ready to run
+  // Check if ready to run (minimum 3 questions total)
   const canRunAnalysis = () => {
-    return selectedQuestions.awareness.length === 3 &&
-           selectedQuestions.consideration.length === 3 &&
-           selectedQuestions.decision.length === 3 &&
-           selectedPlatforms.length > 0;
+    const total = getTotalSelected();
+    return total >= 3 && selectedPlatforms.length > 0;
   };
 
-  // Phase 2: Run analysis
-  const handleRunAnalysis = async () => {
+  // Get selection breakdown by stage
+  const getSelectionBreakdown = () => {
+    return {
+      awareness: selectedQuestions.awareness.length,
+      consideration: selectedQuestions.consideration.length,
+      decision: selectedQuestions.decision.length,
+      total: getTotalSelected(),
+    };
+  };
+
+  // Show confirmation modal before running
+  const handleRunClick = () => {
     if (!canRunAnalysis()) {
-      alert("Please select 3 questions per stage (9 total)");
+      alert("Please select at least 3 questions");
       return;
     }
+    setShowConfirmModal(true);
+  };
 
+  // Phase 2: Run analysis (called after confirmation)
+  const handleRunAnalysis = async () => {
+    setShowConfirmModal(false);
     setLoading(true);
     setPhase(3);
     setAnalysisStartTime(Date.now());
@@ -385,7 +402,7 @@ export default function AnalyzePage() {
                 </div>
                 <div className="flex gap-3">
                   <span className="text-purple-400 font-bold">2.</span>
-                  <span>You'll see search volumes and select 3 questions per funnel stage (9 total)</span>
+                  <span>Select questions from any funnel stage (minimum 3, you decide the mix)</span>
                 </div>
                 <div className="flex gap-3">
                   <span className="text-purple-400 font-bold">3.</span>
@@ -409,15 +426,15 @@ export default function AnalyzePage() {
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <h2 className="text-2xl font-bold">Select Questions to Test</h2>
-                    <p className="text-gray-300">Choose 3 questions per funnel stage (9 total)</p>
+                    <p className="text-gray-300">Choose from any stage (minimum 3 questions)</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className={`px-5 py-2.5 rounded-xl font-bold text-lg ${
-                      getTotalSelected() === 9 
+                      getTotalSelected() >= 3 
                         ? "bg-green-600 text-white" 
                         : "bg-white/20 text-white"
                     }`}>
-                      {getTotalSelected()}/9 selected
+                      {getTotalSelected()} selected {getTotalSelected() >= 3 && "✓"}
                     </div>
                   </div>
                 </div>
@@ -441,27 +458,27 @@ export default function AnalyzePage() {
               {questionGroups.map((group) => {
                 const stageSelected = selectedQuestions[group.stage]?.length || 0;
                 const allQuestions = [...group.brandQuestions, ...group.categoryQuestions];
-                const isComplete = stageSelected === 3;
+                const hasSelection = stageSelected > 0;
                 
                 return (
                   <div 
                     key={group.stage} 
                     className={`rounded-xl border-2 transition-all ${
-                      isComplete 
-                        ? "border-green-500/50 bg-green-500/5" 
+                      hasSelection 
+                        ? "border-purple-500/50 bg-purple-500/5" 
                         : "border-white/10 bg-white/5"
                     }`}
                   >
                     {/* Column Header */}
                     <div className={`p-4 border-b ${
-                      isComplete ? "border-green-500/30 bg-green-500/10" : "border-white/10 bg-white/5"
+                      hasSelection ? "border-purple-500/30 bg-purple-500/10" : "border-white/10 bg-white/5"
                     } rounded-t-xl`}>
                       <div className="flex items-center justify-between mb-1">
                         <h3 className="text-lg font-bold">{stageInfo[group.stage].label}</h3>
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          isComplete ? "bg-green-600 text-white" : "bg-white/20"
+                          hasSelection ? "bg-purple-600 text-white" : "bg-white/20"
                         }`}>
-                          {stageSelected}/3
+                          {stageSelected} selected
                         </span>
                       </div>
                       <p className="text-xs text-gray-400">{group.stageDescription}</p>
@@ -595,7 +612,7 @@ export default function AnalyzePage() {
                   ← Back
                 </Button>
                 <Button
-                  onClick={handleRunAnalysis}
+                  onClick={handleRunClick}
                   disabled={!canRunAnalysis()}
                   className={`flex-1 py-4 text-lg font-semibold ${
                     canRunAnalysis() 
@@ -604,12 +621,102 @@ export default function AnalyzePage() {
                   }`}
                 >
                   {canRunAnalysis() 
-                    ? `🚀 Run Analysis (9 questions × ${selectedPlatforms.length} platforms)` 
-                    : `Select ${9 - getTotalSelected()} more questions`
+                    ? `🚀 Run Analysis (${getTotalSelected()} questions × ${selectedPlatforms.length} platforms)` 
+                    : getTotalSelected() === 0 
+                      ? "Select at least 3 questions"
+                      : `Select ${Math.max(0, 3 - getTotalSelected())} more questions`
                   }
                 </Button>
               </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-purple-500/30 shadow-2xl">
+                  <h3 className="text-xl font-bold mb-4 text-center">📋 Confirm Your Selection</h3>
+                  
+                  <div className="space-y-3 mb-6">
+                    <div className={`flex justify-between items-center p-3 rounded-lg ${
+                      getSelectionBreakdown().awareness > 0 ? "bg-blue-500/20 border border-blue-500/30" : "bg-white/5"
+                    }`}>
+                      <span className="font-medium">🔍 Awareness</span>
+                      <span className={`text-lg font-bold ${
+                        getSelectionBreakdown().awareness > 0 ? "text-blue-400" : "text-gray-500"
+                      }`}>
+                        {getSelectionBreakdown().awareness} questions
+                      </span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-3 rounded-lg ${
+                      getSelectionBreakdown().consideration > 0 ? "bg-amber-500/20 border border-amber-500/30" : "bg-white/5"
+                    }`}>
+                      <span className="font-medium">⚖️ Consideration</span>
+                      <span className={`text-lg font-bold ${
+                        getSelectionBreakdown().consideration > 0 ? "text-amber-400" : "text-gray-500"
+                      }`}>
+                        {getSelectionBreakdown().consideration} questions
+                      </span>
+                    </div>
+                    
+                    <div className={`flex justify-between items-center p-3 rounded-lg ${
+                      getSelectionBreakdown().decision > 0 ? "bg-green-500/20 border border-green-500/30" : "bg-white/5"
+                    }`}>
+                      <span className="font-medium">✅ Decision</span>
+                      <span className={`text-lg font-bold ${
+                        getSelectionBreakdown().decision > 0 ? "text-green-400" : "text-gray-500"
+                      }`}>
+                        {getSelectionBreakdown().decision} questions
+                      </span>
+                    </div>
+                    
+                    <div className="border-t border-white/10 pt-3 mt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-lg">Total</span>
+                        <span className="text-2xl font-bold text-purple-400">
+                          {getSelectionBreakdown().total} questions
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-400 mt-1">
+                        Testing on {selectedPlatforms.length} platform{selectedPlatforms.length > 1 ? "s" : ""}: {selectedPlatforms.join(", ")}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Warning if any stage is empty */}
+                  {(getSelectionBreakdown().awareness === 0 || 
+                    getSelectionBreakdown().consideration === 0 || 
+                    getSelectionBreakdown().decision === 0) && (
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-4">
+                      <p className="text-amber-400 text-sm">
+                        ⚠️ Note: Some funnel stages have no questions selected. 
+                        Your analysis will only cover the selected stages.
+                      </p>
+                    </div>
+                  )}
+
+                  <p className="text-center text-gray-300 mb-6">
+                    Is this your final pick?
+                  </p>
+                  
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => setShowConfirmModal(false)}
+                      variant="outline"
+                      className="flex-1 py-3 border-gray-600 bg-white/5"
+                    >
+                      ← Go Back
+                    </Button>
+                    <Button
+                      onClick={handleRunAnalysis}
+                      className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 font-semibold"
+                    >
+                      ✓ Yes, Run Analysis
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -663,7 +770,7 @@ export default function AnalyzePage() {
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-blue-400">9</div>
+                  <div className="text-2xl font-bold text-blue-400">{getTotalSelected()}</div>
                   <div className="text-xs text-gray-500">Questions</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
@@ -671,7 +778,7 @@ export default function AnalyzePage() {
                   <div className="text-xs text-gray-500">AI Platforms</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-cyan-400">81</div>
+                  <div className="text-2xl font-bold text-cyan-400">{getTotalSelected() * selectedPlatforms.length * 3}</div>
                   <div className="text-xs text-gray-500">Total Tests</div>
                 </div>
               </div>
