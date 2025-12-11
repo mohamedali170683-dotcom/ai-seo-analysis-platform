@@ -105,7 +105,7 @@ export class MultiPlatformAIService {
 
   /**
    * Test a question on SELECTED platforms only
-   * Allows user to choose which chatbots to test
+   * Runs SEQUENTIALLY to avoid rate limiting
    */
   async testQuestionOnPlatforms(
     question: string,
@@ -115,21 +115,68 @@ export class MultiPlatformAIService {
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
-    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × ${platforms.length} platforms)`);
+    console.log(`🤖 [AI] Testing: "${question.substring(0, 40)}..." (${numTests}×${platforms.length})`);
     const startTime = Date.now();
 
-    // Overall timeout for this question (60 seconds max)
-    const questionTimeout = 60000;
+    // Run platforms SEQUENTIALLY to avoid rate limiting
+    const allResponses: AIResponse[] = [];
     
-    // Run selected platforms in PARALLEL with timeout
+    for (const platform of platforms) {
+      try {
+        // 20 second timeout per platform
+        const platformTimeout = new Promise<AIResponse[]>((resolve) => {
+          setTimeout(() => {
+            console.warn(`⚠️ [AI] ${platform} timeout`);
+            resolve([]);
+          }, 20000);
+        });
+
+        const responses = await Promise.race([
+          this.testSinglePlatform(platform, question, brandName, competitors, numTests),
+          platformTimeout,
+        ]);
+        
+        allResponses.push(...responses);
+        console.log(`  ✓ ${platform}: ${responses.length} responses`);
+        
+        // Small delay between platforms
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error: any) {
+        console.warn(`  ✗ ${platform} failed: ${error.message}`);
+      }
+    }
+
+    const aggregated = this.calculateAggregatedStats(allResponses, competitors);
+    console.log(`✅ [AI] Done in ${Date.now() - startTime}ms - ${allResponses.length} total`);
+
+    return {
+      question,
+      searchVolume: 0,
+      category: "awareness",
+      totalResponses: allResponses.length,
+      responses: allResponses,
+      aggregated,
+    };
+  }
+
+  /**
+   * Original parallel method (kept for reference but not used)
+   */
+  async testQuestionOnPlatformsParallel(
+    question: string,
+    brandName: string,
+    competitors: string[] = [],
+    platforms: ("ChatGPT" | "Gemini" | "Copilot")[],
+    testsPerPlatform?: number
+  ): Promise<QuestionAnalysis> {
+    const numTests = testsPerPlatform || this.testsPerPlatform;
+    const startTime = Date.now();
+
     const platformPromises = platforms.map(platform => 
       Promise.race([
         this.testSinglePlatform(platform, question, brandName, competitors, numTests),
         new Promise<AIResponse[]>((resolve) => {
-          setTimeout(() => {
-            console.warn(`⚠️ [AI] ${platform} overall timeout for question`);
-            resolve([]);
-          }, questionTimeout);
+          setTimeout(() => resolve([]), 30000);
         }),
       ])
     );

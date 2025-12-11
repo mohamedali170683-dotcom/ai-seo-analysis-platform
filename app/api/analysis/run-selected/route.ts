@@ -214,7 +214,7 @@ async function executeSelectedAnalysis(
       ]);
     }
 
-    // Test each question
+    // Test each question with rate limiting protection
     const allResults: any[] = [];
     const totalQuestions = selectedQuestions.length;
 
@@ -224,11 +224,18 @@ async function executeSelectedAnalysis(
       
       await updateProgress(progress, `Testing question ${i + 1}/${totalQuestions}: "${question.question.substring(0, 30)}..."`);
       
-      console.log(`🤖 [EXEC] Testing: "${question.question}"`);
+      console.log(`🤖 [EXEC] Testing Q${i + 1}: "${question.question.substring(0, 40)}..."`);
 
       try {
-        // Test on selected platforms only
-        const analysis = await aiService.testQuestionOnPlatforms(
+        // Add timeout wrapper for entire question (45 seconds max)
+        const questionTimeout = new Promise<null>((resolve) => {
+          setTimeout(() => {
+            console.warn(`⚠️ [EXEC] Question ${i + 1} timed out after 45s`);
+            resolve(null);
+          }, 45000);
+        });
+
+        const analysisPromise = aiService.testQuestionOnPlatforms(
           question.question,
           brandName,
           competitors,
@@ -236,16 +243,33 @@ async function executeSelectedAnalysis(
           testsPerPlatform
         );
 
-        allResults.push({
-          questionText: question.question,
-          questionSearchVolume: question.searchVolume,
-          questionCategory: question.category,
-          questionType: question.type,
-          ...analysis,
-        });
+        const analysis = await Promise.race([analysisPromise, questionTimeout]);
+
+        if (analysis) {
+          allResults.push({
+            questionText: question.question,
+            questionSearchVolume: question.searchVolume,
+            questionCategory: question.category,
+            questionType: question.type,
+            ...analysis,
+          });
+          console.log(`✅ [EXEC] Q${i + 1} done - ${analysis.totalResponses} responses`);
+        } else {
+          // Timeout - add empty result
+          allResults.push({
+            questionText: question.question,
+            questionSearchVolume: question.searchVolume,
+            questionCategory: question.category,
+            questionType: question.type,
+            error: "Question timed out",
+            responses: [],
+            totalResponses: 0,
+          });
+          console.warn(`⚠️ [EXEC] Q${i + 1} timed out, continuing...`);
+        }
 
       } catch (error: any) {
-        console.error(`⚠️ [EXEC] Question failed: ${error.message}`);
+        console.error(`⚠️ [EXEC] Q${i + 1} failed: ${error.message}`);
         allResults.push({
           questionText: question.question,
           questionSearchVolume: question.searchVolume,
@@ -255,6 +279,11 @@ async function executeSelectedAnalysis(
           responses: [],
           totalResponses: 0,
         });
+      }
+
+      // Add delay between questions to avoid rate limiting (1 second)
+      if (i < totalQuestions - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
