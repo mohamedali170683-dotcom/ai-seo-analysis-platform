@@ -105,7 +105,7 @@ export class MultiPlatformAIService {
 
   /**
    * Test a question on SELECTED platforms only
-   * Runs SEQUENTIALLY to avoid rate limiting
+   * Uses simple async/await with proper error handling
    */
   async testQuestionOnPlatforms(
     question: string,
@@ -115,39 +115,35 @@ export class MultiPlatformAIService {
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
-    console.log(`🤖 [AI] Testing: "${question.substring(0, 40)}..." (${numTests}×${platforms.length})`);
+    console.log(`🤖 [AI] Q: "${question.substring(0, 35)}..." (${numTests}×${platforms.length})`);
     const startTime = Date.now();
 
-    // Run platforms SEQUENTIALLY to avoid rate limiting
     const allResponses: AIResponse[] = [];
     
+    // Process each platform sequentially with simple async/await
     for (const platform of platforms) {
       try {
-        // 20 second timeout per platform
-        const platformTimeout = new Promise<AIResponse[]>((resolve) => {
-          setTimeout(() => {
-            console.warn(`⚠️ [AI] ${platform} timeout`);
-            resolve([]);
-          }, 20000);
-        });
-
-        const responses = await Promise.race([
-          this.testSinglePlatform(platform, question, brandName, competitors, numTests),
-          platformTimeout,
-        ]);
+        const responses = await this.testSinglePlatform(
+          platform, 
+          question, 
+          brandName, 
+          competitors, 
+          numTests
+        );
         
         allResponses.push(...responses);
-        console.log(`  ✓ ${platform}: ${responses.length} responses`);
-        
-        // Small delay between platforms
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log(`  ✓ ${platform}: ${responses.length}/${numTests}`);
       } catch (error: any) {
-        console.warn(`  ✗ ${platform} failed: ${error.message}`);
+        console.warn(`  ✗ ${platform}: ${error.message}`);
       }
+      
+      // 300ms delay between platforms
+      await new Promise(resolve => setTimeout(resolve, 300));
     }
 
     const aggregated = this.calculateAggregatedStats(allResponses, competitors);
-    console.log(`✅ [AI] Done in ${Date.now() - startTime}ms - ${allResponses.length} total`);
+    const elapsed = Date.now() - startTime;
+    console.log(`✅ Done: ${allResponses.length} responses in ${elapsed}ms`);
 
     return {
       question,
@@ -160,9 +156,9 @@ export class MultiPlatformAIService {
   }
 
   /**
-   * Original parallel method (kept for reference but not used)
+   * Parallel version (not used - kept for future optimization)
    */
-  async testQuestionOnPlatformsParallel(
+  private async testQuestionOnPlatformsParallel(
     question: string,
     brandName: string,
     competitors: string[] = [],
@@ -173,12 +169,8 @@ export class MultiPlatformAIService {
     const startTime = Date.now();
 
     const platformPromises = platforms.map(platform => 
-      Promise.race([
-        this.testSinglePlatform(platform, question, brandName, competitors, numTests),
-        new Promise<AIResponse[]>((resolve) => {
-          setTimeout(() => resolve([]), 30000);
-        }),
-      ])
+      this.testSinglePlatform(platform, question, brandName, competitors, numTests)
+        .catch(() => [] as AIResponse[])
     );
     
     const results = await Promise.allSettled(platformPromises);
@@ -230,38 +222,55 @@ export class MultiPlatformAIService {
         }
         messages.push({ role: "user", content: question });
 
-        // Create a timeout promise (12 seconds per API call)
-        const timeoutPromise = new Promise<null>((_, reject) => {
-          setTimeout(() => reject(new Error(`${platform} API timeout`)), 12000);
-        });
+        // Use AbortController for proper request cancellation
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+        }, 10000); // 10 second timeout
 
-        // Race between API call and timeout
-        const completion = await Promise.race([
-          this.openaiClient.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages,
-            max_tokens: 400,
-            temperature: 0.7,
-          }),
-          timeoutPromise,
-        ]) as OpenAI.Chat.Completions.ChatCompletion;
+        try {
+          const completion = await this.openaiClient.chat.completions.create(
+            {
+              model: "gpt-4o-mini",
+              messages,
+              max_tokens: 300,
+              temperature: 0.7,
+            },
+            {
+              signal: controller.signal,
+            }
+          );
 
-        const fullResponse = completion?.choices?.[0]?.message?.content || "";
-        
-        if (fullResponse) {
-          const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
-          responses.push({
-            platform,
-            modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
-            queryNumber: i,
-            question,
-            fullResponse,
-            ...analysis,
-          });
+          clearTimeout(timeoutId);
+
+          const fullResponse = completion?.choices?.[0]?.message?.content || "";
+          
+          if (fullResponse) {
+            const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+            responses.push({
+              platform,
+              modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
+              queryNumber: i,
+              question,
+              fullResponse,
+              ...analysis,
+            });
+          }
+        } catch (apiError: any) {
+          clearTimeout(timeoutId);
+          if (apiError.name === 'AbortError') {
+            console.warn(`⚠️ [AI] ${platform} test ${i} aborted (timeout)`);
+          } else {
+            console.warn(`⚠️ [AI] ${platform} test ${i} API error: ${apiError.message}`);
+          }
         }
       } catch (error: any) {
         console.warn(`⚠️ [AI] ${platform} test ${i} failed: ${error.message}`);
-        // Continue with remaining tests instead of failing entirely
+      }
+      
+      // Small delay between tests to avoid rate limiting
+      if (i < numTests) {
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
     }
 

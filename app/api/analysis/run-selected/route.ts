@@ -214,7 +214,7 @@ async function executeSelectedAnalysis(
       ]);
     }
 
-    // Test each question with rate limiting protection
+    // Test each question - using simple async/await (AI service handles timeouts internally)
     const allResults: any[] = [];
     const totalQuestions = selectedQuestions.length;
 
@@ -222,20 +222,13 @@ async function executeSelectedAnalysis(
       const question = selectedQuestions[i];
       const progress = 5 + Math.floor(((i + 1) / totalQuestions) * 80);
       
-      await updateProgress(progress, `Testing question ${i + 1}/${totalQuestions}: "${question.question.substring(0, 30)}..."`);
+      await updateProgress(progress, `Testing Q${i + 1}/${totalQuestions}: "${question.question.substring(0, 25)}..."`);
       
-      console.log(`🤖 [EXEC] Testing Q${i + 1}: "${question.question.substring(0, 40)}..."`);
+      console.log(`🤖 [EXEC] Q${i + 1}/${totalQuestions}: "${question.question.substring(0, 35)}..."`);
 
       try {
-        // Add timeout wrapper for entire question (45 seconds max)
-        const questionTimeout = new Promise<null>((resolve) => {
-          setTimeout(() => {
-            console.warn(`⚠️ [EXEC] Question ${i + 1} timed out after 45s`);
-            resolve(null);
-          }, 45000);
-        });
-
-        const analysisPromise = aiService.testQuestionOnPlatforms(
+        // Simple async/await - AI service handles its own timeouts with AbortController
+        const analysis = await aiService.testQuestionOnPlatforms(
           question.question,
           brandName,
           competitors,
@@ -243,30 +236,14 @@ async function executeSelectedAnalysis(
           testsPerPlatform
         );
 
-        const analysis = await Promise.race([analysisPromise, questionTimeout]);
-
-        if (analysis) {
-          allResults.push({
-            questionText: question.question,
-            questionSearchVolume: question.searchVolume,
-            questionCategory: question.category,
-            questionType: question.type,
-            ...analysis,
-          });
-          console.log(`✅ [EXEC] Q${i + 1} done - ${analysis.totalResponses} responses`);
-        } else {
-          // Timeout - add empty result
-          allResults.push({
-            questionText: question.question,
-            questionSearchVolume: question.searchVolume,
-            questionCategory: question.category,
-            questionType: question.type,
-            error: "Question timed out",
-            responses: [],
-            totalResponses: 0,
-          });
-          console.warn(`⚠️ [EXEC] Q${i + 1} timed out, continuing...`);
-        }
+        allResults.push({
+          questionText: question.question,
+          questionSearchVolume: question.searchVolume,
+          questionCategory: question.category,
+          questionType: question.type,
+          ...analysis,
+        });
+        console.log(`✅ Q${i + 1} done: ${analysis.totalResponses} responses`);
 
       } catch (error: any) {
         console.error(`⚠️ [EXEC] Q${i + 1} failed: ${error.message}`);
