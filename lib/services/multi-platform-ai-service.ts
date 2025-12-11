@@ -104,8 +104,8 @@ export class MultiPlatformAIService {
   }
 
   /**
-   * Test a question on SELECTED platforms only
-   * Uses simple async/await with proper error handling
+   * Test a question on SELECTED platforms
+   * Runs platforms in PARALLEL with strict per-platform timeout
    */
   async testQuestionOnPlatforms(
     question: string,
@@ -115,35 +115,32 @@ export class MultiPlatformAIService {
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
-    console.log(`🤖 [AI] Q: "${question.substring(0, 35)}..." (${numTests}×${platforms.length})`);
+    console.log(`🤖 Q: "${question.substring(0, 30)}..." (${numTests}×${platforms.length})`);
     const startTime = Date.now();
 
-    const allResponses: AIResponse[] = [];
-    
-    // Process each platform sequentially with simple async/await
-    for (const platform of platforms) {
+    // Run ALL platforms in PARALLEL with individual timeouts
+    const platformPromises = platforms.map(async (platform) => {
       try {
-        const responses = await this.testSinglePlatform(
-          platform, 
-          question, 
-          brandName, 
-          competitors, 
-          numTests
+        // Strict 15-second timeout per platform
+        const result = await this.withTimeout(
+          this.testSinglePlatform(platform, question, brandName, competitors, numTests),
+          15000,
+          `${platform} timeout`
         );
-        
-        allResponses.push(...responses);
-        console.log(`  ✓ ${platform}: ${responses.length}/${numTests}`);
+        console.log(`  ✓ ${platform}: ${result.length}/${numTests}`);
+        return result;
       } catch (error: any) {
         console.warn(`  ✗ ${platform}: ${error.message}`);
+        return [] as AIResponse[];
       }
-      
-      // 300ms delay between platforms
-      await new Promise(resolve => setTimeout(resolve, 300));
-    }
+    });
+
+    // Wait for all platforms (max ~15s total since parallel)
+    const results = await Promise.all(platformPromises);
+    const allResponses = results.flat();
 
     const aggregated = this.calculateAggregatedStats(allResponses, competitors);
-    const elapsed = Date.now() - startTime;
-    console.log(`✅ Done: ${allResponses.length} responses in ${elapsed}ms`);
+    console.log(`✅ ${allResponses.length} responses in ${Date.now() - startTime}ms`);
 
     return {
       question,
@@ -153,6 +150,25 @@ export class MultiPlatformAIService {
       responses: allResponses,
       aggregated,
     };
+  }
+
+  /**
+   * Utility: wrap a promise with a strict timeout
+   */
+  private async withTimeout<T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> {
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error(errorMsg)), ms);
+    });
+    
+    try {
+      const result = await Promise.race([promise, timeoutPromise]);
+      clearTimeout(timeoutId!);
+      return result;
+    } catch (error) {
+      clearTimeout(timeoutId!);
+      throw error;
+    }
   }
 
   /**
@@ -214,7 +230,9 @@ export class MultiPlatformAIService {
       "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers.",
     };
 
-    for (let i = 1; i <= numTests; i++) {
+    // Run all tests for this platform in PARALLEL
+    const testPromises = Array.from({ length: numTests }, async (_, idx) => {
+      const i = idx + 1;
       try {
         const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [];
         if (systemPrompts[platform]) {
@@ -222,59 +240,42 @@ export class MultiPlatformAIService {
         }
         messages.push({ role: "user", content: question });
 
-        // Use AbortController for proper request cancellation
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => {
-          controller.abort();
-        }, 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s per call
 
-        try {
-          const completion = await this.openaiClient.chat.completions.create(
-            {
-              model: "gpt-4o-mini",
-              messages,
-              max_tokens: 300,
-              temperature: 0.7,
-            },
-            {
-              signal: controller.signal,
-            }
-          );
+        const completion = await this.openaiClient.chat.completions.create(
+          {
+            model: "gpt-4o-mini",
+            messages,
+            max_tokens: 250,
+            temperature: 0.7,
+          },
+          { signal: controller.signal }
+        );
 
-          clearTimeout(timeoutId);
-
-          const fullResponse = completion?.choices?.[0]?.message?.content || "";
-          
-          if (fullResponse) {
-            const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
-            responses.push({
-              platform,
-              modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
-              queryNumber: i,
-              question,
-              fullResponse,
-              ...analysis,
-            });
-          }
-        } catch (apiError: any) {
-          clearTimeout(timeoutId);
-          if (apiError.name === 'AbortError') {
-            console.warn(`⚠️ [AI] ${platform} test ${i} aborted (timeout)`);
-          } else {
-            console.warn(`⚠️ [AI] ${platform} test ${i} API error: ${apiError.message}`);
-          }
+        clearTimeout(timeoutId);
+        const fullResponse = completion?.choices?.[0]?.message?.content || "";
+        
+        if (fullResponse) {
+          const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+          return {
+            platform,
+            modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
+            queryNumber: i,
+            question,
+            fullResponse,
+            ...analysis,
+          } as AIResponse;
         }
+        return null;
       } catch (error: any) {
-        console.warn(`⚠️ [AI] ${platform} test ${i} failed: ${error.message}`);
+        // Silently fail individual tests
+        return null;
       }
-      
-      // Small delay between tests to avoid rate limiting
-      if (i < numTests) {
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
-    }
+    });
 
-    return responses;
+    const results = await Promise.all(testPromises);
+    return results.filter((r): r is AIResponse => r !== null);
   }
 
   private analyzeResponse(
