@@ -23,11 +23,14 @@ interface QuestionGroup {
 /**
  * Phase 1: Discover questions for user selection
  * Returns questions grouped by funnel stage and type (brand vs category)
+ * 
+ * For FREE tier: Only strategic questions (no DataForSEO calls)
+ * For PAID tier: Real search data + strategic questions
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { brandName, category, competitors } = body;
+    const { brandName, category, competitors, tier = "free" } = body;
 
     if (!brandName) {
       return NextResponse.json(
@@ -43,28 +46,35 @@ export async function POST(request: Request) {
       );
     }
 
+    const useRealSearchData = tier === "paid";
     console.log(`🔍 [DISCOVER] Starting question discovery for: ${brandName} in ${category}`);
+    console.log(`🎯 [TIER] Running as ${tier} tier - Real search data: ${useRealSearchData ? "Yes" : "No (strategic only)"}`);
 
-    // Initialize DataForSEO service
-    const dataForSEOLogin = process.env.DATAFORSEO_LOGIN;
-    const dataForSEOPassword = process.env.DATAFORSEO_PASSWORD;
+    let realBrandQuestions: any[] = [];
+    let realCategoryQuestions: any[] = [];
 
-    if (!dataForSEOLogin || !dataForSEOPassword) {
-      return NextResponse.json(
-        { success: false, error: "DataForSEO credentials not configured" },
-        { status: 500 }
-      );
+    // Only fetch real search data for paid tier
+    if (useRealSearchData) {
+      // Initialize DataForSEO service
+      const dataForSEOLogin = process.env.DATAFORSEO_LOGIN;
+      const dataForSEOPassword = process.env.DATAFORSEO_PASSWORD;
+
+      if (!dataForSEOLogin || !dataForSEOPassword) {
+        console.log(`⚠️ [DISCOVER] DataForSEO credentials not configured, falling back to strategic only`);
+      } else {
+        const dataForSEO = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
+
+        // Fetch REAL brand questions from search data
+        console.log(`📡 [DISCOVER] Fetching real brand questions...`);
+        realBrandQuestions = await dataForSEO.getBrandQuestions(brandName, 20);
+
+        // Fetch REAL category questions from search data
+        console.log(`📡 [DISCOVER] Fetching real category questions...`);
+        realCategoryQuestions = await dataForSEO.getCategoryQuestions(category, 20);
+      }
+    } else {
+      console.log(`🆓 [DISCOVER] Free tier - skipping DataForSEO, using strategic questions only`);
     }
-
-    const dataForSEO = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
-
-    // Fetch REAL brand questions from search data
-    console.log(`📡 [DISCOVER] Fetching real brand questions...`);
-    const realBrandQuestions = await dataForSEO.getBrandQuestions(brandName, 20);
-
-    // Fetch REAL category questions from search data
-    console.log(`📡 [DISCOVER] Fetching real category questions...`);
-    const realCategoryQuestions = await dataForSEO.getCategoryQuestions(category, 20);
 
     // Generate STRATEGIC questions for comprehensive brand positioning analysis
     const strategicQuestions = generateStrategicQuestions(brandName, category, competitors || []);
@@ -160,14 +170,18 @@ export async function POST(request: Request) {
       brandName,
       category,
       competitors: competitors || [],
+      tier,
       questionGroups,
       summary: {
         totalBrandQuestions,
         totalCategoryQuestions,
         totalQuestions: totalBrandQuestions + totalCategoryQuestions,
-        requiredSelections: 9, // 3 per stage × 3 stages
+        requiredSelections: tier === "free" ? 3 : 9, // Free: 3 total, Paid: 3 per stage × 3 stages
+        hasRealSearchData: useRealSearchData && (realBrandQuestions.length > 0 || realCategoryQuestions.length > 0),
       },
-      instructions: "Select 3 questions per funnel stage (9 total). Mix real search data questions with strategic ones for comprehensive analysis.",
+      instructions: tier === "free" 
+        ? "Free tier: Select up to 3 questions from Awareness stage. Upgrade for full funnel analysis with real search data."
+        : "Select 3 questions per funnel stage (9 total). Mix real search data questions with strategic ones for comprehensive analysis.",
     });
 
   } catch (error: any) {

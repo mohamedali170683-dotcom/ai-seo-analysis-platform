@@ -21,7 +21,26 @@ interface AnalysisRequest {
   selectedQuestions: SelectedQuestion[];
   selectedPlatforms: ("ChatGPT" | "Gemini" | "Copilot")[];
   testsPerPlatform?: number; // Default 3 for faster analysis
+  tier?: "free" | "paid"; // User tier for validation
 }
+
+// Tier limits for backend validation
+const TIER_LIMITS = {
+  free: {
+    maxQuestions: 3,
+    allowedStages: ["awareness"],
+    allowedPlatforms: ["ChatGPT"],
+    testsPerQuestion: 1,
+    allowCompetitors: false,
+  },
+  paid: {
+    maxQuestions: 18,
+    allowedStages: ["awareness", "consideration", "decision"],
+    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot"],
+    testsPerQuestion: 3,
+    allowCompetitors: true,
+  },
+};
 
 /**
  * Phase 2: Run analysis on user-selected questions and platforms
@@ -37,9 +56,26 @@ export async function POST(request: Request) {
       selectedQuestions,
       selectedPlatforms,
       testsPerPlatform = 3,
+      tier = "free", // Default to free tier
     } = body;
 
-    // Validation
+    // Get tier limits
+    const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
+    
+    // Enforce tier-based limits
+    const enforcedQuestions = selectedQuestions.slice(0, limits.maxQuestions);
+    const enforcedPlatforms = selectedPlatforms.filter(p => 
+      limits.allowedPlatforms.includes(p)
+    ) as ("ChatGPT" | "Gemini" | "Copilot")[];
+    const enforcedCompetitors = limits.allowCompetitors ? competitors.slice(0, 2) : [];
+    const enforcedTestsPerPlatform = Math.min(testsPerPlatform, limits.testsPerQuestion);
+    
+    // Filter questions by allowed stages for free tier
+    const stageFilteredQuestions = enforcedQuestions.filter(q => 
+      limits.allowedStages.includes(q.category)
+    );
+
+    // Basic Validation
     if (!brandName) {
       return NextResponse.json(
         { success: false, error: "Brand name is required" },
@@ -47,30 +83,30 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!selectedQuestions || selectedQuestions.length === 0) {
+    if (!stageFilteredQuestions || stageFilteredQuestions.length === 0) {
       return NextResponse.json(
-        { success: false, error: "At least 1 question must be selected" },
+        { success: false, error: "At least 1 question must be selected from allowed stages" },
         { status: 400 }
       );
     }
 
-    if (selectedQuestions.length > 10) {
+    if (stageFilteredQuestions.length > limits.maxQuestions) {
       return NextResponse.json(
-        { success: false, error: "Maximum 10 questions allowed" },
+        { success: false, error: `Maximum ${limits.maxQuestions} questions allowed for ${tier} tier` },
         { status: 400 }
       );
     }
 
-    if (!selectedPlatforms || selectedPlatforms.length === 0) {
+    if (!enforcedPlatforms || enforcedPlatforms.length === 0) {
       return NextResponse.json(
-        { success: false, error: "At least 1 platform must be selected" },
+        { success: false, error: "At least 1 allowed platform must be selected" },
         { status: 400 }
       );
     }
 
     // Validate platforms
     const validPlatforms = ["ChatGPT", "Gemini", "Copilot"];
-    for (const platform of selectedPlatforms) {
+    for (const platform of enforcedPlatforms) {
       if (!validPlatforms.includes(platform)) {
         return NextResponse.json(
           { success: false, error: `Invalid platform: ${platform}` },
@@ -79,14 +115,26 @@ export async function POST(request: Request) {
       }
     }
 
+    console.log(`🎯 [TIER] Running as ${tier} tier`);
+    console.log(`   Enforced questions: ${stageFilteredQuestions.length} (max: ${limits.maxQuestions})`);
+    console.log(`   Enforced platforms: ${enforcedPlatforms.join(", ")}`);
+    console.log(`   Enforced tests/platform: ${enforcedTestsPerPlatform}`);
+    console.log(`   Competitors: ${enforcedCompetitors.length > 0 ? enforcedCompetitors.join(", ") : "none (free tier)"}`);
+    
+    // Use enforced values for the rest of the function
+    const finalQuestions = stageFilteredQuestions;
+    const finalPlatforms = enforcedPlatforms;
+    const finalCompetitors = enforcedCompetitors;
+    const finalTestsPerPlatform = enforcedTestsPerPlatform;
+
     console.log(`🚀 [RUN-SELECTED] Starting analysis:`);
     console.log(`   Brand: ${brandName}`);
-    console.log(`   Questions: ${selectedQuestions.length}`);
-    console.log(`   Platforms: ${selectedPlatforms.join(", ")}`);
-    console.log(`   Tests per platform: ${testsPerPlatform}`);
+    console.log(`   Questions: ${finalQuestions.length}`);
+    console.log(`   Platforms: ${finalPlatforms.join(", ")}`);
+    console.log(`   Tests per platform: ${finalTestsPerPlatform}`);
 
     // Calculate total API calls
-    const totalCalls = selectedQuestions.length * selectedPlatforms.length * testsPerPlatform;
+    const totalCalls = finalQuestions.length * finalPlatforms.length * finalTestsPerPlatform;
     console.log(`   Total AI calls: ${totalCalls}`);
 
     // Get or create user for analysis
@@ -102,7 +150,7 @@ export async function POST(request: Request) {
         userId: user.id,
         brandOrKeyword: brandName,
         domain: domain || null,
-        competitors: competitors,
+        competitors: finalCompetitors,
         status: "running",
         progress: 0,
         currentStep: "Starting analysis...",
@@ -123,11 +171,11 @@ export async function POST(request: Request) {
         analysis.id,
         brandName,
         domain,
-        competitors,
+        finalCompetitors,
         category,
-        selectedQuestions,
-        selectedPlatforms,
-        testsPerPlatform,
+        finalQuestions,
+        finalPlatforms,
+        finalTestsPerPlatform,
         envVars
       )
     );
@@ -136,10 +184,11 @@ export async function POST(request: Request) {
       success: true,
       analysisId: analysis.id,
       message: "Analysis started",
+      tier,
       config: {
-        questions: selectedQuestions.length,
-        platforms: selectedPlatforms.length,
-        testsPerPlatform,
+        questions: finalQuestions.length,
+        platforms: finalPlatforms.length,
+        testsPerPlatform: finalTestsPerPlatform,
         totalAICalls: totalCalls,
         estimatedTime: `${Math.ceil(totalCalls * 3 / 60)} minutes`,
       },

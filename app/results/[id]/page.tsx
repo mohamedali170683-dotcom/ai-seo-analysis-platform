@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
+import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText } from "lucide-react";
+import { useTier } from "@/lib/tier";
+import { UpgradeModal, PremiumBadge, BlurredContent } from "@/components/UpgradeModal";
+import { UpgradeModalTrigger } from "@/lib/tier/types";
 
 // Sentiment definitions for the report
 const SENTIMENT_DEFINITIONS = {
@@ -74,12 +77,23 @@ export default function ResultsPage() {
   const router = useRouter();
   const analysisId = params.id as string;
 
+  // Tier management
+  const { tier, limits, isStageAllowed, isPlatformAllowed } = useTier();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<UpgradeModalTrigger>("funnel_stages");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("pending");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  // Helper to show upgrade modal
+  const openUpgradeModal = (trigger: UpgradeModalTrigger) => {
+    setUpgradeModalTrigger(trigger);
+    setShowUpgradeModal(true);
+  };
 
   useEffect(() => {
     if (!analysisId) {
@@ -222,6 +236,28 @@ export default function ResultsPage() {
             </div>
           </div>
           <div className="flex gap-3">
+            {/* PDF Export Button */}
+            <button
+              onClick={() => limits.allowPdfExport ? alert("PDF export coming soon!") : openUpgradeModal("pdf_export")}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+                limits.allowPdfExport 
+                  ? "bg-white text-green-600 hover:bg-green-50" 
+                  : "bg-white/20 text-white/80 cursor-pointer"
+              }`}
+            >
+              {limits.allowPdfExport ? (
+                <>
+                  <Download className="w-4 h-4" />
+                  Export PDF
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4" />
+                  Export PDF
+                  <span className="text-xs bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded">PRO</span>
+                </>
+              )}
+            </button>
             <Link
               href="/dashboard"
               className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
@@ -324,22 +360,38 @@ export default function ResultsPage() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-4xl">💡</div>
-                <div className="text-xs px-3 py-1 rounded-full font-semibold bg-amber-100 text-amber-700">
+                <div className="text-xs px-3 py-1 rounded-full font-semibold bg-amber-100 text-amber-700 flex items-center gap-1">
+                  {!limits.showDetailedRecommendations && <Lock className="w-3 h-3" />}
                   {allRecommendations.length} Actions
                 </div>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">Recommendations</h3>
-              <p className="text-sm text-gray-500 mb-4">Actions to improve AI visibility</p>
+              <p className="text-sm text-gray-500 mb-4">
+                {limits.showDetailedRecommendations 
+                  ? "Actions to improve AI visibility"
+                  : `${allRecommendations.length} issues found affecting your visibility`
+                }
+              </p>
               <div className="space-y-2">
-                {allRecommendations.slice(0, 3).map((rec: any, i: number) => (
+                {allRecommendations.slice(0, limits.showDetailedRecommendations ? 3 : 1).map((rec: any, i: number) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <span>{rec.stageIcon}</span>
                     <span className="text-gray-600 truncate">{rec.stage}</span>
                   </div>
                 ))}
+                {!limits.showDetailedRecommendations && allRecommendations.length > 1 && (
+                  <div className="flex items-center gap-2 text-sm text-gray-400 italic">
+                    <Lock className="w-3 h-3" />
+                    <span>+{allRecommendations.length - 1} more recommendations...</span>
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-end text-sm text-amber-600 font-medium mt-3">
-                Details {expandedSection === "recommendations" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                {limits.showDetailedRecommendations ? (
+                  <>Details {expandedSection === "recommendations" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}</>
+                ) : (
+                  <>Get Fix Recommendations <Sparkles className="w-4 h-4 ml-1" /></>
+                )}
               </div>
             </div>
           </div>
@@ -350,15 +402,28 @@ export default function ResultsPage() {
           
           {/* Box 4: Competitive Landscape */}
           <div 
-            onClick={() => toggleSection("competitive")}
-            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+            onClick={() => limits.allowCompetitors ? toggleSection("competitive") : openUpgradeModal("competitors")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl relative ${
               expandedSection === "competitive" ? "ring-2 ring-pink-500" : ""
-            }`}
+            } ${!limits.allowCompetitors ? "opacity-80" : ""}`}
           >
+            {/* Lock overlay for free tier */}
+            {!limits.allowCompetitors && (
+              <div className="absolute inset-0 bg-gray-100/60 backdrop-blur-[1px] rounded-2xl z-10 flex flex-col items-center justify-center">
+                <div className="bg-white rounded-full p-3 shadow-lg mb-2">
+                  <Lock className="w-6 h-6 text-gray-400" />
+                </div>
+                <span className="text-sm font-medium text-gray-600">Included in Full Audit</span>
+                <span className="text-xs text-pink-500 mt-1 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3" /> Click to unlock
+                </span>
+              </div>
+            )}
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-4xl">🏆</div>
-                <div className="text-xs px-3 py-1 rounded-full font-semibold bg-pink-100 text-pink-700">
+                <div className="text-xs px-3 py-1 rounded-full font-semibold bg-pink-100 text-pink-700 flex items-center gap-1">
+                  {!limits.allowCompetitors && <Lock className="w-3 h-3" />}
                   Competitor Analysis
                 </div>
               </div>
@@ -376,7 +441,11 @@ export default function ResultsPage() {
                 </div>
               </div>
               <div className="flex items-center justify-end text-sm text-pink-600 font-medium mt-3">
-                View comparison {expandedSection === "competitive" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                {limits.allowCompetitors ? (
+                  <>View comparison {expandedSection === "competitive" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}</>
+                ) : (
+                  <>Unlock comparison <Sparkles className="w-4 h-4 ml-1" /></>
+                )}
               </div>
             </div>
           </div>
@@ -726,65 +795,104 @@ export default function ResultsPage() {
             </p>
 
             <div className="space-y-6">
-              {allRecommendations.map((rec: any, i: number) => (
-                <div key={i} className={`rounded-xl p-6 border-2 ${
-                  rec.stage === "Awareness" ? "bg-blue-50 border-blue-200" :
-                  rec.stage === "Consideration" ? "bg-purple-50 border-purple-200" : "bg-green-50 border-green-200"
-                }`}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-3xl">{rec.stageIcon}</span>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">{rec.stage} Stage</h3>
-                      <div className="text-sm text-gray-500">Current visibility: {Math.round(rec.visibilityScore)}%</div>
+              {allRecommendations.map((rec: any, i: number) => {
+                const isLocked = !limits.showDetailedRecommendations && i > 0;
+                
+                return (
+                  <div key={i} className={`rounded-xl p-6 border-2 relative ${
+                    rec.stage === "Awareness" ? "bg-blue-50 border-blue-200" :
+                    rec.stage === "Consideration" ? "bg-purple-50 border-purple-200" : "bg-green-50 border-green-200"
+                  } ${isLocked ? "opacity-60" : ""}`}>
+                    {/* Lock overlay for additional recommendations on free tier */}
+                    {isLocked && (
+                      <div 
+                        className="absolute inset-0 bg-white/70 backdrop-blur-[2px] rounded-xl z-10 flex flex-col items-center justify-center cursor-pointer"
+                        onClick={() => openUpgradeModal("recommendations")}
+                      >
+                        <Lock className="w-6 h-6 text-gray-400 mb-2" />
+                        <span className="text-sm font-medium text-gray-600">Unlock Full Recommendations</span>
+                        <span className="text-xs text-amber-500 mt-1">Click to upgrade</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-3 mb-4">
+                      <span className="text-3xl">{rec.stageIcon}</span>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">{rec.stage} Stage</h3>
+                        <div className="text-sm text-gray-500">Current visibility: {Math.round(rec.visibilityScore)}%</div>
+                      </div>
                     </div>
+
+                    {rec.recommendation && (
+                      <div className="space-y-4">
+                        {/* Pattern Identified */}
+                        {rec.recommendation.commonPattern && (
+                          <div className="bg-white rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">🔍</span>
+                              <span className="font-semibold text-gray-900">Pattern Identified</span>
+                            </div>
+                            <p className="text-gray-600">{rec.recommendation.commonPattern}</p>
+                          </div>
+                        )}
+
+                        {/* Content Type Needed */}
+                        {rec.recommendation.contentType && (
+                          <div className="bg-white rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">📚</span>
+                              <span className="font-semibold text-gray-900">Content Type Needed</span>
+                            </div>
+                            <p className="text-gray-600">{rec.recommendation.contentType}</p>
+                          </div>
+                        )}
+
+                        {/* Recommended Action */}
+                        {rec.recommendation.focusedAction && (
+                          <div className="bg-white rounded-lg p-4 border-l-4 border-amber-500">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-lg">✅</span>
+                              <span className="font-semibold text-gray-900">Recommended Action</span>
+                            </div>
+                            <p className="text-gray-700 font-medium">{rec.recommendation.focusedAction}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-
-                  {rec.recommendation && (
-                    <div className="space-y-4">
-                      {/* Pattern Identified */}
-                      {rec.recommendation.commonPattern && (
-                        <div className="bg-white rounded-lg p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">🔍</span>
-                            <span className="font-semibold text-gray-900">Pattern Identified</span>
-                          </div>
-                          <p className="text-gray-600">{rec.recommendation.commonPattern}</p>
-                        </div>
-                      )}
-
-                      {/* Content Type Needed */}
-                      {rec.recommendation.contentType && (
-                        <div className="bg-white rounded-lg p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">📚</span>
-                            <span className="font-semibold text-gray-900">Content Type Needed</span>
-                          </div>
-                          <p className="text-gray-600">{rec.recommendation.contentType}</p>
-                        </div>
-                      )}
-
-                      {/* Recommended Action */}
-                      {rec.recommendation.focusedAction && (
-                        <div className="bg-white rounded-lg p-4 border-l-4 border-amber-500">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-lg">✅</span>
-                            <span className="font-semibold text-gray-900">Recommended Action</span>
-                          </div>
-                          <p className="text-gray-700 font-medium">{rec.recommendation.focusedAction}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
+
+            {/* Upgrade CTA for free tier */}
+            {!limits.showDetailedRecommendations && (
+              <div className="mt-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl p-6 text-center">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  🔒 {allRecommendations.length - 1} More Recommendations Available
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Get detailed action items with implementation guides for all funnel stages.
+                </p>
+                <button
+                  onClick={() => openUpgradeModal("recommendations")}
+                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-6 rounded-lg transition-all flex items-center gap-2 mx-auto"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Unlock All Recommendations
+                </button>
+              </div>
+            )}
 
             {/* Technical Recommendations if available */}
             {reportData.websiteAudit?.recommendations?.length > 0 && (
               <div className="mt-8 pt-8 border-t">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">🔧 Technical Recommendations</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gray-900">🔧 Technical Recommendations</h3>
+                  {!limits.showDetailedRecommendations && (
+                    <PremiumBadge size="md" />
+                  )}
+                </div>
                 <div className="space-y-4">
-                  {reportData.websiteAudit.recommendations.map((rec: any, i: number) => (
+                  {reportData.websiteAudit.recommendations.slice(0, limits.showDetailedRecommendations ? undefined : 1).map((rec: any, i: number) => (
                     <div key={i} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold text-gray-900">{rec.title}</span>
@@ -796,11 +904,23 @@ export default function ResultsPage() {
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{rec.description}</p>
-                      {rec.expectedImpact && (
+                      {rec.expectedImpact && limits.showDetailedRecommendations && (
                         <p className="text-xs text-green-600">Expected impact: {rec.expectedImpact}</p>
                       )}
                     </div>
                   ))}
+                  {!limits.showDetailedRecommendations && reportData.websiteAudit.recommendations.length > 1 && (
+                    <div 
+                      className="bg-gray-100 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-200 transition-colors"
+                      onClick={() => openUpgradeModal("technical_audit")}
+                    >
+                      <Lock className="w-5 h-5 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">
+                        +{reportData.websiteAudit.recommendations.length - 1} more technical recommendations
+                      </p>
+                      <p className="text-xs text-amber-500 mt-1">Click to unlock</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1119,6 +1239,13 @@ export default function ResultsPage() {
           </div>
         )}
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        trigger={upgradeModalTrigger}
+      />
     </div>
   );
 }

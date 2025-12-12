@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { Lock, Sparkles } from "lucide-react";
+import { useTier } from "@/lib/tier";
+import { UpgradeModal, PremiumBadge } from "@/components/UpgradeModal";
+import { UpgradeModalTrigger } from "@/lib/tier/types";
 
 interface Question {
   id: string;
@@ -24,6 +28,11 @@ interface QuestionGroup {
 type Platform = "ChatGPT" | "Gemini" | "Copilot";
 
 export default function AnalyzePage() {
+  // Tier management
+  const { tier, limits, isStageAllowed, isPlatformAllowed } = useTier();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<UpgradeModalTrigger>("funnel_stages");
+
   // Form state
   const [brandName, setBrandName] = useState("");
   const [domain, setDomain] = useState("");
@@ -60,6 +69,12 @@ export default function AnalyzePage() {
   const [discoveryCountdown, setDiscoveryCountdown] = useState(30);
   const [analysisCountdown, setAnalysisCountdown] = useState(240); // 4 minutes
   const [discoveryMessage, setDiscoveryMessage] = useState("");
+
+  // Helper to show upgrade modal
+  const openUpgradeModal = (trigger: UpgradeModalTrigger) => {
+    setUpgradeModalTrigger(trigger);
+    setShowUpgradeModal(true);
+  };
 
   // Phase 1: Discover questions with countdown
   const handleDiscoverQuestions = async () => {
@@ -105,7 +120,8 @@ export default function AnalyzePage() {
         body: JSON.stringify({
           brandName,
           category,
-          competitors: competitors.split(",").map(c => c.trim()).filter(Boolean),
+          competitors: limits.allowCompetitors ? competitors.split(",").map(c => c.trim()).filter(Boolean) : [],
+          tier, // Pass tier to control real data vs strategic questions
         }),
       });
 
@@ -126,8 +142,20 @@ export default function AnalyzePage() {
     }
   };
 
-  // Toggle question selection (max 6 per stage for flexibility)
+  // Toggle question selection with tier limits
   const toggleQuestion = (question: Question, stage: "awareness" | "consideration" | "decision") => {
+    // Check if stage is allowed for this tier
+    if (!isStageAllowed(stage)) {
+      openUpgradeModal(stage as UpgradeModalTrigger);
+      return;
+    }
+
+    // Check if trying to select real data question on free tier
+    if (tier === "free" && question.source === "real_data") {
+      openUpgradeModal("real_search_data");
+      return;
+    }
+
     setSelectedQuestions(prev => {
       const stageQuestions = prev[stage] || [];
       const exists = stageQuestions.find(q => q.id === question.id);
@@ -139,9 +167,21 @@ export default function AnalyzePage() {
         };
       }
       
-      // Allow up to 6 per stage for flexibility
-      if (stageQuestions.length >= 6) {
-        alert(`Maximum 6 questions per stage. Deselect one first.`);
+      // Check tier limit for total questions
+      const currentTotal = getTotalSelected();
+      if (currentTotal >= limits.maxQuestions) {
+        openUpgradeModal("question_limit");
+        return prev;
+      }
+      
+      // Allow up to 6 per stage for paid, 3 total for free
+      const maxPerStage = tier === "free" ? limits.maxQuestions : 6;
+      if (stageQuestions.length >= maxPerStage) {
+        if (tier === "free") {
+          openUpgradeModal("question_limit");
+        } else {
+          alert(`Maximum ${maxPerStage} questions per stage. Deselect one first.`);
+        }
         return prev;
       }
       
@@ -152,8 +192,14 @@ export default function AnalyzePage() {
     });
   };
 
-  // Toggle platform selection
+  // Toggle platform selection with tier limits
   const togglePlatform = (platform: Platform) => {
+    // Check if platform is allowed for this tier
+    if (!isPlatformAllowed(platform)) {
+      openUpgradeModal(platform.toLowerCase() as UpgradeModalTrigger);
+      return;
+    }
+
     setSelectedPlatforms(prev => {
       if (prev.includes(platform)) {
         if (prev.length === 1) {
@@ -224,15 +270,16 @@ export default function AnalyzePage() {
           brandName,
           domain,
           category,
-          competitors: competitors.split(",").map(c => c.trim()).filter(Boolean),
+          competitors: limits.allowCompetitors ? competitors.split(",").map(c => c.trim()).filter(Boolean) : [],
           selectedQuestions: allQuestions.map(q => ({
             question: q.question,
             searchVolume: q.searchVolume,
             category: q.category,
             type: q.type,
           })),
-          selectedPlatforms,
-          testsPerPlatform: 3,
+          selectedPlatforms: selectedPlatforms.filter(p => isPlatformAllowed(p)),
+          testsPerPlatform: limits.testsPerQuestion,
+          tier, // Pass tier for backend validation
         }),
       });
 
@@ -387,17 +434,53 @@ export default function AnalyzePage() {
         {/* Phase 1: Setup */}
         {phase === 1 && (
           <div className="space-y-8">
+            {/* Tier Badge */}
+            <div className="flex items-center justify-between mb-4">
+              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
+                tier === "free" 
+                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/30" 
+                  : "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-500/30"
+              }`}>
+                {tier === "free" ? (
+                  <>🔍 AI Visibility Check (Free)</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" /> Full AI Visibility Audit</>
+                )}
+              </div>
+              {tier === "free" && (
+                <button
+                  onClick={() => openUpgradeModal("funnel_stages")}
+                  className="text-sm text-purple-400 hover:text-purple-300 underline"
+                >
+                  Upgrade to Full Audit →
+                </button>
+              )}
+            </div>
+
             {/* Value Proposition */}
             <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-2xl p-8 border border-purple-500/30">
-              <h2 className="text-3xl font-bold mb-4">Take Control of Your AI Visibility</h2>
+              <h2 className="text-3xl font-bold mb-4">
+                {tier === "free" ? "Get Your AI Visibility Check" : "Take Control of Your AI Visibility"}
+              </h2>
               <p className="text-xl text-gray-300 mb-6">
-                Unlike automated tools, our 2-phase approach lets YOU decide which questions matter most for your brand.
+                {tier === "free" 
+                  ? "See how AI platforms discuss your brand with a quick visibility check. Test up to 3 questions on ChatGPT."
+                  : "Unlike automated tools, our 2-phase approach lets YOU decide which questions matter most for your brand."
+                }
               </p>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-3xl mb-2">📊</div>
+                <div className={`rounded-xl p-4 ${tier === "free" ? "bg-white/5 opacity-60" : "bg-white/5"}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="text-3xl">📊</div>
+                    {tier === "free" && <PremiumBadge size="sm" />}
+                  </div>
                   <h3 className="font-semibold mb-1">Real Search Data</h3>
-                  <p className="text-sm text-gray-400">See actual questions people search with real monthly volumes</p>
+                  <p className="text-sm text-gray-400">
+                    {tier === "free" 
+                      ? "Upgrade to see actual questions with search volumes" 
+                      : "See actual questions people search with real monthly volumes"
+                    }
+                  </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
                   <div className="text-3xl mb-2">🎯</div>
@@ -407,9 +490,35 @@ export default function AnalyzePage() {
                 <div className="bg-white/5 rounded-xl p-4">
                   <div className="text-3xl mb-2">🔬</div>
                   <h3 className="font-semibold mb-1">Your Choice</h3>
-                  <p className="text-sm text-gray-400">Select 9 questions across the customer journey</p>
+                  <p className="text-sm text-gray-400">
+                    {tier === "free" 
+                      ? "Select up to 3 questions from Awareness stage" 
+                      : "Select up to 18 questions across the customer journey"
+                    }
+                  </p>
                 </div>
               </div>
+              
+              {/* Free tier limitations notice */}
+              {tier === "free" && (
+                <div className="mt-6 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
+                  <h4 className="font-semibold text-amber-300 mb-2 flex items-center gap-2">
+                    <Lock className="w-4 h-4" /> Free Tier Includes:
+                  </h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    <li>✓ Up to 3 strategic questions</li>
+                    <li>✓ Awareness stage only</li>
+                    <li>✓ ChatGPT platform only</li>
+                    <li>✓ Overall visibility score + sentiment</li>
+                  </ul>
+                  <button
+                    onClick={() => openUpgradeModal("funnel_stages")}
+                    className="mt-3 text-sm text-amber-400 hover:text-amber-300 font-medium"
+                  >
+                    Unlock all stages, platforms & features →
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Form */}
@@ -450,15 +559,34 @@ export default function AnalyzePage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Main Competitors (comma-separated)</label>
+                <div className="relative">
+                  <label className="block text-sm text-gray-400 mb-1 flex items-center gap-2">
+                    Main Competitors (comma-separated)
+                    {!limits.allowCompetitors && <PremiumBadge size="sm" />}
+                  </label>
                   <input
                     type="text"
                     value={competitors}
-                    onChange={(e) => setCompetitors(e.target.value)}
-                    placeholder="e.g., Adidas, Puma, New Balance"
-                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onChange={(e) => limits.allowCompetitors && setCompetitors(e.target.value)}
+                    onClick={() => !limits.allowCompetitors && openUpgradeModal("competitors")}
+                    placeholder={limits.allowCompetitors ? "e.g., Adidas, Puma, New Balance" : "Adidas, Puma, New Balance"}
+                    className={`w-full rounded-lg px-4 py-3 focus:outline-none ${
+                      limits.allowCompetitors 
+                        ? "bg-white/10 focus:ring-2 focus:ring-purple-500 cursor-text" 
+                        : "bg-white/5 text-gray-500 cursor-pointer border border-dashed border-gray-600"
+                    }`}
+                    readOnly={!limits.allowCompetitors}
                   />
+                  {!limits.allowCompetitors && (
+                    <div className="absolute right-3 top-1/2 translate-y-1">
+                      <Lock className="w-4 h-4 text-gray-500" />
+                    </div>
+                  )}
+                  {!limits.allowCompetitors && (
+                    <p className="text-xs text-amber-400/80 mt-1">
+                      🔒 Available in Full Audit
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -673,16 +801,37 @@ export default function AnalyzePage() {
                 const stageSelected = selectedQuestions[group.stage]?.length || 0;
                 const allQuestions = [...group.brandQuestions, ...group.categoryQuestions];
                 const hasSelection = stageSelected > 0;
+                const isLocked = !isStageAllowed(group.stage);
                 
                 return (
                   <div 
                     key={group.stage} 
-                    className={`rounded-xl border-2 transition-all ${
-                      hasSelection 
-                        ? "border-purple-500/50 bg-purple-500/5" 
-                        : "border-white/10 bg-white/5"
+                    className={`rounded-xl border-2 transition-all relative ${
+                      isLocked 
+                        ? "border-gray-600/50 bg-gray-800/30" 
+                        : hasSelection 
+                          ? "border-purple-500/50 bg-purple-500/5" 
+                          : "border-white/10 bg-white/5"
                     }`}
                   >
+                    {/* Locked Overlay for restricted stages */}
+                    {isLocked && (
+                      <div 
+                        className="absolute inset-0 bg-gray-900/60 backdrop-blur-[1px] z-10 rounded-xl flex flex-col items-center justify-center cursor-pointer"
+                        onClick={() => openUpgradeModal(group.stage as UpgradeModalTrigger)}
+                      >
+                        <div className="bg-white/10 rounded-full p-4 mb-3">
+                          <Lock className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <span className="text-lg font-semibold text-white mb-1">
+                          {group.stage === "consideration" ? "Consideration Stage" : "Decision Stage"}
+                        </span>
+                        <span className="text-sm text-gray-400 mb-3">Included in Full Audit</span>
+                        <span className="text-xs text-purple-400 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" /> Click to unlock
+                        </span>
+                      </div>
+                    )}
                     {/* Column Header */}
                     <div className={`p-4 border-b ${
                       hasSelection ? "border-purple-500/30 bg-purple-500/10" : "border-white/10 bg-white/5"
@@ -711,25 +860,36 @@ export default function AnalyzePage() {
                         <div className="flex items-center gap-2 mb-2 px-1">
                           <div className="w-2 h-2 rounded-full bg-green-500"></div>
                           <span className="text-xs font-semibold text-green-400 uppercase tracking-wide">Real Search Data</span>
+                          {tier === "free" && <PremiumBadge size="sm" />}
                         </div>
                         {allQuestions.filter(q => q.source === "real_data").map((q) => {
                           const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
+                          const isRealDataLocked = tier === "free";
                           
                           return (
                             <div
                               key={q.id}
                               onClick={() => toggleQuestion(q, group.stage)}
-                              className={`p-3 rounded-lg cursor-pointer transition-all mb-2 ${
-                                isSelected
-                                  ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
-                                  : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
+                              className={`p-3 rounded-lg cursor-pointer transition-all mb-2 relative ${
+                                isRealDataLocked
+                                  ? "bg-gray-700/30 border-2 border-dashed border-gray-600 opacity-70"
+                                  : isSelected
+                                    ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
+                                    : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
                               }`}
                             >
+                              {isRealDataLocked && (
+                                <div className="absolute top-2 right-2">
+                                  <Lock className="w-3 h-3 text-gray-500" />
+                                </div>
+                              )}
                               <div className="flex items-start justify-between gap-2">
-                                <span className={`text-sm ${isSelected ? "text-white font-medium" : "text-gray-200"}`}>
+                                <span className={`text-sm ${
+                                  isRealDataLocked ? "text-gray-400" : isSelected ? "text-white font-medium" : "text-gray-200"
+                                }`}>
                                   {q.question}
                                 </span>
-                                {isSelected && (
+                                {isSelected && !isRealDataLocked && (
                                   <span className="text-purple-300 text-lg">✓</span>
                                 )}
                               </div>
@@ -739,7 +899,7 @@ export default function AnalyzePage() {
                                 }`}>
                                   {q.type === "brand" ? "Brand" : "Category"}
                                 </span>
-                                <span className="text-xs text-green-400 font-semibold">
+                                <span className={`text-xs font-semibold ${isRealDataLocked ? "text-gray-500" : "text-green-400"}`}>
                                   {formatVolume(q.searchVolume)}
                                 </span>
                               </div>
@@ -800,25 +960,51 @@ export default function AnalyzePage() {
               <h3 className="text-lg font-semibold mb-4">Select AI Platforms to Test</h3>
               
               <div className="grid grid-cols-3 gap-4">
-                {(["ChatGPT", "Gemini", "Copilot"] as Platform[]).map((platform) => (
-                  <div
-                    key={platform}
-                    onClick={() => togglePlatform(platform)}
-                    className={`p-4 rounded-lg cursor-pointer text-center transition-all ${
-                      selectedPlatforms.includes(platform)
-                        ? "bg-green-600/30 border-2 border-green-500"
-                        : "bg-white/5 border-2 border-transparent hover:bg-white/10"
-                    }`}
-                  >
-                    <div className="text-3xl mb-2">
-                      {platform === "ChatGPT" && "🤖"}
-                      {platform === "Gemini" && "✨"}
-                      {platform === "Copilot" && "🔷"}
+                {(["ChatGPT", "Gemini", "Copilot"] as Platform[]).map((platform) => {
+                  const isAllowed = isPlatformAllowed(platform);
+                  const isSelected = selectedPlatforms.includes(platform);
+                  
+                  return (
+                    <div
+                      key={platform}
+                      onClick={() => togglePlatform(platform)}
+                      className={`p-4 rounded-lg cursor-pointer text-center transition-all relative ${
+                        !isAllowed
+                          ? "bg-gray-700/30 border-2 border-dashed border-gray-600"
+                          : isSelected
+                            ? "bg-green-600/30 border-2 border-green-500"
+                            : "bg-white/5 border-2 border-transparent hover:bg-white/10"
+                      }`}
+                    >
+                      {!isAllowed && (
+                        <div className="absolute top-2 right-2">
+                          <PremiumBadge size="sm" />
+                        </div>
+                      )}
+                      <div className={`text-3xl mb-2 ${!isAllowed ? "opacity-50" : ""}`}>
+                        {platform === "ChatGPT" && "🤖"}
+                        {platform === "Gemini" && "✨"}
+                        {platform === "Copilot" && "🔷"}
+                      </div>
+                      <div className={`font-medium ${!isAllowed ? "text-gray-500" : ""}`}>{platform}</div>
+                      {!isAllowed && (
+                        <div className="text-xs text-amber-400/80 mt-1 flex items-center justify-center gap-1">
+                          <Lock className="w-3 h-3" /> Full Audit
+                        </div>
+                      )}
+                      {isAllowed && isSelected && (
+                        <div className="text-xs text-green-400 mt-1">✓ Selected</div>
+                      )}
                     </div>
-                    <div className="font-medium">{platform}</div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+              
+              {tier === "free" && (
+                <p className="text-xs text-gray-500 mt-3 text-center">
+                  Free tier includes ChatGPT only. <button onClick={() => openUpgradeModal("platforms")} className="text-purple-400 hover:underline">Upgrade to test all platforms</button>
+                </p>
+              )}
             </div>
 
             {/* Actions - Also Sticky at Bottom */}
@@ -1102,6 +1288,13 @@ export default function AnalyzePage() {
           </div>
         )}
       </div>
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        trigger={upgradeModalTrigger}
+      />
     </div>
   );
 }
