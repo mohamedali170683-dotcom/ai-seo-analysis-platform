@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Bot, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
+import { Bot, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, HelpCircle, Sparkles, Lock } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
+import { useTier } from "@/lib/tier";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { UpgradeModalTrigger } from "@/lib/tier/types";
 
 // FAQ Data
 const FAQ_DATA = [
@@ -89,6 +92,16 @@ Marketing leaders who recognize that AI assistants are becoming a primary discov
 ];
 
 export default function DashboardPage() {
+  // Tier management
+  const { tier, limits } = useTier();
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<UpgradeModalTrigger>("funnel_stages");
+
+  const openUpgradeModal = (trigger: UpgradeModalTrigger) => {
+    setUpgradeModalTrigger(trigger);
+    setShowUpgradeModal(true);
+  };
+
   const [projects, setProjects] = useState<any[]>([]);
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -199,13 +212,42 @@ export default function DashboardPage() {
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Velaris
-              </h1>
-              <p className="text-sm text-gray-600">AI Visibility Analysis Platform</p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Velaris
+                </h1>
+                <p className="text-sm text-gray-600">AI Visibility Analysis Platform</p>
+              </div>
+              {/* Tier Badge */}
+              <div className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
+                tier === "free" 
+                  ? "bg-blue-100 text-blue-700 border border-blue-200" 
+                  : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200"
+              }`}>
+                {tier === "free" ? (
+                  <>
+                    <Lock className="w-3 h-3" />
+                    Free Tier
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3" />
+                    Full Audit
+                  </>
+                )}
+              </div>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-3">
+              {tier === "free" && (
+                <button
+                  onClick={() => openUpgradeModal("funnel_stages")}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Upgrade
+                </button>
+              )}
               <Link
                 href="/analyze"
                 className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 font-semibold shadow-lg"
@@ -476,6 +518,13 @@ export default function DashboardPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={loadProjects}
+      />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)} 
+        trigger={upgradeModalTrigger}
       />
     </div>
   );
