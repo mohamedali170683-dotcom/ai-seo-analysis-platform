@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { JourneyStageReport } from "@/components/journey-stage-report";
-import { Brain, Users, ShoppingCart } from "lucide-react";
+import Link from "next/link";
+import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft } from "lucide-react";
 
 // Sentiment definitions for the report
 const SENTIMENT_DEFINITIONS = {
@@ -193,71 +193,267 @@ export default function ResultsPage() {
     );
   }
 
+  // State for expandable sections
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  const toggleSection = (section: string) => {
+    setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  // Collect all recommendations from all stages
+  const allRecommendations = reportData.journeyStages?.map((stage: any) => ({
+    stage: stage.stageLabel,
+    stageIcon: stage.stage === "awareness" ? "🔍" : stage.stage === "consideration" ? "⚖️" : "✅",
+    recommendation: stage.recommendation,
+    visibilityScore: stage.portrayal?.visibilityScore || 0,
+  })) || [];
+
   return (
-    <div>
+    <div className="min-h-screen bg-gray-50">
       {/* Analysis Complete Banner */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 px-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">✅</span>
-            <span className="font-semibold">Analysis Complete</span>
-            <span className="text-green-100">|</span>
-            <span className="text-sm text-green-100">
-              {reportData.totalTests} AI responses analyzed across 3 platforms
-            </span>
+      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-4">
+        <div className="container mx-auto max-w-6xl flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✅</span>
+            <div>
+              <span className="font-bold text-lg">{reportData.brandOrKeyword} - Velaris Analysis Report</span>
+              <div className="text-sm text-green-100">
+                {reportData.totalTests} AI responses analyzed across 3 platforms
+              </div>
+            </div>
           </div>
-          <a
-            href="/analyze"
-            className="px-4 py-1.5 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-sm font-semibold transition-all"
-          >
-            Run Another Analysis
-          </a>
+          <div className="flex gap-3">
+            <Link
+              href="/dashboard"
+              className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Dashboard
+            </Link>
+            <Link
+              href="/analyze"
+              className="px-4 py-2 bg-white text-green-600 rounded-lg text-sm font-semibold hover:bg-green-50 transition-all"
+            >
+              New Analysis
+            </Link>
+          </div>
         </div>
       </div>
-      
-      <JourneyStageReport
-        brandName={reportData.brandOrKeyword}
-        domain={reportData.domain}
-        overallScore={reportData.overallScore}
-        totalTests={reportData.totalTests}
-        totalQuestions={reportData.totalQuestions}
-        scoringMethodology={reportData.scoringMethodology}
-        sentimentDefinitions={SENTIMENT_DEFINITIONS}
-        journeyStages={reportData.journeyStages}
-        showHeader={true}
-        backLink="/dashboard"
-      />
-      
-      {/* Website Technical Audit Section */}
-      {reportData.websiteAudit && (
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
-          <div className="bg-white rounded-3xl shadow-xl p-8 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-                  🔧 Website Technical Audit
-                </h2>
-                <p className="text-gray-600 mt-1">
-                  Technical factors that impact your AI visibility
-                </p>
-              </div>
-              <div className={`text-center p-4 rounded-xl ${
-                reportData.websiteAudit.technicalScore >= 70 ? "bg-green-100" :
-                reportData.websiteAudit.technicalScore >= 40 ? "bg-yellow-100" : "bg-red-100"
-              }`}>
-                <div className={`text-4xl font-bold ${
-                  reportData.websiteAudit.technicalScore >= 70 ? "text-green-700" :
-                  reportData.websiteAudit.technicalScore >= 40 ? "text-yellow-700" : "text-red-700"
+
+      {/* Main Content */}
+      <div className="container mx-auto max-w-6xl px-4 py-8">
+        
+        {/* 3 Main Score Boxes */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          
+          {/* Box 1: AI Visibility Score */}
+          <div 
+            onClick={() => toggleSection("visibility")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+              expandedSection === "visibility" ? "ring-2 ring-blue-500" : ""
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-4xl">📊</div>
+                <div className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                  reportData.overallScore >= 70 ? "bg-green-100 text-green-700" :
+                  reportData.overallScore >= 40 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
                 }`}>
-                  {reportData.websiteAudit.technicalScore}/100
+                  {reportData.overallScore >= 70 ? "Good" : reportData.overallScore >= 40 ? "Needs Work" : "Critical"}
                 </div>
-                <div className="text-sm text-gray-600">Tech Score</div>
               </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">AI Visibility Score</h3>
+              <p className="text-sm text-gray-500 mb-4">How AI platforms mention your brand</p>
+              <div className={`text-5xl font-bold mb-2 ${
+                reportData.overallScore >= 70 ? "text-green-600" :
+                reportData.overallScore >= 40 ? "text-yellow-600" : "text-red-600"
+              }`}>
+                {reportData.overallScore}<span className="text-2xl text-gray-400">/100</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>{reportData.totalQuestions} questions tested</span>
+                <span className="flex items-center gap-1 text-blue-600 font-medium">
+                  Click for details {expandedSection === "visibility" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Box 2: Technical Score */}
+          <div 
+            onClick={() => toggleSection("technical")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+              expandedSection === "technical" ? "ring-2 ring-purple-500" : ""
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-4xl">🔧</div>
+                <div className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                  (reportData.websiteAudit?.technicalScore || 0) >= 70 ? "bg-green-100 text-green-700" :
+                  (reportData.websiteAudit?.technicalScore || 0) >= 40 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                }`}>
+                  {(reportData.websiteAudit?.technicalScore || 0) >= 70 ? "Good" : 
+                   (reportData.websiteAudit?.technicalScore || 0) >= 40 ? "Needs Work" : "Critical"}
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Technical SEO Score</h3>
+              <p className="text-sm text-gray-500 mb-4">Website optimization for AI crawlers</p>
+              <div className={`text-5xl font-bold mb-2 ${
+                (reportData.websiteAudit?.technicalScore || 0) >= 70 ? "text-green-600" :
+                (reportData.websiteAudit?.technicalScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
+              }`}>
+                {reportData.websiteAudit?.technicalScore || "N/A"}<span className="text-2xl text-gray-400">{reportData.websiteAudit ? "/100" : ""}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm text-gray-500">
+                <span>{reportData.websiteAudit ? "Schema & content audit" : "No domain provided"}</span>
+                <span className="flex items-center gap-1 text-purple-600 font-medium">
+                  {reportData.websiteAudit && <>Click for details {expandedSection === "technical" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</>}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Box 3: Recommendations */}
+          <div 
+            onClick={() => toggleSection("recommendations")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+              expandedSection === "recommendations" ? "ring-2 ring-amber-500" : ""
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-4xl">💡</div>
+                <div className="text-xs px-3 py-1 rounded-full font-semibold bg-amber-100 text-amber-700">
+                  {allRecommendations.length} Actions
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Recommendations</h3>
+              <p className="text-sm text-gray-500 mb-4">Actions to improve AI visibility</p>
+              <div className="space-y-2">
+                {allRecommendations.slice(0, 3).map((rec: any, i: number) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <span>{rec.stageIcon}</span>
+                    <span className="text-gray-600 truncate">{rec.stage}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-end text-sm text-amber-600 font-medium mt-3">
+                Click for details {expandedSection === "recommendations" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Expanded Section: AI Visibility Details */}
+        {expandedSection === "visibility" && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 animate-in slide-in-from-top-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">📊 AI Visibility by Funnel Stage</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
+                <ChevronUp className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Scoring Methodology */}
+            <div className="bg-blue-50 rounded-xl p-4 mb-6">
+              <h4 className="font-semibold text-blue-900 mb-2">How We Calculate Your Score</h4>
+              <div className="grid md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="font-bold text-blue-700">50%</span> Mention Rate
+                  <p className="text-blue-600 text-xs">How often AI mentions your brand</p>
+                </div>
+                <div>
+                  <span className="font-bold text-blue-700">30%</span> Position
+                  <p className="text-blue-600 text-xs">Where your brand appears (1st is best)</p>
+                </div>
+                <div>
+                  <span className="font-bold text-blue-700">20%</span> Sentiment
+                  <p className="text-blue-600 text-xs">How positively you're portrayed</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Journey Stages */}
+            <div className="space-y-6">
+              {reportData.journeyStages?.map((stage: any) => (
+                <div key={stage.stage} className="border rounded-xl p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">
+                        {stage.stage === "awareness" ? "🔍" : stage.stage === "consideration" ? "⚖️" : "✅"}
+                      </span>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">{stage.stageLabel}</h3>
+                        <p className="text-sm text-gray-500">{stage.stageDescription}</p>
+                      </div>
+                    </div>
+                    <div className={`text-center px-4 py-2 rounded-xl ${
+                      (stage.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
+                      (stage.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
+                    }`}>
+                      <div className={`text-3xl font-bold ${
+                        (stage.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
+                        (stage.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
+                      }`}>
+                        {Math.round(stage.portrayal?.visibilityScore || 0)}%
+                      </div>
+                      <div className="text-xs text-gray-600">Visibility</div>
+                    </div>
+                  </div>
+
+                  {/* Stage Metrics */}
+                  <div className="grid grid-cols-4 gap-4 mb-4">
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-blue-600">{Math.round(stage.portrayal?.mentionRate || 0)}%</div>
+                      <div className="text-xs text-gray-500">Mention Rate</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-purple-600">{stage.portrayal?.averagePosition?.toFixed(1) || "N/A"}</div>
+                      <div className="text-xs text-gray-500">Avg Position</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-green-600">{Math.round(stage.portrayal?.sentiment?.positive || 0)}%</div>
+                      <div className="text-xs text-gray-500">Positive</div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <div className="text-2xl font-bold text-gray-600">{stage.questions?.length || 0}</div>
+                      <div className="text-xs text-gray-500">Questions</div>
+                    </div>
+                  </div>
+
+                  {/* AI Answer Examples */}
+                  {stage.portrayal?.aiAnswerExamples?.length > 0 && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-gray-700 mb-3">Sample AI Response</h4>
+                      <div className="text-sm text-gray-600 italic border-l-4 border-blue-400 pl-3">
+                        "{stage.portrayal.aiAnswerExamples[0]?.excerpt?.substring(0, 300)}..."
+                      </div>
+                      <div className="text-xs text-gray-400 mt-2">
+                        — {stage.portrayal.aiAnswerExamples[0]?.platform}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Expanded Section: Technical Audit */}
+        {expandedSection === "technical" && reportData.websiteAudit && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 animate-in slide-in-from-top-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">🔧 Website Technical Audit</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
+                <ChevronUp className="w-6 h-6" />
+              </button>
             </div>
 
             {/* Schema Markup Status */}
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">📋 Schema Markup Status</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">📋 Schema Markup Status</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { name: "Organization", has: reportData.websiteAudit.schemas?.hasOrganization },
@@ -266,7 +462,7 @@ export default function ResultsPage() {
                   { name: "Review", has: reportData.websiteAudit.schemas?.hasReview },
                 ].map((schema) => (
                   <div key={schema.name} className={`p-4 rounded-xl text-center ${
-                    schema.has ? "bg-green-50 border-2 border-green-200" : "bg-gray-50 border-2 border-gray-200"
+                    schema.has ? "bg-green-50 border-2 border-green-200" : "bg-red-50 border-2 border-red-200"
                   }`}>
                     <div className="text-2xl mb-1">{schema.has ? "✅" : "❌"}</div>
                     <div className="font-semibold text-gray-900">{schema.name}</div>
@@ -278,112 +474,147 @@ export default function ResultsPage() {
 
             {/* Content Analysis */}
             <div className="mb-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">📝 Content Analysis</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">📝 Content Analysis</h3>
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 rounded-xl p-4">
                   <div className="text-3xl font-bold text-blue-700">{reportData.websiteAudit.content?.wordCount || 0}</div>
                   <div className="text-sm text-gray-600">Words on Homepage</div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    {(reportData.websiteAudit.content?.wordCount || 0) >= 1500 ? "✓ Good depth" : 
-                     (reportData.websiteAudit.content?.wordCount || 0) >= 500 ? "⚠️ Could be deeper" : "❌ Too thin"}
-                  </div>
                 </div>
-                <div className={`rounded-xl p-4 ${
-                  reportData.websiteAudit.faqContent?.hasFAQSection ? "bg-green-50" : "bg-red-50"
-                }`}>
-                  <div className="text-3xl font-bold">
-                    {reportData.websiteAudit.faqContent?.hasFAQSection ? "✅" : "❌"}
-                  </div>
+                <div className={`rounded-xl p-4 ${reportData.websiteAudit.faqContent?.hasFAQSection ? "bg-green-50" : "bg-red-50"}`}>
+                  <div className="text-3xl font-bold">{reportData.websiteAudit.faqContent?.hasFAQSection ? "✅" : "❌"}</div>
                   <div className="text-sm text-gray-600">FAQ Section</div>
-                  <div className="text-xs mt-1">
-                    {reportData.websiteAudit.faqContent?.hasFAQSection 
-                      ? `${reportData.websiteAudit.faqContent.questions?.length || 0} questions found` 
-                      : "No FAQ content detected"}
-                  </div>
                 </div>
-                <div className={`rounded-xl p-4 ${
-                  reportData.websiteAudit.robotsAllowsAI ? "bg-green-50" : "bg-red-50"
-                }`}>
-                  <div className="text-3xl font-bold">
-                    {reportData.websiteAudit.robotsAllowsAI ? "✅" : "🚫"}
-                  </div>
-                  <div className="text-sm text-gray-600">AI Bot Access</div>
-                  <div className="text-xs mt-1">
-                    {reportData.websiteAudit.robotsAllowsAI 
-                      ? "AI crawlers allowed" 
-                      : "AI crawlers may be blocked!"}
-                  </div>
+                <div className={`rounded-xl p-4 ${reportData.websiteAudit.robots?.allowsAIBots ? "bg-green-50" : "bg-red-50"}`}>
+                  <div className="text-3xl font-bold">{reportData.websiteAudit.robots?.allowsAIBots ? "✅" : "❌"}</div>
+                  <div className="text-sm text-gray-600">AI Bots Allowed</div>
                 </div>
               </div>
             </div>
 
-            {/* Technical Recommendations */}
-            {reportData.websiteAudit.recommendations && reportData.websiteAudit.recommendations.length > 0 && (
+            {/* Issues & Recommendations */}
+            {reportData.websiteAudit.issues?.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">🎯 Technical Recommendations</h3>
-                <div className="space-y-4">
-                  {reportData.websiteAudit.recommendations.slice(0, 5).map((rec: any, index: number) => (
-                    <div key={index} className={`rounded-xl p-5 border-l-4 ${
-                      rec.priority === "high" ? "bg-red-50 border-red-500" :
-                      rec.priority === "medium" ? "bg-yellow-50 border-yellow-500" :
-                      "bg-blue-50 border-blue-500"
+                <h3 className="text-lg font-bold text-gray-900 mb-4">⚠️ Issues Found</h3>
+                <div className="space-y-3">
+                  {reportData.websiteAudit.issues.map((issue: any, i: number) => (
+                    <div key={i} className={`p-4 rounded-lg border-l-4 ${
+                      issue.severity === "high" ? "bg-red-50 border-red-500" :
+                      issue.severity === "medium" ? "bg-yellow-50 border-yellow-500" : "bg-blue-50 border-blue-500"
                     }`}>
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-bold text-gray-900">{rec.recommendation}</h4>
-                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                          rec.priority === "high" ? "bg-red-200 text-red-800" :
-                          rec.priority === "medium" ? "bg-yellow-200 text-yellow-800" :
-                          "bg-blue-200 text-blue-800"
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                          issue.severity === "high" ? "bg-red-200 text-red-800" :
+                          issue.severity === "medium" ? "bg-yellow-200 text-yellow-800" : "bg-blue-200 text-blue-800"
                         }`}>
-                          {rec.priority.toUpperCase()}
+                          {issue.severity?.toUpperCase()}
                         </span>
+                        <span className="font-semibold text-gray-900">{issue.issue}</span>
                       </div>
-                      <p className="text-sm text-gray-700 mb-3">{rec.rationale}</p>
-                      <details className="text-sm">
-                        <summary className="cursor-pointer text-blue-600 font-semibold hover:text-blue-800">
-                          View Implementation Guide
-                        </summary>
-                        <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200">
-                          <pre className="whitespace-pre-wrap text-xs text-gray-700 font-mono">
-                            {rec.implementationGuide}
-                          </pre>
-                          <div className="mt-2 text-xs text-green-700 font-semibold">
-                            Expected Impact: {rec.expectedImpact}
-                          </div>
-                        </div>
-                      </details>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Issues */}
-            {reportData.websiteAudit.issues && reportData.websiteAudit.issues.length > 0 && (
-              <div className="mt-8">
-                <h3 className="text-xl font-bold text-gray-900 mb-4">⚠️ Issues Detected</h3>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {reportData.websiteAudit.issues.map((issue: any, index: number) => (
-                    <div key={index} className={`p-4 rounded-lg flex items-start gap-3 ${
-                      issue.severity === "critical" ? "bg-red-50" :
-                      issue.severity === "warning" ? "bg-yellow-50" : "bg-blue-50"
-                    }`}>
-                      <span className="text-xl">
-                        {issue.severity === "critical" ? "🔴" :
-                         issue.severity === "warning" ? "🟡" : "🔵"}
-                      </span>
-                      <div>
-                        <div className="font-semibold text-gray-900">{issue.issue}</div>
-                        <div className="text-sm text-gray-600">{issue.impact}</div>
-                      </div>
+                      <p className="text-sm text-gray-600">{issue.impact}</p>
                     </div>
                   ))}
                 </div>
               </div>
             )}
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Expanded Section: Recommendations */}
+        {expandedSection === "recommendations" && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 animate-in slide-in-from-top-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">💡 All Recommendations</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
+                <ChevronUp className="w-6 h-6" />
+              </button>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Based on your AI visibility analysis, here are personalized recommendations for each stage of the customer journey.
+            </p>
+
+            <div className="space-y-6">
+              {allRecommendations.map((rec: any, i: number) => (
+                <div key={i} className={`rounded-xl p-6 border-2 ${
+                  rec.stage === "Awareness" ? "bg-blue-50 border-blue-200" :
+                  rec.stage === "Consideration" ? "bg-purple-50 border-purple-200" : "bg-green-50 border-green-200"
+                }`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-3xl">{rec.stageIcon}</span>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">{rec.stage} Stage</h3>
+                      <div className="text-sm text-gray-500">Current visibility: {Math.round(rec.visibilityScore)}%</div>
+                    </div>
+                  </div>
+
+                  {rec.recommendation && (
+                    <div className="space-y-4">
+                      {/* Pattern Identified */}
+                      {rec.recommendation.commonPattern && (
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">🔍</span>
+                            <span className="font-semibold text-gray-900">Pattern Identified</span>
+                          </div>
+                          <p className="text-gray-600">{rec.recommendation.commonPattern}</p>
+                        </div>
+                      )}
+
+                      {/* Content Type Needed */}
+                      {rec.recommendation.contentType && (
+                        <div className="bg-white rounded-lg p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">📚</span>
+                            <span className="font-semibold text-gray-900">Content Type Needed</span>
+                          </div>
+                          <p className="text-gray-600">{rec.recommendation.contentType}</p>
+                        </div>
+                      )}
+
+                      {/* Recommended Action */}
+                      {rec.recommendation.focusedAction && (
+                        <div className="bg-white rounded-lg p-4 border-l-4 border-amber-500">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">✅</span>
+                            <span className="font-semibold text-gray-900">Recommended Action</span>
+                          </div>
+                          <p className="text-gray-700 font-medium">{rec.recommendation.focusedAction}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Technical Recommendations if available */}
+            {reportData.websiteAudit?.recommendations?.length > 0 && (
+              <div className="mt-8 pt-8 border-t">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">🔧 Technical Recommendations</h3>
+                <div className="space-y-4">
+                  {reportData.websiteAudit.recommendations.map((rec: any, i: number) => (
+                    <div key={i} className="bg-gray-50 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-gray-900">{rec.title}</span>
+                        <span className={`text-xs font-bold px-2 py-1 rounded ${
+                          rec.priority === "high" ? "bg-red-100 text-red-700" :
+                          rec.priority === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
+                        }`}>
+                          {rec.priority?.toUpperCase()} PRIORITY
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{rec.description}</p>
+                      {rec.expectedImpact && (
+                        <p className="text-xs text-green-600">Expected impact: {rec.expectedImpact}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
