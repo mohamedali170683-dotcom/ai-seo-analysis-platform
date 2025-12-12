@@ -357,7 +357,7 @@ export default function AnalyzePage() {
           <Link href="/dashboard" className="text-gray-400 hover:text-white flex items-center gap-2">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-xl font-bold">Velaris Analysis</h1>
+          <h1 className="text-xl font-bold">Velaris</h1>
           <div className="w-32" />
         </div>
       </header>
@@ -389,7 +389,7 @@ export default function AnalyzePage() {
           <div className="space-y-8">
             {/* Value Proposition */}
             <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-2xl p-8 border border-purple-500/30">
-              <h2 className="text-3xl font-bold mb-4">Take Control of Your AI Visibility Analysis</h2>
+              <h2 className="text-3xl font-bold mb-4">Take Control of Your AI Visibility</h2>
               <p className="text-xl text-gray-300 mb-6">
                 Unlike automated tools, our 2-phase approach lets YOU decide which questions matter most for your brand.
               </p>

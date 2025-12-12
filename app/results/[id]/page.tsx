@@ -215,7 +215,7 @@ export default function ResultsPage() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">✅</span>
             <div>
-              <span className="font-bold text-lg">{reportData.brandOrKeyword} - Velaris Analysis Report</span>
+              <span className="font-bold text-lg">{reportData.brandOrKeyword} - Velaris Report</span>
               <div className="text-sm text-green-100">
                 {reportData.totalTests} AI responses analyzed across 3 platforms
               </div>
@@ -297,7 +297,7 @@ export default function ResultsPage() {
                    (reportData.websiteAudit?.technicalScore || 0) >= 40 ? "Needs Work" : "Critical"}
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-1">Technical SEO Score</h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">AI Technical Score</h3>
               <p className="text-sm text-gray-500 mb-4">Website optimization for AI crawlers</p>
               <div className={`text-5xl font-bold mb-2 ${
                 (reportData.websiteAudit?.technicalScore || 0) >= 70 ? "text-green-600" :
@@ -616,6 +616,135 @@ export default function ResultsPage() {
             )}
           </div>
         )}
+
+        {/* FAQ Section - Methodology & Transparency */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <span>❓</span> How It Works - Methodology & Transparency
+          </h2>
+          
+          <div className="space-y-6">
+            {/* How is the AI Visibility Score calculated? */}
+            <div className="border-b pb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="text-blue-500">📊</span> How is the AI Visibility Score calculated?
+              </h3>
+              <p className="text-gray-600 mb-3">
+                Your AI Visibility Score (0-100) is a weighted combination of three key metrics:
+              </p>
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-blue-700 mb-1">50%</div>
+                  <div className="font-semibold text-gray-900">Mention Rate</div>
+                  <p className="text-sm text-gray-600">How often AI platforms mention your brand when answering relevant questions.</p>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-purple-700 mb-1">30%</div>
+                  <div className="font-semibold text-gray-900">Position</div>
+                  <p className="text-sm text-gray-600">Where your brand appears in responses. Being mentioned first is better than being listed third.</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-2xl font-bold text-green-700 mb-1">20%</div>
+                  <div className="font-semibold text-gray-900">Sentiment</div>
+                  <p className="text-sm text-gray-600">Whether AI speaks positively, neutrally, or negatively about your brand.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* What is the audit process? */}
+            <div className="border-b pb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="text-purple-500">🔬</span> What is the audit process?
+              </h3>
+              <p className="text-gray-600 mb-3">
+                Our analysis follows a rigorous, multi-step process:
+              </p>
+              <div className="space-y-3">
+                <div className="flex gap-3 items-start">
+                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+                  <div>
+                    <span className="font-semibold text-gray-900">Question Discovery</span>
+                    <p className="text-sm text-gray-600">We pull real questions from search data (DataForSEO) and generate strategic questions based on your industry.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+                  <div>
+                    <span className="font-semibold text-gray-900">Multi-Platform Testing</span>
+                    <p className="text-sm text-gray-600">Each question is sent to ChatGPT and Google Gemini (real APIs), plus Microsoft Copilot simulation. We run 3 tests per platform for statistical reliability.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+                  <div>
+                    <span className="font-semibold text-gray-900">Response Analysis</span>
+                    <p className="text-sm text-gray-600">We analyze each response for brand mentions, positioning, sentiment, and competitor references using pattern matching and NLP.</p>
+                  </div>
+                </div>
+                <div className="flex gap-3 items-start">
+                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
+                  <div>
+                    <span className="font-semibold text-gray-900">Technical Audit</span>
+                    <p className="text-sm text-gray-600">If you provided a domain, we scan your website for schema markup, content structure, FAQ sections, and robots.txt settings that affect AI visibility.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* How are recommendations generated? */}
+            <div className="border-b pb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="text-amber-500">💡</span> How are recommendations generated?
+              </h3>
+              <p className="text-gray-600 mb-3">
+                Our recommendations are data-driven and specific to your results:
+              </p>
+              <ul className="space-y-2 text-gray-600">
+                <li className="flex gap-2">
+                  <span className="text-amber-500">•</span>
+                  <span><strong>Pattern Analysis:</strong> We identify common themes across AI responses - what topics trigger mentions, what questions lead to competitor recommendations, etc.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-500">•</span>
+                  <span><strong>Gap Identification:</strong> We flag funnel stages where your visibility is low compared to others, indicating content opportunities.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-500">•</span>
+                  <span><strong>Technical Issues:</strong> Missing schema markup or blocked AI crawlers directly impact how AI platforms understand your brand.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-500">•</span>
+                  <span><strong>Actionable Steps:</strong> Each recommendation includes the "what" and "why" - specific actions you can take and the expected impact.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* What makes this analysis reliable? */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <span className="text-green-500">✅</span> What makes this analysis reliable?
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="font-semibold text-gray-900 mb-1">Real API Calls</div>
+                  <p className="text-sm text-gray-600">We use actual ChatGPT (OpenAI) and Gemini (Google) APIs - not simulations or scraping. You see real AI responses.</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="font-semibold text-gray-900 mb-1">Statistical Significance</div>
+                  <p className="text-sm text-gray-600">3 tests per question per platform reduces noise from AI variability. More tests = more reliable patterns.</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="font-semibold text-gray-900 mb-1">Full Funnel Coverage</div>
+                  <p className="text-sm text-gray-600">Testing across Awareness, Consideration, and Decision stages gives a complete picture of the customer journey.</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="font-semibold text-gray-900 mb-1">Transparent Methodology</div>
+                  <p className="text-sm text-gray-600">You see the actual questions tested, the real AI responses, and exactly how scores are calculated.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
