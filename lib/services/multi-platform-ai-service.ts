@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export interface AIResponse {
   platform: "ChatGPT" | "Gemini" | "Copilot";
@@ -46,15 +47,24 @@ export interface QuestionAnalysis {
 
 export class MultiPlatformAIService {
   private openaiClient: OpenAI;
+  private geminiClient: GoogleGenerativeAI | null = null;
   private testsPerPlatform: number;
 
-  constructor(openaiApiKey: string, _geminiApiKey?: string, testsPerPlatform: number = 3) {
+  constructor(openaiApiKey: string, geminiApiKey?: string, testsPerPlatform: number = 3) {
     this.openaiClient = new OpenAI({ 
       apiKey: openaiApiKey,
-      timeout: 15000, // 15 second timeout (reduced from 30)
-      maxRetries: 1,  // Only 1 retry (reduced from 2)
+      timeout: 15000,
+      maxRetries: 1,
     });
-    // Allow up to 10 tests per platform for statistical significance
+    
+    // Initialize Gemini client if API key provided
+    if (geminiApiKey) {
+      this.geminiClient = new GoogleGenerativeAI(geminiApiKey);
+      console.log("✅ [AI] Gemini API initialized (REAL)");
+    } else {
+      console.log("⚠️ [AI] Gemini API key not provided - will use simulation");
+    }
+    
     this.testsPerPlatform = Math.min(testsPerPlatform, 10);
   }
 
@@ -222,12 +232,15 @@ export class MultiPlatformAIService {
     competitors: string[],
     numTests: number
   ): Promise<AIResponse[]> {
-    const responses: AIResponse[] = [];
+    // Use real Gemini API if available
+    if (platform === "Gemini" && this.geminiClient) {
+      return this.testGeminiReal(question, brandName, competitors, numTests);
+    }
     
+    // Use OpenAI for ChatGPT and Copilot (simulated)
     const systemPrompts: Record<string, string> = {
       "ChatGPT": "",
-      "Gemini": "You are Google Gemini. Provide comprehensive answers.",
-      "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers.",
+      "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers with references when possible.",
     };
 
     // Run all tests for this platform in PARALLEL
@@ -241,7 +254,7 @@ export class MultiPlatformAIService {
         messages.push({ role: "user", content: question });
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s per call
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
 
         const completion = await this.openaiClient.chat.completions.create(
           {
@@ -260,7 +273,7 @@ export class MultiPlatformAIService {
           const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
           return {
             platform,
-            modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : `${platform.toLowerCase()}-sim`,
+            modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : "copilot-sim",
             queryNumber: i,
             question,
             fullResponse,
@@ -269,7 +282,63 @@ export class MultiPlatformAIService {
         }
         return null;
       } catch (error: any) {
-        // Silently fail individual tests
+        return null;
+      }
+    });
+
+    const results = await Promise.all(testPromises);
+    return results.filter((r): r is AIResponse => r !== null);
+  }
+
+  /**
+   * Test using REAL Google Gemini API
+   */
+  private async testGeminiReal(
+    question: string,
+    brandName: string,
+    competitors: string[],
+    numTests: number
+  ): Promise<AIResponse[]> {
+    if (!this.geminiClient) return [];
+
+    const testPromises = Array.from({ length: numTests }, async (_, idx) => {
+      const i = idx + 1;
+      try {
+        const model = this.geminiClient!.getGenerativeModel({ 
+          model: "gemini-1.5-flash",
+          generationConfig: {
+            maxOutputTokens: 300,
+            temperature: 0.7,
+          },
+        });
+
+        // Add timeout using Promise.race
+        const timeoutPromise = new Promise<null>((resolve) => {
+          setTimeout(() => resolve(null), 10000); // 10s timeout
+        });
+
+        const resultPromise = model.generateContent(question);
+        const result = await Promise.race([resultPromise, timeoutPromise]);
+        
+        if (!result) return null;
+        
+        const response = await (result as any).response;
+        const fullResponse = response.text();
+        
+        if (fullResponse) {
+          const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+          return {
+            platform: "Gemini" as const,
+            modelVersion: "gemini-1.5-flash",
+            queryNumber: i,
+            question,
+            fullResponse,
+            ...analysis,
+          } as AIResponse;
+        }
+        return null;
+      } catch (error: any) {
+        console.warn(`⚠️ [Gemini] Test ${i} failed: ${error.message}`);
         return null;
       }
     });

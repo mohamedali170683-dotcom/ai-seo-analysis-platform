@@ -35,6 +35,7 @@
   },
   "homepage": "https://github.com/mohamedali170683-dotcom/ai-seo-analysis-platform#readme",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.19.0",
     "@radix-ui/react-slot": "^1.2.4",
     "@types/react": "^19.2.5",
