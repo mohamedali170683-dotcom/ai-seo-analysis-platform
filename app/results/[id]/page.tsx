@@ -361,7 +361,7 @@ export default function ResultsPage() {
 
         {/* Expanded Section: AI Visibility Details */}
         {expandedSection === "visibility" && (
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 animate-in slide-in-from-top-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">📊 AI Visibility by Funnel Stage</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
@@ -393,27 +393,27 @@ export default function ResultsPage() {
               {journeyStages.length === 0 && (
                 <p className="text-gray-500 text-center py-8">No journey stage data available</p>
               )}
-              {journeyStages.map((stage: any) => (
-                <div key={stage.stage} className="border rounded-xl p-6">
+              {journeyStages.map((stage: any, index: number) => (
+                <div key={stage?.stage || index} className="border rounded-xl p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">
-                        {stage.stage === "awareness" ? "🔍" : stage.stage === "consideration" ? "⚖️" : "✅"}
+                        {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
                       </span>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">{stage.stageLabel}</h3>
-                        <p className="text-sm text-gray-500">{stage.stageDescription}</p>
+                        <h3 className="text-xl font-bold text-gray-900">{stage?.stageLabel || "Unknown Stage"}</h3>
+                        <p className="text-sm text-gray-500">{stage?.stageDescription || ""}</p>
                       </div>
                     </div>
                     <div className={`text-center px-4 py-2 rounded-xl ${
-                      (stage.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
-                      (stage.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
+                      (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
+                      (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
                     }`}>
                       <div className={`text-3xl font-bold ${
-                        (stage.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
-                        (stage.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
+                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
+                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
                       }`}>
-                        {Math.round(stage.portrayal?.visibilityScore || 0)}%
+                        {Math.round(stage?.portrayal?.visibilityScore || 0)}%
                       </div>
                       <div className="text-xs text-gray-600">Visibility</div>
                     </div>
@@ -422,32 +422,32 @@ export default function ResultsPage() {
                   {/* Stage Metrics */}
                   <div className="grid grid-cols-4 gap-4 mb-4">
                     <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-blue-600">{Math.round(stage.portrayal?.mentionRate || 0)}%</div>
+                      <div className="text-2xl font-bold text-blue-600">{Math.round(stage?.portrayal?.mentionRate || 0)}%</div>
                       <div className="text-xs text-gray-500">Mention Rate</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-purple-600">{stage.portrayal?.averagePosition?.toFixed(1) || "N/A"}</div>
+                      <div className="text-2xl font-bold text-purple-600">{stage?.portrayal?.averagePosition ? stage.portrayal.averagePosition.toFixed(1) : "N/A"}</div>
                       <div className="text-xs text-gray-500">Avg Position</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-green-600">{Math.round(stage.portrayal?.sentiment?.positive || 0)}%</div>
+                      <div className="text-2xl font-bold text-green-600">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</div>
                       <div className="text-xs text-gray-500">Positive</div>
                     </div>
                     <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-gray-600">{stage.questions?.length || 0}</div>
+                      <div className="text-2xl font-bold text-gray-600">{stage?.questions?.length || 0}</div>
                       <div className="text-xs text-gray-500">Questions</div>
                     </div>
                   </div>
 
                   {/* AI Answer Examples */}
-                  {stage.portrayal?.aiAnswerExamples?.length > 0 && (
+                  {stage?.portrayal?.aiAnswerExamples && stage.portrayal.aiAnswerExamples.length > 0 && stage.portrayal.aiAnswerExamples[0] && (
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h4 className="font-semibold text-gray-700 mb-3">Sample AI Response</h4>
                       <div className="text-sm text-gray-600 italic border-l-4 border-blue-400 pl-3">
-                        "{stage.portrayal.aiAnswerExamples[0]?.excerpt?.substring(0, 300)}..."
+                        &quot;{(stage.portrayal.aiAnswerExamples[0].excerpt || "").substring(0, 300)}{stage.portrayal.aiAnswerExamples[0].excerpt?.length > 300 ? "..." : ""}&quot;
                       </div>
                       <div className="text-xs text-gray-400 mt-2">
-                        — {stage.portrayal.aiAnswerExamples[0]?.platform}
+                        — {stage.portrayal.aiAnswerExamples[0].platform || "AI Platform"}
                       </div>
                     </div>
                   )}
@@ -459,7 +459,7 @@ export default function ResultsPage() {
 
         {/* Expanded Section: Technical Audit */}
         {expandedSection === "technical" && reportData.websiteAudit && (
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 animate-in slide-in-from-top-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">🔧 Website Technical Audit</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
@@ -537,7 +537,7 @@ export default function ResultsPage() {
 
         {/* Expanded Section: Recommendations */}
         {expandedSection === "recommendations" && (
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 animate-in slide-in-from-top-4">
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">💡 All Recommendations</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
