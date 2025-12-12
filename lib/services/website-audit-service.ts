@@ -213,7 +213,7 @@ export class WebsiteAuditService {
       const response = await fetch(url, {
         signal: controller.signal,
         headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; VercelAuditBot/1.0; +https://vercel.com)",
+          "User-Agent": "Mozilla/5.0 (compatible; VelarisAuditBot/1.0)",
           "Accept": "text/html,application/xhtml+xml",
         },
       });
@@ -259,7 +259,7 @@ export class WebsiteAuditService {
       const robotsUrl = new URL("/robots.txt", baseUrl).toString();
       const response = await fetch(robotsUrl, {
         signal: controller.signal,
-        headers: { "User-Agent": "VercelAuditBot/1.0" },
+        headers: { "User-Agent": "VelarisAuditBot/1.0" },
       });
       clearTimeout(timeoutId);
 

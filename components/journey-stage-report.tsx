@@ -107,7 +107,7 @@ export function JourneyStageReport({
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {brandName} - Vercel Analysis Report
+                  {brandName} - Velaris Analysis Report
                 </h1>
                 {domain && <p className="text-gray-600 mt-1">{domain}</p>}
               </div>

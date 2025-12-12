@@ -353,7 +353,7 @@ function DemoPageContent() {
                 </div>
               )}
               <h1 className="text-3xl font-bold text-gray-900">
-                {DEMO_DATA.brandOrKeyword} - Vercel Analysis Report
+                {DEMO_DATA.brandOrKeyword} - Velaris Analysis Report
               </h1>
               <p className="text-gray-600 mt-1">{DEMO_DATA.domain}</p>
             </div>
