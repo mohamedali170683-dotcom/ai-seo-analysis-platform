@@ -242,8 +242,8 @@ export default function ResultsPage() {
       {/* Main Content */}
       <div className="container mx-auto max-w-6xl px-4 py-8">
         
-        {/* 3 Main Score Boxes */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Top Row: 3 Main Score Boxes */}
+        <div className="grid md:grid-cols-3 gap-6 mb-6">
           
           {/* Box 1: AI Visibility Score */}
           <div 
@@ -273,7 +273,7 @@ export default function ResultsPage() {
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>{reportData.totalQuestions || 0} questions tested</span>
                 <span className="flex items-center gap-1 text-blue-600 font-medium">
-                  Click for details {expandedSection === "visibility" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  Details {expandedSection === "visibility" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </span>
               </div>
             </div>
@@ -308,7 +308,7 @@ export default function ResultsPage() {
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>{reportData.websiteAudit ? "Schema & content audit" : "No domain provided"}</span>
                 <span className="flex items-center gap-1 text-purple-600 font-medium">
-                  {reportData.websiteAudit && <>Click for details {expandedSection === "technical" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</>}
+                  {reportData.websiteAudit && <>Details {expandedSection === "technical" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</>}
                 </span>
               </div>
             </div>
@@ -339,7 +339,80 @@ export default function ResultsPage() {
                 ))}
               </div>
               <div className="flex items-center justify-end text-sm text-amber-600 font-medium mt-3">
-                Click for details {expandedSection === "recommendations" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                Details {expandedSection === "recommendations" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Row: 2 Additional Boxes */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          
+          {/* Box 4: Competitive Landscape */}
+          <div 
+            onClick={() => toggleSection("competitive")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+              expandedSection === "competitive" ? "ring-2 ring-pink-500" : ""
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-4xl">🏆</div>
+                <div className="text-xs px-3 py-1 rounded-full font-semibold bg-pink-100 text-pink-700">
+                  Competitor Analysis
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Competitive Landscape</h3>
+              <p className="text-sm text-gray-500 mb-4">How you compare against competitors in AI visibility</p>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-pink-600">{reportData.brandOrKeyword || "Brand"}</div>
+                  <div className="text-xs text-gray-500">Your Brand</div>
+                </div>
+                <div className="text-2xl text-gray-300">vs</div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-gray-600">{reportData.competitors?.length || 0} competitors</div>
+                  <div className="text-xs text-gray-500">Tracked</div>
+                </div>
+              </div>
+              <div className="flex items-center justify-end text-sm text-pink-600 font-medium mt-3">
+                View comparison {expandedSection === "competitive" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </div>
+            </div>
+          </div>
+
+          {/* Box 5: Methodology & FAQ */}
+          <div 
+            onClick={() => toggleSection("methodology")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+              expandedSection === "methodology" ? "ring-2 ring-teal-500" : ""
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="text-4xl">❓</div>
+                <div className="text-xs px-3 py-1 rounded-full font-semibold bg-teal-100 text-teal-700">
+                  Transparency
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Methodology & FAQ</h3>
+              <p className="text-sm text-gray-500 mb-4">How we calculate scores and generate insights</p>
+              <div className="space-y-1 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <span>📊</span>
+                  <span>Score calculation</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>🔬</span>
+                  <span>Audit process</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>💡</span>
+                  <span>Recommendation logic</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-end text-sm text-teal-600 font-medium mt-3">
+                Learn more {expandedSection === "methodology" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
               </div>
             </div>
           </div>
@@ -375,12 +448,15 @@ export default function ResultsPage() {
             </div>
 
             {/* Journey Stages */}
-            <div className="space-y-6">
+            <div className="space-y-8">
               {journeyStages.length === 0 && (
                 <p className="text-gray-500 text-center py-8">No journey stage data available</p>
               )}
               {journeyStages.map((stage: any, index: number) => (
-                <div key={stage?.stage || index} className="border rounded-xl p-6">
+                <div key={stage?.stage || index} className={`border-2 rounded-xl p-6 ${
+                  stage?.stage === "awareness" ? "border-blue-200 bg-blue-50/30" :
+                  stage?.stage === "consideration" ? "border-purple-200 bg-purple-50/30" : "border-green-200 bg-green-50/30"
+                }`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">
@@ -405,35 +481,149 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
-                  {/* Stage Metrics */}
-                  <div className="grid grid-cols-4 gap-4 mb-4">
-                    <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-blue-600">{Math.round(stage?.portrayal?.mentionRate || 0)}%</div>
-                      <div className="text-xs text-gray-500">Mention Rate</div>
+                  {/* Questions Analyzed Section */}
+                  {stage?.questions && stage.questions.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span>❓</span> Questions Analyzed ({stage.questions.length})
+                      </h4>
+                      <div className="bg-white rounded-lg p-4 space-y-2">
+                        {stage.questions.slice(0, 6).map((q: any, qIdx: number) => (
+                          <div key={qIdx} className="flex items-start gap-2 text-sm">
+                            <span className={`text-xs px-2 py-0.5 rounded-full mt-0.5 ${
+                              stage?.stage === "awareness" ? "bg-blue-100 text-blue-700" :
+                              stage?.stage === "consideration" ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"
+                            }`}>Q{qIdx + 1}</span>
+                            <span className="text-gray-700">{typeof q === 'string' ? q : q.question || q.text || 'Question'}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-purple-600">{stage?.portrayal?.averagePosition ? stage.portrayal.averagePosition.toFixed(1) : "N/A"}</div>
-                      <div className="text-xs text-gray-500">Avg Position</div>
+                  )}
+
+                  {/* Stage Metrics with Explanations */}
+                  <div className="grid md:grid-cols-2 gap-4 mb-6">
+                    {/* Mention Rate Explained */}
+                    <div className="bg-white rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">📢 Mention Rate</h4>
+                        <span className={`text-2xl font-bold ${
+                          (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
+                          (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
+                        }`}>{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Out of {stage?.portrayal?.totalTests || 0} tests across all AI platforms, your brand was mentioned in {Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)} responses.
+                      </p>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${
+                            (stage?.portrayal?.mentionRate || 0) >= 70 ? "bg-green-500" :
+                            (stage?.portrayal?.mentionRate || 0) >= 40 ? "bg-yellow-500" : "bg-red-500"
+                          }`}
+                          style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {(stage?.portrayal?.mentionRate || 0) >= 70 ? "✅ Strong presence - AI consistently mentions your brand" :
+                         (stage?.portrayal?.mentionRate || 0) >= 40 ? "⚠️ Moderate presence - Room for improvement" : "❌ Low presence - Significant opportunity to improve"}
+                      </p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-green-600">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</div>
-                      <div className="text-xs text-gray-500">Positive</div>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-gray-600">{stage?.questions?.length || 0}</div>
-                      <div className="text-xs text-gray-500">Questions</div>
+
+                    {/* Audience Sentiment Explained */}
+                    <div className="bg-white rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-gray-900">💭 Audience Sentiment</h4>
+                        <span className={`text-sm font-bold px-2 py-1 rounded ${
+                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
+                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
+                        }`}>{stage?.portrayal?.sentiment?.dominant || "Neutral"}</span>
+                      </div>
+                      <div className="space-y-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs w-16">Positive</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div className="h-2 rounded-full bg-green-500" style={{ width: `${stage?.portrayal?.sentiment?.positive || 0}%` }} />
+                          </div>
+                          <span className="text-xs w-10 text-right">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs w-16">Neutral</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div className="h-2 rounded-full bg-gray-400" style={{ width: `${stage?.portrayal?.sentiment?.neutral || 0}%` }} />
+                          </div>
+                          <span className="text-xs w-10 text-right">{Math.round(stage?.portrayal?.sentiment?.neutral || 0)}%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs w-16">Negative</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                            <div className="h-2 rounded-full bg-red-500" style={{ width: `${stage?.portrayal?.sentiment?.negative || 0}%` }} />
+                          </div>
+                          <span className="text-xs w-10 text-right">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        {stage?.portrayal?.sentiment?.dominant === "positive" ? "AI platforms speak favorably about your brand in this stage." :
+                         stage?.portrayal?.sentiment?.dominant === "negative" ? "Attention needed - Some responses portray your brand negatively." : "AI responses are factual without strong positive or negative bias."}
+                      </p>
                     </div>
                   </div>
 
-                  {/* AI Answer Examples */}
-                  {stage?.portrayal?.aiAnswerExamples && stage.portrayal.aiAnswerExamples.length > 0 && stage.portrayal.aiAnswerExamples[0] && (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <h4 className="font-semibold text-gray-700 mb-3">Sample AI Response</h4>
-                      <div className="text-sm text-gray-600 italic border-l-4 border-blue-400 pl-3">
-                        &quot;{(stage.portrayal.aiAnswerExamples[0].excerpt || "").substring(0, 300)}{stage.portrayal.aiAnswerExamples[0].excerpt?.length > 300 ? "..." : ""}&quot;
+                  {/* Competitor Comparison (if available) */}
+                  {stage?.portrayal?.competitorComparison && stage.portrayal.competitorComparison.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span>🏆</span> Competitor Mentions in This Stage
+                      </h4>
+                      <div className="bg-white rounded-lg p-4">
+                        <div className="space-y-3">
+                          {stage.portrayal.competitorComparison.map((comp: any, compIdx: number) => (
+                            <div key={compIdx} className="flex items-center gap-3">
+                              <span className="font-medium text-gray-900 w-32 truncate">{comp.competitorName || comp.competitor || comp.name || `Competitor ${compIdx + 1}`}</span>
+                              <div className="flex-1 bg-gray-200 rounded-full h-3">
+                                <div 
+                                  className={`h-3 rounded-full ${compIdx === 0 ? "bg-pink-500" : "bg-gray-400"}`}
+                                  style={{ width: `${comp.mentionRate || 0}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-bold text-gray-700 w-12 text-right">{Math.round(comp.mentionRate || 0)}%</span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-3">
+                          Shows how often competitors are mentioned by AI when answering {stage?.stageLabel || "this stage"} questions.
+                        </p>
                       </div>
-                      <div className="text-xs text-gray-400 mt-2">
-                        — {stage.portrayal.aiAnswerExamples[0].platform || "AI Platform"}
+                    </div>
+                  )}
+
+                  {/* AI Answer Examples - Show multiple platforms */}
+                  {stage?.portrayal?.aiAnswerExamples && stage.portrayal.aiAnswerExamples.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span>🤖</span> Sample AI Responses
+                      </h4>
+                      <div className="space-y-3">
+                        {stage.portrayal.aiAnswerExamples.slice(0, 3).map((example: any, exIdx: number) => (
+                          <div key={exIdx} className={`bg-white rounded-lg p-4 border-l-4 ${
+                            example?.sentiment === "positive" ? "border-green-400" :
+                            example?.sentiment === "negative" ? "border-red-400" : "border-gray-400"
+                          }`}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                                example?.platform === "ChatGPT" ? "bg-green-100 text-green-700" :
+                                example?.platform === "Gemini" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                              }`}>{example?.platform || "AI"}</span>
+                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                example?.sentiment === "positive" ? "bg-green-50 text-green-600" :
+                                example?.sentiment === "negative" ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-600"
+                              }`}>{example?.sentiment || "neutral"}</span>
+                            </div>
+                            <p className="text-sm text-gray-600 italic">
+                              &quot;{(example?.excerpt || "").substring(0, 250)}{(example?.excerpt || "").length > 250 ? "..." : ""}&quot;
+                            </p>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -617,134 +807,317 @@ export default function ResultsPage() {
           </div>
         )}
 
-        {/* FAQ Section - Methodology & Transparency */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mt-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <span>❓</span> How It Works - Methodology & Transparency
-          </h2>
-          
-          <div className="space-y-6">
-            {/* How is the AI Visibility Score calculated? */}
-            <div className="border-b pb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="text-blue-500">📊</span> How is the AI Visibility Score calculated?
-              </h3>
-              <p className="text-gray-600 mb-3">
-                Your AI Visibility Score (0-100) is a weighted combination of three key metrics:
-              </p>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-blue-700 mb-1">50%</div>
-                  <div className="font-semibold text-gray-900">Mention Rate</div>
-                  <p className="text-sm text-gray-600">How often AI platforms mention your brand when answering relevant questions.</p>
+        {/* Expanded Section: Competitive Landscape */}
+        {expandedSection === "competitive" && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">🏆 Competitive Landscape</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
+                <ChevronUp className="w-6 h-6" />
+              </button>
+            </div>
+
+            <p className="text-gray-600 mb-6">
+              Compare your brand&apos;s AI visibility against competitors across all funnel stages.
+            </p>
+
+            {/* Overall Comparison */}
+            <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-6 mb-8">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Overall AI Visibility Comparison</h3>
+              <div className="space-y-4">
+                {/* Your Brand */}
+                <div className="flex items-center gap-4">
+                  <div className="w-32 font-bold text-pink-700 truncate">{reportData.brandOrKeyword || "Your Brand"}</div>
+                  <div className="flex-1 bg-white rounded-full h-8 shadow-inner relative overflow-hidden">
+                    <div 
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-end pr-3"
+                      style={{ width: `${reportData.overallScore || 0}%` }}
+                    >
+                      <span className="text-white text-sm font-bold">{reportData.overallScore || 0}%</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-purple-700 mb-1">30%</div>
-                  <div className="font-semibold text-gray-900">Position</div>
-                  <p className="text-sm text-gray-600">Where your brand appears in responses. Being mentioned first is better than being listed third.</p>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="text-2xl font-bold text-green-700 mb-1">20%</div>
-                  <div className="font-semibold text-gray-900">Sentiment</div>
-                  <p className="text-sm text-gray-600">Whether AI speaks positively, neutrally, or negatively about your brand.</p>
-                </div>
+
+                {/* Competitors from journey stages */}
+                {(() => {
+                  const allCompetitors = new Map();
+                  journeyStages.forEach((stage: any) => {
+                    if (stage?.portrayal?.competitorComparison) {
+                      stage.portrayal.competitorComparison.forEach((comp: any) => {
+                        const name = comp.competitorName || comp.competitor || comp.name;
+                        if (name && name !== reportData.brandOrKeyword) {
+                          if (!allCompetitors.has(name)) {
+                            allCompetitors.set(name, { total: 0, count: 0 });
+                          }
+                          allCompetitors.get(name).total += (comp.mentionRate || 0);
+                          allCompetitors.get(name).count += 1;
+                        }
+                      });
+                    }
+                  });
+                  
+                  const competitorList = Array.from(allCompetitors.entries()).map(([name, data]: [string, any]) => ({
+                    name,
+                    avgVisibility: Math.round(data.total / data.count)
+                  })).sort((a, b) => b.avgVisibility - a.avgVisibility).slice(0, 5);
+
+                  if (competitorList.length === 0) {
+                    return (
+                      <div className="text-center py-4 text-gray-500">
+                        <p>No competitor data available.</p>
+                        <p className="text-sm">Add competitors when starting your analysis to see comparison data.</p>
+                      </div>
+                    );
+                  }
+
+                  return competitorList.map((comp, idx) => (
+                    <div key={idx} className="flex items-center gap-4">
+                      <div className="w-32 font-medium text-gray-600 truncate">{comp.name}</div>
+                      <div className="flex-1 bg-white rounded-full h-8 shadow-inner relative overflow-hidden">
+                        <div 
+                          className="absolute inset-y-0 left-0 bg-gradient-to-r from-gray-400 to-gray-500 rounded-full flex items-center justify-end pr-3"
+                          style={{ width: `${comp.avgVisibility}%` }}
+                        >
+                          <span className="text-white text-sm font-bold">{comp.avgVisibility}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
 
-            {/* What is the audit process? */}
-            <div className="border-b pb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="text-purple-500">🔬</span> What is the audit process?
-              </h3>
-              <p className="text-gray-600 mb-3">
-                Our analysis follows a rigorous, multi-step process:
-              </p>
-              <div className="space-y-3">
-                <div className="flex gap-3 items-start">
-                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
-                  <div>
-                    <span className="font-semibold text-gray-900">Question Discovery</span>
-                    <p className="text-sm text-gray-600">We pull real questions from search data (DataForSEO) and generate strategic questions based on your industry.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3 items-start">
-                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
-                  <div>
-                    <span className="font-semibold text-gray-900">Multi-Platform Testing</span>
-                    <p className="text-sm text-gray-600">Each question is sent to ChatGPT and Google Gemini (real APIs), plus Microsoft Copilot simulation. We run 3 tests per platform for statistical reliability.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3 items-start">
-                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
-                  <div>
-                    <span className="font-semibold text-gray-900">Response Analysis</span>
-                    <p className="text-sm text-gray-600">We analyze each response for brand mentions, positioning, sentiment, and competitor references using pattern matching and NLP.</p>
-                  </div>
-                </div>
-                <div className="flex gap-3 items-start">
-                  <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
-                  <div>
-                    <span className="font-semibold text-gray-900">Technical Audit</span>
-                    <p className="text-sm text-gray-600">If you provided a domain, we scan your website for schema markup, content structure, FAQ sections, and robots.txt settings that affect AI visibility.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* How are recommendations generated? */}
-            <div className="border-b pb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="text-amber-500">💡</span> How are recommendations generated?
-              </h3>
-              <p className="text-gray-600 mb-3">
-                Our recommendations are data-driven and specific to your results:
-              </p>
-              <ul className="space-y-2 text-gray-600">
-                <li className="flex gap-2">
-                  <span className="text-amber-500">•</span>
-                  <span><strong>Pattern Analysis:</strong> We identify common themes across AI responses - what topics trigger mentions, what questions lead to competitor recommendations, etc.</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-amber-500">•</span>
-                  <span><strong>Gap Identification:</strong> We flag funnel stages where your visibility is low compared to others, indicating content opportunities.</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-amber-500">•</span>
-                  <span><strong>Technical Issues:</strong> Missing schema markup or blocked AI crawlers directly impact how AI platforms understand your brand.</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-amber-500">•</span>
-                  <span><strong>Actionable Steps:</strong> Each recommendation includes the "what" and "why" - specific actions you can take and the expected impact.</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* What makes this analysis reliable? */}
+            {/* Stage-by-Stage Comparison */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span className="text-green-500">✅</span> What makes this analysis reliable?
-              </h3>
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Stage-by-Stage Analysis</h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                {journeyStages.map((stage: any, stageIdx: number) => (
+                  <div key={stageIdx} className={`rounded-xl p-5 ${
+                    stage?.stage === "awareness" ? "bg-blue-50 border-2 border-blue-200" :
+                    stage?.stage === "consideration" ? "bg-purple-50 border-2 border-purple-200" : "bg-green-50 border-2 border-green-200"
+                  }`}>
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-2xl">
+                        {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
+                      </span>
+                      <h4 className="font-bold text-gray-900">{stage?.stageLabel || "Stage"}</h4>
+                    </div>
+
+                    <div className="space-y-3">
+                      {/* Your brand in this stage */}
+                      <div>
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className={`font-bold ${
+                            stage?.stage === "awareness" ? "text-blue-700" :
+                            stage?.stage === "consideration" ? "text-purple-700" : "text-green-700"
+                          }`}>{reportData.brandOrKeyword || "You"}</span>
+                          <span className="font-bold">{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
+                        </div>
+                        <div className="w-full bg-white rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              stage?.stage === "awareness" ? "bg-blue-500" :
+                              stage?.stage === "consideration" ? "bg-purple-500" : "bg-green-500"
+                            }`}
+                            style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Competitors in this stage */}
+                      {stage?.portrayal?.competitorComparison?.slice(0, 3).map((comp: any, compIdx: number) => (
+                        <div key={compIdx}>
+                          <div className="flex justify-between text-sm mb-1">
+                            <span className="text-gray-600">{comp.competitorName || comp.competitor || comp.name || `Competitor ${compIdx + 1}`}</span>
+                            <span className="text-gray-600">{Math.round(comp.mentionRate || 0)}%</span>
+                          </div>
+                          <div className="w-full bg-white rounded-full h-2">
+                            <div className="h-2 rounded-full bg-gray-400" style={{ width: `${comp.mentionRate || 0}%` }} />
+                          </div>
+                        </div>
+                      ))}
+
+                      {(!stage?.portrayal?.competitorComparison || stage.portrayal.competitorComparison.length === 0) && (
+                        <p className="text-xs text-gray-500 italic">No competitor data for this stage</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Competitive Insights */}
+            <div className="mt-8 bg-gray-50 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">💡 Key Competitive Insights</h3>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="font-semibold text-gray-900 mb-1">Real API Calls</div>
-                  <p className="text-sm text-gray-600">We use actual ChatGPT (OpenAI) and Gemini (Google) APIs - not simulations or scraping. You see real AI responses.</p>
+                <div className="bg-white rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Your Strongest Stage</h4>
+                  {(() => {
+                    const sorted = [...journeyStages].sort((a: any, b: any) => 
+                      (b?.portrayal?.mentionRate || 0) - (a?.portrayal?.mentionRate || 0)
+                    );
+                    const best = sorted[0];
+                    return (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-bold text-green-600">{best?.stageLabel || "N/A"}</span> with {Math.round(best?.portrayal?.mentionRate || 0)}% mention rate. 
+                        Focus on maintaining this lead while improving weaker stages.
+                      </p>
+                    );
+                  })()}
                 </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="font-semibold text-gray-900 mb-1">Statistical Significance</div>
-                  <p className="text-sm text-gray-600">3 tests per question per platform reduces noise from AI variability. More tests = more reliable patterns.</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="font-semibold text-gray-900 mb-1">Full Funnel Coverage</div>
-                  <p className="text-sm text-gray-600">Testing across Awareness, Consideration, and Decision stages gives a complete picture of the customer journey.</p>
-                </div>
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="font-semibold text-gray-900 mb-1">Transparent Methodology</div>
-                  <p className="text-sm text-gray-600">You see the actual questions tested, the real AI responses, and exactly how scores are calculated.</p>
+                <div className="bg-white rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-2">Biggest Opportunity</h4>
+                  {(() => {
+                    const sorted = [...journeyStages].sort((a: any, b: any) => 
+                      (a?.portrayal?.mentionRate || 0) - (b?.portrayal?.mentionRate || 0)
+                    );
+                    const weakest = sorted[0];
+                    return (
+                      <p className="text-sm text-gray-600">
+                        <span className="font-bold text-amber-600">{weakest?.stageLabel || "N/A"}</span> shows only {Math.round(weakest?.portrayal?.mentionRate || 0)}% visibility. 
+                        Improving this stage could significantly boost your overall AI presence.
+                      </p>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Expanded Section: Methodology & FAQ */}
+        {expandedSection === "methodology" && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">❓ How It Works - Methodology & Transparency</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
+                <ChevronUp className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* How is the AI Visibility Score calculated? */}
+              <div className="border-b pb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span className="text-blue-500">📊</span> How is the AI Visibility Score calculated?
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Your AI Visibility Score (0-100) is a weighted combination of three key metrics:
+                </p>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-blue-700 mb-1">50%</div>
+                    <div className="font-semibold text-gray-900">Mention Rate</div>
+                    <p className="text-sm text-gray-600">How often AI platforms mention your brand when answering relevant questions.</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-purple-700 mb-1">30%</div>
+                    <div className="font-semibold text-gray-900">Position</div>
+                    <p className="text-sm text-gray-600">Where your brand appears in responses. Being mentioned first is better than being listed third.</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-green-700 mb-1">20%</div>
+                    <div className="font-semibold text-gray-900">Sentiment</div>
+                    <p className="text-sm text-gray-600">Whether AI speaks positively, neutrally, or negatively about your brand.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* What is the audit process? */}
+              <div className="border-b pb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span className="text-purple-500">🔬</span> What is the audit process?
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Our analysis follows a rigorous, multi-step process:
+                </p>
+                <div className="space-y-3">
+                  <div className="flex gap-3 items-start">
+                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+                    <div>
+                      <span className="font-semibold text-gray-900">Question Discovery</span>
+                      <p className="text-sm text-gray-600">We pull real questions from search data (DataForSEO) and generate strategic questions based on your industry.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+                    <div>
+                      <span className="font-semibold text-gray-900">Multi-Platform Testing</span>
+                      <p className="text-sm text-gray-600">Each question is sent to ChatGPT and Google Gemini (real APIs), plus Microsoft Copilot simulation. We run 3 tests per platform for statistical reliability.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+                    <div>
+                      <span className="font-semibold text-gray-900">Response Analysis</span>
+                      <p className="text-sm text-gray-600">We analyze each response for brand mentions, positioning, sentiment, and competitor references using pattern matching and NLP.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
+                    <div>
+                      <span className="font-semibold text-gray-900">Technical Audit</span>
+                      <p className="text-sm text-gray-600">If you provided a domain, we scan your website for schema markup, content structure, FAQ sections, and robots.txt settings that affect AI visibility.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* How are recommendations generated? */}
+              <div className="border-b pb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span className="text-amber-500">💡</span> How are recommendations generated?
+                </h3>
+                <p className="text-gray-600 mb-3">
+                  Our recommendations are data-driven and specific to your results:
+                </p>
+                <ul className="space-y-2 text-gray-600">
+                  <li className="flex gap-2">
+                    <span className="text-amber-500">•</span>
+                    <span><strong>Pattern Analysis:</strong> We identify common themes across AI responses - what topics trigger mentions, what questions lead to competitor recommendations, etc.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-amber-500">•</span>
+                    <span><strong>Gap Identification:</strong> We flag funnel stages where your visibility is low compared to others, indicating content opportunities.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-amber-500">•</span>
+                    <span><strong>Technical Issues:</strong> Missing schema markup or blocked AI crawlers directly impact how AI platforms understand your brand.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-amber-500">•</span>
+                    <span><strong>Actionable Steps:</strong> Each recommendation includes the &quot;what&quot; and &quot;why&quot; - specific actions you can take and the expected impact.</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* What makes this analysis reliable? */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <span className="text-green-500">✅</span> What makes this analysis reliable?
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="font-semibold text-gray-900 mb-1">Real API Calls</div>
+                    <p className="text-sm text-gray-600">We use actual ChatGPT (OpenAI) and Gemini (Google) APIs - not simulations or scraping. You see real AI responses.</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="font-semibold text-gray-900 mb-1">Statistical Significance</div>
+                    <p className="text-sm text-gray-600">3 tests per question per platform reduces noise from AI variability. More tests = more reliable patterns.</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="font-semibold text-gray-900 mb-1">Full Funnel Coverage</div>
+                    <p className="text-sm text-gray-600">Testing across Awareness, Consideration, and Decision stages gives a complete picture of the customer journey.</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="font-semibold text-gray-900 mb-1">Transparent Methodology</div>
+                    <p className="text-sm text-gray-600">You see the actual questions tested, the real AI responses, and exactly how scores are calculated.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -847,9 +1220,15 @@ function transformAnalysisData(data: any) {
     },
   };
 
+  // Extract competitors if available
+  const competitors = data.competitor 
+    ? [data.competitor] 
+    : (data.competitors || []);
+
   return {
     brandOrKeyword: data.brandOrKeyword,
     domain: data.domain,
+    competitors: competitors,
     overallScore: overallScore,
     totalTests: totalTests || 18, // Default to 18 (9 questions × 2 tests)
     totalQuestions: totalQuestions || 9, // Default to 9
