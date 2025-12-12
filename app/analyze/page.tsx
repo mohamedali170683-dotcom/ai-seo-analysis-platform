@@ -56,7 +56,12 @@ export default function AnalyzePage() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [currentStep, setCurrentStep] = useState<string>("");
 
-  // Phase 1: Discover questions
+  // Countdown timers
+  const [discoveryCountdown, setDiscoveryCountdown] = useState(30);
+  const [analysisCountdown, setAnalysisCountdown] = useState(240); // 4 minutes
+  const [discoveryMessage, setDiscoveryMessage] = useState("");
+
+  // Phase 1: Discover questions with countdown
   const handleDiscoverQuestions = async () => {
     if (!brandName || !category) {
       alert("Please enter brand name and category");
@@ -64,6 +69,35 @@ export default function AnalyzePage() {
     }
 
     setLoading(true);
+    setDiscoveryCountdown(30);
+    setDiscoveryMessage("Connecting to search data APIs...");
+
+    // Start countdown timer
+    const countdownInterval = setInterval(() => {
+      setDiscoveryCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Rotate discovery messages
+    const messages = [
+      "Connecting to search data APIs...",
+      "Extracting real search questions...",
+      "Analyzing search volumes...",
+      "Generating strategic questions...",
+      "Categorizing by funnel stage...",
+      "Preparing your question selection...",
+    ];
+    let messageIndex = 0;
+    const messageInterval = setInterval(() => {
+      messageIndex = (messageIndex + 1) % messages.length;
+      setDiscoveryMessage(messages[messageIndex]);
+    }, 4000);
+
     try {
       const response = await fetch("/api/analysis/discover", {
         method: "POST",
@@ -85,7 +119,10 @@ export default function AnalyzePage() {
     } catch (error) {
       alert("Error discovering questions");
     } finally {
+      clearInterval(countdownInterval);
+      clearInterval(messageInterval);
       setLoading(false);
+      setDiscoveryMessage("");
     }
   };
 
@@ -167,6 +204,11 @@ export default function AnalyzePage() {
     setAnalysisStartTime(Date.now());
     setElapsedTime(0);
     setCurrentStep("Starting analysis...");
+    
+    // Set countdown based on number of questions (roughly 20-25 seconds per question)
+    const totalQuestions = getTotalSelected();
+    const estimatedSeconds = Math.max(120, totalQuestions * 25); // At least 2 minutes
+    setAnalysisCountdown(estimatedSeconds);
 
     const allQuestions = [
       ...selectedQuestions.awareness,
@@ -216,9 +258,10 @@ export default function AnalyzePage() {
   const pollAnalysisStatus = async (id: string) => {
     const startTime = Date.now();
     
-    // Timer interval to update elapsed time every second
+    // Timer interval to update elapsed time and countdown every second
     const timerInterval = setInterval(() => {
       setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      setAnalysisCountdown(prev => Math.max(0, prev - 1));
     }, 1000);
     
     const poll = async () => {
@@ -422,11 +465,71 @@ export default function AnalyzePage() {
               <Button
                 onClick={handleDiscoverQuestions}
                 disabled={loading || !brandName || !category}
-                className="w-full bg-purple-600 hover:bg-purple-700 py-4 text-lg mt-6"
+                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 py-4 text-lg mt-6 font-semibold"
               >
-                {loading ? "Discovering Questions..." : "Discover Questions →"}
+                {loading ? (
+                  <span className="flex items-center justify-center gap-3">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Discovering Questions...
+                  </span>
+                ) : (
+                  <span>🔍 Discover Questions for {brandName || "Your Brand"} →</span>
+                )}
               </Button>
+              <p className="text-center text-xs text-gray-500 mt-2">
+                Next: You'll select which questions to test on AI platforms
+              </p>
             </div>
+
+            {/* Discovery Loading Overlay */}
+            {loading && (
+              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-purple-500/30 shadow-2xl">
+                  <div className="text-center">
+                    <div className="text-6xl mb-4 animate-bounce">🔍</div>
+                    <h3 className="text-2xl font-bold mb-2">Discovering Questions</h3>
+                    <p className="text-gray-400 mb-6">
+                      We're finding real questions people ask about <strong className="text-purple-400">{brandName}</strong> and generating strategic ones for your analysis.
+                    </p>
+                    
+                    {/* Countdown Timer */}
+                    <div className="bg-purple-900/50 rounded-xl p-4 mb-6">
+                      <div className="text-4xl font-mono font-bold text-purple-400 mb-1">
+                        {Math.floor(discoveryCountdown / 60)}:{(discoveryCountdown % 60).toString().padStart(2, '0')}
+                      </div>
+                      <p className="text-xs text-gray-500">estimated time remaining</p>
+                    </div>
+
+                    {/* Current Step */}
+                    <div className="bg-black/30 rounded-lg p-3 mb-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm text-gray-300">{discoveryMessage}</span>
+                      </div>
+                    </div>
+
+                    {/* Progress Steps */}
+                    <div className="space-y-2 text-left">
+                      {[
+                        { label: "Connect to DataForSEO API", done: discoveryCountdown < 28 },
+                        { label: "Extract real search questions", done: discoveryCountdown < 22 },
+                        { label: "Analyze search volumes", done: discoveryCountdown < 16 },
+                        { label: "Generate strategic questions", done: discoveryCountdown < 10 },
+                        { label: "Categorize by funnel stage", done: discoveryCountdown < 5 },
+                      ].map((step, i) => (
+                        <div key={i} className={`flex items-center gap-2 text-sm ${step.done ? "text-green-400" : "text-gray-500"}`}>
+                          <span>{step.done ? "✅" : "⏳"}</span>
+                          <span>{step.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* How it works */}
             <div className="bg-white/5 rounded-xl p-6">
@@ -833,7 +936,7 @@ export default function AnalyzePage() {
           <div className="max-w-3xl mx-auto space-y-6">
             {/* Main Progress Card */}
             <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 rounded-2xl p-8 border border-purple-500/30">
-              {/* Header with Timer */}
+              {/* Header with Timers */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -842,14 +945,26 @@ export default function AnalyzePage() {
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">Analysis Running</h2>
-                    <p className="text-gray-400">Querying AI platforms...</p>
+                    <p className="text-gray-400">Testing your questions on AI platforms...</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-4xl font-mono font-bold text-purple-400">
-                    {formatTime(elapsedTime)}
+                
+                {/* Dual Timer Display */}
+                <div className="flex gap-4">
+                  {/* Countdown */}
+                  <div className="text-center bg-gradient-to-br from-blue-600/30 to-cyan-600/30 rounded-xl px-4 py-2 border border-cyan-500/30">
+                    <div className="text-3xl font-mono font-bold text-cyan-400">
+                      {Math.floor(analysisCountdown / 60)}:{(analysisCountdown % 60).toString().padStart(2, '0')}
+                    </div>
+                    <div className="text-xs text-cyan-300/70">remaining</div>
                   </div>
-                  <div className="text-xs text-gray-500">elapsed time</div>
+                  {/* Elapsed */}
+                  <div className="text-center bg-white/5 rounded-xl px-4 py-2">
+                    <div className="text-3xl font-mono font-bold text-purple-400">
+                      {formatTime(elapsedTime)}
+                    </div>
+                    <div className="text-xs text-gray-500">elapsed</div>
+                  </div>
                 </div>
               </div>
               
