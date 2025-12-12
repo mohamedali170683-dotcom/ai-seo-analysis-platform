@@ -79,6 +79,7 @@ export default function ResultsPage() {
   const [reportData, setReportData] = useState<any>(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("pending");
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   useEffect(() => {
     if (!analysisId) {
@@ -193,27 +194,12 @@ export default function ResultsPage() {
     );
   }
 
-  // State for expandable sections
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  // Safety check - if reportData is missing critical properties, show fallback
-  if (!reportData || typeof reportData !== 'object') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">Unable to load report data</p>
-          <a href="/dashboard" className="text-blue-600 hover:underline mt-2 block">Return to Dashboard</a>
-        </div>
-      </div>
-    );
-  }
-
   // Collect all recommendations from all stages with safety checks
-  const journeyStages = reportData.journeyStages || [];
+  const journeyStages = reportData?.journeyStages || [];
   const allRecommendations = journeyStages.map((stage: any) => ({
     stage: stage?.stageLabel || "Unknown",
     stageIcon: stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅",
