@@ -489,43 +489,68 @@ export default function AnalyzePage() {
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
                 <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-purple-500/30 shadow-2xl">
                   <div className="text-center">
-                    <div className="text-6xl mb-4 animate-bounce">🔍</div>
-                    <h3 className="text-2xl font-bold mb-2">Discovering Questions</h3>
-                    <p className="text-gray-400 mb-6">
-                      We're finding real questions people ask about <strong className="text-purple-400">{brandName}</strong> and generating strategic ones for your analysis.
-                    </p>
+                    <div className="text-6xl mb-4 animate-bounce">{discoveryCountdown <= 0 ? "🤔" : "🔍"}</div>
+                    <h3 className="text-2xl font-bold mb-2">
+                      {discoveryCountdown <= 0 ? "Still Working..." : "Discovering Questions"}
+                    </h3>
                     
-                    {/* Countdown Timer */}
-                    <div className="bg-purple-900/50 rounded-xl p-4 mb-6">
-                      <div className="text-4xl font-mono font-bold text-purple-400 mb-1">
-                        {Math.floor(discoveryCountdown / 60)}:{(discoveryCountdown % 60).toString().padStart(2, '0')}
-                      </div>
-                      <p className="text-xs text-gray-500">estimated time remaining</p>
-                    </div>
-
-                    {/* Current Step */}
-                    <div className="bg-black/30 rounded-lg p-3 mb-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm text-gray-300">{discoveryMessage}</span>
-                      </div>
-                    </div>
-
-                    {/* Progress Steps */}
-                    <div className="space-y-2 text-left">
-                      {[
-                        { label: "Connect to DataForSEO API", done: discoveryCountdown < 28 },
-                        { label: "Extract real search questions", done: discoveryCountdown < 22 },
-                        { label: "Analyze search volumes", done: discoveryCountdown < 16 },
-                        { label: "Generate strategic questions", done: discoveryCountdown < 10 },
-                        { label: "Categorize by funnel stage", done: discoveryCountdown < 5 },
-                      ].map((step, i) => (
-                        <div key={i} className={`flex items-center gap-2 text-sm ${step.done ? "text-green-400" : "text-gray-500"}`}>
-                          <span>{step.done ? "✅" : "⏳"}</span>
-                          <span>{step.label}</span>
+                    {/* Show funny message when countdown reaches 0 */}
+                    {discoveryCountdown <= 0 ? (
+                      <div className="mb-6">
+                        <p className="text-amber-400 mb-3 text-lg">
+                          Oops! Taking longer than expected... 🐌
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          Our AI is being extra thorough with <strong className="text-purple-400">{brandName}</strong>. 
+                          Almost there, we promise! ☕
+                        </p>
+                        <div className="mt-4 flex justify-center">
+                          <div className="flex gap-1">
+                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                          </div>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-gray-400 mb-6">
+                          Finding real questions people ask about <strong className="text-purple-400">{brandName}</strong> and generating strategic ones.
+                        </p>
+                        
+                        {/* Countdown Timer */}
+                        <div className="bg-purple-900/50 rounded-xl p-4 mb-6">
+                          <div className="text-4xl font-mono font-bold text-purple-400 mb-1">
+                            {Math.floor(discoveryCountdown / 60)}:{(discoveryCountdown % 60).toString().padStart(2, '0')}
+                          </div>
+                          <p className="text-xs text-gray-500">estimated time remaining</p>
+                        </div>
+
+                        {/* Current Step */}
+                        <div className="bg-black/30 rounded-lg p-3 mb-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm text-gray-300">{discoveryMessage}</span>
+                          </div>
+                        </div>
+
+                        {/* Progress Steps */}
+                        <div className="space-y-2 text-left">
+                          {[
+                            { label: "Connect to DataForSEO API", done: discoveryCountdown < 28 },
+                            { label: "Extract real search questions", done: discoveryCountdown < 22 },
+                            { label: "Analyze search volumes", done: discoveryCountdown < 16 },
+                            { label: "Generate strategic questions", done: discoveryCountdown < 10 },
+                            { label: "Categorize by funnel stage", done: discoveryCountdown < 5 },
+                          ].map((step, i) => (
+                            <div key={i} className={`flex items-center gap-2 text-sm ${step.done ? "text-green-400" : "text-gray-500"}`}>
+                              <span>{step.done ? "✅" : "⏳"}</span>
+                              <span>{step.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -593,67 +618,51 @@ export default function AnalyzePage() {
             </div>
 
             {/* Educational Section: Understanding the Customer Journey */}
-            <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-xl p-6 mt-4 border border-white/10">
-              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                <span className="text-2xl">🎯</span>
-                Understanding the Customer Journey
-              </h3>
-              <p className="text-gray-300 text-sm mb-4">
-                When people ask AI assistants questions, they're at different stages of their buying journey. 
-                By testing questions from each stage, you'll see how AI influences customers <strong>from first discovery to final purchase</strong>.
-              </p>
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-8 mt-4 border border-white/20">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold mb-2">🎯 Why These 3 Stages Matter</h3>
+                <p className="text-lg text-gray-300">
+                  People asking AI questions are on a <strong className="text-white">buying journey</strong>. 
+                  Test all stages to see how AI guides them to (or away from) your brand.
+                </p>
+              </div>
               
-              <div className="grid md:grid-cols-3 gap-4">
+              <div className="grid md:grid-cols-3 gap-6">
                 {/* Awareness */}
-                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">🔍</span>
-                    <span className="font-bold text-blue-400">Awareness</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-2">{stageInfo.awareness.longDesc}</p>
-                  <div className="bg-black/20 rounded p-2 mb-2">
-                    <p className="text-xs text-blue-300 italic">{stageInfo.awareness.userMindset}</p>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    <strong className="text-blue-400">Why it matters:</strong> {stageInfo.awareness.whyItMatters}
+                <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-5 text-center">
+                  <div className="text-4xl mb-3">🔍</div>
+                  <h4 className="text-xl font-bold text-blue-400 mb-2">Awareness</h4>
+                  <p className="text-base text-gray-300 mb-3">"What is...?" "How does...?"</p>
+                  <p className="text-sm text-blue-200">
+                    Users are <strong>learning</strong>. If AI doesn't mention you here, you're invisible from the start.
                   </p>
                 </div>
 
                 {/* Consideration */}
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">⚖️</span>
-                    <span className="font-bold text-amber-400">Consideration</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-2">{stageInfo.consideration.longDesc}</p>
-                  <div className="bg-black/20 rounded p-2 mb-2">
-                    <p className="text-xs text-amber-300 italic">{stageInfo.consideration.userMindset}</p>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    <strong className="text-amber-400">Why it matters:</strong> {stageInfo.consideration.whyItMatters}
+                <div className="bg-amber-500/20 border-2 border-amber-500/40 rounded-xl p-5 text-center">
+                  <div className="text-4xl mb-3">⚖️</div>
+                  <h4 className="text-xl font-bold text-amber-400 mb-2">Consideration</h4>
+                  <p className="text-base text-gray-300 mb-3">"Best...?" "X vs Y?"</p>
+                  <p className="text-sm text-amber-200">
+                    Users are <strong>comparing</strong>. If competitors are mentioned but you're not, you lose.
                   </p>
                 </div>
 
                 {/* Decision */}
-                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">✅</span>
-                    <span className="font-bold text-green-400">Decision</span>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-2">{stageInfo.decision.longDesc}</p>
-                  <div className="bg-black/20 rounded p-2 mb-2">
-                    <p className="text-xs text-green-300 italic">{stageInfo.decision.userMindset}</p>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    <strong className="text-green-400">Why it matters:</strong> {stageInfo.decision.whyItMatters}
+                <div className="bg-green-500/20 border-2 border-green-500/40 rounded-xl p-5 text-center">
+                  <div className="text-4xl mb-3">✅</div>
+                  <h4 className="text-xl font-bold text-green-400 mb-2">Decision</h4>
+                  <p className="text-base text-gray-300 mb-3">"Should I buy...?" "Worth it?"</p>
+                  <p className="text-sm text-green-200">
+                    Users are <strong>ready to buy</strong>. A positive mention here = conversions.
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 bg-white/5 rounded-lg p-3 border border-white/10">
-                <p className="text-xs text-gray-400 text-center">
-                  💡 <strong>Pro tip:</strong> For a complete picture, select at least one question from each stage. 
-                  However, you can focus on specific stages if you have particular concerns (e.g., only Decision stage if you're worried about purchase intent).
+              <div className="mt-6 bg-white/10 rounded-xl p-4 text-center">
+                <p className="text-base text-gray-300">
+                  💡 <strong>Tip:</strong> Select questions from <strong>all 3 stages</strong> for a complete picture, 
+                  or focus on one stage if that's your priority.
                 </p>
               </div>
             </div>

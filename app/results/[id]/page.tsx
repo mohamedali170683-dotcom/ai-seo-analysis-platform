@@ -200,13 +200,26 @@ export default function ResultsPage() {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  // Collect all recommendations from all stages
-  const allRecommendations = reportData.journeyStages?.map((stage: any) => ({
-    stage: stage.stageLabel,
-    stageIcon: stage.stage === "awareness" ? "🔍" : stage.stage === "consideration" ? "⚖️" : "✅",
-    recommendation: stage.recommendation,
-    visibilityScore: stage.portrayal?.visibilityScore || 0,
-  })) || [];
+  // Safety check - if reportData is missing critical properties, show fallback
+  if (!reportData || typeof reportData !== 'object') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">Unable to load report data</p>
+          <a href="/dashboard" className="text-blue-600 hover:underline mt-2 block">Return to Dashboard</a>
+        </div>
+      </div>
+    );
+  }
+
+  // Collect all recommendations from all stages with safety checks
+  const journeyStages = reportData.journeyStages || [];
+  const allRecommendations = journeyStages.map((stage: any) => ({
+    stage: stage?.stageLabel || "Unknown",
+    stageIcon: stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅",
+    recommendation: stage?.recommendation || null,
+    visibilityScore: stage?.portrayal?.visibilityScore || 0,
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -257,22 +270,22 @@ export default function ResultsPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="text-4xl">📊</div>
                 <div className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                  reportData.overallScore >= 70 ? "bg-green-100 text-green-700" :
-                  reportData.overallScore >= 40 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
+                  (reportData.overallScore || 0) >= 70 ? "bg-green-100 text-green-700" :
+                  (reportData.overallScore || 0) >= 40 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
                 }`}>
-                  {reportData.overallScore >= 70 ? "Good" : reportData.overallScore >= 40 ? "Needs Work" : "Critical"}
+                  {(reportData.overallScore || 0) >= 70 ? "Good" : (reportData.overallScore || 0) >= 40 ? "Needs Work" : "Critical"}
                 </div>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-1">AI Visibility Score</h3>
               <p className="text-sm text-gray-500 mb-4">How AI platforms mention your brand</p>
               <div className={`text-5xl font-bold mb-2 ${
-                reportData.overallScore >= 70 ? "text-green-600" :
-                reportData.overallScore >= 40 ? "text-yellow-600" : "text-red-600"
+                (reportData.overallScore || 0) >= 70 ? "text-green-600" :
+                (reportData.overallScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
               }`}>
-                {reportData.overallScore}<span className="text-2xl text-gray-400">/100</span>
+                {reportData.overallScore || 0}<span className="text-2xl text-gray-400">/100</span>
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500">
-                <span>{reportData.totalQuestions} questions tested</span>
+                <span>{reportData.totalQuestions || 0} questions tested</span>
                 <span className="flex items-center gap-1 text-blue-600 font-medium">
                   Click for details {expandedSection === "visibility" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </span>
@@ -377,7 +390,10 @@ export default function ResultsPage() {
 
             {/* Journey Stages */}
             <div className="space-y-6">
-              {reportData.journeyStages?.map((stage: any) => (
+              {journeyStages.length === 0 && (
+                <p className="text-gray-500 text-center py-8">No journey stage data available</p>
+              )}
+              {journeyStages.map((stage: any) => (
                 <div key={stage.stage} className="border rounded-xl p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
