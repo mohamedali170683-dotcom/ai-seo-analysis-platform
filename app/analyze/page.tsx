@@ -263,11 +263,47 @@ export default function AnalyzePage() {
     return `${vol}/mo`;
   };
 
-  // Stage labels and icons
-  const stageInfo = {
-    awareness: { label: "🔍 Awareness", color: "blue" },
-    consideration: { label: "⚖️ Consideration", color: "yellow" },
-    decision: { label: "✅ Decision", color: "green" },
+  // Stage labels, icons, and detailed explanations
+  const stageInfo: Record<string, {
+    label: string;
+    color: string;
+    icon: string;
+    shortDesc: string;
+    longDesc: string;
+    userMindset: string;
+    exampleQuestions: string[];
+    whyItMatters: string;
+  }> = {
+    awareness: { 
+      label: "🔍 Awareness", 
+      color: "blue",
+      icon: "🔍",
+      shortDesc: "Discovery & Learning",
+      longDesc: "The first stage where potential customers are just learning about a topic or problem. They're gathering information, not yet looking for specific brands.",
+      userMindset: "\"I want to understand...\" or \"What is...?\"",
+      exampleQuestions: ["What is the best way to...", "How does X work?", "Why should I care about..."],
+      whyItMatters: "If AI doesn't mention your brand when users are learning about your category, you miss the chance to be considered from the start."
+    },
+    consideration: { 
+      label: "⚖️ Consideration", 
+      color: "yellow",
+      icon: "⚖️",
+      shortDesc: "Comparing Options",
+      longDesc: "Users now know what they need and are actively comparing different brands, products, or solutions. They're looking for the best fit.",
+      userMindset: "\"Which one should I choose?\" or \"X vs Y?\"",
+      exampleQuestions: ["Best [product] for...", "Compare X and Y", "[Brand] vs competitors"],
+      whyItMatters: "This is where AI influences preferences. If competitors are mentioned but you're not, you lose ground at a critical moment."
+    },
+    decision: { 
+      label: "✅ Decision", 
+      color: "green",
+      icon: "✅",
+      shortDesc: "Ready to Act",
+      longDesc: "Users are ready to make a purchase or take action. They're looking for final validation, reviews, or the best place to buy.",
+      userMindset: "\"Should I buy...?\" or \"Is X worth it?\"",
+      exampleQuestions: ["Is [brand] worth buying?", "Where to buy...", "[Brand] reviews"],
+      whyItMatters: "The final push. If AI recommends your brand here, it directly drives conversions and sales."
+    },
   };
 
   return (
@@ -453,6 +489,72 @@ export default function AnalyzePage() {
               </div>
             </div>
 
+            {/* Educational Section: Understanding the Customer Journey */}
+            <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 rounded-xl p-6 mt-4 border border-white/10">
+              <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                <span className="text-2xl">🎯</span>
+                Understanding the Customer Journey
+              </h3>
+              <p className="text-gray-300 text-sm mb-4">
+                When people ask AI assistants questions, they're at different stages of their buying journey. 
+                By testing questions from each stage, you'll see how AI influences customers <strong>from first discovery to final purchase</strong>.
+              </p>
+              
+              <div className="grid md:grid-cols-3 gap-4">
+                {/* Awareness */}
+                <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">🔍</span>
+                    <span className="font-bold text-blue-400">Awareness</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-2">{stageInfo.awareness.longDesc}</p>
+                  <div className="bg-black/20 rounded p-2 mb-2">
+                    <p className="text-xs text-blue-300 italic">{stageInfo.awareness.userMindset}</p>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    <strong className="text-blue-400">Why it matters:</strong> {stageInfo.awareness.whyItMatters}
+                  </p>
+                </div>
+
+                {/* Consideration */}
+                <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">⚖️</span>
+                    <span className="font-bold text-amber-400">Consideration</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-2">{stageInfo.consideration.longDesc}</p>
+                  <div className="bg-black/20 rounded p-2 mb-2">
+                    <p className="text-xs text-amber-300 italic">{stageInfo.consideration.userMindset}</p>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    <strong className="text-amber-400">Why it matters:</strong> {stageInfo.consideration.whyItMatters}
+                  </p>
+                </div>
+
+                {/* Decision */}
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">✅</span>
+                    <span className="font-bold text-green-400">Decision</span>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-2">{stageInfo.decision.longDesc}</p>
+                  <div className="bg-black/20 rounded p-2 mb-2">
+                    <p className="text-xs text-green-300 italic">{stageInfo.decision.userMindset}</p>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    <strong className="text-green-400">Why it matters:</strong> {stageInfo.decision.whyItMatters}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 bg-white/5 rounded-lg p-3 border border-white/10">
+                <p className="text-xs text-gray-400 text-center">
+                  💡 <strong>Pro tip:</strong> For a complete picture, select at least one question from each stage. 
+                  However, you can focus on specific stages if you have particular concerns (e.g., only Decision stage if you're worried about purchase intent).
+                </p>
+              </div>
+            </div>
+
             {/* 3-Column Grid for Questions */}
             <div className="grid md:grid-cols-3 gap-4 mt-4">
               {questionGroups.map((group) => {
@@ -473,15 +575,21 @@ export default function AnalyzePage() {
                     <div className={`p-4 border-b ${
                       hasSelection ? "border-purple-500/30 bg-purple-500/10" : "border-white/10 bg-white/5"
                     } rounded-t-xl`}>
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-lg font-bold">{stageInfo[group.stage].label}</h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h3 className="text-lg font-bold">{stageInfo[group.stage].label}</h3>
+                          <p className="text-xs text-gray-400 font-medium">{stageInfo[group.stage].shortDesc}</p>
+                        </div>
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                           hasSelection ? "bg-purple-600 text-white" : "bg-white/20"
                         }`}>
                           {stageSelected} selected
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400">{group.stageDescription}</p>
+                      <div className="bg-black/20 rounded-lg p-2 mb-2">
+                        <p className="text-xs text-gray-300 italic">{stageInfo[group.stage].userMindset}</p>
+                      </div>
+                      <p className="text-xs text-gray-500">{group.stageDescription}</p>
                     </div>
                     
                     {/* Questions List */}
