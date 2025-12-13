@@ -25,7 +25,7 @@ interface QuestionGroup {
   requiredSelections: number;
 }
 
-type Platform = "ChatGPT" | "Gemini" | "Copilot";
+type Platform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
 
 export default function AnalyzePage() {
   // Tier management
@@ -52,7 +52,7 @@ export default function AnalyzePage() {
   });
 
   // Platform selection
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["ChatGPT", "Gemini", "Copilot"]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["ChatGPT", "Gemini", "Copilot", "Perplexity"]);
 
   // Confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -120,7 +120,7 @@ export default function AnalyzePage() {
         body: JSON.stringify({
           brandName,
           category,
-          competitors: limits.allowCompetitors ? competitors.split(",").map(c => c.trim()).filter(Boolean) : [],
+          competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           tier, // Pass tier to control real data vs strategic questions
         }),
       });
@@ -270,7 +270,7 @@ export default function AnalyzePage() {
           brandName,
           domain,
           category,
-          competitors: limits.allowCompetitors ? competitors.split(",").map(c => c.trim()).filter(Boolean) : [],
+          competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           selectedQuestions: allQuestions.map(q => ({
             question: q.question,
             searchVolume: q.searchVolume,
@@ -562,29 +562,34 @@ export default function AnalyzePage() {
                 <div className="relative">
                   <label className="block text-sm text-gray-400 mb-1 flex items-center gap-2">
                     Main Competitors (comma-separated)
-                    {!limits.allowCompetitors && <PremiumBadge size="sm" />}
+                    {tier === "free" && <PremiumBadge size="sm" />}
                   </label>
                   <input
                     type="text"
                     value={competitors}
-                    onChange={(e) => limits.allowCompetitors && setCompetitors(e.target.value)}
-                    onClick={() => !limits.allowCompetitors && openUpgradeModal("competitors")}
-                    placeholder={limits.allowCompetitors ? "e.g., Adidas, Puma, New Balance" : "Adidas, Puma, New Balance"}
+                    onChange={(e) => tier !== "free" && setCompetitors(e.target.value)}
+                    onClick={() => tier === "free" && openUpgradeModal("competitors")}
+                    placeholder={tier !== "free" ? `e.g., Adidas, Puma${limits.maxCompetitors > 2 ? ", New Balance" : ""}` : "Adidas, Puma, New Balance"}
                     className={`w-full rounded-lg px-4 py-3 focus:outline-none ${
-                      limits.allowCompetitors 
+                      tier !== "free"
                         ? "bg-white/10 focus:ring-2 focus:ring-purple-500 cursor-text" 
                         : "bg-white/5 text-gray-500 cursor-pointer border border-dashed border-gray-600"
                     }`}
-                    readOnly={!limits.allowCompetitors}
+                    readOnly={tier === "free"}
                   />
-                  {!limits.allowCompetitors && (
+                  {tier === "free" && (
                     <div className="absolute right-3 top-1/2 translate-y-1">
                       <Lock className="w-4 h-4 text-gray-500" />
                     </div>
                   )}
-                  {!limits.allowCompetitors && (
+                  {tier === "free" && (
                     <p className="text-xs text-amber-400/80 mt-1">
-                      🔒 Available in Full Audit
+                      🔒 Available in Professional
+                    </p>
+                  )}
+                  {tier !== "free" && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Up to {limits.maxCompetitors} competitors ({tier === "partner" ? "unlimited in Partner" : "3 in Professional"})
                     </p>
                   )}
                 </div>
@@ -959,8 +964,8 @@ export default function AnalyzePage() {
             <div className="bg-white/5 rounded-xl p-6 mt-6 border border-white/10">
               <h3 className="text-lg font-semibold mb-4">Select AI Platforms to Test</h3>
               
-              <div className="grid grid-cols-3 gap-4">
-                {(["ChatGPT", "Gemini", "Copilot"] as Platform[]).map((platform) => {
+              <div className="grid grid-cols-4 gap-4">
+                {(["ChatGPT", "Gemini", "Copilot", "Perplexity"] as Platform[]).map((platform) => {
                   const isAllowed = isPlatformAllowed(platform);
                   const isSelected = selectedPlatforms.includes(platform);
                   
@@ -985,11 +990,12 @@ export default function AnalyzePage() {
                         {platform === "ChatGPT" && "🤖"}
                         {platform === "Gemini" && "✨"}
                         {platform === "Copilot" && "🔷"}
+                        {platform === "Perplexity" && "🔮"}
                       </div>
                       <div className={`font-medium ${!isAllowed ? "text-gray-500" : ""}`}>{platform}</div>
                       {!isAllowed && (
                         <div className="text-xs text-amber-400/80 mt-1 flex items-center justify-center gap-1">
-                          <Lock className="w-3 h-3" /> Full Audit
+                          <Lock className="w-3 h-3" /> Professional
                         </div>
                       )}
                       {isAllowed && isSelected && (
@@ -1002,7 +1008,7 @@ export default function AnalyzePage() {
               
               {tier === "free" && (
                 <p className="text-xs text-gray-500 mt-3 text-center">
-                  Free tier includes ChatGPT only. <button onClick={() => openUpgradeModal("platforms")} className="text-purple-400 hover:underline">Upgrade to test all platforms</button>
+                  Free tier includes ChatGPT only. <button onClick={() => openUpgradeModal("platforms")} className="text-purple-400 hover:underline">Upgrade to test all 4 platforms</button>
                 </p>
               )}
             </div>
@@ -1196,7 +1202,7 @@ export default function AnalyzePage() {
                   <div className="text-xs text-gray-500">AI Platforms</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-cyan-400">{getTotalSelected() * selectedPlatforms.length * 3}</div>
+                  <div className="text-2xl font-bold text-cyan-400">{getTotalSelected() * selectedPlatforms.length * limits.testsPerQuestion}</div>
                   <div className="text-xs text-gray-500">Total Tests</div>
                 </div>
               </div>
@@ -1252,7 +1258,7 @@ export default function AnalyzePage() {
             {/* Platforms Being Tested */}
             <div className="bg-white/5 rounded-xl p-6">
               <h3 className="text-sm font-semibold text-gray-400 mb-4">PLATFORMS BEING TESTED</h3>
-              <div className="flex justify-center gap-6">
+              <div className="flex justify-center gap-6 flex-wrap">
                 {selectedPlatforms.map((platform) => (
                   <div key={platform} className="flex flex-col items-center gap-2">
                     <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-white/10 ${
@@ -1261,14 +1267,15 @@ export default function AnalyzePage() {
                       {platform === "ChatGPT" && "🤖"}
                       {platform === "Gemini" && "✨"}
                       {platform === "Copilot" && "🔷"}
+                      {platform === "Perplexity" && "🔮"}
                     </div>
                     <span className="text-sm text-gray-400">{platform}</span>
                     <div className="flex gap-1">
-                      {[1, 2, 3, 4, 5].map((dot) => (
+                      {[1, 2, 3].map((dot) => (
                         <div 
                           key={dot} 
                           className={`w-1.5 h-1.5 rounded-full transition-all ${
-                            analysisProgress > 10 + (dot * 10) ? "bg-green-500" : "bg-gray-600"
+                            analysisProgress > 10 + (dot * 15) ? "bg-green-500" : "bg-gray-600"
                           }`}
                         ></div>
                       ))}

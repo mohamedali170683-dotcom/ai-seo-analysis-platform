@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText } from "lucide-react";
+import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight } from "lucide-react";
 import { useTier } from "@/lib/tier";
-import { UpgradeModal, PremiumBadge, BlurredContent } from "@/components/UpgradeModal";
+import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
+import { EmailGate } from "@/components/EmailGate";
 
 // Sentiment definitions for the report
 const SENTIMENT_DEFINITIONS = {
@@ -78,9 +79,13 @@ export default function ResultsPage() {
   const analysisId = params.id as string;
 
   // Tier management
-  const { tier, limits, isStageAllowed, isPlatformAllowed } = useTier();
+  const { tier, limits, isStageAllowed, isPlatformAllowed, userEmail, setUserEmail } = useTier();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<UpgradeModalTrigger>("funnel_stages");
+  
+  // Email gate for free tier
+  const [showEmailGate, setShowEmailGate] = useState(false);
+  const [hasSubmittedEmail, setHasSubmittedEmail] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +98,13 @@ export default function ResultsPage() {
   const openUpgradeModal = (trigger: UpgradeModalTrigger) => {
     setUpgradeModalTrigger(trigger);
     setShowUpgradeModal(true);
+  };
+  
+  // Handle email submission
+  const handleEmailSubmit = (email: string) => {
+    setUserEmail(email);
+    setHasSubmittedEmail(true);
+    setShowEmailGate(false);
   };
 
   useEffect(() => {
@@ -118,6 +130,11 @@ export default function ResultsPage() {
           clearInterval(pollInterval);
           setReportData(transformAnalysisData(data));
           setLoading(false);
+          
+          // Show email gate for free tier users who haven't submitted email
+          if (tier === "free" && !userEmail && !hasSubmittedEmail) {
+            setShowEmailGate(true);
+          }
         } else if (data.status === "failed") {
           clearInterval(pollInterval);
           setError(data.error || "Analysis failed");
@@ -205,6 +222,21 @@ export default function ResultsPage() {
           <p className="text-gray-600">No data available</p>
         </div>
       </div>
+    );
+  }
+  
+  // Show email gate for free tier
+  if (showEmailGate) {
+    return (
+      <EmailGate
+        brandName={reportData.brandOrKeyword || "Your Brand"}
+        competitorName={reportData.competitors?.[0]}
+        onEmailSubmit={handleEmailSubmit}
+        onSkip={() => {
+          setHasSubmittedEmail(true);
+          setShowEmailGate(false);
+        }}
+      />
     );
   }
 
@@ -402,13 +434,13 @@ export default function ResultsPage() {
           
           {/* Box 4: Competitive Landscape */}
           <div 
-            onClick={() => limits.allowCompetitors ? toggleSection("competitive") : openUpgradeModal("competitors")}
+            onClick={() => tier !== "free" ? toggleSection("competitive") : openUpgradeModal("competitors")}
             className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl relative ${
               expandedSection === "competitive" ? "ring-2 ring-pink-500" : ""
-            } ${!limits.allowCompetitors ? "opacity-80" : ""}`}
+            } ${tier === "free" ? "opacity-80" : ""}`}
           >
             {/* Lock overlay for free tier */}
-            {!limits.allowCompetitors && (
+            {tier === "free" && (
               <div className="absolute inset-0 bg-gray-100/60 backdrop-blur-[1px] rounded-2xl z-10 flex flex-col items-center justify-center">
                 <div className="bg-white rounded-full p-3 shadow-lg mb-2">
                   <Lock className="w-6 h-6 text-gray-400" />
@@ -423,7 +455,7 @@ export default function ResultsPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="text-4xl">🏆</div>
                 <div className="text-xs px-3 py-1 rounded-full font-semibold bg-pink-100 text-pink-700 flex items-center gap-1">
-                  {!limits.allowCompetitors && <Lock className="w-3 h-3" />}
+                  {tier === "free" && <Lock className="w-3 h-3" />}
                   Competitor Analysis
                 </div>
               </div>
@@ -441,7 +473,7 @@ export default function ResultsPage() {
                 </div>
               </div>
               <div className="flex items-center justify-end text-sm text-pink-600 font-medium mt-3">
-                {limits.allowCompetitors ? (
+                {tier !== "free" ? (
                   <>View comparison {expandedSection === "competitive" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}</>
                 ) : (
                   <>Unlock comparison <Sparkles className="w-4 h-4 ml-1" /></>
@@ -1105,6 +1137,28 @@ export default function ResultsPage() {
           </div>
         )}
 
+        {/* Visibility Gap Alert (for free tier with low scores) */}
+        {tier === "free" && (reportData.overallScore || 0) < 70 && (
+          <VisibilityGapAlert
+            brandName={reportData.brandOrKeyword || "Your Brand"}
+            brandScore={reportData.overallScore || 0}
+            competitorName={reportData.competitors?.[0]}
+            competitorScore={(() => {
+              // Calculate competitor's average visibility if available
+              let total = 0, count = 0;
+              journeyStages.forEach((stage: any) => {
+                if (stage?.portrayal?.competitorComparison?.[0]?.mentionRate) {
+                  total += stage.portrayal.competitorComparison[0].mentionRate;
+                  count++;
+                }
+              });
+              return count > 0 ? Math.round(total / count) : undefined;
+            })()}
+            issuesFound={allRecommendations.length}
+            onUpgrade={() => openUpgradeModal("recommendations")}
+          />
+        )}
+
         {/* Expanded Section: Methodology & FAQ */}
         {expandedSection === "methodology" && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
@@ -1238,6 +1292,9 @@ export default function ResultsPage() {
             </div>
           </div>
         )}
+
+        {/* Agency CTA */}
+        <AgencyCTA />
       </div>
 
       {/* Upgrade Modal */}

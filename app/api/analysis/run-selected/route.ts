@@ -13,32 +13,48 @@ interface SelectedQuestion {
   type: "brand" | "category";
 }
 
+type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
+type UserTier = "free" | "professional" | "partner";
+
 interface AnalysisRequest {
   brandName: string;
   domain?: string;
   competitors?: string[];
   category: string;
   selectedQuestions: SelectedQuestion[];
-  selectedPlatforms: ("ChatGPT" | "Gemini" | "Copilot")[];
+  selectedPlatforms: AIPlatform[];
   testsPerPlatform?: number; // Default 3 for faster analysis
-  tier?: "free" | "paid"; // User tier for validation
+  tier?: UserTier; // User tier for validation
 }
 
-// Tier limits for backend validation
-const TIER_LIMITS = {
+// 3-Tier limits for backend validation
+const TIER_LIMITS: Record<UserTier, {
+  maxQuestions: number;
+  allowedStages: string[];
+  allowedPlatforms: AIPlatform[];
+  testsPerQuestion: number;
+  maxCompetitors: number;
+}> = {
   free: {
     maxQuestions: 3,
     allowedStages: ["awareness"],
     allowedPlatforms: ["ChatGPT"],
     testsPerQuestion: 1,
-    allowCompetitors: false,
+    maxCompetitors: 1, // View only
   },
-  paid: {
+  professional: {
     maxQuestions: 18,
     allowedStages: ["awareness", "consideration", "decision"],
-    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot"],
+    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
     testsPerQuestion: 3,
-    allowCompetitors: true,
+    maxCompetitors: 3,
+  },
+  partner: {
+    maxQuestions: Infinity,
+    allowedStages: ["awareness", "consideration", "decision"],
+    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
+    testsPerQuestion: 3,
+    maxCompetitors: 10,
   },
 };
 
@@ -59,15 +75,17 @@ export async function POST(request: Request) {
       tier = "free", // Default to free tier
     } = body;
 
-    // Get tier limits
-    const limits = TIER_LIMITS[tier] || TIER_LIMITS.free;
+    // Get tier limits (default to free if invalid tier)
+    const validTier: UserTier = tier === "professional" || tier === "partner" ? tier : "free";
+    const limits = TIER_LIMITS[validTier];
     
     // Enforce tier-based limits
-    const enforcedQuestions = selectedQuestions.slice(0, limits.maxQuestions);
+    const maxQ = limits.maxQuestions === Infinity ? 1000 : limits.maxQuestions;
+    const enforcedQuestions = selectedQuestions.slice(0, maxQ);
     const enforcedPlatforms = selectedPlatforms.filter(p => 
       limits.allowedPlatforms.includes(p)
-    ) as ("ChatGPT" | "Gemini" | "Copilot")[];
-    const enforcedCompetitors = limits.allowCompetitors ? competitors.slice(0, 2) : [];
+    ) as AIPlatform[];
+    const enforcedCompetitors = competitors.slice(0, limits.maxCompetitors);
     const enforcedTestsPerPlatform = Math.min(testsPerPlatform, limits.testsPerQuestion);
     
     // Filter questions by allowed stages for free tier
@@ -105,7 +123,7 @@ export async function POST(request: Request) {
     }
 
     // Validate platforms
-    const validPlatforms = ["ChatGPT", "Gemini", "Copilot"];
+    const validPlatforms: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
     for (const platform of enforcedPlatforms) {
       if (!validPlatforms.includes(platform)) {
         return NextResponse.json(
@@ -115,7 +133,7 @@ export async function POST(request: Request) {
       }
     }
 
-    console.log(`🎯 [TIER] Running as ${tier} tier`);
+    console.log(`🎯 [TIER] Running as ${validTier} tier`);
     console.log(`   Enforced questions: ${stageFilteredQuestions.length} (max: ${limits.maxQuestions})`);
     console.log(`   Enforced platforms: ${enforcedPlatforms.join(", ")}`);
     console.log(`   Enforced tests/platform: ${enforcedTestsPerPlatform}`);
@@ -184,7 +202,7 @@ export async function POST(request: Request) {
       success: true,
       analysisId: analysis.id,
       message: "Analysis started",
-      tier,
+      tier: validTier,
       config: {
         questions: finalQuestions.length,
         platforms: finalPlatforms.length,
@@ -210,7 +228,7 @@ async function executeSelectedAnalysis(
   competitors: string[],
   category: string,
   selectedQuestions: SelectedQuestion[],
-  selectedPlatforms: ("ChatGPT" | "Gemini" | "Copilot")[],
+  selectedPlatforms: AIPlatform[],
   testsPerPlatform: number,
   envVars: { openaiApiKey: string; geminiApiKey?: string }
 ) {
@@ -443,7 +461,7 @@ async function executeSelectedAnalysis(
 
       // Select diverse examples: one per platform, varied sentiment
       const aiAnswerExamples: any[] = [];
-      const platforms = ["ChatGPT", "Gemini", "Copilot"];
+      const platforms: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
       const targetSentiments = ["positive", "neutral", "negative"];
       
       for (const platform of platforms) {

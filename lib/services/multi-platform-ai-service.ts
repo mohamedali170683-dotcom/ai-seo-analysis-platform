@@ -1,8 +1,10 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+export type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
+
 export interface AIResponse {
-  platform: "ChatGPT" | "Gemini" | "Copilot";
+  platform: AIPlatform;
   modelVersion: string;
   queryNumber: number;
   question: string;
@@ -17,7 +19,7 @@ export interface AIResponse {
 }
 
 export interface PlatformStats {
-  platform: "ChatGPT" | "Gemini" | "Copilot";
+  platform: AIPlatform;
   totalTests: number;
   mentionCount: number;
   mentionRate: number;
@@ -78,21 +80,23 @@ export class MultiPlatformAIService {
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
-    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × 3 platforms)`);
+    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × 4 platforms)`);
     const startTime = Date.now();
 
-    // Run all 3 platforms in PARALLEL using Promise.allSettled
+    // Run all 4 platforms in PARALLEL using Promise.allSettled
     // Each platform will run numTests times for statistical significance
     const results = await Promise.allSettled([
       this.testSinglePlatform("ChatGPT", question, brandName, competitors, numTests),
       this.testSinglePlatform("Gemini", question, brandName, competitors, numTests),
       this.testSinglePlatform("Copilot", question, brandName, competitors, numTests),
+      this.testSinglePlatform("Perplexity", question, brandName, competitors, numTests),
     ]);
 
     // Collect successful responses
     const allResponses: AIResponse[] = [];
+    const platformNames: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
     results.forEach((result, index) => {
-      const platform = ["ChatGPT", "Gemini", "Copilot"][index];
+      const platform = platformNames[index];
       if (result.status === "fulfilled") {
         allResponses.push(...result.value);
       } else {
@@ -121,7 +125,7 @@ export class MultiPlatformAIService {
     question: string,
     brandName: string,
     competitors: string[] = [],
-    platforms: ("ChatGPT" | "Gemini" | "Copilot")[],
+    platforms: AIPlatform[],
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
@@ -188,7 +192,7 @@ export class MultiPlatformAIService {
     question: string,
     brandName: string,
     competitors: string[] = [],
-    platforms: ("ChatGPT" | "Gemini" | "Copilot")[],
+    platforms: AIPlatform[],
     testsPerPlatform?: number
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
@@ -226,7 +230,7 @@ export class MultiPlatformAIService {
   }
 
   private async testSinglePlatform(
-    platform: "ChatGPT" | "Gemini" | "Copilot",
+    platform: AIPlatform,
     question: string,
     brandName: string,
     competitors: string[],
@@ -237,10 +241,11 @@ export class MultiPlatformAIService {
       return this.testGeminiReal(question, brandName, competitors, numTests);
     }
     
-    // Use OpenAI for ChatGPT and Copilot (simulated)
+    // Use OpenAI for ChatGPT, Copilot (simulated), and Perplexity (simulated)
     const systemPrompts: Record<string, string> = {
       "ChatGPT": "",
       "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers with references when possible.",
+      "Perplexity": "You are Perplexity AI, an AI-powered answer engine. Provide comprehensive, well-researched answers with citations and sources when available. Focus on accuracy and include relevant context.",
     };
 
     // Run all tests for this platform in PARALLEL
@@ -271,9 +276,15 @@ export class MultiPlatformAIService {
         
         if (fullResponse) {
           const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+          const modelVersionMap: Record<AIPlatform, string> = {
+            "ChatGPT": "gpt-4o-mini",
+            "Copilot": "copilot-sim",
+            "Perplexity": "perplexity-sim",
+            "Gemini": "gemini-sim",
+          };
           return {
             platform,
-            modelVersion: platform === "ChatGPT" ? "gpt-4o-mini" : "copilot-sim",
+            modelVersion: modelVersionMap[platform],
             queryNumber: i,
             question,
             fullResponse,
@@ -458,7 +469,7 @@ export class MultiPlatformAIService {
     const competitorMentions: { [c: string]: number } = {};
     competitors.forEach(c => { competitorMentions[c] = responses.filter(r => r.competitorsMentioned.includes(c)).length; });
 
-    const platforms: ("ChatGPT" | "Gemini" | "Copilot")[] = ["ChatGPT", "Gemini", "Copilot"];
+    const platforms: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
     const platformBreakdown = platforms.map(platform => {
       const pr = responses.filter(r => r.platform === platform);
       const pm = pr.filter(r => r.brandMentioned).length;

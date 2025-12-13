@@ -222,35 +222,48 @@ export default function DashboardPage() {
               {/* Tier Badge */}
               <div className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
                 tier === "free" 
-                  ? "bg-blue-100 text-blue-700 border border-blue-200" 
-                  : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200"
+                  ? "bg-gray-100 text-gray-700 border border-gray-200" 
+                  : tier === "professional"
+                    ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200"
+                    : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200"
               }`}>
                 {tier === "free" ? (
                   <>
                     <Lock className="w-3 h-3" />
-                    Free Tier
+                    Free
+                  </>
+                ) : tier === "professional" ? (
+                  <>
+                    <Sparkles className="w-3 h-3" />
+                    Professional
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-3 h-3" />
-                    Full Audit
+                    Partner
                   </>
                 )}
               </div>
             </div>
             <div className="flex gap-3">
+              <Link
+                href="/pricing"
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+              >
+                Pricing
+              </Link>
               {tier === "free" && (
-                <button
-                  onClick={() => openUpgradeModal("funnel_stages")}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
+                <Link
+                  href="/pricing"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
                   Upgrade
-                </button>
+                </Link>
               )}
               <Link
                 href="/analyze"
-                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-2 font-semibold shadow-lg"
+                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 font-semibold shadow-lg"
               >
                 <Brain className="w-4 h-4" />
                 New Analysis
@@ -307,7 +320,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="text-sm text-blue-100 mb-4">
-              Select from real search data questions and strategic questions. Test on ChatGPT, Gemini, and Copilot. Get data-driven recommendations.
+              Select from real search data questions and strategic questions. Test on ChatGPT, Gemini, Copilot, and Perplexity. Get data-driven recommendations.
             </p>
             <div className="flex items-center text-sm font-semibold">
               Start Analysis

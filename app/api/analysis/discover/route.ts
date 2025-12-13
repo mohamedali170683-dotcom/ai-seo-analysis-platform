@@ -20,17 +20,22 @@ interface QuestionGroup {
   requiredSelections: number;
 }
 
+type UserTier = "free" | "professional" | "partner";
+
 /**
  * Phase 1: Discover questions for user selection
  * Returns questions grouped by funnel stage and type (brand vs category)
  * 
  * For FREE tier: Only strategic questions (no DataForSEO calls)
- * For PAID tier: Real search data + strategic questions
+ * For PROFESSIONAL/PARTNER tier: Real search data + strategic questions
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { brandName, category, competitors, tier = "free" } = body;
+    
+    // Validate tier
+    const validTier: UserTier = tier === "professional" || tier === "partner" ? tier : "free";
 
     if (!brandName) {
       return NextResponse.json(
@@ -46,9 +51,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const useRealSearchData = tier === "paid";
+    // Professional and Partner tiers get real search data
+    const useRealSearchData = validTier === "professional" || validTier === "partner";
     console.log(`🔍 [DISCOVER] Starting question discovery for: ${brandName} in ${category}`);
-    console.log(`🎯 [TIER] Running as ${tier} tier - Real search data: ${useRealSearchData ? "Yes" : "No (strategic only)"}`);
+    console.log(`🎯 [TIER] Running as ${validTier} tier - Real search data: ${useRealSearchData ? "Yes" : "No (strategic only)"}`);
 
     let realBrandQuestions: any[] = [];
     let realCategoryQuestions: any[] = [];
@@ -165,23 +171,31 @@ export async function POST(request: Request) {
 
     console.log(`✅ [DISCOVER] Found ${totalBrandQuestions} brand questions, ${totalCategoryQuestions} category questions`);
 
+    // Determine required selections based on tier
+    const requiredSelections = validTier === "free" ? 3 : 9;
+    
+    // Tier-specific instructions
+    const instructions: Record<UserTier, string> = {
+      free: "Free tier: Select up to 3 questions from Awareness stage. Upgrade to Professional for full funnel analysis with real search data.",
+      professional: "Professional tier: Select up to 18 questions across all 3 funnel stages. Mix real search data questions with strategic ones for comprehensive analysis.",
+      partner: "Partner tier: Unlimited question selection. Full access to real search data and all funnel stages.",
+    };
+
     return NextResponse.json({
       success: true,
       brandName,
       category,
       competitors: competitors || [],
-      tier,
+      tier: validTier,
       questionGroups,
       summary: {
         totalBrandQuestions,
         totalCategoryQuestions,
         totalQuestions: totalBrandQuestions + totalCategoryQuestions,
-        requiredSelections: tier === "free" ? 3 : 9, // Free: 3 total, Paid: 3 per stage × 3 stages
+        requiredSelections,
         hasRealSearchData: useRealSearchData && (realBrandQuestions.length > 0 || realCategoryQuestions.length > 0),
       },
-      instructions: tier === "free" 
-        ? "Free tier: Select up to 3 questions from Awareness stage. Upgrade for full funnel analysis with real search data."
-        : "Select 3 questions per funnel stage (9 total). Mix real search data questions with strategic ones for comprehensive analysis.",
+      instructions: instructions[validTier],
     });
 
   } catch (error: any) {
