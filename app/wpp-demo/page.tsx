@@ -483,6 +483,22 @@ export default function WPPDemoPage() {
                   {/* Sentiment Breakdown */}
                   <div className="mb-8">
                     <h4 className="text-lg font-bold text-gray-900 mb-4">⭐ Sentiment Breakdown</h4>
+                    
+                    {/* Sentiment Methodology */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                      <div className="flex items-start gap-2">
+                        <span className="text-amber-600 text-sm">ℹ️</span>
+                        <div className="text-xs text-amber-800">
+                          <strong>How Sentiment is Classified:</strong>
+                          <ul className="mt-1 space-y-0.5 list-disc list-inside">
+                            <li><span className="text-green-700 font-medium">Positive:</span> Brand mentioned with words like &quot;beste&quot;, &quot;empfohlen&quot;, &quot;hochwertig&quot;, &quot;premium&quot;, &quot;beliebt&quot;, &quot;trusted&quot;, &quot;quality&quot;</li>
+                            <li><span className="text-gray-700 font-medium">Neutral:</span> Brand mentioned factually without evaluative language</li>
+                            <li><span className="text-red-700 font-medium">Negative:</span> Brand mentioned with words like &quot;teuer&quot;, &quot;überteuert&quot;, &quot;probleme&quot;, &quot;bedenken&quot;, &quot;avoid&quot;</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                    
                     <div className="grid grid-cols-3 gap-6">
                       <div className="bg-green-50 rounded-xl p-6 text-center border-2 border-green-200">
                         <div className="text-3xl mb-2">😊</div>
@@ -711,11 +727,23 @@ export default function WPPDemoPage() {
               <span className="text-purple-600 text-lg">ℹ️</span>
               <div>
                 <h4 className="font-semibold text-purple-900 text-sm mb-1">How Persona Visibility is Calculated</h4>
-                <p className="text-purple-800 text-xs leading-relaxed">
+                <p className="text-purple-800 text-xs leading-relaxed mb-2">
                   Each search query is mapped to a target persona based on search intent. 
-                  <strong> Persona Visibility = (Brand Mentions in Persona Queries ÷ Total Mentions in Persona) × 100</strong>. 
-                  This shows which brands AI platforms recommend to different audience segments (e.g., Bodybuilders searching dosage questions vs. Beginners checking safety).
+                  <strong> Persona Visibility = (Brand Mentions in Persona Queries ÷ Total Mentions in Persona) × 100</strong>.
                 </p>
+                <div className="text-purple-800 text-xs">
+                  <strong>Question → Persona Mapping:</strong>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+                    <div>🏋️ <strong>Bodybuilder:</strong></div>
+                    <div>&quot;Wie viel Proteinpulver am Tag?&quot;, &quot;Welches ist das beste?&quot;, &quot;Wo ESN kaufen?&quot;</div>
+                    <div>🏃 <strong>Sports Enthusiast:</strong></div>
+                    <div>&quot;Proteinpulver Test&quot;</div>
+                    <div>🌱 <strong>Beauty Affinity:</strong></div>
+                    <div>&quot;Veganes Proteinpulver Test&quot;</div>
+                    <div>👤 <strong>Beginner/General:</strong></div>
+                    <div>&quot;Sind Proteinriegel gesund?&quot;, &quot;Ist Proteinpulver schädlich?&quot;, &quot;DM/Rossmann&quot; queries</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
