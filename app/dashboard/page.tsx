@@ -65,7 +65,7 @@ Strategic Recommendations: Get specific, justified actions with correlations exp
 
 Multiple AI Platform Analysis: By querying several AI assistants, we reduce the risk of skewed results from any single platform. It's like conducting focus groups with different demographic segments rather than relying on just one.
 
-Statistical Reliability: Each question is tested 3 times per platform (3 × 3 platforms = 9 tests per question), creating a dataset of 81 total AI responses across 9 questions. This repetition accounts for AI response variability.
+Statistical Reliability: Each question is tested 3 times per platform (3 × 4 platforms = 12 tests per question), creating a statistically significant dataset of AI responses. This repetition accounts for AI response variability.
 
 Why 3 tests per platform works: Unlike human surveys (which need n≥30), AI models are relatively deterministic—the same question yields 80-90% consistent responses. With 3 tests, we can detect clear patterns while keeping analysis fast (~3-5 minutes).
 
@@ -300,7 +300,7 @@ export default function DashboardPage() {
               <Bot className="w-5 h-5 opacity-75" />
             </div>
             <div className="text-3xl font-bold">{stats.totalAnalyses * 81}</div>
-            <div className="text-xs opacity-75 mt-1">3 tests × 3 platforms × 9 questions</div>
+            <div className="text-xs opacity-75 mt-1">3 tests × 4 platforms × questions</div>
           </div>
         </div>
 

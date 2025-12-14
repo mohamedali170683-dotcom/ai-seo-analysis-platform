@@ -150,11 +150,7 @@ export default function AnalyzePage() {
       return;
     }
 
-    // Check if trying to select real data question on free tier
-    if (tier === "free" && question.source === "real_data") {
-      openUpgradeModal("real_search_data");
-      return;
-    }
+    // Real search data is now available for ALL tiers (including free)
 
     setSelectedQuestions(prev => {
       const stageQuestions = prev[stage] || [];
@@ -464,28 +460,24 @@ export default function AnalyzePage() {
               </h2>
               <p className="text-xl text-gray-300 mb-6">
                 {tier === "free" 
-                  ? "See how AI platforms discuss your brand with a quick visibility check. Test up to 3 questions on ChatGPT."
+                  ? "See how AI platforms discuss your brand across ChatGPT, Gemini, Copilot & Perplexity. Identify visibility gaps and optimization opportunities."
                   : "Unlike automated tools, our 2-phase approach lets YOU decide which questions matter most for your brand."
                 }
               </p>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className={`rounded-xl p-4 ${tier === "free" ? "bg-white/5 opacity-60" : "bg-white/5"}`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="text-3xl">📊</div>
-                    {tier === "free" && <PremiumBadge size="sm" />}
-                  </div>
+                <div className="bg-white/5 rounded-xl p-4">
+                  <div className="text-3xl mb-2">📊</div>
                   <h3 className="font-semibold mb-1">Real Search Data</h3>
                   <p className="text-sm text-gray-400">
-                    {tier === "free" 
-                      ? "Upgrade to see actual questions with search volumes" 
-                      : "See actual questions people search with real monthly volumes"
-                    }
+                    See actual questions people search with real monthly volumes
                   </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
                   <div className="text-3xl mb-2">🎯</div>
-                  <h3 className="font-semibold mb-1">Strategic Questions</h3>
-                  <p className="text-sm text-gray-400">AI-crafted questions to understand brand positioning</p>
+                  <h3 className="font-semibold mb-1">All 4 AI Platforms</h3>
+                  <p className="text-sm text-gray-400">
+                    Test on ChatGPT, Gemini, Copilot & Perplexity — see the full picture
+                  </p>
                 </div>
                 <div className="bg-white/5 rounded-xl p-4">
                   <div className="text-3xl mb-2">🔬</div>
@@ -493,7 +485,7 @@ export default function AnalyzePage() {
                   <p className="text-sm text-gray-400">
                     {tier === "free" 
                       ? "Select up to 3 questions from Awareness stage" 
-                      : "Select up to 18 questions across the customer journey"
+                      : "Select unlimited questions across the customer journey"
                     }
                   </p>
                 </div>
@@ -503,19 +495,20 @@ export default function AnalyzePage() {
               {tier === "free" && (
                 <div className="mt-6 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
                   <h4 className="font-semibold text-amber-300 mb-2 flex items-center gap-2">
-                    <Lock className="w-4 h-4" /> Free Tier Includes:
+                    <Lock className="w-4 h-4" /> Free Tier — See the Problem, Unlock the Solution:
                   </h4>
                   <ul className="text-sm text-gray-300 space-y-1">
-                    <li>✓ Up to 3 strategic questions</li>
-                    <li>✓ Awareness stage only</li>
-                    <li>✓ ChatGPT platform only</li>
-                    <li>✓ Overall visibility score + sentiment</li>
+                    <li>✓ All 4 AI platforms (ChatGPT, Gemini, Copilot, Perplexity)</li>
+                    <li>✓ Real search data from DataForSEO</li>
+                    <li>✓ Up to 3 questions • Awareness stage only</li>
+                    <li>✓ Full visibility scores & competitor comparison</li>
+                    <li className="text-red-400">✗ Detailed recommendations & code snippets locked</li>
                   </ul>
                   <button
-                    onClick={() => openUpgradeModal("funnel_stages")}
+                    onClick={() => openUpgradeModal("recommendations")}
                     className="mt-3 text-sm text-amber-400 hover:text-amber-300 font-medium"
                   >
-                    Unlock all stages, platforms & features →
+                    Unlock full recommendations & all funnel stages →
                   </button>
                 </div>
               )}
@@ -561,37 +554,24 @@ export default function AnalyzePage() {
 
                 <div className="relative">
                   <label className="block text-sm text-gray-400 mb-1 flex items-center gap-2">
-                    Main Competitors (comma-separated)
-                    {tier === "free" && <PremiumBadge size="sm" />}
+                    Main Competitor
+                    {tier === "free" && <span className="text-xs text-gray-500">(1 in Free, up to 10 in Professional)</span>}
                   </label>
                   <input
                     type="text"
                     value={competitors}
-                    onChange={(e) => tier !== "free" && setCompetitors(e.target.value)}
-                    onClick={() => tier === "free" && openUpgradeModal("competitors")}
-                    placeholder={tier !== "free" ? `e.g., Adidas, Puma${limits.maxCompetitors > 2 ? ", New Balance" : ""}` : "Adidas, Puma, New Balance"}
-                    className={`w-full rounded-lg px-4 py-3 focus:outline-none ${
-                      tier !== "free"
-                        ? "bg-white/10 focus:ring-2 focus:ring-purple-500 cursor-text" 
-                        : "bg-white/5 text-gray-500 cursor-pointer border border-dashed border-gray-600"
-                    }`}
-                    readOnly={tier === "free"}
+                    onChange={(e) => setCompetitors(e.target.value)}
+                    placeholder={tier === "free" ? "e.g., Adidas" : `e.g., Adidas, Puma, New Balance${limits.maxCompetitors >= 10 ? ", etc." : ""}`}
+                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-text"
                   />
-                  {tier === "free" && (
-                    <div className="absolute right-3 top-1/2 translate-y-1">
-                      <Lock className="w-4 h-4 text-gray-500" />
-                    </div>
-                  )}
-                  {tier === "free" && (
-                    <p className="text-xs text-amber-400/80 mt-1">
-                      🔒 Available in Professional
-                    </p>
-                  )}
-                  {tier !== "free" && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Up to {limits.maxCompetitors} competitors ({tier === "partner" ? "unlimited in Partner" : "3 in Professional"})
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    {tier === "free" 
+                      ? "Free: 1 competitor comparison. Compare up to 10 with Professional →"
+                      : tier === "partner"
+                        ? "Partner: Unlimited competitor comparisons"
+                        : `Professional: Up to ${limits.maxCompetitors} competitors`
+                    }
+                  </p>
                 </div>
               </div>
 
@@ -703,11 +683,11 @@ export default function AnalyzePage() {
                 </div>
                 <div className="flex gap-3">
                   <span className="text-purple-400 font-bold">3.</span>
-                  <span>Choose which AI chatbots to test (ChatGPT, Gemini, Copilot)</span>
+                  <span>Test on all 4 AI platforms: ChatGPT, Gemini, Copilot & Perplexity</span>
                 </div>
                 <div className="flex gap-3">
                   <span className="text-purple-400 font-bold">4.</span>
-                  <span>Get detailed visibility scores, mention rates, and actionable insights</span>
+                  <span>Get visibility scores across all platforms {tier === "free" ? "(unlock detailed recommendations with Professional)" : "and actionable recommendations"}</span>
                 </div>
               </div>
             </div>
@@ -865,36 +845,25 @@ export default function AnalyzePage() {
                         <div className="flex items-center gap-2 mb-2 px-1">
                           <div className="w-2 h-2 rounded-full bg-green-500"></div>
                           <span className="text-xs font-semibold text-green-400 uppercase tracking-wide">Real Search Data</span>
-                          {tier === "free" && <PremiumBadge size="sm" />}
                         </div>
                         {allQuestions.filter(q => q.source === "real_data").map((q) => {
                           const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
-                          const isRealDataLocked = tier === "free";
                           
                           return (
                             <div
                               key={q.id}
                               onClick={() => toggleQuestion(q, group.stage)}
                               className={`p-3 rounded-lg cursor-pointer transition-all mb-2 relative ${
-                                isRealDataLocked
-                                  ? "bg-gray-700/30 border-2 border-dashed border-gray-600 opacity-70"
-                                  : isSelected
-                                    ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
-                                    : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
+                                isSelected
+                                  ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
+                                  : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
                               }`}
                             >
-                              {isRealDataLocked && (
-                                <div className="absolute top-2 right-2">
-                                  <Lock className="w-3 h-3 text-gray-500" />
-                                </div>
-                              )}
                               <div className="flex items-start justify-between gap-2">
-                                <span className={`text-sm ${
-                                  isRealDataLocked ? "text-gray-400" : isSelected ? "text-white font-medium" : "text-gray-200"
-                                }`}>
+                                <span className={`text-sm ${isSelected ? "text-white font-medium" : "text-gray-200"}`}>
                                   {q.question}
                                 </span>
-                                {isSelected && !isRealDataLocked && (
+                                {isSelected && (
                                   <span className="text-purple-300 text-lg">✓</span>
                                 )}
                               </div>
@@ -904,7 +873,7 @@ export default function AnalyzePage() {
                                 }`}>
                                   {q.type === "brand" ? "Brand" : "Category"}
                                 </span>
-                                <span className={`text-xs font-semibold ${isRealDataLocked ? "text-gray-500" : "text-green-400"}`}>
+                                <span className="text-xs font-semibold text-green-400">
                                   {formatVolume(q.searchVolume)}
                                 </span>
                               </div>
@@ -966,7 +935,6 @@ export default function AnalyzePage() {
               
               <div className="grid grid-cols-4 gap-4">
                 {(["ChatGPT", "Gemini", "Copilot", "Perplexity"] as Platform[]).map((platform) => {
-                  const isAllowed = isPlatformAllowed(platform);
                   const isSelected = selectedPlatforms.includes(platform);
                   
                   return (
@@ -974,31 +942,19 @@ export default function AnalyzePage() {
                       key={platform}
                       onClick={() => togglePlatform(platform)}
                       className={`p-4 rounded-lg cursor-pointer text-center transition-all relative ${
-                        !isAllowed
-                          ? "bg-gray-700/30 border-2 border-dashed border-gray-600"
-                          : isSelected
-                            ? "bg-green-600/30 border-2 border-green-500"
-                            : "bg-white/5 border-2 border-transparent hover:bg-white/10"
+                        isSelected
+                          ? "bg-green-600/30 border-2 border-green-500"
+                          : "bg-white/5 border-2 border-transparent hover:bg-white/10"
                       }`}
                     >
-                      {!isAllowed && (
-                        <div className="absolute top-2 right-2">
-                          <PremiumBadge size="sm" />
-                        </div>
-                      )}
-                      <div className={`text-3xl mb-2 ${!isAllowed ? "opacity-50" : ""}`}>
+                      <div className="text-3xl mb-2">
                         {platform === "ChatGPT" && "🤖"}
                         {platform === "Gemini" && "✨"}
                         {platform === "Copilot" && "🔷"}
                         {platform === "Perplexity" && "🔮"}
                       </div>
-                      <div className={`font-medium ${!isAllowed ? "text-gray-500" : ""}`}>{platform}</div>
-                      {!isAllowed && (
-                        <div className="text-xs text-amber-400/80 mt-1 flex items-center justify-center gap-1">
-                          <Lock className="w-3 h-3" /> Professional
-                        </div>
-                      )}
-                      {isAllowed && isSelected && (
+                      <div className="font-medium">{platform}</div>
+                      {isSelected && (
                         <div className="text-xs text-green-400 mt-1">✓ Selected</div>
                       )}
                     </div>
@@ -1006,11 +962,9 @@ export default function AnalyzePage() {
                 })}
               </div>
               
-              {tier === "free" && (
-                <p className="text-xs text-gray-500 mt-3 text-center">
-                  Free tier includes ChatGPT only. <button onClick={() => openUpgradeModal("platforms")} className="text-purple-400 hover:underline">Upgrade to test all 4 platforms</button>
-                </p>
-              )}
+              <p className="text-xs text-gray-500 mt-3 text-center">
+                All 4 AI platforms are included {tier === "free" ? "in the Free tier" : "in your plan"}. Test on all of them to see the full picture.
+              </p>
             </div>
 
             {/* Actions - Also Sticky at Bottom */}

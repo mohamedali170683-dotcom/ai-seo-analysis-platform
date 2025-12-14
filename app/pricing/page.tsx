@@ -142,11 +142,11 @@ export default function PricingPage() {
             <ul className="space-y-3 mb-8">
               {[
                 "Unlimited analyses & brands",
-                "Up to 10 competitor comparisons",
+                "Unlimited competitor comparisons",
                 "Daily monitoring alerts",
                 "White-label PDF reports",
                 "Full API access",
-                "10 team members",
+                "Team access (up to 10 users)",
                 "Monthly strategy call (2 hrs)",
                 "Implementation support",
                 "Dedicated account manager",
@@ -210,14 +210,14 @@ export default function PricingPage() {
               {[
                 "All 4 AI platforms (ChatGPT, Gemini, Copilot, Perplexity)",
                 "Full funnel analysis (Awareness → Decision)",
-                "Up to 18 questions per analysis",
-                "3 competitor comparisons",
-                "5 analyses per month",
+                "Unlimited questions per analysis",
+                "Up to 10 competitor comparisons",
+                "Unlimited analyses per month",
                 "3 brands monitored",
                 "Real search volume data",
                 "Full technical recommendations",
                 "Code snippets for implementation",
-                "PDF export",
+                "PDF export & save results",
                 "Weekly monitoring alerts",
                 "Email + chat support",
               ].map((feature, i) => (
@@ -270,20 +270,32 @@ export default function PricingPage() {
 
             <ul className="space-y-3 mb-8">
               {[
-                "ChatGPT platform only",
+                "All 4 AI platforms",
+                "Real search data from DataForSEO",
                 "3 questions analyzed",
                 "Awareness stage only",
                 "1 analysis per month",
-                "Overall visibility score",
-                "Sentiment breakdown",
-                "Technical audit (pass/fail)",
-                "1 competitor comparison (view only)",
+                "Full visibility scores (all platforms)",
+                "Competitor comparison (1 competitor)",
+                "Technical audit (issues found)",
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <Check className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <span className="text-gray-600">{feature}</span>
                 </li>
               ))}
+              <li className="flex items-start gap-2 text-sm text-red-600">
+                <span className="w-5 h-5 flex-shrink-0 text-center">✗</span>
+                <span>Detailed recommendations locked</span>
+              </li>
+              <li className="flex items-start gap-2 text-sm text-red-600">
+                <span className="w-5 h-5 flex-shrink-0 text-center">✗</span>
+                <span>Code snippets locked</span>
+              </li>
+              <li className="flex items-start gap-2 text-sm text-red-600">
+                <span className="w-5 h-5 flex-shrink-0 text-center">✗</span>
+                <span>PDF export locked</span>
+              </li>
             </ul>
 
             <button
@@ -318,17 +330,18 @@ export default function PricingPage() {
               </thead>
               <tbody className="divide-y">
                 {[
-                  { feature: "AI Platforms", free: "ChatGPT only", pro: "All 4", partner: "All 4 + future" },
-                  { feature: "Max Questions", free: "3", pro: "18", partner: "Unlimited" },
+                  { feature: "AI Platforms", free: "All 4", pro: "All 4", partner: "All 4 + future" },
+                  { feature: "Max Questions", free: "3", pro: "Unlimited", partner: "Unlimited" },
                   { feature: "Funnel Stages", free: "Awareness", pro: "All 3", partner: "All 3" },
                   { feature: "Tests per Question", free: "1", pro: "3", partner: "3" },
-                  { feature: "Competitors", free: "1 (view)", pro: "3", partner: "10" },
-                  { feature: "Analyses/Month", free: "1", pro: "5", partner: "Unlimited" },
+                  { feature: "Competitors", free: "1", pro: "10", partner: "Unlimited" },
+                  { feature: "Analyses/Month", free: "1", pro: "Unlimited", partner: "Unlimited" },
                   { feature: "Brands", free: "1", pro: "3", partner: "Unlimited" },
-                  { feature: "Real Search Data", free: false, pro: true, partner: true },
+                  { feature: "Real Search Data", free: true, pro: true, partner: true },
                   { feature: "Detailed Recommendations", free: false, pro: true, partner: true },
                   { feature: "Code Snippets", free: false, pro: true, partner: true },
                   { feature: "PDF Export", free: false, pro: true, partner: "White-label" },
+                  { feature: "Save Results", free: false, pro: true, partner: true },
                   { feature: "Monitoring", free: "—", pro: "Weekly", partner: "Daily" },
                   { feature: "API Access", free: false, pro: false, partner: true },
                   { feature: "Team Members", free: "1", pro: "1", partner: "10" },
@@ -377,7 +390,7 @@ export default function PricingPage() {
               },
               {
                 q: "What AI platforms do you test?",
-                a: "We test ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. Free tier includes ChatGPT only. Professional and Partner include all four platforms."
+                a: "We test ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. All tiers include all four platforms — so you see the full picture of your AI visibility, even on Free."
               },
               {
                 q: "How is the visibility score calculated?",

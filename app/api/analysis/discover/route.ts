@@ -26,8 +26,8 @@ type UserTier = "free" | "professional" | "partner";
  * Phase 1: Discover questions for user selection
  * Returns questions grouped by funnel stage and type (brand vs category)
  * 
- * For FREE tier: Only strategic questions (no DataForSEO calls)
- * For PROFESSIONAL/PARTNER tier: Real search data + strategic questions
+ * NEW MODEL: ALL tiers get real search data from DataForSEO
+ * Free tier sees the FULL problem but can't access detailed recommendations
  */
 export async function POST(request: Request) {
   try {
@@ -51,35 +51,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Professional and Partner tiers get real search data
-    const useRealSearchData = validTier === "professional" || validTier === "partner";
+    // ALL tiers now get real search data (Free tier sees the problem, not the solution)
     console.log(`🔍 [DISCOVER] Starting question discovery for: ${brandName} in ${category}`);
-    console.log(`🎯 [TIER] Running as ${validTier} tier - Real search data: ${useRealSearchData ? "Yes" : "No (strategic only)"}`);
+    console.log(`🎯 [TIER] Running as ${validTier} tier - Real search data: YES (all tiers)`);
 
     let realBrandQuestions: any[] = [];
     let realCategoryQuestions: any[] = [];
 
-    // Only fetch real search data for paid tier
-    if (useRealSearchData) {
-      // Initialize DataForSEO service
-      const dataForSEOLogin = process.env.DATAFORSEO_LOGIN;
-      const dataForSEOPassword = process.env.DATAFORSEO_PASSWORD;
+    // Fetch real search data for ALL tiers
+    // Initialize DataForSEO service
+    const dataForSEOLogin = process.env.DATAFORSEO_LOGIN;
+    const dataForSEOPassword = process.env.DATAFORSEO_PASSWORD;
 
-      if (!dataForSEOLogin || !dataForSEOPassword) {
-        console.log(`⚠️ [DISCOVER] DataForSEO credentials not configured, falling back to strategic only`);
-      } else {
-        const dataForSEO = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
-
-        // Fetch REAL brand questions from search data
-        console.log(`📡 [DISCOVER] Fetching real brand questions...`);
-        realBrandQuestions = await dataForSEO.getBrandQuestions(brandName, 20);
-
-        // Fetch REAL category questions from search data
-        console.log(`📡 [DISCOVER] Fetching real category questions...`);
-        realCategoryQuestions = await dataForSEO.getCategoryQuestions(category, 20);
-      }
+    if (!dataForSEOLogin || !dataForSEOPassword) {
+      console.log(`⚠️ [DISCOVER] DataForSEO credentials not configured, falling back to strategic only`);
     } else {
-      console.log(`🆓 [DISCOVER] Free tier - skipping DataForSEO, using strategic questions only`);
+      const dataForSEO = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
+
+      // Fetch REAL brand questions from search data
+      console.log(`📡 [DISCOVER] Fetching real brand questions...`);
+      realBrandQuestions = await dataForSEO.getBrandQuestions(brandName, 20);
+
+      // Fetch REAL category questions from search data
+      console.log(`📡 [DISCOVER] Fetching real category questions...`);
+      realCategoryQuestions = await dataForSEO.getCategoryQuestions(category, 20);
     }
 
     // Generate STRATEGIC questions for comprehensive brand positioning analysis
@@ -172,13 +167,13 @@ export async function POST(request: Request) {
     console.log(`✅ [DISCOVER] Found ${totalBrandQuestions} brand questions, ${totalCategoryQuestions} category questions`);
 
     // Determine required selections based on tier
-    const requiredSelections = validTier === "free" ? 3 : 9;
+    const requiredSelections = validTier === "free" ? 3 : 3; // Min 3 for all tiers
     
-    // Tier-specific instructions
+    // Tier-specific instructions - now all tiers get real search data
     const instructions: Record<UserTier, string> = {
-      free: "Free tier: Select up to 3 questions from Awareness stage. Upgrade to Professional for full funnel analysis with real search data.",
-      professional: "Professional tier: Select up to 18 questions across all 3 funnel stages. Mix real search data questions with strategic ones for comprehensive analysis.",
-      partner: "Partner tier: Unlimited question selection. Full access to real search data and all funnel stages.",
+      free: "Free tier: Select up to 3 questions from Awareness stage. All 4 AI platforms included. Real search data included. Upgrade to Professional for detailed recommendations and full funnel analysis.",
+      professional: "Professional tier: Unlimited questions across all 3 funnel stages. Full recommendations with implementation code.",
+      partner: "Partner tier: Unlimited question selection. Full access to all features plus strategy calls and implementation support.",
     };
 
     return NextResponse.json({
@@ -193,7 +188,7 @@ export async function POST(request: Request) {
         totalCategoryQuestions,
         totalQuestions: totalBrandQuestions + totalCategoryQuestions,
         requiredSelections,
-        hasRealSearchData: useRealSearchData && (realBrandQuestions.length > 0 || realCategoryQuestions.length > 0),
+        hasRealSearchData: realBrandQuestions.length > 0 || realCategoryQuestions.length > 0,
       },
       instructions: instructions[validTier],
     });

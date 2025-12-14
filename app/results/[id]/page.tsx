@@ -263,7 +263,7 @@ export default function ResultsPage() {
             <div>
               <span className="font-bold text-lg">{reportData.brandOrKeyword} - Velaris Report</span>
               <div className="text-sm text-green-100">
-                {reportData.totalTests} AI responses analyzed across 3 platforms
+                {reportData.totalTests} AI responses analyzed across 4 platforms
               </div>
             </div>
           </div>
@@ -713,7 +713,8 @@ export default function ResultsPage() {
                             <div className="flex items-center gap-2 mb-2">
                               <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                                 example?.platform === "ChatGPT" ? "bg-green-100 text-green-700" :
-                                example?.platform === "Gemini" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"
+                                example?.platform === "Gemini" ? "bg-blue-100 text-blue-700" :
+                                example?.platform === "Perplexity" ? "bg-amber-100 text-amber-700" : "bg-purple-100 text-purple-700"
                               }`}>{example?.platform || "AI"}</span>
                               <span className={`text-xs px-2 py-0.5 rounded ${
                                 example?.sentiment === "positive" ? "bg-green-50 text-green-600" :
@@ -1217,7 +1218,7 @@ export default function ResultsPage() {
                     <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
                     <div>
                       <span className="font-semibold text-gray-900">Multi-Platform Testing</span>
-                      <p className="text-sm text-gray-600">Each question is sent to ChatGPT and Google Gemini (real APIs), plus Microsoft Copilot simulation. We run 3 tests per platform for statistical reliability.</p>
+                      <p className="text-sm text-gray-600">Each question is sent to all 4 AI platforms: ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. We run multiple tests per platform for statistical reliability.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">

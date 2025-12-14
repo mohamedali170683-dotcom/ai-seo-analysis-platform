@@ -135,11 +135,11 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
                 {[
                   "All 4 AI platforms (ChatGPT, Gemini, Copilot, Perplexity)",
                   "Full funnel analysis (Awareness → Decision)",
-                  "Up to 18 questions per analysis",
-                  "3 competitor comparisons",
-                  "5 analyses per month",
-                  "Real search volume data",
-                  "PDF export & code snippets",
+                  "Unlimited questions per analysis",
+                  "Up to 10 competitor comparisons",
+                  "Unlimited analyses per month",
+                  "Detailed recommendations & code snippets",
+                  "PDF export & save results",
                   "Weekly monitoring alerts",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
@@ -193,10 +193,11 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
               <ul className="space-y-3 mb-6">
                 {[
                   "Unlimited analyses & brands",
-                  "Up to 10 competitor comparisons",
+                  "Unlimited competitor comparisons",
                   "Daily monitoring alerts",
                   "White-label PDF reports",
                   "Full API access",
+                  "Team access (up to 10 users)",
                   "Monthly strategy call (2 hours)",
                   "Implementation support",
                   "Dedicated account manager",
@@ -397,7 +398,7 @@ export function VisibilityGapAlert({
         onClick={onUpgrade}
         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
       >
-        Unlock Full Analysis — €299/mo
+        Get Fix Recommendations — €590/mo
         <ArrowRight className="w-4 h-4" />
       </button>
     </div>

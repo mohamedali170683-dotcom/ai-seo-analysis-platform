@@ -1,11 +1,12 @@
 // 3-Tier Pricing Model Types and Constants
 // Based on behavioral science principles for client acquisition
+// KEY INSIGHT: Free tier sees FULL PROBLEM (all platforms), but cannot access SOLUTION (recommendations)
 
 export type UserTier = "free" | "professional" | "partner";
 export type BillingCycle = "monthly" | "annual";
 
 export interface TierLimits {
-  // Platform access
+  // Platform access - ALL tiers get all platforms now
   platforms: ("ChatGPT" | "Gemini" | "Copilot" | "Perplexity")[];
   
   // Analysis limits
@@ -16,11 +17,12 @@ export interface TierLimits {
   analysesPerMonth: number;
   maxBrands: number;
   
-  // Feature flags
-  useRealSearchData: boolean;
-  showDetailedRecommendations: boolean;
+  // Feature flags - THE KEY GATES
+  useRealSearchData: boolean;  // Now TRUE for all tiers
+  showDetailedRecommendations: boolean;  // THE PRIMARY GATE - Free sees issues, not fixes
   showCodeSnippets: boolean;
   allowPdfExport: boolean;
+  saveResults: boolean;  // NEW: Can save to dashboard
   allowApiAccess: boolean;
   allowWhiteLabel: boolean;
   
@@ -55,9 +57,9 @@ export const TIER_PRICING: Record<UserTier, TierPricing> = {
     currency: "EUR",
   },
   professional: {
-    monthly: 299,
-    annual: 2990, // 2 months free
-    annualSavings: 598,
+    monthly: 590,
+    annual: 5900, // 2 months free
+    annualSavings: 1180,
     currency: "EUR",
   },
   partner: {
@@ -70,17 +72,20 @@ export const TIER_PRICING: Record<UserTier, TierPricing> = {
 
 export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   free: {
-    platforms: ["ChatGPT"],
+    // ALL platforms available - they see the FULL problem
+    platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
     maxQuestions: 3,
-    allowedStages: ["awareness"],
+    allowedStages: ["awareness"], // Only awareness stage
     testsPerQuestion: 1,
-    maxCompetitors: 1, // View comparison only
+    maxCompetitors: 1, // Can see comparison but only 1 competitor
     analysesPerMonth: 1,
     maxBrands: 1,
-    useRealSearchData: false,
-    showDetailedRecommendations: false,
+    // THE KEY GATES - see problem, not solution
+    useRealSearchData: true, // YES - they see real search data
+    showDetailedRecommendations: false, // NO - they see "7 issues found" but not the fixes
     showCodeSnippets: false,
     allowPdfExport: false,
+    saveResults: false, // Cannot save to dashboard
     allowApiAccess: false,
     allowWhiteLabel: false,
     monitoringFrequency: "none",
@@ -93,16 +98,17 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   },
   professional: {
     platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
-    maxQuestions: 18,
+    maxQuestions: Infinity, // UNLIMITED
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,
-    maxCompetitors: 3,
-    analysesPerMonth: 5,
+    maxCompetitors: 10, // Up to 10 competitors
+    analysesPerMonth: Infinity, // UNLIMITED
     maxBrands: 3,
     useRealSearchData: true,
-    showDetailedRecommendations: true,
+    showDetailedRecommendations: true, // UNLOCKED
     showCodeSnippets: true,
     allowPdfExport: true,
+    saveResults: true, // Can save to dashboard
     allowApiAccess: false,
     allowWhiteLabel: false,
     monitoringFrequency: "weekly",
@@ -118,13 +124,14 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     maxQuestions: Infinity,
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,
-    maxCompetitors: 10,
+    maxCompetitors: Infinity, // Unlimited
     analysesPerMonth: Infinity,
     maxBrands: Infinity,
     useRealSearchData: true,
     showDetailedRecommendations: true,
     showCodeSnippets: true,
     allowPdfExport: true,
+    saveResults: true,
     allowApiAccess: true,
     allowWhiteLabel: true,
     monitoringFrequency: "daily",
@@ -153,25 +160,23 @@ export const TIER_NAMES: Record<UserTier, { name: string; tagline: string; badge
   },
 };
 
-// Upgrade modal trigger types
+// Upgrade modal trigger types - Updated for recommendations-focused gating
 export type UpgradeModalTrigger =
-  | "funnel_stages"
-  | "platforms"
-  | "competitors"
-  | "recommendations"
+  | "recommendations" // Primary gate - see issues, unlock fixes
+  | "code_snippets"
   | "pdf_export"
-  | "question_limit"
-  | "real_search_data"
-  | "technical_audit"
-  | "gemini"
-  | "copilot"
-  | "perplexity"
+  | "save_results"
+  | "funnel_stages"
   | "consideration"
   | "decision"
+  | "question_limit"
+  | "competitor_limit"
+  | "competitors" // Alias for competitor_limit
   | "analysis_limit"
-  | "code_snippets"
   | "api_access"
-  | "white_label";
+  | "white_label"
+  | "team_management"
+  | "technical_audit"; // Technical recommendations lock
 
 export interface UpgradeModalContent {
   headline: string;
@@ -180,60 +185,30 @@ export interface UpgradeModalContent {
 }
 
 export const UPGRADE_MODAL_CONTENT: Record<UpgradeModalTrigger, UpgradeModalContent> = {
-  platforms: {
-    headline: "Test All 4 AI Platforms",
-    description: "ChatGPT is only 25% of the picture. See how Gemini, Copilot, and Perplexity represent your brand.",
-    keyMessage: "Complete coverage of the AI landscape",
-  },
-  funnel_stages: {
-    headline: "Unlock Full Journey Analysis",
-    description: "See how AI influences your customers from discovery to purchase decision.",
-    keyMessage: "Awareness → Consideration → Decision",
-  },
-  competitors: {
-    headline: "Compare Against Competitors",
-    description: "Know exactly where you stand. See who AI recommends more.",
-    keyMessage: "Track up to 3 competitors side-by-side",
-  },
   recommendations: {
-    headline: "Get Your Fix Recommendations",
-    description: "We found issues affecting your AI visibility. Get specific fixes with implementation code.",
-    keyMessage: "Actionable optimization roadmap",
+    headline: "Unlock Your Fix Recommendations",
+    description: "You've identified optimization opportunities. Get the detailed fixes with implementation code.",
+    keyMessage: "See exactly what to fix and how",
+  },
+  code_snippets: {
+    headline: "Get Implementation Code",
+    description: "Copy-paste ready fixes for your development team. Schema markup, meta tags, and more.",
+    keyMessage: "Ready-to-use code for developers",
   },
   pdf_export: {
     headline: "Download Your Report",
     description: "Get a professional PDF to share with your team or stakeholders.",
     keyMessage: "Shareable, presentation-ready format",
   },
-  question_limit: {
-    headline: "Go Deeper with 18 Questions",
-    description: "Analyze more queries across the full customer journey.",
-    keyMessage: "6x more questions for comprehensive analysis",
+  save_results: {
+    headline: "Save & Track Your Results",
+    description: "Build a history of your AI visibility over time. See what's improving.",
+    keyMessage: "Track progress across analyses",
   },
-  real_search_data: {
-    headline: "Access Real Search Data",
-    description: "See actual questions users search for, with monthly search volumes.",
-    keyMessage: "Real data from DataForSEO",
-  },
-  technical_audit: {
-    headline: "Get Full Technical Audit",
-    description: "Receive detailed technical recommendations with implementation guides.",
-    keyMessage: "Code snippets included",
-  },
-  gemini: {
-    headline: "Test on Google Gemini",
-    description: "See how Google's AI assistant discusses your brand - critical for search visibility.",
-    keyMessage: "Integrated with Google Search & AI Overviews",
-  },
-  copilot: {
-    headline: "Test on Microsoft Copilot",
-    description: "Understand your presence on Microsoft's AI platform used by millions.",
-    keyMessage: "Built into Windows, Edge, and Office",
-  },
-  perplexity: {
-    headline: "Test on Perplexity",
-    description: "See how this fast-growing AI search engine represents your brand.",
-    keyMessage: "The AI-native search experience",
+  funnel_stages: {
+    headline: "Unlock Full Journey Analysis",
+    description: "See how AI influences your customers from discovery to purchase decision.",
+    keyMessage: "Awareness → Consideration → Decision",
   },
   consideration: {
     headline: "Unlock Consideration Stage",
@@ -245,15 +220,25 @@ export const UPGRADE_MODAL_CONTENT: Record<UpgradeModalTrigger, UpgradeModalCont
     description: "Discover what AI says when users are ready to buy.",
     keyMessage: "Where recommendations drive conversions",
   },
-  analysis_limit: {
-    headline: "Run More Analyses",
-    description: "You've used your monthly analysis. Upgrade for 5/month.",
-    keyMessage: "Track changes over time",
+  question_limit: {
+    headline: "Analyze Unlimited Questions",
+    description: "Go deeper with unlimited queries across the full customer journey.",
+    keyMessage: "No limits on your analysis",
   },
-  code_snippets: {
-    headline: "Get Implementation Code",
-    description: "Ready-to-use code snippets for schema markup and technical fixes.",
-    keyMessage: "Copy-paste implementation",
+  competitor_limit: {
+    headline: "Compare More Competitors",
+    description: "Track up to 10 competitors. Know exactly where you stand.",
+    keyMessage: "Full competitive landscape",
+  },
+  competitors: {
+    headline: "Compare More Competitors",
+    description: "See detailed competitive analysis with up to 10 competitors.",
+    keyMessage: "Full competitive landscape",
+  },
+  analysis_limit: {
+    headline: "Run Unlimited Analyses",
+    description: "You've used your monthly analysis. Upgrade for unlimited analyses.",
+    keyMessage: "Analyze as often as you need",
   },
   api_access: {
     headline: "API Access",
@@ -264,6 +249,16 @@ export const UPGRADE_MODAL_CONTENT: Record<UpgradeModalTrigger, UpgradeModalCont
     headline: "White-Label Reports",
     description: "Remove Velaris branding and add your own for client-ready reports.",
     keyMessage: "Perfect for agencies",
+  },
+  team_management: {
+    headline: "Team Access",
+    description: "Invite up to 10 team members with role-based access.",
+    keyMessage: "Collaborate across your organization",
+  },
+  technical_audit: {
+    headline: "Unlock Technical Recommendations",
+    description: "Get detailed fixes for technical SEO issues affecting your AI visibility.",
+    keyMessage: "Schema markup, robots.txt, and content fixes",
   },
 };
 
