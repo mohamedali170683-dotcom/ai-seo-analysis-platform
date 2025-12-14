@@ -404,8 +404,8 @@ export async function POST(request: Request) {
     
     // Calculate More Nutrition metrics for this stage
     let mentionCount = 0;
-    let positions: number[] = [];
-    let sentiments = { positive: 0, neutral: 0, negative: 0 };
+    const positions: number[] = [];
+    const sentiments = { positive: 0, neutral: 0, negative: 0 };
     
     stageResponses.forEach(r => {
       const moreNutritionMention = r.brandMentions.find(m => m.brand === "More Nutrition");

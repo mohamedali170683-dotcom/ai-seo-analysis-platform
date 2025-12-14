@@ -56,7 +56,7 @@ export class EnhancedQuestionService {
     }
 
     const startTime = Date.now();
-    let allQuestions: DiscoveredQuestion[] = [];
+    const allQuestions: DiscoveredQuestion[] = [];
 
     // PRIORITY 1: DataForSEO (REAL questions with ACTUAL search volumes)
     if (this.dataForSEOService) {
