@@ -571,6 +571,18 @@ export default function WPPDemoPage() {
                   {/* Competitive Landscape */}
                   <div className="mb-8">
                     <h4 className="text-lg font-bold text-gray-900 mb-4">📊 Competitive Landscape in {config.label}</h4>
+                    
+                    {/* Methodology Box */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                      <div className="flex items-start gap-2">
+                        <span className="text-green-600 text-sm">ℹ️</span>
+                        <p className="text-green-800 text-xs leading-relaxed">
+                          <strong>Methodology:</strong> Competitive landscape shows each brand&apos;s share of total mentions within this funnel stage. 
+                          Trend arrows (↑↓) compare stage performance vs. overall average. Based on {metrics.responseCount} AI responses for {metrics.questionCount} questions in this stage.
+                        </p>
+                      </div>
+                    </div>
+                    
                     <div className="space-y-4">
                       {Object.entries(competitive)
                         .sort((a, b) => b[1] - a[1])
@@ -649,7 +661,22 @@ export default function WPPDemoPage() {
 
         {/* Share of Voice by Platform */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">📊 Share of Voice by Platform</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">📊 Share of Voice by Platform</h3>
+          
+          {/* Methodology Box */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="text-blue-600 text-lg">ℹ️</span>
+              <div>
+                <h4 className="font-semibold text-blue-900 text-sm mb-1">How Share of Voice is Calculated</h4>
+                <p className="text-blue-800 text-xs leading-relaxed">
+                  For each platform, we count how many times each brand is mentioned across all AI responses. 
+                  <strong> Share of Voice = (Brand Mentions ÷ Total Brand Mentions) × 100</strong>. 
+                  Each question is tested 3 times per platform for statistical reliability ({data.totalResponses} total responses across {data.platforms.length} platforms).
+                </p>
+              </div>
+            </div>
+          </div>
           
           <div className="grid md:grid-cols-4 gap-6">
             {Object.entries(data.results.shareOfVoiceByPlatform).map(([platform, brands]) => (
@@ -676,8 +703,24 @@ export default function WPPDemoPage() {
 
         {/* Persona Visibility */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-6">👥 Visibility by Persona</h3>
-          <p className="text-gray-600 mb-6">Which brands win each target audience segment</p>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">👥 Visibility by Persona</h3>
+          
+          {/* Methodology Box */}
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <span className="text-purple-600 text-lg">ℹ️</span>
+              <div>
+                <h4 className="font-semibold text-purple-900 text-sm mb-1">How Persona Visibility is Calculated</h4>
+                <p className="text-purple-800 text-xs leading-relaxed">
+                  Each search query is mapped to a target persona based on search intent. 
+                  <strong> Persona Visibility = (Brand Mentions in Persona Queries ÷ Total Mentions in Persona) × 100</strong>. 
+                  This shows which brands AI platforms recommend to different audience segments (e.g., Bodybuilders searching dosage questions vs. Beginners checking safety).
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-gray-600 mb-4">Which brands win each target audience segment</p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {Object.entries(data.results.personaVisibility).map(([persona, brands]) => {
