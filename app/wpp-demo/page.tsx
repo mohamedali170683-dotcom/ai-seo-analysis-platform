@@ -16,17 +16,17 @@ const analysisData = {
   "platforms": ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
   "questions": [
     // AWARENESS - Safety & Dosage education
-    { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Health Check" },
-    { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Safety/Fear" },
-    { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Dosage/Usage" },
+    { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Beginner/General" },
+    { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Beginner/General" },
+    { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Bodybuilder" },
     // CONSIDERATION - Market evaluation & social proof
-    { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Social Proof" },
-    { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Selection" },
-    { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Plant-Based" },
+    { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Sports Enthusiast" },
+    { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Bodybuilder" },
+    { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Beauty Affinity" },
     // DECISION - Purchase intent & retail
-    { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Retail/Drugstore" },
-    { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Retail/Drugstore" },
-    { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Direct Purchase" }
+    { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Beginner/General" },
+    { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Beginner/General" },
+    { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Bodybuilder" }
   ],
   "totalSearchVolume": 14050,
   "totalResponses": 108,
@@ -66,17 +66,17 @@ const analysisData = {
     },
     "topQuestions": [
       // AWARENESS
-      { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Health Check", "winner": "ESN", "winnerShare": 29.2, "moreNutrition": 25.0, "esn": 29.2, "myprotein": 25.0, "foodspring": 12.5, "rockaNutrition": 8.3 },
-      { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Safety/Fear", "winner": "More Nutrition", "winnerShare": 30.8, "moreNutrition": 30.8, "esn": 26.9, "myprotein": 23.1, "foodspring": 11.5, "rockaNutrition": 7.7 },
-      { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Dosage/Usage", "winner": "More Nutrition", "winnerShare": 28.6, "moreNutrition": 28.6, "esn": 25.7, "myprotein": 25.7, "foodspring": 11.4, "rockaNutrition": 8.6 },
+      { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Beginner/General", "winner": "ESN", "winnerShare": 29.2, "moreNutrition": 25.0, "esn": 29.2, "myprotein": 25.0, "foodspring": 12.5, "rockaNutrition": 8.3 },
+      { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Beginner/General", "winner": "More Nutrition", "winnerShare": 30.8, "moreNutrition": 30.8, "esn": 26.9, "myprotein": 23.1, "foodspring": 11.5, "rockaNutrition": 7.7 },
+      { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Bodybuilder", "winner": "More Nutrition", "winnerShare": 28.6, "moreNutrition": 28.6, "esn": 25.7, "myprotein": 25.7, "foodspring": 11.4, "rockaNutrition": 8.6 },
       // CONSIDERATION
-      { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Social Proof", "winner": "ESN", "winnerShare": 31.5, "moreNutrition": 28.2, "esn": 31.5, "myprotein": 22.4, "foodspring": 10.8, "rockaNutrition": 7.1 },
-      { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Selection", "winner": "More Nutrition", "winnerShare": 32.5, "moreNutrition": 32.5, "esn": 27.5, "myprotein": 22.5, "foodspring": 10.0, "rockaNutrition": 7.5 },
-      { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Plant-Based", "winner": "Foodspring", "winnerShare": 28.3, "moreNutrition": 21.7, "esn": 18.3, "myprotein": 23.3, "foodspring": 28.3, "rockaNutrition": 8.4 },
+      { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Sports Enthusiast", "winner": "ESN", "winnerShare": 31.5, "moreNutrition": 28.2, "esn": 31.5, "myprotein": 22.4, "foodspring": 10.8, "rockaNutrition": 7.1 },
+      { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Bodybuilder", "winner": "More Nutrition", "winnerShare": 32.5, "moreNutrition": 32.5, "esn": 27.5, "myprotein": 22.5, "foodspring": 10.0, "rockaNutrition": 7.5 },
+      { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Beauty Affinity", "winner": "Foodspring", "winnerShare": 28.3, "moreNutrition": 21.7, "esn": 18.3, "myprotein": 23.3, "foodspring": 28.3, "rockaNutrition": 8.4 },
       // DECISION
-      { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Retail/Drugstore", "winner": "Foodspring", "winnerShare": 35.0, "moreNutrition": 15.0, "esn": 12.5, "myprotein": 25.0, "foodspring": 35.0, "rockaNutrition": 12.5 },
-      { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Retail/Drugstore", "winner": "Foodspring", "winnerShare": 33.3, "moreNutrition": 16.7, "esn": 16.7, "myprotein": 20.8, "foodspring": 33.3, "rockaNutrition": 12.5 },
-      { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Direct Purchase", "winner": "ESN", "winnerShare": 83.3, "moreNutrition": 8.3, "esn": 83.3, "myprotein": 4.2, "foodspring": 2.1, "rockaNutrition": 2.1 }
+      { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Beginner/General", "winner": "Foodspring", "winnerShare": 35.0, "moreNutrition": 15.0, "esn": 12.5, "myprotein": 25.0, "foodspring": 35.0, "rockaNutrition": 12.5 },
+      { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Beginner/General", "winner": "Foodspring", "winnerShare": 33.3, "moreNutrition": 16.7, "esn": 16.7, "myprotein": 20.8, "foodspring": 33.3, "rockaNutrition": 12.5 },
+      { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Bodybuilder", "winner": "ESN", "winnerShare": 83.3, "moreNutrition": 8.3, "esn": 83.3, "myprotein": 4.2, "foodspring": 2.1, "rockaNutrition": 2.1 }
     ],
     "sentiment": {
       "More Nutrition": { "positive": 62.5, "neutral": 29.2, "negative": 8.3 },
@@ -86,14 +86,10 @@ const analysisData = {
       "Rocka Nutrition": { "positive": 45.8, "neutral": 45.8, "negative": 8.4 }
     },
     "personaVisibility": {
-      "Health Check": { "More Nutrition": 25.0, "ESN": 29.2, "Myprotein": 25.0, "Foodspring": 12.5, "Rocka Nutrition": 8.3 },
-      "Safety/Fear": { "More Nutrition": 30.8, "ESN": 26.9, "Myprotein": 23.1, "Foodspring": 11.5, "Rocka Nutrition": 7.7 },
-      "Dosage/Usage": { "More Nutrition": 28.6, "ESN": 25.7, "Myprotein": 25.7, "Foodspring": 11.4, "Rocka Nutrition": 8.6 },
-      "Social Proof": { "More Nutrition": 28.2, "ESN": 31.5, "Myprotein": 22.4, "Foodspring": 10.8, "Rocka Nutrition": 7.1 },
-      "Selection": { "More Nutrition": 32.5, "ESN": 27.5, "Myprotein": 22.5, "Foodspring": 10.0, "Rocka Nutrition": 7.5 },
-      "Plant-Based": { "More Nutrition": 21.7, "ESN": 18.3, "Myprotein": 23.3, "Foodspring": 28.3, "Rocka Nutrition": 8.4 },
-      "Retail/Drugstore": { "More Nutrition": 15.9, "ESN": 14.6, "Myprotein": 22.9, "Foodspring": 34.2, "Rocka Nutrition": 12.5 },
-      "Direct Purchase": { "More Nutrition": 8.3, "ESN": 83.3, "Myprotein": 4.2, "Foodspring": 2.1, "Rocka Nutrition": 2.1 }
+      "Bodybuilder": { "More Nutrition": 29.8, "ESN": 32.5, "Myprotein": 22.6, "Foodspring": 8.5, "Rocka Nutrition": 6.6 },
+      "Sports Enthusiast": { "More Nutrition": 28.2, "ESN": 31.5, "Myprotein": 22.4, "Foodspring": 10.8, "Rocka Nutrition": 7.1 },
+      "Beginner/General": { "More Nutrition": 21.8, "ESN": 21.0, "Myprotein": 24.2, "Foodspring": 22.4, "Rocka Nutrition": 10.6 },
+      "Beauty Affinity": { "More Nutrition": 21.7, "ESN": 18.3, "Myprotein": 23.3, "Foodspring": 28.3, "Rocka Nutrition": 8.4 }
     }
   },
   "sampleResponses": {
