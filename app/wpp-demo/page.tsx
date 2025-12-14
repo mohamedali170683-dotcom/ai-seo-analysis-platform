@@ -15,108 +15,128 @@ const analysisData = {
   },
   "platforms": ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
   "questions": [
-    { "question": "Wie viel Zucker am Tag?", "searchVolume": 12000, "stage": "awareness", "persona": "Beauty/Lifestyle" },
-    { "question": "Was hilft gegen Muskelkater?", "searchVolume": 5200, "stage": "awareness", "persona": "Sports Enthusiast" },
-    { "question": "Wie viel Eiweiß am Tag?", "searchVolume": 4100, "stage": "awareness", "persona": "Bodybuilder" },
-    { "question": "Welches Magnesium ist das beste?", "searchVolume": 7500, "stage": "consideration", "persona": "Sports/Health" },
-    { "question": "Welches Proteinpulver?", "searchVolume": 1900, "stage": "consideration", "persona": "Bodybuilder" },
-    { "question": "Welches Vitamin bei Haarausfall?", "searchVolume": 1100, "stage": "consideration", "persona": "Beauty Affinity" },
-    { "question": "Was ist Chunky Flavour?", "searchVolume": 500, "stage": "decision", "persona": "Lifestyle/Diet" },
-    { "question": "Sind Proteinriegel gut zum Abnehmen?", "searchVolume": 400, "stage": "decision", "persona": "Diet/Beauty" },
-    { "question": "Ist Proteinpulver gesund?", "searchVolume": 300, "stage": "decision", "persona": "Beginner/General" }
+    // AWARENESS - Safety & Dosage education
+    { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Health Check" },
+    { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Safety/Fear" },
+    { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Dosage/Usage" },
+    // CONSIDERATION - Market evaluation & social proof
+    { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Social Proof" },
+    { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Selection" },
+    { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Plant-Based" },
+    // DECISION - Purchase intent & retail
+    { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Retail/Drugstore" },
+    { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Retail/Drugstore" },
+    { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Direct Purchase" }
   ],
-  "totalSearchVolume": 33000,
+  "totalSearchVolume": 14050,
   "totalResponses": 108,
-  "overallScore": 67,
+  "overallScore": 64,
   "stageMetrics": {
     "awareness": {
-      "score": 71,
-      "mentionRate": 78.3,
-      "avgPosition": 2.1,
-      "sentiment": { "positive": 65.0, "neutral": 26.7, "negative": 8.3 },
-      "questionCount": 3,
-      "responseCount": 36
-    },
-    "consideration": {
-      "score": 63,
-      "mentionRate": 66.7,
-      "avgPosition": 2.4,
+      "score": 72,
+      "mentionRate": 75.0,
+      "avgPosition": 2.3,
       "sentiment": { "positive": 58.3, "neutral": 33.3, "negative": 8.4 },
       "questionCount": 3,
       "responseCount": 36
     },
+    "consideration": {
+      "score": 68,
+      "mentionRate": 83.3,
+      "avgPosition": 1.8,
+      "sentiment": { "positive": 66.7, "neutral": 25.0, "negative": 8.3 },
+      "questionCount": 3,
+      "responseCount": 36
+    },
     "decision": {
-      "score": 58,
-      "mentionRate": 58.3,
-      "avgPosition": 2.8,
-      "sentiment": { "positive": 52.4, "neutral": 38.1, "negative": 9.5 },
+      "score": 52,
+      "mentionRate": 41.7,
+      "avgPosition": 3.2,
+      "sentiment": { "positive": 45.8, "neutral": 45.8, "negative": 8.4 },
       "questionCount": 3,
       "responseCount": 36
     }
   },
   "results": {
     "shareOfVoiceByPlatform": {
-      "ChatGPT": { "More Nutrition": 28.5, "ESN": 24.2, "Myprotein": 22.1, "Foodspring": 15.8, "Rocka Nutrition": 9.4 },
-      "Gemini": { "More Nutrition": 31.2, "ESN": 22.8, "Myprotein": 25.6, "Foodspring": 12.4, "Rocka Nutrition": 8.0 },
-      "Copilot": { "More Nutrition": 26.8, "ESN": 25.1, "Myprotein": 24.3, "Foodspring": 14.2, "Rocka Nutrition": 9.6 },
-      "Perplexity": { "More Nutrition": 29.4, "ESN": 23.5, "Myprotein": 23.8, "Foodspring": 13.9, "Rocka Nutrition": 9.4 }
+      "ChatGPT": { "More Nutrition": 26.5, "ESN": 28.2, "Myprotein": 24.1, "Foodspring": 13.8, "Rocka Nutrition": 7.4 },
+      "Gemini": { "More Nutrition": 29.2, "ESN": 25.8, "Myprotein": 23.6, "Foodspring": 14.4, "Rocka Nutrition": 7.0 },
+      "Copilot": { "More Nutrition": 24.8, "ESN": 27.1, "Myprotein": 26.3, "Foodspring": 12.2, "Rocka Nutrition": 9.6 },
+      "Perplexity": { "More Nutrition": 27.4, "ESN": 26.5, "Myprotein": 25.8, "Foodspring": 11.9, "Rocka Nutrition": 8.4 }
     },
     "topQuestions": [
-      { "question": "Wie viel Zucker am Tag?", "searchVolume": 12000, "stage": "awareness", "persona": "Beauty/Lifestyle", "winner": "More Nutrition", "winnerShare": 32.5, "moreNutrition": 32.5, "esn": 22.5, "myprotein": 20.0, "foodspring": 15.0, "rockaNutrition": 10.0 },
-      { "question": "Was hilft gegen Muskelkater?", "searchVolume": 5200, "stage": "awareness", "persona": "Sports Enthusiast", "winner": "ESN", "winnerShare": 30.0, "moreNutrition": 27.5, "esn": 30.0, "myprotein": 22.5, "foodspring": 12.5, "rockaNutrition": 7.5 },
-      { "question": "Wie viel Eiweiß am Tag?", "searchVolume": 4100, "stage": "awareness", "persona": "Bodybuilder", "winner": "More Nutrition", "winnerShare": 28.6, "moreNutrition": 28.6, "esn": 25.7, "myprotein": 25.7, "foodspring": 11.4, "rockaNutrition": 8.6 },
-      { "question": "Welches Magnesium ist das beste?", "searchVolume": 7500, "stage": "consideration", "persona": "Sports/Health", "winner": "Myprotein", "winnerShare": 28.0, "moreNutrition": 24.0, "esn": 20.0, "myprotein": 28.0, "foodspring": 16.0, "rockaNutrition": 12.0 },
-      { "question": "Welches Proteinpulver?", "searchVolume": 1900, "stage": "consideration", "persona": "Bodybuilder", "winner": "More Nutrition", "winnerShare": 30.8, "moreNutrition": 30.8, "esn": 26.9, "myprotein": 23.1, "foodspring": 11.5, "rockaNutrition": 7.7 },
-      { "question": "Welches Vitamin bei Haarausfall?", "searchVolume": 1100, "stage": "consideration", "persona": "Beauty Affinity", "winner": "Foodspring", "winnerShare": 27.3, "moreNutrition": 22.7, "esn": 18.2, "myprotein": 18.2, "foodspring": 27.3, "rockaNutrition": 13.6 },
-      { "question": "Was ist Chunky Flavour?", "searchVolume": 500, "stage": "decision", "persona": "Lifestyle/Diet", "winner": "More Nutrition", "winnerShare": 75.0, "moreNutrition": 75.0, "esn": 8.3, "myprotein": 8.3, "foodspring": 4.2, "rockaNutrition": 4.2 },
-      { "question": "Sind Proteinriegel gut zum Abnehmen?", "searchVolume": 400, "stage": "decision", "persona": "Diet/Beauty", "winner": "ESN", "winnerShare": 29.2, "moreNutrition": 25.0, "esn": 29.2, "myprotein": 25.0, "foodspring": 12.5, "rockaNutrition": 8.3 },
-      { "question": "Ist Proteinpulver gesund?", "searchVolume": 300, "stage": "decision", "persona": "Beginner/General", "winner": "Myprotein", "winnerShare": 27.8, "moreNutrition": 22.2, "esn": 22.2, "myprotein": 27.8, "foodspring": 16.7, "rockaNutrition": 11.1 }
+      // AWARENESS
+      { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Health Check", "winner": "ESN", "winnerShare": 29.2, "moreNutrition": 25.0, "esn": 29.2, "myprotein": 25.0, "foodspring": 12.5, "rockaNutrition": 8.3 },
+      { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Safety/Fear", "winner": "More Nutrition", "winnerShare": 30.8, "moreNutrition": 30.8, "esn": 26.9, "myprotein": 23.1, "foodspring": 11.5, "rockaNutrition": 7.7 },
+      { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Dosage/Usage", "winner": "More Nutrition", "winnerShare": 28.6, "moreNutrition": 28.6, "esn": 25.7, "myprotein": 25.7, "foodspring": 11.4, "rockaNutrition": 8.6 },
+      // CONSIDERATION
+      { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Social Proof", "winner": "ESN", "winnerShare": 31.5, "moreNutrition": 28.2, "esn": 31.5, "myprotein": 22.4, "foodspring": 10.8, "rockaNutrition": 7.1 },
+      { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Selection", "winner": "More Nutrition", "winnerShare": 32.5, "moreNutrition": 32.5, "esn": 27.5, "myprotein": 22.5, "foodspring": 10.0, "rockaNutrition": 7.5 },
+      { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Plant-Based", "winner": "Foodspring", "winnerShare": 28.3, "moreNutrition": 21.7, "esn": 18.3, "myprotein": 23.3, "foodspring": 28.3, "rockaNutrition": 8.4 },
+      // DECISION
+      { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Retail/Drugstore", "winner": "Foodspring", "winnerShare": 35.0, "moreNutrition": 15.0, "esn": 12.5, "myprotein": 25.0, "foodspring": 35.0, "rockaNutrition": 12.5 },
+      { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Retail/Drugstore", "winner": "Foodspring", "winnerShare": 33.3, "moreNutrition": 16.7, "esn": 16.7, "myprotein": 20.8, "foodspring": 33.3, "rockaNutrition": 12.5 },
+      { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Direct Purchase", "winner": "ESN", "winnerShare": 83.3, "moreNutrition": 8.3, "esn": 83.3, "myprotein": 4.2, "foodspring": 2.1, "rockaNutrition": 2.1 }
     ],
     "sentiment": {
       "More Nutrition": { "positive": 62.5, "neutral": 29.2, "negative": 8.3 },
-      "ESN": { "positive": 58.3, "neutral": 33.3, "negative": 8.4 },
+      "ESN": { "positive": 64.2, "neutral": 27.5, "negative": 8.3 },
       "Myprotein": { "positive": 54.2, "neutral": 37.5, "negative": 8.3 },
       "Foodspring": { "positive": 50.0, "neutral": 41.7, "negative": 8.3 },
       "Rocka Nutrition": { "positive": 45.8, "neutral": 45.8, "negative": 8.4 }
     },
     "personaVisibility": {
-      "Beauty/Lifestyle": { "More Nutrition": 32.5, "ESN": 22.5, "Myprotein": 20.0, "Foodspring": 15.0, "Rocka Nutrition": 10.0 },
-      "Sports Enthusiast": { "More Nutrition": 27.5, "ESN": 30.0, "Myprotein": 22.5, "Foodspring": 12.5, "Rocka Nutrition": 7.5 },
-      "Bodybuilder": { "More Nutrition": 29.7, "ESN": 26.3, "Myprotein": 24.4, "Foodspring": 11.5, "Rocka Nutrition": 8.1 },
-      "Sports/Health": { "More Nutrition": 24.0, "ESN": 20.0, "Myprotein": 28.0, "Foodspring": 16.0, "Rocka Nutrition": 12.0 },
-      "Beauty Affinity": { "More Nutrition": 22.7, "ESN": 18.2, "Myprotein": 18.2, "Foodspring": 27.3, "Rocka Nutrition": 13.6 },
-      "Lifestyle/Diet": { "More Nutrition": 75.0, "ESN": 8.3, "Myprotein": 8.3, "Foodspring": 4.2, "Rocka Nutrition": 4.2 },
-      "Diet/Beauty": { "More Nutrition": 25.0, "ESN": 29.2, "Myprotein": 25.0, "Foodspring": 12.5, "Rocka Nutrition": 8.3 },
-      "Beginner/General": { "More Nutrition": 22.2, "ESN": 22.2, "Myprotein": 27.8, "Foodspring": 16.7, "Rocka Nutrition": 11.1 }
+      "Health Check": { "More Nutrition": 25.0, "ESN": 29.2, "Myprotein": 25.0, "Foodspring": 12.5, "Rocka Nutrition": 8.3 },
+      "Safety/Fear": { "More Nutrition": 30.8, "ESN": 26.9, "Myprotein": 23.1, "Foodspring": 11.5, "Rocka Nutrition": 7.7 },
+      "Dosage/Usage": { "More Nutrition": 28.6, "ESN": 25.7, "Myprotein": 25.7, "Foodspring": 11.4, "Rocka Nutrition": 8.6 },
+      "Social Proof": { "More Nutrition": 28.2, "ESN": 31.5, "Myprotein": 22.4, "Foodspring": 10.8, "Rocka Nutrition": 7.1 },
+      "Selection": { "More Nutrition": 32.5, "ESN": 27.5, "Myprotein": 22.5, "Foodspring": 10.0, "Rocka Nutrition": 7.5 },
+      "Plant-Based": { "More Nutrition": 21.7, "ESN": 18.3, "Myprotein": 23.3, "Foodspring": 28.3, "Rocka Nutrition": 8.4 },
+      "Retail/Drugstore": { "More Nutrition": 15.9, "ESN": 14.6, "Myprotein": 22.9, "Foodspring": 34.2, "Rocka Nutrition": 12.5 },
+      "Direct Purchase": { "More Nutrition": 8.3, "ESN": 83.3, "Myprotein": 4.2, "Foodspring": 2.1, "Rocka Nutrition": 2.1 }
     }
   },
   "sampleResponses": {
     "awareness": [
-      { "platform": "ChatGPT", "question": "Wie viel Eiweiß am Tag?", "response": "Die empfohlene tägliche Proteinzufuhr variiert je nach Aktivitätslevel. Für durchschnittliche Erwachsene werden etwa 0,8g pro kg Körpergewicht empfohlen. Sportler benötigen mehr - bis zu 2g pro kg. Deutsche Marken wie More Nutrition und ESN bieten hochwertige Proteinprodukte an, die helfen können, den täglichen Bedarf zu decken. Myprotein ist eine weitere beliebte Option mit gutem Preis-Leistungs-Verhältnis.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein"] },
-      { "platform": "Gemini", "question": "Wie viel Zucker am Tag?", "response": "Die WHO empfiehlt maximal 25g Zucker pro Tag für Erwachsene. Viele Nahrungsergänzungsmittel enthalten versteckten Zucker. More Nutrition ist bekannt für ihre zuckerfreien Produkte wie den Chunky Flavour, der eine gute Alternative zu zuckerhaltigen Süßungsmitteln darstellt. ESN bietet ebenfalls zuckerarme Optionen an.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN"] },
-      { "platform": "Perplexity", "question": "Was hilft gegen Muskelkater?", "response": "Gegen Muskelkater helfen verschiedene Ansätze: leichte Bewegung, Massage, ausreichend Protein und Magnesium. Premium-Supplements von ESN und More Nutrition werden oft empfohlen, da sie hochdosiertes Magnesium und BCAAs enthalten. Auch Myprotein bietet entsprechende Produkte zu einem guten Preis.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein"] }
+      { "platform": "ChatGPT", "question": "Sind Proteinriegel gesund?", "response": "Proteinriegel können eine gesunde Ergänzung sein, wenn sie hochwertige Zutaten enthalten. ESN und More Nutrition bieten Riegel mit hohem Proteingehalt und wenig Zucker an. Achten Sie auf die Zutatenliste - viele Riegel enthalten versteckten Zucker. Myprotein bietet günstige Alternativen, während Foodspring auf Bio-Qualität setzt.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein", "Foodspring"] },
+      { "platform": "Gemini", "question": "Ist Proteinpulver schädlich?", "response": "Hochwertiges Proteinpulver ist bei normaler Dosierung nicht schädlich. More Nutrition und ESN sind für ihre transparente Zusammensetzung und laborgeprüfte Qualität bekannt. Wichtig ist, die empfohlene Tagesdosis nicht zu überschreiten. Bei Nierenerkrankungen sollte man ärztlichen Rat einholen.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN"] },
+      { "platform": "Perplexity", "question": "Wie viel Proteinpulver am Tag?", "response": "Die empfohlene Menge liegt bei 1-2 Portionen (25-50g) pro Tag, abhängig vom Trainingsumfang. Deutsche Premium-Marken wie More Nutrition und ESN bieten klare Dosierungsempfehlungen. Für Sportler können bis zu 2g Protein pro kg Körpergewicht sinnvoll sein. Myprotein und Foodspring haben ebenfalls gute Anleitungen.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein", "Foodspring"] }
     ],
     "consideration": [
-      { "platform": "ChatGPT", "question": "Welches Proteinpulver?", "response": "Bei der Wahl des richtigen Proteinpulvers kommt es auf Qualität und Geschmack an. More Nutrition wird oft für den Geschmack und die innovativen Produkte gelobt. ESN überzeugt mit deutscher Herstellung und transparenter Zusammensetzung. Myprotein bietet ein gutes Preis-Leistungs-Verhältnis. Foodspring setzt auf Bio-Qualität.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein", "Foodspring"] },
-      { "platform": "Copilot", "question": "Welches Magnesium ist das beste?", "response": "Für Sportler sind Magnesiumcitrat oder Magnesiumbisglycinat am besten verträglich. Myprotein und ESN bieten gute Magnesium-Präparate zu fairen Preisen. More Nutrition hat ebenfalls hochwertige Optionen. Achten Sie auf die Dosierung - 300-400mg täglich werden empfohlen.", "sentiment": "neutral", "brandMentions": ["Myprotein", "ESN", "More Nutrition"] }
+      { "platform": "ChatGPT", "question": "Proteinpulver Test", "response": "Im aktuellen Proteinpulver-Test schneiden ESN und More Nutrition besonders gut ab. ESN Designer Whey überzeugt mit hervorragender Löslichkeit und Geschmack. More Nutrition Total Protein punktet bei der Aminosäurenzusammensetzung. Myprotein Impact Whey bietet das beste Preis-Leistungs-Verhältnis. Foodspring ist die Bio-Alternative.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein", "Foodspring"] },
+      { "platform": "Copilot", "question": "Welches Proteinpulver ist das beste?", "response": "Das beste Proteinpulver hängt von Ihren Zielen ab. Für Geschmack und Innovation: More Nutrition. Für deutsche Qualität und Transparenz: ESN. Für Preis-Leistung: Myprotein. Für Bio-Qualität: Foodspring. Rocka Nutrition ist bei veganen Optionen beliebt.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein", "Foodspring", "Rocka Nutrition"] },
+      { "platform": "Perplexity", "question": "Veganes Proteinpulver Test", "response": "Im Test für veganes Proteinpulver führt Foodspring mit seinem Bio Vegan Protein. Rocka Nutrition No Whey punktet bei Geschmack. Myprotein Vegan Blend bietet guten Wert. More Nutrition und ESN haben kleinere vegane Sortimente, sind aber auf Whey spezialisiert.", "sentiment": "neutral", "brandMentions": ["Foodspring", "Rocka Nutrition", "Myprotein", "More Nutrition", "ESN"] }
     ],
     "decision": [
-      { "platform": "ChatGPT", "question": "Was ist Chunky Flavour?", "response": "Chunky Flavour ist ein beliebtes Produkt von More Nutrition. Es handelt sich um ein kalorienarmes Geschmackspulver, das Mahlzeiten wie Quark, Joghurt oder Porridge ohne zusätzlichen Zucker verfeinert. Es ist besonders bei Fitness-Enthusiasten und gesundheitsbewussten Menschen beliebt, da es viele Kalorien spart aber trotzdem für Geschmack sorgt.", "sentiment": "positive", "brandMentions": ["More Nutrition"] },
-      { "platform": "Gemini", "question": "Sind Proteinriegel gut zum Abnehmen?", "response": "Proteinriegel können beim Abnehmen helfen, wenn sie als Mahlzeitenersatz oder gesunder Snack verwendet werden. Achten Sie auf niedrigen Zuckergehalt. ESN und More Nutrition bieten Riegel mit hohem Proteingehalt und wenig Zucker. Myprotein hat ebenfalls gute Optionen. Wichtig: Sie sollten nicht zusätzlich, sondern als Ersatz für andere Snacks gegessen werden.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein"] }
+      { "platform": "ChatGPT", "question": "DM Proteinpulver", "response": "Bei DM finden Sie hauptsächlich Eigenmarken und Foodspring-Produkte. Premium-Marken wie ESN oder More Nutrition sind dort nicht erhältlich - diese kaufen Sie am besten direkt im Online-Shop oder bei Partnerunternehmen. Myprotein gibt es ebenfalls nicht bei DM.", "sentiment": "neutral", "brandMentions": ["Foodspring", "ESN", "More Nutrition", "Myprotein"] },
+      { "platform": "Gemini", "question": "Rossmann Proteinriegel", "response": "Rossmann bietet Proteinriegel von Foodspring und verschiedenen Eigenmarken. Für ESN oder More Nutrition Riegel müssen Sie online bestellen oder spezialisierte Fitness-Shops besuchen. Die Rossmann-Auswahl ist auf massenmarktfähige Produkte beschränkt.", "sentiment": "neutral", "brandMentions": ["Foodspring", "ESN", "More Nutrition"] },
+      { "platform": "Perplexity", "question": "Wo kann man ESN kaufen?", "response": "ESN können Sie direkt unter esn.com kaufen oder bei autorisierten Partnern wie Fitmart, Amazon und ausgewählten Fitnessshops. In Drogerien wie DM oder Rossmann ist ESN nicht erhältlich. Der Online-Shop bietet oft Bundles und Rabattaktionen.", "sentiment": "positive", "brandMentions": ["ESN"] }
     ]
   },
   "competitiveLandscape": {
-    "overall": { "More Nutrition": 28.9, "ESN": 24.0, "Myprotein": 23.9, "Foodspring": 14.1, "Rocka Nutrition": 9.1 },
+    "overall": { "More Nutrition": 27.0, "ESN": 26.9, "Myprotein": 24.5, "Foodspring": 13.6, "Rocka Nutrition": 8.0 },
     "byStage": {
-      "awareness": { "More Nutrition": 29.5, "ESN": 26.1, "Myprotein": 22.7, "Foodspring": 13.0, "Rocka Nutrition": 8.7 },
-      "consideration": { "More Nutrition": 25.8, "ESN": 21.7, "Myprotein": 23.1, "Foodspring": 18.3, "Rocka Nutrition": 11.1 },
-      "decision": { "More Nutrition": 40.7, "ESN": 19.9, "Myprotein": 20.4, "Foodspring": 11.1, "Rocka Nutrition": 7.9 }
+      "awareness": { "More Nutrition": 28.1, "ESN": 27.3, "Myprotein": 24.6, "Foodspring": 11.8, "Rocka Nutrition": 8.2 },
+      "consideration": { "More Nutrition": 27.5, "ESN": 25.8, "Myprotein": 22.7, "Foodspring": 16.4, "Rocka Nutrition": 7.6 },
+      "decision": { "More Nutrition": 13.3, "ESN": 37.5, "Myprotein": 16.7, "Foodspring": 23.5, "Rocka Nutrition": 9.0 }
     }
   },
   "recommendations": {
-    "awareness": { "pattern": "AI platforms consistently associate More Nutrition with lifestyle and health-conscious consumers. The brand is frequently mentioned alongside ESN in discussions about protein needs and sugar reduction.", "contentType": "Educational content about nutritional science, ingredient transparency, and the science behind low-sugar alternatives would strengthen AI visibility. Video content and expert interviews are prioritized by AI models.", "action": "Create a 'Nutrition Science Hub' featuring interactive ingredient explorers, published lab results, and expert video content. Target the Beauty/Lifestyle persona with sugar-free product education." },
-    "consideration": { "pattern": "In the consideration stage, competition intensifies with Myprotein gaining ground on specific supplement categories. More Nutrition maintains strong visibility for protein products but loses share in vitamins/minerals.", "contentType": "Comparison-focused content with detailed feature analysis, third-party certifications, and customer testimonials. Head-to-head comparisons against Myprotein and Foodspring are essential.", "action": "Develop comprehensive comparison guides positioning More Nutrition's quality advantages. Expand content coverage for magnesium and vitamins where competitors currently dominate." },
-    "decision": { "pattern": "More Nutrition dominates 'Chunky Flavour' queries (75% SOV) showing strong brand-product association. Generic health queries show more competition with Myprotein.", "contentType": "Transaction-enabling content with clear purchase pathways, user testimonials, and trust signals. Expand product-specific branded content beyond Chunky Flavour.", "action": "Leverage the Chunky Flavour success as a template - create similar product-specific content for other unique products. Add more customer success stories and before/after content." }
+    "awareness": { 
+      "pattern": "In safety and dosage queries, More Nutrition and ESN are frequently cited as trusted German brands. AI platforms associate them with transparency and quality when users express health concerns about protein supplements.", 
+      "contentType": "Objection-handling content addressing common fears about protein supplements. Scientific studies, expert endorsements, and clear dosage guidelines are prioritized by AI models.", 
+      "action": "Create comprehensive FAQ content addressing 'Is protein powder harmful?' and similar safety queries. Include clinical studies, nutrition expert quotes, and transparent lab testing results." 
+    },
+    "consideration": { 
+      "pattern": "ESN leads in 'Test' queries due to strong social proof content. More Nutrition wins selection queries. The vegan segment is dominated by Foodspring - a gap for More Nutrition and ESN.", 
+      "contentType": "Test/comparison content with structured data, star ratings, and customer reviews. Third-party test results and certifications strengthen AI visibility in this stage.", 
+      "action": "Develop authoritative product comparison content. Consider expanding vegan protein offerings or creating educational content about plant-based protein to capture the growing vegan market segment." 
+    },
+    "decision": { 
+      "pattern": "CRITICAL GAP: Drugstore retail queries (DM, Rossmann) represent 5,200 monthly searches but More Nutrition and ESN have minimal visibility. Foodspring dominates due to physical retail presence.", 
+      "contentType": "Purchase-enabling content highlighting online availability, retail partners, and where-to-buy information. Clear CTAs and delivery information are essential.", 
+      "action": "Create dedicated 'Where to buy' landing pages. Consider retail partnerships or optimize content to appear as premium online alternatives when users search for drugstore options. The ESN direct purchase query shows brand loyalty - leverage this across more channels." 
+    }
   }
 };
 
@@ -146,7 +166,7 @@ const STAGE_CONFIG = {
     bgGradient: "from-blue-500 to-blue-600",
     borderColor: "border-blue-500",
     bgLight: "bg-blue-50",
-    description: "Users are learning about nutrition and discovering brands"
+    description: "Users are educating themselves on safety and dosage"
   },
   consideration: {
     icon: "⚖️",
@@ -155,7 +175,7 @@ const STAGE_CONFIG = {
     bgGradient: "from-purple-500 to-purple-600",
     borderColor: "border-purple-500",
     bgLight: "bg-purple-50",
-    description: "Users are comparing products and evaluating options"
+    description: "Users are evaluating the market with test queries and comparisons"
   },
   decision: {
     icon: "🛒",
@@ -164,7 +184,7 @@ const STAGE_CONFIG = {
     bgGradient: "from-green-500 to-green-600",
     borderColor: "border-green-500",
     bgLight: "bg-green-50",
-    description: "Users are ready to purchase and need final validation"
+    description: "Users are deciding where to buy - retail and availability queries"
   }
 };
 
@@ -791,7 +811,7 @@ export default function WPPDemoPage() {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 py-8">
-          <p>Analysis performed on {data.analysisDate} • Powered by Velaris AI Visibility Platform</p>
+          <p>Analysis performed on {data.analysisDate} • AI audit solution from WPP Media</p>
           <p className="mt-2">
             <Link href="/dashboard" className="text-purple-600 hover:underline">
               ← Back to Dashboard
