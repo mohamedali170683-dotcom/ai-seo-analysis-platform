@@ -3,15 +3,23 @@
 import { useTier } from "@/lib/tier";
 import { UserTier, TIER_NAMES } from "@/lib/tier/types";
 import { Settings, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 /**
  * Development-only tier switcher for prototype testing.
  * Allows quickly switching between tiers to see UI behavior.
+ * Hidden on WPP demo page (/wpp-demo).
  */
 export function TierSwitcher() {
   const { tier, setTier } = useTier();
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  
+  // Hide on WPP demo page
+  if (pathname?.startsWith("/wpp-demo")) {
+    return null;
+  }
 
   const tiers: UserTier[] = ["free", "professional", "partner"];
 
