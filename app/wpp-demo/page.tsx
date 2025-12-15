@@ -999,34 +999,6 @@ export default function WPPDemoPage() {
               </ul>
             </div>
           </div>
-          
-          {/* How to Get Real Data */}
-          <div className="mt-6 bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-xl">🔬</span>
-              <h4 className="font-bold text-blue-900">How to Generate Real AI Analysis Data</h4>
-            </div>
-            <p className="text-sm text-blue-800 mb-3">
-              To replace illustrative data with actual AI responses, the platform can:
-            </p>
-            <div className="grid md:grid-cols-3 gap-4 text-xs text-blue-700">
-              <div className="bg-white rounded-lg p-3">
-                <strong className="block mb-1">1. ChatGPT / OpenAI</strong>
-                Query each question via API, analyze responses for brand mentions, position, and sentiment
-              </div>
-              <div className="bg-white rounded-lg p-3">
-                <strong className="block mb-1">2. Google Gemini</strong>
-                Submit queries to Gemini API and extract brand visibility patterns
-              </div>
-              <div className="bg-white rounded-lg p-3">
-                <strong className="block mb-1">3. Perplexity / Copilot</strong>
-                Where API access is available, capture real AI-generated recommendations
-              </div>
-            </div>
-            <p className="text-xs text-blue-600 mt-3 italic">
-              Click &quot;Run Real Analysis&quot; to execute live queries against available AI platforms (requires API keys)
-            </p>
-          </div>
         </div>
 
         {/* Footer */}
