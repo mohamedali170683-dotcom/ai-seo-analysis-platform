@@ -57,10 +57,17 @@ function extractBrands(response: string) {
 export async function GET() {
   console.log("🚀 Quick Analysis - Real AI data");
   
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY!, timeout: 15000 });
-  const gemini = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY!, timeout: 20000 });
+  const geminiKey = process.env.GEMINI_API_KEY;
   
   const results: any[] = [];
+  const errors: string[] = [];
+  
+  // Check what's configured
+  const configInfo = {
+    openai: !!process.env.OPENAI_API_KEY,
+    gemini: !!geminiKey,
+  };
   
   // Query each question once per platform
   for (const q of QUESTIONS) {
@@ -86,13 +93,22 @@ export async function GET() {
         });
       }
     } catch (e: any) {
-      console.error(`ChatGPT error: ${e.message}`);
+      const errMsg = `ChatGPT error on "${q.question}": ${e.message}`;
+      console.error(errMsg);
+      errors.push(errMsg);
     }
     
     // Gemini
-    if (gemini) {
+    if (geminiKey) {
       try {
-        const model = gemini.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const gemini = new GoogleGenerativeAI(geminiKey);
+        const model = gemini.getGenerativeModel({ 
+          model: "gemini-1.5-flash",
+          generationConfig: {
+            maxOutputTokens: 400,
+            temperature: 0.7,
+          }
+        });
         const result = await model.generateContent(q.question);
         const response = result.response.text() || "";
         if (response) {
@@ -106,7 +122,9 @@ export async function GET() {
           });
         }
       } catch (e: any) {
-        console.error(`Gemini error: ${e.message}`);
+        const errMsg = `Gemini error on "${q.question}": ${e.message}`;
+        console.error(errMsg);
+        errors.push(errMsg);
       }
     }
   }
@@ -181,7 +199,9 @@ export async function GET() {
     success: true,
     analysisDate: new Date().toISOString().split("T")[0],
     platforms,
+    configuredAPIs: configInfo,
     totalResponses: results.length,
+    errors: errors.length > 0 ? errors : undefined,
     shareOfVoiceByPlatform,
     topQuestions,
     sentiment,
