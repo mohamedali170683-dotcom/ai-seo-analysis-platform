@@ -3,134 +3,140 @@
 import { useState } from "react";
 import { Download, RefreshCw, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
-// Analysis data embedded directly
+// ===================================================================
+// REAL AI DATA - Generated from actual ChatGPT API responses
+// Analysis Date: December 15, 2025
+// Platform: ChatGPT (gpt-4o-mini) - Gemini API unavailable at test time
+// ===================================================================
 const analysisData = {
-  "analysisDate": "2024-12-15",
+  "analysisDate": "2025-12-15",
   "client": "Quality Group",
   "primaryBrand": "More Nutrition",
+  "dataSource": "REAL DATA - ChatGPT API responses",
   "brands": {
     "client": ["More Nutrition", "ESN"],
     "competitors": ["Myprotein", "Foodspring", "Rocka Nutrition"]
   },
-  "platforms": ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
+  "platforms": ["ChatGPT"],  // Real data from ChatGPT only
   "questions": [
-    // AWARENESS - Safety & Dosage education
     { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Beginner/General" },
     { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Beginner/General" },
     { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Bodybuilder" },
-    // CONSIDERATION - Market evaluation & social proof
     { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Sports Enthusiast" },
     { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Bodybuilder" },
     { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Beauty Affinity" },
-    // DECISION - Purchase intent & retail
     { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Beginner/General" },
     { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Beginner/General" },
     { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Bodybuilder" }
   ],
   "totalSearchVolume": 14050,
-  "totalResponses": 108,
-  "overallScore": 64,
+  "totalResponses": 9,  // Real: 9 ChatGPT responses
+  // KEY FINDING: AI platforms provide generic advice for most queries
+  // Only direct brand queries like "Wo kann man ESN kaufen?" generate brand mentions
+  "overallScore": 11,  // Low score reflects real AI behavior - brands rarely mentioned
   "stageMetrics": {
     "awareness": {
-      "score": 72,
-      "mentionRate": 75.0,
-      "avgPosition": 2.3,
-      "sentiment": { "positive": 58.3, "neutral": 33.3, "negative": 8.4 },
+      "score": 0,
+      "mentionRate": 0,  // Real: No brands mentioned in safety/dosage queries
+      "avgPosition": 0,
+      "sentiment": { "positive": 0, "neutral": 100, "negative": 0 },
       "questionCount": 3,
-      "responseCount": 36
+      "responseCount": 3
     },
     "consideration": {
-      "score": 68,
-      "mentionRate": 83.3,
-      "avgPosition": 1.8,
-      "sentiment": { "positive": 66.7, "neutral": 25.0, "negative": 8.3 },
+      "score": 0,
+      "mentionRate": 0,  // Real: No brands mentioned in test/comparison queries
+      "avgPosition": 0,
+      "sentiment": { "positive": 0, "neutral": 100, "negative": 0 },
       "questionCount": 3,
-      "responseCount": 36
+      "responseCount": 3
     },
     "decision": {
-      "score": 52,
-      "mentionRate": 41.7,
-      "avgPosition": 3.2,
-      "sentiment": { "positive": 45.8, "neutral": 45.8, "negative": 8.4 },
+      "score": 33,
+      "mentionRate": 33.3,  // Real: Only 1 of 3 queries mentions a brand (ESN)
+      "avgPosition": 1.0,
+      "sentiment": { "positive": 100, "neutral": 0, "negative": 0 },
       "questionCount": 3,
-      "responseCount": 36
+      "responseCount": 3
     }
   },
   "results": {
     "shareOfVoiceByPlatform": {
-      "ChatGPT": { "More Nutrition": 26.5, "ESN": 28.2, "Myprotein": 24.1, "Foodspring": 13.8, "Rocka Nutrition": 7.4 },
-      "Gemini": { "More Nutrition": 29.2, "ESN": 25.8, "Myprotein": 23.6, "Foodspring": 14.4, "Rocka Nutrition": 7.0 },
-      "Copilot": { "More Nutrition": 24.8, "ESN": 27.1, "Myprotein": 26.3, "Foodspring": 12.2, "Rocka Nutrition": 9.6 },
-      "Perplexity": { "More Nutrition": 27.4, "ESN": 26.5, "Myprotein": 25.8, "Foodspring": 11.9, "Rocka Nutrition": 8.4 }
+      // Real data: Only ESN was mentioned across all 9 queries
+      "ChatGPT": { "More Nutrition": 0, "ESN": 100, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 }
     },
     "topQuestions": [
-      // AWARENESS
-      { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Beginner/General", "winner": "ESN", "winnerShare": 29.2, "moreNutrition": 25.0, "esn": 29.2, "myprotein": 25.0, "foodspring": 12.5, "rockaNutrition": 8.3 },
-      { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Beginner/General", "winner": "More Nutrition", "winnerShare": 30.8, "moreNutrition": 30.8, "esn": 26.9, "myprotein": 23.1, "foodspring": 11.5, "rockaNutrition": 7.7 },
-      { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Bodybuilder", "winner": "More Nutrition", "winnerShare": 28.6, "moreNutrition": 28.6, "esn": 25.7, "myprotein": 25.7, "foodspring": 11.4, "rockaNutrition": 8.6 },
-      // CONSIDERATION
-      { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Sports Enthusiast", "winner": "ESN", "winnerShare": 31.5, "moreNutrition": 28.2, "esn": 31.5, "myprotein": 22.4, "foodspring": 10.8, "rockaNutrition": 7.1 },
-      { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Bodybuilder", "winner": "More Nutrition", "winnerShare": 32.5, "moreNutrition": 32.5, "esn": 27.5, "myprotein": 22.5, "foodspring": 10.0, "rockaNutrition": 7.5 },
-      { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Beauty Affinity", "winner": "Foodspring", "winnerShare": 28.3, "moreNutrition": 21.7, "esn": 18.3, "myprotein": 23.3, "foodspring": 28.3, "rockaNutrition": 8.4 },
-      // DECISION
-      { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Beginner/General", "winner": "Foodspring", "winnerShare": 35.0, "moreNutrition": 15.0, "esn": 12.5, "myprotein": 25.0, "foodspring": 35.0, "rockaNutrition": 12.5 },
-      { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Beginner/General", "winner": "Foodspring", "winnerShare": 33.3, "moreNutrition": 16.7, "esn": 16.7, "myprotein": 20.8, "foodspring": 33.3, "rockaNutrition": 12.5 },
-      { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Bodybuilder", "winner": "ESN", "winnerShare": 83.3, "moreNutrition": 8.3, "esn": 83.3, "myprotein": 4.2, "foodspring": 2.1, "rockaNutrition": 2.1 }
+      // REAL DATA: Brand mentions from actual ChatGPT responses
+      // Generic queries = no brand mentions (ChatGPT provides neutral advice)
+      { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Beginner/General", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      { "question": "Ist Proteinpulver schädlich?", "searchVolume": 600, "stage": "awareness", "persona": "Beginner/General", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      { "question": "Wie viel Proteinpulver am Tag?", "searchVolume": 450, "stage": "awareness", "persona": "Bodybuilder", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      { "question": "Proteinpulver Test", "searchVolume": 4600, "stage": "consideration", "persona": "Sports Enthusiast", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      { "question": "Welches Proteinpulver ist das beste?", "searchVolume": 1000, "stage": "consideration", "persona": "Bodybuilder", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      { "question": "Veganes Proteinpulver Test", "searchVolume": 1200, "stage": "consideration", "persona": "Beauty Affinity", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      { "question": "DM Proteinpulver", "searchVolume": 3200, "stage": "decision", "persona": "Beginner/General", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      { "question": "Rossmann Proteinriegel", "searchVolume": 2000, "stage": "decision", "persona": "Beginner/General", "winner": null, "winnerShare": 0, "moreNutrition": 0, "esn": 0, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 },
+      // Only direct brand query generates brand mention
+      { "question": "Wo kann man ESN kaufen?", "searchVolume": 100, "stage": "decision", "persona": "Bodybuilder", "winner": "ESN", "winnerShare": 100, "moreNutrition": 0, "esn": 100, "myprotein": 0, "foodspring": 0, "rockaNutrition": 0 }
     ],
     "sentiment": {
-      "More Nutrition": { "positive": 62.5, "neutral": 29.2, "negative": 8.3 },
-      "ESN": { "positive": 64.2, "neutral": 27.5, "negative": 8.3 },
-      "Myprotein": { "positive": 54.2, "neutral": 37.5, "negative": 8.3 },
-      "Foodspring": { "positive": 50.0, "neutral": 41.7, "negative": 8.3 },
-      "Rocka Nutrition": { "positive": 45.8, "neutral": 45.8, "negative": 8.4 }
+      // Real sentiment data: Only ESN has mentions (positive)
+      "More Nutrition": { "positive": 0, "neutral": 0, "negative": 0 },
+      "ESN": { "positive": 100, "neutral": 0, "negative": 0 },
+      "Myprotein": { "positive": 0, "neutral": 0, "negative": 0 },
+      "Foodspring": { "positive": 0, "neutral": 0, "negative": 0 },
+      "Rocka Nutrition": { "positive": 0, "neutral": 0, "negative": 0 }
     },
     "personaVisibility": {
-      "Bodybuilder": { "More Nutrition": 29.8, "ESN": 32.5, "Myprotein": 22.6, "Foodspring": 8.5, "Rocka Nutrition": 6.6 },
-      "Sports Enthusiast": { "More Nutrition": 28.2, "ESN": 31.5, "Myprotein": 22.4, "Foodspring": 10.8, "Rocka Nutrition": 7.1 },
-      "Beginner/General": { "More Nutrition": 21.8, "ESN": 21.0, "Myprotein": 24.2, "Foodspring": 22.4, "Rocka Nutrition": 10.6 },
-      "Beauty Affinity": { "More Nutrition": 21.7, "ESN": 18.3, "Myprotein": 23.3, "Foodspring": 28.3, "Rocka Nutrition": 8.4 }
+      // Real data: Visibility is minimal except for direct brand queries
+      "Bodybuilder": { "More Nutrition": 0, "ESN": 50, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 },
+      "Sports Enthusiast": { "More Nutrition": 0, "ESN": 0, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 },
+      "Beginner/General": { "More Nutrition": 0, "ESN": 0, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 },
+      "Beauty Affinity": { "More Nutrition": 0, "ESN": 0, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 }
     }
   },
   "sampleResponses": {
+    // REAL ChatGPT responses (December 2025)
     "awareness": [
-      { "platform": "ChatGPT", "question": "Sind Proteinriegel gesund?", "response": "Proteinriegel können eine gesunde Ergänzung sein, wenn sie hochwertige Zutaten enthalten. ESN und More Nutrition bieten Riegel mit hohem Proteingehalt und wenig Zucker an. Achten Sie auf die Zutatenliste - viele Riegel enthalten versteckten Zucker. Myprotein bietet günstige Alternativen, während Foodspring auf Bio-Qualität setzt.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein", "Foodspring"] },
-      { "platform": "Gemini", "question": "Ist Proteinpulver schädlich?", "response": "Hochwertiges Proteinpulver ist bei normaler Dosierung nicht schädlich. More Nutrition und ESN sind für ihre transparente Zusammensetzung und laborgeprüfte Qualität bekannt. Wichtig ist, die empfohlene Tagesdosis nicht zu überschreiten. Bei Nierenerkrankungen sollte man ärztlichen Rat einholen.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN"] },
-      { "platform": "Perplexity", "question": "Wie viel Proteinpulver am Tag?", "response": "Die empfohlene Menge liegt bei 1-2 Portionen (25-50g) pro Tag, abhängig vom Trainingsumfang. Deutsche Premium-Marken wie More Nutrition und ESN bieten klare Dosierungsempfehlungen. Für Sportler können bis zu 2g Protein pro kg Körpergewicht sinnvoll sein. Myprotein und Foodspring haben ebenfalls gute Anleitungen.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein", "Foodspring"] }
+      { "platform": "ChatGPT", "question": "Sind Proteinriegel gesund?", "response": "Ob Proteinriegel gesund sind oder nicht, hängt von mehreren Faktoren ab, darunter die Inhaltsstoffe, die Nährstoffzusammensetzung und die individuellen Ernährungsziele. Hier sind einige Punkte, die du beachten solltest: 1. Inhaltsstoffe: Viele Proteinriegel enthalten hochwertige Proteinquellen wie Whey, Casein oder pflanzliches Protein. Allerdings gibt es auch Riegel, die viele Zucker, künstliche Süßstoffe oder ungesunde Fette enthalten...", "sentiment": "neutral", "brandMentions": [] },
+      { "platform": "ChatGPT", "question": "Ist Proteinpulver schädlich?", "response": "Proteinpulver ist für die meisten Menschen unbedenklich, solange es in moderaten Mengen konsumiert wird und als Teil einer ausgewogenen Ernährung dient. Hier sind einige Punkte zu beachten: 1. Bedarf: Der Proteinbedarf variiert je nach Alter, Geschlecht, Aktivitätslevel und Gesundheitszustand. Die meisten Menschen können ihren Proteinbedarf durch eine ausgewogene Ernährung decken...", "sentiment": "neutral", "brandMentions": [] },
+      { "platform": "ChatGPT", "question": "Wie viel Proteinpulver am Tag?", "response": "Die empfohlene Menge an Proteinpulver variiert je nach individuellen Zielen, Aktivitätslevel und Ernährung. Allgemeine Richtlinien sind: 1. Für den Durchschnittsmenschen: Etwa 0,8 bis 1,0 Gramm Protein pro Kilogramm Körpergewicht pro Tag sind für die meisten Menschen ausreichend. 2. Für Sportler oder Menschen, die Krafttraining machen: Der Bedarf kann auf 1,2 bis 2,0 Gramm Protein pro Kilogramm Körpergewicht steigen...", "sentiment": "neutral", "brandMentions": [] }
     ],
     "consideration": [
-      { "platform": "ChatGPT", "question": "Proteinpulver Test", "response": "Im aktuellen Proteinpulver-Test schneiden ESN und More Nutrition besonders gut ab. ESN Designer Whey überzeugt mit hervorragender Löslichkeit und Geschmack. More Nutrition Total Protein punktet bei der Aminosäurenzusammensetzung. Myprotein Impact Whey bietet das beste Preis-Leistungs-Verhältnis. Foodspring ist die Bio-Alternative.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein", "Foodspring"] },
-      { "platform": "Copilot", "question": "Welches Proteinpulver ist das beste?", "response": "Das beste Proteinpulver hängt von Ihren Zielen ab. Für Geschmack und Innovation: More Nutrition. Für deutsche Qualität und Transparenz: ESN. Für Preis-Leistung: Myprotein. Für Bio-Qualität: Foodspring. Rocka Nutrition ist bei veganen Optionen beliebt.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein", "Foodspring", "Rocka Nutrition"] },
-      { "platform": "Perplexity", "question": "Veganes Proteinpulver Test", "response": "Im Test für veganes Proteinpulver führt Foodspring mit seinem Bio Vegan Protein. Rocka Nutrition No Whey punktet bei Geschmack. Myprotein Vegan Blend bietet guten Wert. More Nutrition und ESN haben kleinere vegane Sortimente, sind aber auf Whey spezialisiert.", "sentiment": "neutral", "brandMentions": ["Foodspring", "Rocka Nutrition", "Myprotein", "More Nutrition", "ESN"] }
+      { "platform": "ChatGPT", "question": "Proteinpulver Test", "response": "Es gibt viele verschiedene Arten von Proteinpulvern auf dem Markt, und die Wahl des richtigen Produkts hängt von verschiedenen Faktoren ab, einschließlich Ihrer Ernährungsbedürfnisse, Fitnessziele und persönlichen Vorlieben. Hier sind einige wichtige Punkte, die Sie bei einem Test oder Vergleich von Proteinpulvern berücksichtigen sollten: 1. Arten von Proteinpulvern - Whey-Protein: Schnell verdaulich, ideal nach dem Training. Hoher Gehalt an essentiellen Aminosäuren...", "sentiment": "neutral", "brandMentions": [] },
+      { "platform": "ChatGPT", "question": "Welches Proteinpulver ist das beste?", "response": "Die Wahl des besten Proteinpulvers hängt von verschiedenen Faktoren ab, darunter deine individuellen Ziele, Ernährungsbedürfnisse, Allergien oder Unverträglichkeiten sowie persönliche Vorlieben. Hier sind einige gängige Arten von Proteinpulver und ihre Vorzüge: 1. Molkenprotein (Whey): Schnell verdaulich und ideal für den Muskelaufbau. Enthält alle essentiellen Aminosäuren...", "sentiment": "neutral", "brandMentions": [] },
+      { "platform": "ChatGPT", "question": "Veganes Proteinpulver Test", "response": "Wenn du auf der Suche nach veganem Proteinpulver bist, gibt es viele Optionen und verschiedene Kriterien, die du in Betracht ziehen solltest. Hier sind einige wichtige Punkte, die du bei einem Test oder Vergleich von veganem Proteinpulver beachten kannst: 1. Proteinquelle - Erbsenprotein: Hochwertig, leicht verdaulich und reich an Aminosäuren. Reisprotein: Gut verträglich...", "sentiment": "neutral", "brandMentions": [] }
     ],
     "decision": [
-      { "platform": "ChatGPT", "question": "DM Proteinpulver", "response": "Bei DM finden Sie hauptsächlich Eigenmarken und Foodspring-Produkte. Premium-Marken wie ESN oder More Nutrition sind dort nicht erhältlich - diese kaufen Sie am besten direkt im Online-Shop oder bei Partnerunternehmen. Myprotein gibt es ebenfalls nicht bei DM.", "sentiment": "neutral", "brandMentions": ["Foodspring", "ESN", "More Nutrition", "Myprotein"] },
-      { "platform": "Gemini", "question": "Rossmann Proteinriegel", "response": "Rossmann bietet Proteinriegel von Foodspring und verschiedenen Eigenmarken. Für ESN oder More Nutrition Riegel müssen Sie online bestellen oder spezialisierte Fitness-Shops besuchen. Die Rossmann-Auswahl ist auf massenmarktfähige Produkte beschränkt.", "sentiment": "neutral", "brandMentions": ["Foodspring", "ESN", "More Nutrition"] },
-      { "platform": "Perplexity", "question": "Wo kann man ESN kaufen?", "response": "ESN können Sie direkt unter esn.com kaufen oder bei autorisierten Partnern wie Fitmart, Amazon und ausgewählten Fitnessshops. In Drogerien wie DM oder Rossmann ist ESN nicht erhältlich. Der Online-Shop bietet oft Bundles und Rabattaktionen.", "sentiment": "positive", "brandMentions": ["ESN"] }
+      { "platform": "ChatGPT", "question": "DM Proteinpulver", "response": "DM Proteinpulver bezieht sich wahrscheinlich auf Proteinpulver, das in DM-Drogeriemärkten erhältlich ist. DM ist eine bekannte Drogeriemarktkette in Deutschland, die eine Vielzahl von Produkten anbietet, darunter auch Nahrungsergänzungsmittel wie Proteinpulver. Proteinpulver wird häufig von Sportlern und Fitness-Enthusiasten verwendet, um die Proteinzufuhr zu erhöhen. Es gibt verschiedene Arten von Proteinpulvern, darunter: 1. Whey-Protein: Schnell verdaulich und ideal nach dem Training...", "sentiment": "neutral", "brandMentions": [] },
+      { "platform": "ChatGPT", "question": "Rossmann Proteinriegel", "response": "Rossmann ist eine Drogeriemarktkette in Deutschland, die eine Vielzahl von Produkten anbietet, darunter auch Proteinriegel. Diese Riegel sind oft als Snack für Sportler oder gesundheitsbewusste Verbraucher gedacht und enthalten in der Regel eine hohe Menge an Protein, um den Muskelaufbau und die Regeneration zu unterstützen...", "sentiment": "neutral", "brandMentions": [] },
+      { "platform": "ChatGPT", "question": "Wo kann man ESN kaufen?", "response": "ESN (Essentials of Sport Nutrition) Produkte können in verschiedenen Geschäften und Online-Shops gekauft werden. Hier sind einige Optionen, wo du ESN Produkte finden kannst: 1. Offizielle Website: Die beste Quelle ist die offizielle ESN-Website, wo du das gesamte Sortiment an Nahrungsergänzungsmitteln direkt kaufen kannst. 2. Sportnahrungsgeschäfte: Viele Fachgeschäfte für Sporternährung führen ESN Produkte. 3. Online-Shops: Plattformen wie Amazon, eBay oder spezielle Sporternährungs-Webshops...", "sentiment": "positive", "brandMentions": ["ESN"] }
     ]
   },
   "competitiveLandscape": {
-    "overall": { "More Nutrition": 27.0, "ESN": 26.9, "Myprotein": 24.5, "Foodspring": 13.6, "Rocka Nutrition": 8.0 },
+    // Real data: Only ESN visible across all stages
+    "overall": { "More Nutrition": 0, "ESN": 100, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 },
     "byStage": {
-      "awareness": { "More Nutrition": 28.1, "ESN": 27.3, "Myprotein": 24.6, "Foodspring": 11.8, "Rocka Nutrition": 8.2 },
-      "consideration": { "More Nutrition": 27.5, "ESN": 25.8, "Myprotein": 22.7, "Foodspring": 16.4, "Rocka Nutrition": 7.6 },
-      "decision": { "More Nutrition": 13.3, "ESN": 37.5, "Myprotein": 16.7, "Foodspring": 23.5, "Rocka Nutrition": 9.0 }
+      "awareness": { "More Nutrition": 0, "ESN": 0, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 },
+      "consideration": { "More Nutrition": 0, "ESN": 0, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 },
+      "decision": { "More Nutrition": 0, "ESN": 100, "Myprotein": 0, "Foodspring": 0, "Rocka Nutrition": 0 }
     }
   },
   "recommendations": {
     "awareness": { 
-      "pattern": "In safety and dosage queries, More Nutrition and ESN are frequently cited as trusted German brands. AI platforms associate them with transparency and quality when users express health concerns about protein supplements.", 
-      "contentType": "Objection-handling content addressing common fears about protein supplements. Scientific studies, expert endorsements, and clear dosage guidelines are prioritized by AI models.", 
-      "action": "Create comprehensive FAQ content addressing 'Is protein powder harmful?' and similar safety queries. Include clinical studies, nutrition expert quotes, and transparent lab testing results." 
+      "pattern": "CRITICAL FINDING: ChatGPT provides only generic educational content for safety/dosage queries. No protein powder brands are mentioned. AI models prioritize neutral, informational responses over brand recommendations.", 
+      "contentType": "To be cited by AI, brands need authoritative scientific content that AI can reference. Clinical studies, expert partnerships, and structured data (FAQ schema, medical endorsements) are essential.", 
+      "action": "Create citation-worthy content: partner with nutritionists for expert quotes, publish research studies, and implement structured data. Consider building a knowledge base that AI models can learn from." 
     },
     "consideration": { 
-      "pattern": "ESN leads in 'Test' queries due to strong social proof content. More Nutrition wins selection queries. The vegan segment is dominated by Foodspring - a gap for More Nutrition and ESN.", 
-      "contentType": "Test/comparison content with structured data, star ratings, and customer reviews. Third-party test results and certifications strengthen AI visibility in this stage.", 
-      "action": "Develop authoritative product comparison content. Consider expanding vegan protein offerings or creating educational content about plant-based protein to capture the growing vegan market segment." 
+      "pattern": "CRITICAL FINDING: Even for 'Test' and 'best protein powder' queries, ChatGPT does NOT recommend specific brands. It provides generic criteria (whey vs casein, protein types) rather than brand comparisons.", 
+      "contentType": "AI models avoid brand recommendations in comparison queries. To gain visibility, brands need third-party authority: independent test results, media coverage, and strong Wikipedia/knowledge graph presence.", 
+      "action": "Invest in third-party validation: secure independent product testing, pursue media coverage in fitness publications, and build Wikipedia/Wikidata presence. These sources feed AI training data." 
     },
     "decision": { 
-      "pattern": "CRITICAL GAP: Drugstore retail queries (DM, Rossmann) represent 5,200 monthly searches but More Nutrition and ESN have minimal visibility. Foodspring dominates due to physical retail presence.", 
-      "contentType": "Purchase-enabling content highlighting online availability, retail partners, and where-to-buy information. Clear CTAs and delivery information are essential.", 
-      "action": "Create dedicated 'Where to buy' landing pages. Consider retail partnerships or optimize content to appear as premium online alternatives when users search for drugstore options. The ESN direct purchase query shows brand loyalty - leverage this across more channels." 
+      "pattern": "ONLY SUCCESS: The direct brand query 'Wo kann man ESN kaufen?' generated a brand mention with positive sentiment. This shows that brand-specific queries work - users must already know the brand.", 
+      "contentType": "Purchase intent content works when users search for your brand directly. Brands need strong presence on official channels, Amazon, and retail partners that AI can cite.", 
+      "action": "Optimize for branded search: ensure clear 'where to buy' information across all channels. The challenge is moving users from generic queries (where AI doesn't mention brands) to branded queries. This requires traditional brand building outside of AI." 
     }
   }
 };
@@ -224,6 +230,11 @@ export default function WPPDemoPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Real Data Banner */}
+      <div className="bg-green-600 text-white text-center py-2 text-sm font-medium">
+        ✅ REAL DATA - Analysis performed using ChatGPT API (December 15, 2025) | Gemini API unavailable at analysis time
+      </div>
+      
       {/* Header */}
       <header className="bg-white border-b shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -244,7 +255,7 @@ export default function WPPDemoPage() {
             <div className="flex gap-3">
               <button className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 flex items-center gap-2">
                 <RefreshCw className="w-4 h-4" />
-                Run Real Analysis
+                Run New Analysis
               </button>
               <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 flex items-center gap-2">
                 <Download className="w-4 h-4" />
@@ -261,15 +272,15 @@ export default function WPPDemoPage() {
           <div className="grid grid-cols-4 gap-6">
             <div className="text-center">
               <div className="text-4xl font-bold">{data.totalResponses}</div>
-              <div className="text-purple-100 text-sm">AI Responses</div>
+              <div className="text-purple-100 text-sm">Real AI Responses</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold">{data.questions.length}</div>
-              <div className="text-purple-100 text-sm">Questions</div>
+              <div className="text-purple-100 text-sm">Questions Tested</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold">{data.platforms.length}</div>
-              <div className="text-purple-100 text-sm">Platforms</div>
+              <div className="text-purple-100 text-sm">Platform (ChatGPT)</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold">5</div>
@@ -278,6 +289,23 @@ export default function WPPDemoPage() {
           </div>
           <div className="mt-4 bg-white/10 rounded-lg p-3 text-center text-sm">
             ℹ️ This analysis covers {data.questions.length} questions across {formatNumber(data.totalSearchVolume)}+ monthly searches to measure AI visibility
+          </div>
+        </div>
+      </div>
+      
+      {/* Key Finding Alert */}
+      <div className="bg-amber-50 border-b border-amber-200">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <h3 className="font-bold text-amber-900">Key Finding: AI Platforms Don&apos;t Naturally Recommend Protein Brands</h3>
+              <p className="text-amber-800 text-sm mt-1">
+                Our real ChatGPT analysis reveals that for generic queries like &quot;Sind Proteinriegel gesund?&quot; or &quot;Proteinpulver Test&quot;, 
+                <strong> AI platforms provide neutral, educational responses WITHOUT mentioning any specific brands</strong>. 
+                Only direct brand queries (e.g., &quot;Wo kann man ESN kaufen?&quot;) generate brand mentions. This represents a significant challenge and opportunity for AI visibility.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -525,7 +553,7 @@ export default function WPPDemoPage() {
                     
                     {/* Platform Tabs */}
                     <div className="flex gap-2 mb-4">
-                      {["ChatGPT", "Gemini", "Perplexity", "Copilot"].map(platform => (
+                      {data.platforms.map(platform => (
                         <button
                           key={platform}
                           onClick={(e) => { e.stopPropagation(); setSelectedPlatform(platform); }}
@@ -538,6 +566,9 @@ export default function WPPDemoPage() {
                           {platform}
                         </button>
                       ))}
+                      <span className="px-3 py-2 text-xs text-gray-400 italic">
+                        (Real data from ChatGPT API)
+                      </span>
                     </div>
 
                     {/* Sample Response Card */}
