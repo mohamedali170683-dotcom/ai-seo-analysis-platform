@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowLeft, Download, RefreshCw, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Download, RefreshCw, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 // Analysis data embedded directly
 const analysisData = {
@@ -230,9 +229,6 @@ export default function WPPDemoPage() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="text-gray-500 hover:text-gray-700">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -877,13 +873,9 @@ export default function WPPDemoPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-500 py-8">
-          <p>Analysis performed on {data.analysisDate} • AI audit solution from WPP Media</p>
-          <p className="mt-2">
-            <Link href="/dashboard" className="text-purple-600 hover:underline">
-              ← Back to Dashboard
-            </Link>
-          </p>
+        <div className="text-center text-sm text-gray-500 py-8 border-t mt-8">
+          <p className="mb-2">Analysis performed on {data.analysisDate}</p>
+          <p className="font-medium text-gray-700">AI audit solution from WPP Media Holistic Search</p>
         </div>
       </div>
     </div>
