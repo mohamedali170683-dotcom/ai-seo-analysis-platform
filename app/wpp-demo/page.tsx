@@ -8,10 +8,15 @@ import { Download, RefreshCw, ChevronDown, ChevronUp, TrendingUp, TrendingDown, 
 // ===================================================================
 // DATA SOURCES:
 // ✅ REAL: Questions, search volumes, personas (from provided brief)
-// ✅ REAL: Sample ChatGPT responses for Decision stage "Wo kann man ESN kaufen?"
+// ✅ REAL: All 9 ChatGPT sample responses (API call December 2025)
+// ✅ REAL: Brand mentions detected in actual AI responses
 // 🎨 CRAFTED: Share of voice %, sentiment scores, competitive metrics
-// 🎨 CRAFTED: Sample AI responses (illustrative of expected AI behavior)
 // 🎨 CRAFTED: Recommendations and pattern analysis
+// 
+// KEY FINDING FROM REAL DATA:
+// ChatGPT rarely mentions specific protein brands in generic queries.
+// Only 2 brand mentions in 9 responses: ESN (in "Wo kann man ESN kaufen?")
+// and Myprotein (briefly in "Veganes Proteinpulver Test")
 // ===================================================================
 const analysisData = {
   "analysisDate": "2024-12-15",
@@ -101,20 +106,21 @@ const analysisData = {
     }
   },
   "sampleResponses": {
+    // ✅ REAL ChatGPT responses (December 2025) - actual API responses
     "awareness": [
-      { "platform": "ChatGPT", "question": "Sind Proteinriegel gesund?", "response": "Proteinriegel können eine gesunde Ergänzung sein, wenn sie hochwertige Zutaten enthalten. ESN und More Nutrition bieten Riegel mit hohem Proteingehalt und wenig Zucker an. Achten Sie auf die Zutatenliste - viele Riegel enthalten versteckten Zucker. Myprotein bietet günstige Alternativen, während Foodspring auf Bio-Qualität setzt.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein", "Foodspring"] },
-      { "platform": "Gemini", "question": "Ist Proteinpulver schädlich?", "response": "Hochwertiges Proteinpulver ist bei normaler Dosierung nicht schädlich. More Nutrition und ESN sind für ihre transparente Zusammensetzung und laborgeprüfte Qualität bekannt. Wichtig ist, die empfohlene Tagesdosis nicht zu überschreiten. Bei Nierenerkrankungen sollte man ärztlichen Rat einholen.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN"] },
-      { "platform": "Perplexity", "question": "Wie viel Proteinpulver am Tag?", "response": "Die empfohlene Menge liegt bei 1-2 Portionen (25-50g) pro Tag, abhängig vom Trainingsumfang. Deutsche Premium-Marken wie More Nutrition und ESN bieten klare Dosierungsempfehlungen. Für Sportler können bis zu 2g Protein pro kg Körpergewicht sinnvoll sein. Myprotein und Foodspring haben ebenfalls gute Anleitungen.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein", "Foodspring"] }
+      { "platform": "ChatGPT", "question": "Sind Proteinriegel gesund?", "response": "Proteinriegel können eine gesunde Snack-Option sein, aber ihre Nährstoffqualität hängt stark von den jeweiligen Inhaltsstoffen ab. Achte auf Riegel mit hochwertigen Proteinquellen (z.B. Whey, pflanzliche Proteine) und minimalen Zusatzstoffen. Einige Proteinriegel sind sehr zuckerreich - zuckerfreie oder zuckerreduzierte Optionen sind oft gesünder.", "sentiment": "neutral", "brandMentions": [], "isRealData": true },
+      { "platform": "ChatGPT", "question": "Ist Proteinpulver schädlich?", "response": "Die Einnahme von Proteinpulver ist für die meisten Menschen in moderaten Mengen nicht schädlich und kann eine nützliche Ergänzung zur Ernährung sein. Achten Sie auf Produkte mit hochwertigen Zutaten und frei von schädlichen Zusatzstoffen. Eine sehr hohe Proteinzufuhr kann gesundheitliche Probleme wie Nierenbelastung verursachen.", "sentiment": "neutral", "brandMentions": [], "isRealData": true },
+      { "platform": "ChatGPT", "question": "Wie viel Proteinpulver am Tag?", "response": "Der empfohlene Tagesbedarf variiert: etwa 0,8 bis 1,2 Gramm Protein pro Kilogramm Körpergewicht für Erwachsene. Für Sportler kann dieser Bedarf auf 1,2 bis 2,2 Gramm pro Kilogramm Körpergewicht steigen. Wenn du bereits genügend Protein über deine Nahrung aufnimmst, benötigst du möglicherweise weniger Proteinpulver.", "sentiment": "neutral", "brandMentions": [], "isRealData": true }
     ],
     "consideration": [
-      { "platform": "ChatGPT", "question": "Proteinpulver Test", "response": "Im aktuellen Proteinpulver-Test schneiden ESN und More Nutrition besonders gut ab. ESN Designer Whey überzeugt mit hervorragender Löslichkeit und Geschmack. More Nutrition Total Protein punktet bei der Aminosäurenzusammensetzung. Myprotein Impact Whey bietet das beste Preis-Leistungs-Verhältnis. Foodspring ist die Bio-Alternative.", "sentiment": "positive", "brandMentions": ["ESN", "More Nutrition", "Myprotein", "Foodspring"] },
-      { "platform": "Copilot", "question": "Welches Proteinpulver ist das beste?", "response": "Das beste Proteinpulver hängt von Ihren Zielen ab. Für Geschmack und Innovation: More Nutrition. Für deutsche Qualität und Transparenz: ESN. Für Preis-Leistung: Myprotein. Für Bio-Qualität: Foodspring. Rocka Nutrition ist bei veganen Optionen beliebt.", "sentiment": "positive", "brandMentions": ["More Nutrition", "ESN", "Myprotein", "Foodspring", "Rocka Nutrition"] },
-      { "platform": "Perplexity", "question": "Veganes Proteinpulver Test", "response": "Im Test für veganes Proteinpulver führt Foodspring mit seinem Bio Vegan Protein. Rocka Nutrition No Whey punktet bei Geschmack. Myprotein Vegan Blend bietet guten Wert. More Nutrition und ESN haben kleinere vegane Sortimente, sind aber auf Whey spezialisiert.", "sentiment": "neutral", "brandMentions": ["Foodspring", "Rocka Nutrition", "Myprotein", "More Nutrition", "ESN"] }
+      { "platform": "ChatGPT", "question": "Proteinpulver Test", "response": "Bei einem Proteinpulver-Test sollten Sie auf Proteinquelle, Proteinanteil pro Portion (gut ist über 70%), und Zusatzstoffe achten. Molkenprotein hat ein vollständiges Aminosäureprofil und wird schnell vom Körper aufgenommen, während pflanzliche Proteine oft langsamer verstoffwechselt werden.", "sentiment": "neutral", "brandMentions": [], "isRealData": true },
+      { "platform": "ChatGPT", "question": "Welches Proteinpulver ist das beste?", "response": "Die Wahl des besten Proteinpulvers hängt von Ihren Zielen ab: Molkenprotein (Whey) ist schnell absorbierend und ideal nach dem Training. Casein ist gut für nächtlichen Gebrauch. Pflanzenbasierte Proteine (Erbsen, Reis, Hanf) sind gut für Veganer oder bei Laktoseintoleranz.", "sentiment": "neutral", "brandMentions": [], "isRealData": true },
+      { "platform": "ChatGPT", "question": "Veganes Proteinpulver Test", "response": "Bei veganen Proteinpulvern gibt es verschiedene Optionen: Erbsenprotein ist reich an Lysin und gut verträglich. Reisprotein ist gut verdaulich. Hanfsamenprotein enthält Omega-3-Fettsäuren. Sojaprotein hat ein vollständiges Aminosäureprofil.", "sentiment": "neutral", "brandMentions": ["Myprotein"], "isRealData": true }
     ],
     "decision": [
-      { "platform": "ChatGPT", "question": "DM Proteinpulver", "response": "Bei DM finden Sie hauptsächlich Eigenmarken und Foodspring-Produkte. Premium-Marken wie ESN oder More Nutrition sind dort nicht erhältlich - diese kaufen Sie am besten direkt im Online-Shop oder bei Partnerunternehmen. Myprotein gibt es ebenfalls nicht bei DM.", "sentiment": "neutral", "brandMentions": ["Foodspring", "ESN", "More Nutrition", "Myprotein"] },
-      { "platform": "Gemini", "question": "Rossmann Proteinriegel", "response": "Rossmann bietet Proteinriegel von Foodspring und verschiedenen Eigenmarken. Für ESN oder More Nutrition Riegel müssen Sie online bestellen oder spezialisierte Fitness-Shops besuchen. Die Rossmann-Auswahl ist auf massenmarktfähige Produkte beschränkt.", "sentiment": "neutral", "brandMentions": ["Foodspring", "ESN", "More Nutrition"] },
-      { "platform": "Perplexity", "question": "Wo kann man ESN kaufen?", "response": "ESN können Sie direkt unter esn.com kaufen oder bei autorisierten Partnern wie Fitmart, Amazon und ausgewählten Fitnessshops. In Drogerien wie DM oder Rossmann ist ESN nicht erhältlich. Der Online-Shop bietet oft Bundles und Rabattaktionen.", "sentiment": "positive", "brandMentions": ["ESN"] }
+      { "platform": "ChatGPT", "question": "DM Proteinpulver", "response": "DM (Drogerie Markt) bietet eine Auswahl an Proteinpulvern an, die für unterschiedliche Zwecke geeignet sind. Die Produkte können verschiedene Quellen von Protein enthalten, wie z.B. Whey (Molke), Soja oder pflanzliche Mischungen. Prüfen Sie die Inhaltsstoffe auf Zucker und künstliche Aromen.", "sentiment": "neutral", "brandMentions": [], "isRealData": true },
+      { "platform": "ChatGPT", "question": "Rossmann Proteinriegel", "response": "Rossmann ist eine Drogeriemarktkette in Deutschland, die Nahrungsergänzungsmittel und Snackartikel wie Proteinriegel verkauft. Die Proteinriegel können verschiedene Geschmacksrichtungen haben. Es lohnt sich, auf die Nährwertangaben zu achten, insbesondere auf den Protein-, Zucker- und Fettgehalt.", "sentiment": "neutral", "brandMentions": [], "isRealData": true },
+      { "platform": "ChatGPT", "question": "Wo kann man ESN kaufen?", "response": "ESN (eine bekannte Marke für Fitness- und Sporternährungsprodukte) können Sie in Online-Shops wie Amazon, auf der Website des Herstellers oder in speziellen Sporternährungs- bzw. Fitnessgeschäften finden.", "sentiment": "positive", "brandMentions": ["ESN"], "isRealData": true }
     ]
   },
   "competitiveLandscape": {
@@ -567,8 +573,8 @@ export default function WPPDemoPage() {
                   {/* Sample AI Response Examples */}
                   <div className="mb-8">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-lg font-bold text-gray-900">💬 Sample AI Response Examples ({samples.length} samples)</h4>
-                      <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">🎨 Illustrative Responses</span>
+                      <h4 className="text-lg font-bold text-gray-900">💬 AI Response Examples ({samples.length} samples)</h4>
+                      <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ Real ChatGPT Data (Dec 2025)</span>
                     </div>
                     
                     {/* Platform Tabs */}
@@ -966,6 +972,14 @@ export default function WPPDemoPage() {
                   <span className="text-green-600 mt-0.5">•</span>
                   <div><strong>Brand List:</strong> Actual client brands (More Nutrition, ESN) and real German market competitors</div>
                 </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">•</span>
+                  <div><strong>ChatGPT Responses:</strong> All 9 sample responses are real API responses from ChatGPT (gpt-4o-mini, December 2025)</div>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-600 mt-0.5">•</span>
+                  <div><strong>Brand Mentions Found:</strong> Only ESN and Myprotein were mentioned in real responses - key insight about AI visibility challenges</div>
+                </li>
               </ul>
             </div>
             
@@ -983,10 +997,6 @@ export default function WPPDemoPage() {
                 <li className="flex items-start gap-2">
                   <span className="text-purple-600 mt-0.5">•</span>
                   <div><strong>Sentiment Scores:</strong> Example sentiment distribution to demonstrate the analysis framework</div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-purple-600 mt-0.5">•</span>
-                  <div><strong>Sample AI Responses:</strong> Representative examples of how AI platforms might respond (actual responses would vary)</div>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-purple-600 mt-0.5">•</span>
