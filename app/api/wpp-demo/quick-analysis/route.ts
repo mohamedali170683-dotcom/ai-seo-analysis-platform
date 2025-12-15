@@ -103,7 +103,7 @@ export async function GET() {
       try {
         const gemini = new GoogleGenerativeAI(geminiKey);
         const model = gemini.getGenerativeModel({ 
-          model: "gemini-1.5-flash",
+          model: "gemini-pro",
           generationConfig: {
             maxOutputTokens: 400,
             temperature: 0.7,
