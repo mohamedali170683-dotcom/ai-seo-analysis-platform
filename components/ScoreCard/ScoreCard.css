@@ -1,0 +1,284 @@
+/**
+ * ScoreCard Component Styles - Behavioral Science Optimized
+ * 
+ * Key features:
+ * - Large monospace score display (4.5rem / 72px)
+ * - Traffic light status colors
+ * - 32px card padding for comprehension
+ * - Progress bar visualization
+ */
+
+.score-card {
+  background-color: var(--color-background-card, #FFFFFF);
+  border: 1px solid var(--color-border-default, #E2E8F0);
+  border-radius: var(--radius-xl, 1rem);
+  padding: var(--card-padding, 2rem);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base, 200ms);
+}
+
+.score-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Size variants */
+.score-card-large {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.score-card-large .score-value {
+  font-size: 6rem;
+}
+
+.score-card-compact {
+  padding: var(--space-lg, 1.5rem);
+}
+
+.score-card-compact .score-value {
+  font-size: var(--text-4xl, 2.25rem);
+}
+
+/* Header */
+.score-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md, 1rem);
+  margin-bottom: var(--space-xl, 2rem);
+}
+
+.score-card-icon {
+  font-size: var(--text-3xl, 1.875rem);
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.score-card-header-text {
+  flex: 1;
+}
+
+.score-card-title {
+  font-family: var(--font-headline, 'IBM Plex Sans', sans-serif);
+  font-size: var(--text-xl, 1.25rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--color-navy-900, #0F172A);
+  margin-bottom: var(--space-xs, 0.25rem);
+  line-height: 1.2;
+}
+
+.score-card-subtitle {
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-text-secondary, #475569);
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Body */
+.score-card-body {
+  margin-bottom: var(--space-xl, 2rem);
+}
+
+/* Score Display */
+.score-display {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-xs, 0.25rem);
+  margin-bottom: var(--space-lg, 1.5rem);
+}
+
+.score-value {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--text-score, 4.5rem);
+  font-weight: var(--font-bold, 700);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--color-navy-900, #0F172A);
+  font-variant-numeric: tabular-nums;
+}
+
+.score-max {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--text-3xl, 1.875rem);
+  color: var(--color-text-tertiary, #94A3B8);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Progress Bar */
+.score-progress {
+  height: 12px;
+  background-color: var(--color-background-subtle, #F1F5F9);
+  border-radius: var(--radius-lg, 0.75rem);
+  overflow: hidden;
+  margin-bottom: var(--space-md, 1rem);
+}
+
+.score-progress-fill {
+  height: 100%;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: var(--radius-lg, 0.75rem);
+}
+
+.score-progress-green {
+  background: linear-gradient(90deg, var(--color-green-600, #059669) 0%, var(--color-green-500, #10B981) 100%);
+}
+
+.score-progress-amber {
+  background: linear-gradient(90deg, var(--color-amber-600, #D97706) 0%, var(--color-amber-500, #F59E0B) 100%);
+}
+
+.score-progress-red {
+  background: linear-gradient(90deg, var(--color-red-600, #DC2626) 0%, var(--color-red-500, #EF4444) 100%);
+}
+
+/* Status Badge */
+.score-status {
+  display: inline-block;
+  padding: var(--space-xs, 0.25rem) var(--space-md, 1rem);
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: var(--font-bold, 700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.score-status-green {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--color-green-600, #059669);
+}
+
+.score-status-amber {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--color-amber-600, #D97706);
+}
+
+.score-status-red {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--color-red-600, #DC2626);
+}
+
+/* Meta info */
+.score-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs, 0.25rem);
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-text-secondary, #475569);
+  line-height: 1.4;
+  margin-bottom: var(--space-lg, 1.5rem);
+}
+
+/* Benchmark */
+.score-benchmark {
+  padding: var(--space-md, 1rem);
+  background-color: var(--color-background-subtle, #F1F5F9);
+  border-radius: var(--radius-md, 0.5rem);
+  margin-bottom: var(--space-lg, 1.5rem);
+  font-size: var(--text-sm, 0.875rem);
+  line-height: 1.4;
+}
+
+.benchmark-positive {
+  color: var(--color-green-600, #059669);
+  font-weight: var(--font-semibold, 600);
+}
+
+.benchmark-negative {
+  color: var(--color-red-600, #DC2626);
+  font-weight: var(--font-semibold, 600);
+}
+
+/* Action button */
+.score-card-action {
+  background: none;
+  border: none;
+  color: var(--color-cyan-500, #06B6D4);
+  font-size: var(--text-base, 1rem);
+  font-weight: var(--font-semibold, 600);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition-fast, 150ms);
+  font-family: var(--font-body, 'Inter', sans-serif);
+}
+
+.score-card-action:hover {
+  color: var(--color-cyan-600, #0891B2);
+  text-decoration: underline;
+}
+
+/* ===================================
+   MetricCard - Secondary metrics
+   =================================== */
+
+.metric-card {
+  background-color: var(--color-background-card, #FFFFFF);
+  border: 1px solid var(--color-border-default, #E2E8F0);
+  border-radius: var(--radius-lg, 0.75rem);
+  padding: var(--space-lg, 1.5rem);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md, 1rem);
+}
+
+.metric-card-icon {
+  font-size: var(--text-2xl, 1.5rem);
+  line-height: 1;
+}
+
+.metric-card-content {
+  flex: 1;
+}
+
+.metric-card-title {
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--color-text-secondary, #475569);
+  margin: 0 0 var(--space-xs, 0.25rem);
+}
+
+.metric-card-value {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: var(--text-2xl, 1.5rem);
+  font-weight: var(--font-bold, 700);
+  color: var(--color-navy-900, #0F172A);
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-card-subtitle {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--color-text-tertiary, #94A3B8);
+  margin: var(--space-xs, 0.25rem) 0 0;
+}
+
+.metric-card-trend {
+  font-size: var(--text-sm, 0.875rem);
+  font-weight: var(--font-semibold, 600);
+  margin-top: var(--space-xs, 0.25rem);
+}
+
+.trend-positive {
+  color: var(--color-green-600, #059669);
+}
+
+.trend-negative {
+  color: var(--color-red-600, #DC2626);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .score-card {
+    padding: var(--card-padding-mobile, 1.5rem);
+  }
+  
+  .score-value {
+    font-size: var(--text-5xl, 3rem);
+  }
+  
+  .score-max {
+    font-size: var(--text-2xl, 1.5rem);
+  }
+  
+  .score-card-large .score-value {
+    font-size: 4rem;
+  }
+}
