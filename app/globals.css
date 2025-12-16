@@ -1,3 +1,7 @@
+/* Behavioral Science Design System */
+@import './styles/design-tokens.css';
+@import './styles/typography.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
