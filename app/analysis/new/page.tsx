@@ -219,7 +219,7 @@ export default function NewAnalysisPage() {
                 </>
               ) : (
                 <>
-                  Start Analysis
+                  Start My Analysis
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}

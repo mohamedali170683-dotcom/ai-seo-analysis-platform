@@ -62,7 +62,7 @@ export default function PricingPage() {
             href="/analyze"
             className="text-gray-600 hover:text-gray-900 font-medium"
           >
-            Start Free Analysis
+            Start My Free Analysis
           </Link>
         </div>
       </header>
@@ -232,7 +232,7 @@ export default function PricingPage() {
               onClick={handleStartTrial}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
             >
-              Start {TRIAL_DAYS}-Day Free Trial
+              Start My {TRIAL_DAYS}-Day Free Trial
               <ArrowRight className="w-5 h-5" />
             </button>
             
@@ -245,7 +245,7 @@ export default function PricingPage() {
               onClick={handleBookDemo}
               className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
             >
-              or Book a Demo →
+              or Book My Demo →
             </button>
           </div>
 
@@ -302,7 +302,7 @@ export default function PricingPage() {
               onClick={handleStartFree}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              Start Free
+              Start My Free Check
               <ArrowRight className="w-4 h-4" />
             </button>
             
@@ -424,13 +424,13 @@ export default function PricingPage() {
               onClick={handleStartFree}
               className="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              Start Free Check
+              Start My Free Check
             </button>
             <button
               onClick={handleStartTrial}
               className="bg-white text-blue-600 font-semibold py-3 px-6 rounded-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-2"
             >
-              Start Professional Trial
+              Start My Professional Trial
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

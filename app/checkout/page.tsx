@@ -153,7 +153,7 @@ function CheckoutContent() {
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
             >
               <Lock className="w-4 h-4" />
-              Start Free Trial
+              Start My Free Trial
             </button>
 
             <div className="mt-4 text-center">

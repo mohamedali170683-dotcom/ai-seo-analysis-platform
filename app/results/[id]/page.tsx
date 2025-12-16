@@ -207,7 +207,7 @@ export default function ResultsPage() {
               onClick={() => router.push("/")}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700"
             >
-              Start New Analysis
+              Start My New Analysis
             </button>
           </div>
         </div>
@@ -280,12 +280,12 @@ export default function ResultsPage() {
               {limits.allowPdfExport ? (
                 <>
                   <Download className="w-4 h-4" />
-                  Export PDF
+                  Export My Report
                 </>
               ) : (
                 <>
                   <Lock className="w-4 h-4" />
-                  Export PDF
+                  Export My Report
                   <span className="text-xs bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded">PRO</span>
                 </>
               )}
@@ -301,7 +301,7 @@ export default function ResultsPage() {
               href="/analyze"
               className="px-4 py-2 bg-white text-green-600 rounded-lg text-sm font-semibold hover:bg-green-50 transition-all"
             >
-              New Analysis
+              Run My Next Audit
             </Link>
           </div>
         </div>

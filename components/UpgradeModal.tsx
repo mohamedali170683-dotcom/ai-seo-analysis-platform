@@ -153,7 +153,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
                 onClick={handleStartTrial}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
               >
-                Start 14-Day Free Trial
+                Start My 14-Day Free Trial
                 <ArrowRight className="w-4 h-4" />
               </button>
               
@@ -165,7 +165,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
                 onClick={handleBookDemo}
                 className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
               >
-                or Book a Demo →
+                or Book My Demo →
               </button>
             </div>
 
@@ -398,7 +398,7 @@ export function VisibilityGapAlert({
         onClick={onUpgrade}
         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
       >
-        Get Fix Recommendations — €590/mo
+        Get My Fix Recommendations — €590/mo
         <ArrowRight className="w-4 h-4" />
       </button>
     </div>
@@ -430,7 +430,7 @@ export function AgencyCTA({ onContact }: { onContact?: () => void }) {
             onClick={handleContact}
             className="bg-white text-slate-900 font-semibold py-2 px-4 rounded-lg hover:bg-slate-100 transition-all flex items-center gap-2"
           >
-            Talk to Our Team
+            Talk to Your Team
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>

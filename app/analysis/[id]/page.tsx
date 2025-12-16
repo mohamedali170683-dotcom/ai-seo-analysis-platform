@@ -73,7 +73,7 @@ export default function AnalysisResultsPage({ params }: PageProps) {
             Analysis not found
           </h2>
           <Link href="/" className="text-blue-600 hover:text-blue-700">
-            Start New Analysis
+            Start My New Analysis
           </Link>
         </div>
       </div>

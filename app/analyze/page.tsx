@@ -589,7 +589,7 @@ export default function AnalyzePage() {
                     Discovering Questions...
                   </span>
                 ) : (
-                  <span>🔍 Discover Questions for {brandName || "Your Brand"} →</span>
+                  <span>🔍 Find My Brand's Questions →</span>
                 )}
               </Button>
               <p className="text-center text-xs text-gray-500 mt-2">

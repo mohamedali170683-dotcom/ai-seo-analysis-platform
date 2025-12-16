@@ -266,7 +266,7 @@ export default function DashboardPage() {
                 className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 font-semibold shadow-lg"
               >
                 <Brain className="w-4 h-4" />
-                New Analysis
+                Start My Analysis
               </Link>
             </div>
           </div>
@@ -315,7 +315,7 @@ export default function DashboardPage() {
                 <Brain className="w-8 h-8" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">New Analysis</h2>
+                <h2 className="text-2xl font-bold">Run My Next Audit</h2>
                 <p className="text-blue-100">You choose the questions & platforms</p>
               </div>
             </div>
@@ -323,7 +323,7 @@ export default function DashboardPage() {
               Select from real search data questions and strategic questions. Test on ChatGPT, Gemini, Copilot, and Perplexity. Get data-driven recommendations.
             </p>
             <div className="flex items-center text-sm font-semibold">
-              Start Analysis
+              Start My Analysis
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
           </Link>
@@ -354,7 +354,7 @@ export default function DashboardPage() {
                 className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
               >
                 <Plus className="w-4 h-4" />
-                New Analysis
+                Run My Next Audit
               </Link>
             </div>
           </div>
@@ -404,13 +404,13 @@ export default function DashboardPage() {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                 <Brain className="w-8 h-8 text-blue-600" />
               </div>
-              <p className="text-gray-500 mb-4">No analyses yet. Start your first AI visibility analysis!</p>
+              <p className="text-gray-500 mb-4">No analyses yet. Start my first AI visibility analysis!</p>
               <Link
                 href="/analyze"
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 inline-flex items-center gap-2 font-semibold"
               >
                 <Brain className="w-5 h-5" />
-                Start Your First Analysis
+                Start My First Analysis
               </Link>
             </div>
           ) : (
@@ -465,7 +465,7 @@ export default function DashboardPage() {
                           href={`/results/${analysis.id}`}
                           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-1 font-semibold"
                         >
-                          View Report
+                          Show My Report
                           <ArrowRight className="w-4 h-4" />
                         </Link>
                       ) : analysis.status === "running" || analysis.status === "pending" ? (
