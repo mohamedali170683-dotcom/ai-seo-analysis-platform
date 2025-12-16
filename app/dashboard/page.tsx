@@ -276,7 +276,7 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Stats Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-8 text-white">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold opacity-90">AI Visibility Analyses</span>
               <Brain className="w-5 h-5 opacity-75" />
@@ -285,7 +285,7 @@ export default function DashboardPage() {
             <div className="text-xs opacity-75 mt-1">{stats.completedAnalyses} completed</div>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl shadow-lg p-8 text-white">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold opacity-90">Questions Tested</span>
               <HelpCircle className="w-5 h-5 opacity-75" />
@@ -294,7 +294,7 @@ export default function DashboardPage() {
             <div className="text-xs opacity-75 mt-1">Across all analyses</div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-8 text-white">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold opacity-90">AI Responses Analyzed</span>
               <Bot className="w-5 h-5 opacity-75" />
@@ -418,7 +418,7 @@ export default function DashboardPage() {
               {analyses.map((analysis) => (
                 <div
                   key={analysis.id}
-                  className="border border-gray-200 rounded-lg p-5 hover:border-blue-300 transition-colors"
+                  className="border border-gray-200 rounded-xl p-6 hover:border-blue-300 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">

@@ -106,7 +106,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
           <div className="grid md:grid-cols-2 gap-6">
             
             {/* Professional Tier - TARGET (highlighted) */}
-            <div className="relative border-2 border-blue-500 rounded-2xl p-6 bg-blue-50/30">
+            <div className="relative border-2 border-blue-500 rounded-2xl p-8 bg-blue-50/30">
               {/* Most Popular Badge */}
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <span className="bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
@@ -170,7 +170,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
             </div>
 
             {/* Partner Tier - ANCHOR */}
-            <div className="border border-gray-200 rounded-2xl p-6 bg-gradient-to-br from-amber-50/50 to-yellow-50/50">
+            <div className="border border-gray-200 rounded-2xl p-8 bg-gradient-to-br from-amber-50/50 to-yellow-50/50">
               <div className="text-center mb-4">
                 <h3 className="text-lg font-bold text-gray-900">{TIER_NAMES.partner.name}</h3>
                 <p className="text-sm text-gray-500">{TIER_NAMES.partner.tagline}</p>

@@ -554,7 +554,7 @@ export default function ResultsPage() {
                 <p className="text-gray-500 text-center py-8">No journey stage data available</p>
               )}
               {journeyStages.map((stage: any, index: number) => (
-                <div key={stage?.stage || index} className={`border-2 rounded-xl p-6 ${
+                <div key={stage?.stage || index} className={`border-2 rounded-xl p-8 ${
                   stage?.stage === "awareness" ? "border-blue-200 bg-blue-50/30" :
                   stage?.stage === "consideration" ? "border-cyan-200 bg-cyan-50/30" : "border-green-200 bg-green-50/30"
                 }`}>
@@ -832,7 +832,7 @@ export default function ResultsPage() {
                 const isLocked = !limits.showDetailedRecommendations && i > 0;
                 
                 return (
-                  <div key={i} className={`rounded-xl p-6 border-2 relative ${
+                  <div key={i} className={`rounded-xl p-8 border-2 relative ${
                     rec.stage === "Awareness" ? "bg-blue-50 border-blue-200" :
                     rec.stage === "Consideration" ? "bg-cyan-50 border-cyan-200" : "bg-green-50 border-green-200"
                   } ${isLocked ? "opacity-60" : ""}`}>
@@ -898,7 +898,7 @@ export default function ResultsPage() {
 
             {/* Upgrade CTA for free tier */}
             {!limits.showDetailedRecommendations && (
-              <div className="mt-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl p-6 text-center">
+              <div className="mt-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl p-8 text-center">
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
                   🔒 {allRecommendations.length - 1} More Recommendations Available
                 </h3>
@@ -975,7 +975,7 @@ export default function ResultsPage() {
             </p>
 
             {/* Overall Comparison */}
-            <div className="bg-gradient-to-r from-cyan-50 to-slate-50 rounded-xl p-6 mb-8">
+            <div className="bg-gradient-to-r from-cyan-50 to-slate-50 rounded-xl p-8 mb-8">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Overall AI Visibility Comparison</h3>
               <div className="space-y-4">
                 {/* Your Brand */}
@@ -1100,7 +1100,7 @@ export default function ResultsPage() {
             </div>
 
             {/* Competitive Insights */}
-            <div className="mt-8 bg-gray-50 rounded-xl p-6">
+            <div className="mt-8 bg-gray-50 rounded-xl p-8">
               <h3 className="text-lg font-bold text-gray-900 mb-4">💡 Key Competitive Insights</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-lg p-4">
