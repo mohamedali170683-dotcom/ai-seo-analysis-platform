@@ -255,7 +255,7 @@ export default function DashboardPage() {
               {tier === "free" && (
                 <Link
                   href="/pricing"
-                  className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
+                  className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
                   Upgrade
@@ -263,7 +263,7 @@ export default function DashboardPage() {
               )}
               <Link
                 href="/analyze"
-                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 font-semibold shadow-lg"
+                className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 font-semibold shadow-lg"
               >
                 <Brain className="w-4 h-4" />
                 Start My Analysis
@@ -407,7 +407,7 @@ export default function DashboardPage() {
               <p className="text-gray-500 mb-4">No analyses yet. Start my first AI visibility analysis!</p>
               <Link
                 href="/analyze"
-                className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 inline-flex items-center gap-2 font-semibold"
+                className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 inline-flex items-center gap-2 font-semibold"
               >
                 <Brain className="w-5 h-5" />
                 Start My First Analysis
@@ -463,7 +463,7 @@ export default function DashboardPage() {
                       {analysis.status === "completed" ? (
                         <Link
                           href={`/results/${analysis.id}`}
-                          className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 flex items-center gap-1 font-semibold"
+                          className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 flex items-center gap-1 font-semibold"
                         >
                           Show My Report
                           <ArrowRight className="w-4 h-4" />

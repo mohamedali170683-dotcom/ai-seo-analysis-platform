@@ -151,7 +151,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
 
               <button
                 onClick={handleStartTrial}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
               >
                 Start My 14-Day Free Trial
                 <ArrowRight className="w-4 h-4" />
@@ -212,7 +212,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
 
               <button
                 onClick={handleBookStrategyCall}
-                className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
               >
                 <Calendar className="w-4 h-4" />
                 Book Strategy Call
@@ -396,7 +396,7 @@ export function VisibilityGapAlert({
 
       <button
         onClick={onUpgrade}
-        className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
       >
         Get My Fix Recommendations — €590/mo
         <ArrowRight className="w-4 h-4" />

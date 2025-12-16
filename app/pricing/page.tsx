@@ -161,7 +161,7 @@ export default function PricingPage() {
 
             <button
               onClick={handleBookStrategyCall}
-              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-200"
+              className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-200"
             >
               <Calendar className="w-5 h-5" />
               Book Strategy Call
@@ -230,7 +230,7 @@ export default function PricingPage() {
 
             <button
               onClick={handleStartTrial}
-              className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+              className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-4 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
             >
               Start My {TRIAL_DAYS}-Day Free Trial
               <ArrowRight className="w-5 h-5" />
@@ -300,7 +300,7 @@ export default function PricingPage() {
 
             <button
               onClick={handleStartFree}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
             >
               Start My Free Check
               <ArrowRight className="w-4 h-4" />
@@ -422,13 +422,13 @@ export default function PricingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={handleStartFree}
-              className="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+              className="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
             >
               Start My Free Check
             </button>
             <button
               onClick={handleStartTrial}
-              className="bg-white text-blue-600 font-semibold py-3 px-6 rounded-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-2"
+              className="bg-white text-blue-600 font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-2"
             >
               Start My Professional Trial
               <ArrowRight className="w-4 h-4" />
