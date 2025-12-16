@@ -492,6 +492,30 @@ export default function DashboardPage() {
           )}
         </div>
 
+        {/* Trust Signals Section */}
+        <section className="bg-slate-50 rounded-xl p-8 mb-8 border border-slate-200">
+          <div className="text-center mb-6">
+            <h3 className="text-xl font-semibold text-slate-600 mb-4">Trusted by Marketing Teams At:</h3>
+            <div className="flex flex-wrap justify-center items-center gap-8 text-slate-500 font-medium">
+              <span className="text-lg">Deutsche Telekom</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-lg">Nestlé</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-lg">Purina</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-lg">Henkel</span>
+            </div>
+          </div>
+          <div className="max-w-2xl mx-auto text-center">
+            <blockquote className="text-xl italic text-slate-700 mb-3">
+              "Velaris helped us increase AI visibility by 34% in 90 days"
+            </blockquote>
+            <cite className="text-base text-slate-500 not-italic">
+              — CMO, Fortune 500 Brand
+            </cite>
+          </div>
+        </section>
+
         {/* FAQ Section */}
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
