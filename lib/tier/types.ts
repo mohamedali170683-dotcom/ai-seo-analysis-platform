@@ -1,9 +1,11 @@
 // 3-Tier Pricing Model Types and Constants
 // Based on behavioral science principles for client acquisition
-// KEY INSIGHT: Free tier sees FULL PROBLEM (all platforms), but cannot access SOLUTION (recommendations)
+// KEY INSIGHT: Free tier sees FULL PROBLEM (all platforms + full funnel), but cannot access SOLUTION (recommendations)
+// "High Value Acquisition" strategy: Show real pain points, blur the fixes
 
 export type UserTier = "free" | "professional" | "partner";
 export type BillingCycle = "monthly" | "annual";
+export type PurchaseType = "subscription" | "one_time";
 
 export interface TierLimits {
   // Platform access - ALL tiers get all platforms now
@@ -17,12 +19,13 @@ export interface TierLimits {
   analysesPerMonth: number;
   maxBrands: number;
   
-  // Feature flags - THE KEY GATES
-  useRealSearchData: boolean;  // Now TRUE for all tiers
+  // Feature flags - THE KEY GATES (Blur Strategy)
+  useRealSearchData: boolean;  // TRUE for all - show real pain points
   showDetailedRecommendations: boolean;  // THE PRIMARY GATE - Free sees issues, not fixes
+  showDeepDiveDetails: boolean;  // NEW: Specific questions/keywords missed
   showCodeSnippets: boolean;
   allowPdfExport: boolean;
-  saveResults: boolean;  // NEW: Can save to dashboard
+  saveResults: boolean;  // Can save to dashboard
   allowApiAccess: boolean;
   allowWhiteLabel: boolean;
   
@@ -46,6 +49,7 @@ export interface TierPricing {
   monthly: number;
   annual: number;
   annualSavings: number;
+  oneTimeReport: number;  // NEW: One-time report purchase option
   currency: string;
 }
 
@@ -54,38 +58,43 @@ export const TIER_PRICING: Record<UserTier, TierPricing> = {
     monthly: 0,
     annual: 0,
     annualSavings: 0,
+    oneTimeReport: 0,
     currency: "EUR",
   },
   professional: {
-    monthly: 590,
-    annual: 5900, // 2 months free
-    annualSavings: 1180,
+    monthly: 600,  // UPDATED: €600/month (high anchor price)
+    annual: 6000,  // 2 months free
+    annualSavings: 1200,
+    oneTimeReport: 199,  // NEW: €199 one-time report option
     currency: "EUR",
   },
   partner: {
     monthly: 2990,
     annual: 32890, // 1 month free (11 months)
     annualSavings: 2990,
+    oneTimeReport: 0, // Not applicable
     currency: "EUR",
   },
 };
 
 export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   free: {
-    // ALL platforms available - they see the FULL problem
-    platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
-    maxQuestions: 3,
-    allowedStages: ["awareness"], // Only awareness stage
+    // "HIGH VALUE ACQUISITION" - Free tier sees the FULL PROBLEM
+    // ALL platforms + ALL funnel stages + REAL data = maximum pain point visibility
+    platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],  // ALL 4 platforms
+    maxQuestions: 9,  // 3 per stage (awareness, consideration, decision)
+    allowedStages: ["awareness", "consideration", "decision"],  // FULL FUNNEL
     testsPerQuestion: 1,
-    maxCompetitors: 1, // Can see comparison but only 1 competitor
-    analysesPerMonth: 1,
+    maxCompetitors: 1,
+    analysesPerMonth: 3,  // Allow a few analyses to build habit
     maxBrands: 1,
-    // THE KEY GATES - see problem, not solution
-    useRealSearchData: true, // YES - they see real search data
-    showDetailedRecommendations: false, // NO - they see "7 issues found" but not the fixes
-    showCodeSnippets: false,
-    allowPdfExport: false,
-    saveResults: false, // Cannot save to dashboard
+    // THE KEY GATES - see problem, NOT solution (Blur Strategy)
+    useRealSearchData: true,  // YES - show real pain points
+    showDetailedRecommendations: false,  // BLURRED - "7 issues found" but not the fixes
+    showDeepDiveDetails: false,  // BLURRED - specific questions/keywords hidden
+    showCodeSnippets: false,  // LOCKED
+    allowPdfExport: false,  // LOCKED
+    saveResults: false,  // Must sign up to save
     allowApiAccess: false,
     allowWhiteLabel: false,
     monitoringFrequency: "none",
@@ -97,18 +106,20 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     includesDedicatedManager: false,
   },
   professional: {
+    // "ILLUSION OF FULL AUDIT" - Remove all caps
     platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
-    maxQuestions: Infinity, // UNLIMITED
+    maxQuestions: Infinity,  // UNLIMITED
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,
-    maxCompetitors: 10, // Up to 10 competitors
-    analysesPerMonth: Infinity, // UNLIMITED
+    maxCompetitors: 10,  // Up to 10 competitors
+    analysesPerMonth: Infinity,  // UNLIMITED
     maxBrands: 3,
     useRealSearchData: true,
-    showDetailedRecommendations: true, // UNLOCKED
+    showDetailedRecommendations: true,  // UNLOCKED
+    showDeepDiveDetails: true,  // UNLOCKED
     showCodeSnippets: true,
     allowPdfExport: true,
-    saveResults: true, // Can save to dashboard
+    saveResults: true,
     allowApiAccess: false,
     allowWhiteLabel: false,
     monitoringFrequency: "weekly",
@@ -124,11 +135,12 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     maxQuestions: Infinity,
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,
-    maxCompetitors: Infinity, // Unlimited
+    maxCompetitors: Infinity,
     analysesPerMonth: Infinity,
     maxBrands: Infinity,
     useRealSearchData: true,
     showDetailedRecommendations: true,
+    showDeepDiveDetails: true,
     showCodeSnippets: true,
     allowPdfExport: true,
     saveResults: true,
@@ -160,12 +172,15 @@ export const TIER_NAMES: Record<UserTier, { name: string; tagline: string; badge
   },
 };
 
-// Upgrade modal trigger types - Updated for recommendations-focused gating
+// Upgrade modal trigger types - Blur Strategy focused gating
 export type UpgradeModalTrigger =
   | "recommendations" // Primary gate - see issues, unlock fixes
+  | "deep_dive" // NEW: Specific questions/keywords missed
+  | "actionable_insights" // NEW: Actionable insights blurred
   | "code_snippets"
   | "pdf_export"
   | "save_results"
+  | "email_unlock" // NEW: Lead magnet - unlock one detail for email
   | "funnel_stages"
   | "consideration"
   | "decision"
@@ -190,6 +205,16 @@ export const UPGRADE_MODAL_CONTENT: Record<UpgradeModalTrigger, UpgradeModalCont
     description: "You've identified optimization opportunities. Get the detailed fixes with implementation code.",
     keyMessage: "See exactly what to fix and how",
   },
+  deep_dive: {
+    headline: "Unlock Deep Dive Details",
+    description: "See the specific questions and keywords where you're losing visibility to competitors.",
+    keyMessage: "Know exactly what you're missing",
+  },
+  actionable_insights: {
+    headline: "Unlock Actionable Insights",
+    description: "Get step-by-step recommendations with implementation guides to fix your visibility gaps.",
+    keyMessage: "From diagnosis to solution",
+  },
   code_snippets: {
     headline: "Get Implementation Code",
     description: "Copy-paste ready fixes for your development team. Schema markup, meta tags, and more.",
@@ -204,6 +229,11 @@ export const UPGRADE_MODAL_CONTENT: Record<UpgradeModalTrigger, UpgradeModalCont
     headline: "Save & Track Your Results",
     description: "Build a history of your AI visibility over time. See what's improving.",
     keyMessage: "Track progress across analyses",
+  },
+  email_unlock: {
+    headline: "Unlock Top 10 Missed Questions",
+    description: "Enter your email to reveal the top questions where competitors are beating you.",
+    keyMessage: "Quick win: See what you're missing",
   },
   funnel_stages: {
     headline: "Unlock Full Journey Analysis",

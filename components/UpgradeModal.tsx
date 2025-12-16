@@ -1,6 +1,7 @@
 "use client";
 
-import { X, Lock, Sparkles, Calendar, ArrowRight, Check, Star } from "lucide-react";
+import React, { useState } from "react";
+import { X, Lock, Sparkles, Calendar, ArrowRight, Check, Star, Mail } from "lucide-react";
 import { 
   UpgradeModalTrigger, 
   UPGRADE_MODAL_CONTENT, 
@@ -8,7 +9,6 @@ import {
   TIER_PRICING,
   TIER_NAMES,
 } from "@/lib/tier/types";
-import { useState } from "react";
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -161,9 +161,22 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
                 30-day money-back guarantee. Cancel anytime.
               </p>
               
+              {/* One-Time Report Option */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => window.location.href = `${BOOKING_URLS.checkout}?tier=professional&type=one_time`}
+                  className="w-full bg-white border-2 border-blue-500 text-blue-600 font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-2"
+                >
+                  Single Report — €{TIER_PRICING.professional.oneTimeReport}
+                </button>
+                <p className="text-center text-xs text-gray-500 mt-2">
+                  One-off payment, no subscription
+                </p>
+              </div>
+              
               <button
                 onClick={handleBookDemo}
-                className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-2"
+                className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-3"
               >
                 or Book My Demo →
               </button>
@@ -394,13 +407,103 @@ export function VisibilityGapAlert({
         </p>
       )}
 
-      <button
-        onClick={onUpgrade}
-        className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
-      >
-        Get My Fix Recommendations — €590/mo
-        <ArrowRight className="w-4 h-4" />
-      </button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={onUpgrade}
+          className="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
+        >
+          Get My Fix Recommendations
+          <ArrowRight className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onUpgrade}
+          className="flex-1 bg-white border-2 border-blue-500 text-blue-600 font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-2"
+        >
+          One Report — €199
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Lead Magnet Unlock Component - Exchange email for one detail reveal
+export function LeadMagnetUnlock({
+  title = "Unlock Top 10 Missed Questions",
+  description = "Enter your email to reveal the top questions where competitors are beating you.",
+  onUnlock,
+  isLoading = false,
+}: {
+  title?: string;
+  description?: string;
+  onUnlock: (email: string) => void;
+  isLoading?: boolean;
+}) {
+  const [email, setEmail] = React.useState("");
+  const [error, setError] = React.useState("");
+  
+  const validateEmail = (email: string) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateEmail(email)) {
+      setError("Please enter a valid work email");
+      return;
+    }
+    setError("");
+    onUnlock(email);
+  };
+
+  return (
+    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-6 my-4">
+      <div className="flex items-start gap-3 mb-4">
+        <div className="bg-blue-100 p-2 rounded-lg">
+          <Mail className="w-5 h-5 text-blue-600" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+          <p className="text-sm text-gray-600">{description}</p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+        <div className="flex-1">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@company.com"
+            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              error ? "border-red-500" : "border-gray-300"
+            }`}
+          />
+          {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+        </div>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 min-w-[140px]"
+        >
+          {isLoading ? (
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" />
+              Unlock Now
+            </>
+          )}
+        </button>
+      </form>
+
+      <p className="text-xs text-gray-400 mt-3 flex items-center gap-1">
+        <Lock className="w-3 h-3" />
+        We respect your privacy. No spam, ever.
+      </p>
     </div>
   );
 }

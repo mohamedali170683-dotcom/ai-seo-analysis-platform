@@ -107,6 +107,13 @@ export default function PricingPage() {
               </span>
             </button>
           </div>
+
+          {/* One-Time Report Option */}
+          <div className="mt-4">
+            <p className="text-sm text-gray-500">
+              Or get a <span className="font-semibold text-blue-600">single comprehensive report for €{TIER_PRICING.professional.oneTimeReport}</span> (one-off, no subscription)
+            </p>
+          </div>
         </div>
 
         {/* Pricing Cards - Anchoring: Partner → Professional → Free */}
@@ -271,30 +278,30 @@ export default function PricingPage() {
             <ul className="space-y-3 mb-8">
               {[
                 "All 4 AI platforms",
+                "Full funnel analysis (Awareness → Decision)",
                 "Real search data from DataForSEO",
-                "3 questions analyzed",
-                "Awareness stage only",
-                "1 analysis per month",
-                "Full visibility scores (all platforms)",
+                "9 questions analyzed (3 per stage)",
+                "Real visibility scores & pain points",
                 "Competitor comparison (1 competitor)",
                 "Technical audit (issues found)",
+                "3 analyses per month",
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
-                  <Check className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                  <span className="text-gray-600">{feature}</span>
+                  <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
+                  <span className="text-gray-700">{feature}</span>
                 </li>
               ))}
-              <li className="flex items-start gap-2 text-sm text-red-600">
-                <span className="w-5 h-5 flex-shrink-0 text-center">✗</span>
-                <span>Detailed recommendations locked</span>
+              <li className="flex items-start gap-2 text-sm text-amber-600 bg-amber-50 p-2 rounded-lg -mx-2 mt-2">
+                <span className="w-5 h-5 flex-shrink-0 text-center">🔒</span>
+                <span>Actionable insights & recommendations blurred</span>
               </li>
-              <li className="flex items-start gap-2 text-sm text-red-600">
-                <span className="w-5 h-5 flex-shrink-0 text-center">✗</span>
-                <span>Code snippets locked</span>
+              <li className="flex items-start gap-2 text-sm text-amber-600">
+                <span className="w-5 h-5 flex-shrink-0 text-center">🔒</span>
+                <span>Deep dive details locked</span>
               </li>
-              <li className="flex items-start gap-2 text-sm text-red-600">
-                <span className="w-5 h-5 flex-shrink-0 text-center">✗</span>
-                <span>PDF export locked</span>
+              <li className="flex items-start gap-2 text-sm text-amber-600">
+                <span className="w-5 h-5 flex-shrink-0 text-center">🔒</span>
+                <span>Code snippets & PDF export locked</span>
               </li>
             </ul>
 
@@ -331,14 +338,17 @@ export default function PricingPage() {
               <tbody className="divide-y">
                 {[
                   { feature: "AI Platforms", free: "All 4", pro: "All 4", partner: "All 4 + future" },
-                  { feature: "Max Questions", free: "3", pro: "Unlimited", partner: "Unlimited" },
-                  { feature: "Funnel Stages", free: "Awareness", pro: "All 3", partner: "All 3" },
+                  { feature: "Full Funnel Analysis", free: true, pro: true, partner: true },
+                  { feature: "Real Visibility Scores", free: true, pro: true, partner: true },
+                  { feature: "Max Questions", free: "9", pro: "Unlimited", partner: "Unlimited" },
                   { feature: "Tests per Question", free: "1", pro: "3", partner: "3" },
                   { feature: "Competitors", free: "1", pro: "10", partner: "Unlimited" },
-                  { feature: "Analyses/Month", free: "1", pro: "Unlimited", partner: "Unlimited" },
+                  { feature: "Analyses/Month", free: "3", pro: "Unlimited", partner: "Unlimited" },
                   { feature: "Brands", free: "1", pro: "3", partner: "Unlimited" },
                   { feature: "Real Search Data", free: true, pro: true, partner: true },
-                  { feature: "Detailed Recommendations", free: false, pro: true, partner: true },
+                  { feature: "Actionable Insights", free: "Blurred 🔒", pro: true, partner: true },
+                  { feature: "Detailed Recommendations", free: "Blurred 🔒", pro: true, partner: true },
+                  { feature: "Deep Dive Details", free: "Blurred 🔒", pro: true, partner: true },
                   { feature: "Code Snippets", free: false, pro: true, partner: true },
                   { feature: "PDF Export", free: false, pro: true, partner: "White-label" },
                   { feature: "Save Results", free: false, pro: true, partner: true },

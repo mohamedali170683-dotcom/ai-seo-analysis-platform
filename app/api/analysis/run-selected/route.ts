@@ -28,7 +28,8 @@ interface AnalysisRequest {
 }
 
 // 3-Tier limits for backend validation
-// NEW MODEL: Free tier gets ALL platforms but limited stages/recommendations
+// "HIGH VALUE ACQUISITION" MODEL: Free tier gets FULL PROBLEM visibility (all platforms + all stages)
+// but recommendations/insights are blurred on frontend
 const TIER_LIMITS: Record<UserTier, {
   maxQuestions: number;
   allowedStages: string[];
@@ -37,25 +38,25 @@ const TIER_LIMITS: Record<UserTier, {
   maxCompetitors: number;
 }> = {
   free: {
-    maxQuestions: 3,
-    allowedStages: ["awareness"], // Only awareness stage
-    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"], // ALL platforms now!
+    maxQuestions: 9,  // 3 per stage (awareness, consideration, decision)
+    allowedStages: ["awareness", "consideration", "decision"],  // FULL FUNNEL
+    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],  // ALL platforms
     testsPerQuestion: 1,
     maxCompetitors: 1,
   },
   professional: {
-    maxQuestions: Infinity, // Unlimited questions
+    maxQuestions: Infinity,  // UNLIMITED
     allowedStages: ["awareness", "consideration", "decision"],
     allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
     testsPerQuestion: 3,
-    maxCompetitors: 10, // Up to 10 competitors
+    maxCompetitors: 10,  // Up to 10 competitors
   },
   partner: {
     maxQuestions: Infinity,
     allowedStages: ["awareness", "consideration", "decision"],
     allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
     testsPerQuestion: 3,
-    maxCompetitors: Infinity, // Unlimited competitors
+    maxCompetitors: Infinity,
   },
 };
 
