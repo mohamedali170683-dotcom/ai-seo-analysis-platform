@@ -343,7 +343,7 @@ export default function AnalyzePage() {
 
   // Format search volume
   const formatVolume = (vol: number) => {
-    if (vol === 0) return "Strategic";
+    if (vol === 0) return "AI-Generated";
     if (vol >= 1000000) return `${(vol / 1000000).toFixed(1)}M/mo`;
     if (vol >= 1000) return `${(vol / 1000).toFixed(1)}K/mo`;
     return `${vol}/mo`;
@@ -543,6 +543,26 @@ export default function AnalyzePage() {
                   />
                   <p className="text-xs text-gray-400 mt-2">For technical audit of your website</p>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Competitors (optional)
+                    {tier === "free" && <span className="text-xs text-gray-400 font-normal ml-2">1 in Free tier</span>}
+                  </label>
+                  <input
+                    type="text"
+                    value={competitors}
+                    onChange={(e) => setCompetitors(e.target.value)}
+                    placeholder={tier === "free" ? "e.g., Adidas" : "e.g., Adidas, Puma, New Balance"}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                  />
+                  <p className="text-xs text-gray-400 mt-2">
+                    {tier === "free" 
+                      ? "Compare with 1 competitor. Upgrade for more." 
+                      : `Compare with up to ${limits.maxCompetitors} competitors`
+                    }
+                  </p>
+                </div>
               </div>
 
               <Button
@@ -567,73 +587,31 @@ export default function AnalyzePage() {
               </p>
             </div>
 
-            {/* Discovery Loading Overlay */}
+            {/* Discovery Loading Overlay - Apple Style */}
             {loading && (
-              <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-cyan-500/30 shadow-2xl">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4 animate-bounce">{discoveryCountdown <= 0 ? "🤔" : "🔍"}</div>
-                    <h3 className="text-2xl font-bold mb-2">
-                      {discoveryCountdown <= 0 ? "Still Working..." : "Discovering Questions"}
-                    </h3>
-                    
-                    {/* Show funny message when countdown reaches 0 */}
-                    {discoveryCountdown <= 0 ? (
-                      <div className="mb-6">
-                        <p className="text-amber-400 mb-3 text-lg">
-                          Oops! Taking longer than expected... 🐌
-                        </p>
-                        <p className="text-gray-400 text-sm">
-                          Our AI is being extra thorough with <strong className="text-cyan-400">{brandName}</strong>. 
-                          Almost there, we promise! ☕
-                        </p>
-                        <div className="mt-4 flex justify-center">
-                          <div className="flex gap-1">
-                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <p className="text-gray-400 mb-6">
-                          Finding real questions people ask about <strong className="text-cyan-400">{brandName}</strong> and generating strategic ones.
-                        </p>
-                        
-                        {/* Countdown Timer */}
-                        <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
-                          <div className="text-4xl font-mono font-bold text-cyan-400 mb-1">
-                            {Math.floor(discoveryCountdown / 60)}:{(discoveryCountdown % 60).toString().padStart(2, '0')}
-                          </div>
-                          <p className="text-xs text-gray-500">estimated time remaining</p>
-                        </div>
+              <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center">
+                <div className="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center">
+                  <div className="text-5xl mb-4">{discoveryCountdown <= 0 ? "🤔" : "🔍"}</div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {discoveryCountdown <= 0 ? "Still Working..." : "Finding Questions"}
+                  </h3>
+                  
+                  <p className="text-gray-500 mb-6">
+                    Discovering questions for <strong className="text-blue-600">{brandName}</strong>
+                  </p>
+                  
+                  {/* Simple Countdown */}
+                  <div className="mb-6">
+                    <div className="text-4xl font-bold text-blue-500 font-mono">
+                      {discoveryCountdown > 0 ? `${discoveryCountdown}s` : "Almost done..."}
+                    </div>
+                  </div>
 
-                        {/* Current Step */}
-                        <div className="bg-black/30 rounded-lg p-3 mb-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm text-gray-300">{discoveryMessage}</span>
-                          </div>
-                        </div>
-
-                        {/* Progress Steps */}
-                        <div className="space-y-2 text-left">
-                          {[
-                            { label: "Connect to DataForSEO API", done: discoveryCountdown < 28 },
-                            { label: "Extract real search questions", done: discoveryCountdown < 22 },
-                            { label: "Analyze search volumes", done: discoveryCountdown < 16 },
-                            { label: "Generate strategic questions", done: discoveryCountdown < 10 },
-                            { label: "Categorize by funnel stage", done: discoveryCountdown < 5 },
-                          ].map((step, i) => (
-                            <div key={i} className={`flex items-center gap-2 text-sm ${step.done ? "text-green-400" : "text-gray-500"}`}>
-                              <span>{step.done ? "✅" : "⏳"}</span>
-                              <span>{step.label}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
+                  {/* Progress indicator */}
+                  <div className="flex justify-center gap-1.5">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
                   </div>
                 </div>
               </div>
@@ -690,11 +668,11 @@ export default function AnalyzePage() {
                 <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                    <span className="text-sm text-gray-600">Real Search Data</span>
+                    <span className="text-sm text-gray-600">Real Search Data (with volume)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
-                    <span className="text-sm text-gray-600">Strategic Questions</span>
+                    <span className="text-sm text-gray-600">AI-Generated Questions</span>
                   </div>
                 </div>
               </div>
@@ -815,11 +793,11 @@ export default function AnalyzePage() {
                         })}
                       </div>
                       
-                      {/* Strategic Questions Section */}
+                      {/* AI-Generated Questions Section */}
                       <div>
                         <div className="flex items-center gap-2 mb-2 px-1">
                           <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Strategic</span>
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI-Generated</span>
                         </div>
                         {allQuestions.filter(q => q.source === "strategic").map((q) => {
                           const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
@@ -906,11 +884,11 @@ export default function AnalyzePage() {
                 </details>
                 <details className="group">
                   <summary className="cursor-pointer text-gray-700 font-medium hover:text-gray-900 list-none flex items-center justify-between">
-                    What's the difference between Real Search and Strategic questions?
+                    What's the difference between Real Search and AI-Generated questions?
                     <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
                   </summary>
                   <p className="mt-2 text-sm text-gray-500 pl-4 border-l-2 border-gray-100">
-                    Real Search Data comes from actual search queries with monthly volume data. Strategic questions are AI-crafted to probe specific brand positioning aspects that users might not search directly but AI considers when forming opinions.
+                    Real Search Data comes from actual search queries with monthly volume data. AI-Generated questions are intelligently crafted to probe specific brand positioning aspects that users might not search directly but AI considers when forming opinions.
                   </p>
                 </details>
                 <details className="group">
@@ -1027,13 +1005,13 @@ export default function AnalyzePage() {
                     <Button
                       onClick={() => setShowConfirmModal(false)}
                       variant="outline"
-                      className="flex-1 py-3 border-gray-600 bg-white/5"
+                      className="flex-1 py-3 border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                     >
                       ← Go Back
                     </Button>
                     <Button
                       onClick={handleRunAnalysis}
-                      className="flex-1 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 font-semibold"
+                      className="flex-1 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl"
                     >
                       ✓ Yes, Run Analysis
                     </Button>
@@ -1044,86 +1022,71 @@ export default function AnalyzePage() {
           </div>
         )}
 
-        {/* Phase 3: Running Analysis */}
+        {/* Phase 3: Running Analysis - Apple Style */}
         {phase === 3 && (
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-2xl mx-auto space-y-6">
             {/* Main Progress Card */}
-            <div className="bg-gradient-to-br from-slate-900/50 to-blue-900/50 rounded-2xl p-8 border border-cyan-500/30">
-              {/* Header with Timers */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className="text-5xl animate-pulse">🔬</div>
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold">Analysis Running</h2>
-                    <p className="text-gray-400">Testing your questions on AI platforms...</p>
-                  </div>
+            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 text-center">
+              {/* Animated Icon */}
+              <div className="relative inline-block mb-6">
+                <div className="text-6xl animate-pulse">🔬</div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
+              </div>
+              
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Analysis Running</h2>
+              <p className="text-gray-500 mb-8">Testing your brand on AI platforms...</p>
+              
+              {/* Single Countdown */}
+              <div className="mb-8">
+                <div className="text-5xl font-bold text-blue-500 font-mono mb-2">
+                  {Math.floor(analysisCountdown / 60)}:{(analysisCountdown % 60).toString().padStart(2, '0')}
                 </div>
-                
-                {/* Dual Timer Display */}
-                <div className="flex gap-4">
-                  {/* Countdown */}
-                  <div className="text-center bg-gradient-to-br from-blue-600/30 to-cyan-600/30 rounded-xl px-4 py-2 border border-cyan-500/30">
-                    <div className="text-3xl font-mono font-bold text-cyan-400">
-                      {Math.floor(analysisCountdown / 60)}:{(analysisCountdown % 60).toString().padStart(2, '0')}
-                    </div>
-                    <div className="text-xs text-cyan-300/70">remaining</div>
-                  </div>
-                  {/* Elapsed */}
-                  <div className="text-center bg-white/5 rounded-xl px-4 py-2">
-                    <div className="text-3xl font-mono font-bold text-cyan-400">
-                      {formatTime(elapsedTime)}
-                    </div>
-                    <div className="text-xs text-gray-500">elapsed</div>
-                  </div>
-                </div>
+                <p className="text-sm text-gray-400">estimated time remaining</p>
               </div>
               
               {/* Progress Bar */}
-              <div className="mb-4">
+              <div className="mb-6">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">Progress</span>
-                  <span className="text-cyan-400 font-bold">{analysisProgress}%</span>
+                  <span className="text-gray-500">Progress</span>
+                  <span className="text-blue-500 font-bold">{analysisProgress}%</span>
                 </div>
-                <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
+                <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-400 h-4 rounded-full transition-all duration-500"
+                    className="bg-blue-500 h-3 rounded-full transition-all duration-500"
                     style={{ width: `${analysisProgress}%` }}
                   />
                 </div>
               </div>
 
               {/* Current Step */}
-              <div className="bg-black/20 rounded-xl p-4 mb-6">
-                <div className="flex items-center gap-3">
+              <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-300 font-mono">{currentStep || analysisStatus}</span>
+                  <span className="text-sm text-gray-600">{currentStep || analysisStatus}</span>
                 </div>
               </div>
 
               {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-blue-400">{getTotalSelected()}</div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="text-2xl font-bold text-gray-900">{getTotalSelected()}</div>
                   <div className="text-xs text-gray-500">Questions</div>
                 </div>
-                <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-cyan-400">{selectedPlatforms.length}</div>
-                  <div className="text-xs text-gray-500">AI Platforms</div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="text-2xl font-bold text-gray-900">{selectedPlatforms.length}</div>
+                  <div className="text-xs text-gray-500">Platforms</div>
                 </div>
-                <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-cyan-400">{getTotalSelected() * selectedPlatforms.length * limits.testsPerQuestion}</div>
-                  <div className="text-xs text-gray-500">Total Tests</div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="text-2xl font-bold text-gray-900">{getTotalSelected() * selectedPlatforms.length * limits.testsPerQuestion}</div>
+                  <div className="text-xs text-gray-500">Tests</div>
                 </div>
               </div>
             </div>
 
             {/* Step-by-Step Progress */}
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-sm font-semibold text-gray-400 mb-4">ANALYSIS PIPELINE</h3>
-              <div className="space-y-3">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wide">Analysis Pipeline</h3>
+              <div className="space-y-2">
                 {[
                   { step: "Initialize", icon: "⚡", threshold: 5 },
                   { step: "Website Technical Audit", icon: "🔍", threshold: 10 },
@@ -1138,28 +1101,23 @@ export default function AnalyzePage() {
                   const isCurrent = analysisProgress >= (index > 0 ? [5, 10, 35, 60, 85, 92, 98, 100][index - 1] : 0) && analysisProgress < item.threshold;
                   
                   return (
-                    <div key={item.step} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
-                      isCurrent ? "bg-cyan-500/20 border border-cyan-500/50" : 
-                      isComplete ? "opacity-100" : "opacity-40"
+                    <div key={item.step} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
+                      isCurrent ? "bg-blue-50 border border-blue-200" : 
+                      isComplete ? "" : "opacity-40"
                     }`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg ${
-                        isComplete ? "bg-green-500/20" : 
-                        isCurrent ? "bg-cyan-500/20 animate-pulse" : "bg-white/5"
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                        isComplete ? "bg-green-100 text-green-600" : 
+                        isCurrent ? "bg-blue-100 text-blue-600" : "bg-gray-100"
                       }`}>
                         {isComplete ? "✓" : item.icon}
                       </div>
-                      <span className={`flex-1 text-sm ${isCurrent ? "text-white font-medium" : ""}`}>
+                      <span className={`flex-1 text-sm ${isCurrent ? "text-gray-900 font-medium" : "text-gray-600"}`}>
                         {item.step}
                       </span>
                       {isCurrent && (
                         <div className="flex gap-1 items-center">
-                          <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
-                          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                          <div className="w-2 h-2 bg-cyan-300 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                         </div>
-                      )}
-                      {isComplete && (
-                        <span className="text-green-500 text-sm">✓</span>
                       )}
                     </div>
                   );
@@ -1168,12 +1126,12 @@ export default function AnalyzePage() {
             </div>
 
             {/* Platforms Being Tested */}
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-sm font-semibold text-gray-400 mb-4">PLATFORMS BEING TESTED</h3>
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wide">Platforms Being Tested</h3>
               <div className="flex justify-center gap-6 flex-wrap">
                 {selectedPlatforms.map((platform) => (
                   <div key={platform} className="flex flex-col items-center gap-2">
-                    <div className={`w-16 h-16 rounded-xl flex items-center justify-center text-3xl bg-white/10 ${
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl bg-gray-50 ${
                       analysisProgress > 10 ? "animate-pulse" : ""
                     }`}>
                       {platform === "ChatGPT" && "🤖"}
@@ -1181,13 +1139,13 @@ export default function AnalyzePage() {
                       {platform === "Copilot" && "🔷"}
                       {platform === "Perplexity" && "🔮"}
                     </div>
-                    <span className="text-sm text-gray-400">{platform}</span>
+                    <span className="text-sm text-gray-600">{platform}</span>
                     <div className="flex gap-1">
                       {[1, 2, 3].map((dot) => (
                         <div 
                           key={dot} 
                           className={`w-1.5 h-1.5 rounded-full transition-all ${
-                            analysisProgress > 10 + (dot * 15) ? "bg-green-500" : "bg-gray-600"
+                            analysisProgress > 10 + (dot * 15) ? "bg-green-500" : "bg-gray-200"
                           }`}
                         ></div>
                       ))}
