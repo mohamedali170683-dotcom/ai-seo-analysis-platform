@@ -393,36 +393,36 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-900 text-white">
-      {/* Header */}
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
+    <div className="min-h-screen bg-[#F5F5F7] text-gray-900">
+      {/* Header - Apple Style */}
+      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="text-gray-400 hover:text-white flex items-center gap-2">
+          <Link href="/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-2 transition-colors">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-xl font-bold">Velaris</h1>
+          <h1 className="text-xl font-bold text-gray-900">Velaris</h1>
           <div className="w-32" />
         </div>
       </header>
 
       <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Phase indicator */}
-        <div className="flex items-center gap-4 mb-8">
+        {/* Phase indicator - Apple Style */}
+        <div className="flex items-center justify-center gap-4 mb-8">
           {[
             { num: 1, label: "Setup" },
             { num: 2, label: "Select Questions" },
             { num: 3, label: "Analyze" },
           ].map((step, i) => (
             <div key={step.num} className="flex items-center">
-              <div className={`flex items-center gap-2 ${phase >= step.num ? "text-cyan-400" : "text-gray-600"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                  phase >= step.num ? "bg-cyan-600" : "bg-gray-700"
+              <div className={`flex items-center gap-2 ${phase >= step.num ? "text-blue-600" : "text-gray-400"}`}>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
+                  phase >= step.num ? "bg-blue-500" : "bg-gray-300"
                 }`}>
-                  {step.num}
+                  {phase > step.num ? "✓" : step.num}
                 </div>
-                <span className="hidden sm:inline">{step.label}</span>
+                <span className="hidden sm:inline font-medium">{step.label}</span>
               </div>
-              {i < 2 && <div className="w-8 sm:w-16 h-0.5 bg-gray-700 mx-2" />}
+              {i < 2 && <div className={`w-8 sm:w-16 h-0.5 mx-2 ${phase > step.num ? "bg-blue-500" : "bg-gray-200"}`} />}
             </div>
           ))}
         </div>
@@ -453,39 +453,36 @@ export default function AnalyzePage() {
               )}
             </div>
 
-            {/* Value Proposition */}
-            <div className="bg-gradient-to-r from-slate-900/50 to-blue-900/50 rounded-2xl p-8 border border-cyan-500/30">
-              <h2 className="text-3xl font-bold mb-4">
+            {/* Value Proposition - Apple Style */}
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+              <h2 className="text-3xl font-bold mb-4 text-gray-900">
                 {tier === "free" ? "Get Your AI Visibility Check" : "Take Control of Your AI Visibility"}
               </h2>
-              <p className="text-xl text-gray-300 mb-6">
-                {tier === "free" 
-                  ? "See how AI platforms discuss your brand across ChatGPT, Gemini, Copilot & Perplexity. Identify visibility gaps and optimization opportunities."
-                  : "Unlike automated tools, our 2-phase approach lets YOU decide which questions matter most for your brand."
-                }
+              <p className="text-xl text-gray-600 mb-6">
+                See how AI platforms discuss your brand across ChatGPT, Gemini, Copilot & Perplexity.
               </p>
               <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-3xl mb-2">📊</div>
-                  <h3 className="font-semibold mb-1">Real Search Data</h3>
-                  <p className="text-sm text-gray-400">
-                    See actual questions people search with real monthly volumes
+                <div className="bg-gray-50 rounded-xl p-5">
+                  <div className="text-3xl mb-3">📊</div>
+                  <h3 className="font-semibold mb-1 text-gray-900">Real Search Data</h3>
+                  <p className="text-sm text-gray-500">
+                    Questions people actually search
                   </p>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-3xl mb-2">🎯</div>
-                  <h3 className="font-semibold mb-1">All 4 AI Platforms</h3>
-                  <p className="text-sm text-gray-400">
-                    Test on ChatGPT, Gemini, Copilot & Perplexity — see the full picture
+                <div className="bg-gray-50 rounded-xl p-5">
+                  <div className="text-3xl mb-3">🎯</div>
+                  <h3 className="font-semibold mb-1 text-gray-900">4 AI Platforms</h3>
+                  <p className="text-sm text-gray-500">
+                    ChatGPT, Gemini, Copilot & Perplexity
                   </p>
                 </div>
-                <div className="bg-white/5 rounded-xl p-4">
-                  <div className="text-3xl mb-2">🔬</div>
-                  <h3 className="font-semibold mb-1">Your Choice</h3>
-                  <p className="text-sm text-gray-400">
+                <div className="bg-gray-50 rounded-xl p-5">
+                  <div className="text-3xl mb-3">🔬</div>
+                  <h3 className="font-semibold mb-1 text-gray-900">You Choose</h3>
+                  <p className="text-sm text-gray-500">
                     {tier === "free" 
-                      ? "Select up to 3 questions from Awareness stage" 
-                      : "Select unlimited questions across the customer journey"
+                      ? "Up to 3 questions • Awareness stage" 
+                      : "Unlimited questions across the journey"
                     }
                   </p>
                 </div>
@@ -493,72 +490,65 @@ export default function AnalyzePage() {
               
               {/* Free tier limitations notice */}
               {tier === "free" && (
-                <div className="mt-6 bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
-                  <h4 className="font-semibold text-amber-300 mb-2 flex items-center gap-2">
-                    <Lock className="w-4 h-4" /> Free Tier — See the Problem, Unlock the Solution:
-                  </h4>
-                  <ul className="text-sm text-gray-300 space-y-1">
-                    <li>✓ All 4 AI platforms (ChatGPT, Gemini, Copilot, Perplexity)</li>
-                    <li>✓ Real search data from DataForSEO</li>
-                    <li>✓ Up to 3 questions • Awareness stage only</li>
-                    <li>✓ Full visibility scores & competitor comparison</li>
-                    <li className="text-red-400">✗ Detailed recommendations & code snippets locked</li>
-                  </ul>
-                  <button
-                    onClick={() => openUpgradeModal("recommendations")}
-                    className="mt-3 text-sm text-amber-400 hover:text-amber-300 font-medium"
-                  >
-                    Unlock full recommendations & all funnel stages →
-                  </button>
+                <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lock className="w-4 h-4 text-amber-600" />
+                    <span className="font-semibold text-amber-800">Free Tier</span>
+                  </div>
+                  <p className="text-sm text-amber-700">
+                    Full visibility scores included. Upgrade to unlock detailed recommendations & all funnel stages.
+                  </p>
                 </div>
               )}
             </div>
 
-            {/* Form - Simplified to 3 essential fields (35% completion increase) */}
-            <div className="bg-white/5 rounded-xl p-8 space-y-6 max-w-xl mx-auto">
-              <h3 className="text-xl font-semibold mb-2 text-center">Enter Your Brand Details</h3>
-              <p className="text-sm text-gray-400 text-center mb-6">We'll auto-detect questions based on your brand name</p>
+            {/* Form - Apple Style */}
+            <div className="bg-white rounded-2xl p-8 space-y-6 max-w-xl mx-auto shadow-lg border border-gray-100">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold mb-2 text-gray-900">Enter Your Brand Details</h3>
+                <p className="text-sm text-gray-500">We'll find the questions that matter for your brand</p>
+              </div>
               
               <div className="space-y-5">
                 <div>
-                  <label className="block text-base font-semibold text-white mb-2">Brand Name *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Brand Name *</label>
                   <input
                     type="text"
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
                     placeholder="e.g., Nike"
-                    className="w-full bg-white/10 rounded-lg px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-cyan-500 min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-white mb-2">Category / Vertical *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Category / Vertical *</label>
                   <input
                     type="text"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     placeholder="e.g., running shoes, sportswear"
-                    className="w-full bg-white/10 rounded-lg px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-cyan-500 min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-base font-semibold text-white mb-2">Domain (optional)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Domain (optional)</label>
                   <input
                     type="text"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
                     placeholder="e.g., nike.com"
-                    className="w-full bg-white/10 rounded-lg px-4 py-4 text-base focus:outline-none focus:ring-2 focus:ring-cyan-500 min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
-                  <p className="text-xs text-gray-500 mt-2">For technical website audit - we'll check your schema markup and AI bot access</p>
+                  <p className="text-xs text-gray-400 mt-2">For technical audit of your website</p>
                 </div>
               </div>
 
               <Button
                 onClick={handleDiscoverQuestions}
                 disabled={loading || !brandName || !category}
-                className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 py-4 text-lg mt-6 font-semibold"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 text-lg mt-6 font-semibold rounded-xl transition-all hover:scale-[1.02] shadow-lg"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-3">
@@ -569,11 +559,11 @@ export default function AnalyzePage() {
                     Discovering Questions...
                   </span>
                 ) : (
-                  <span>🔍 Find My Brand's Questions →</span>
+                  <span>Find My Brand's Questions →</span>
                 )}
               </Button>
-              <p className="text-center text-xs text-gray-500 mt-2">
-                Next: You'll select which questions to test on AI platforms
+              <p className="text-center text-xs text-gray-400 mt-3">
+                Takes about 30 seconds
               </p>
             </div>
 
@@ -649,118 +639,87 @@ export default function AnalyzePage() {
               </div>
             )}
 
-            {/* How it works */}
-            <div className="bg-white/5 rounded-xl p-6">
-              <h3 className="text-lg font-semibold mb-4">How It Works</h3>
-              <div className="space-y-3 text-gray-300">
-                <div className="flex gap-3">
-                  <span className="text-cyan-400 font-bold">1.</span>
-                  <span>We'll discover questions people actually search for about your brand and category</span>
+            {/* How it works - Apple Style */}
+            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">How It Works</h3>
+              <div className="grid md:grid-cols-4 gap-4">
+                <div className="text-center p-4">
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">1</div>
+                  <p className="text-sm text-gray-600">Discover real search questions</p>
                 </div>
-                <div className="flex gap-3">
-                  <span className="text-cyan-400 font-bold">2.</span>
-                  <span>Select questions from any funnel stage (minimum 3, you decide the mix)</span>
+                <div className="text-center p-4">
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">2</div>
+                  <p className="text-sm text-gray-600">Select questions to test</p>
                 </div>
-                <div className="flex gap-3">
-                  <span className="text-cyan-400 font-bold">3.</span>
-                  <span>Test on all 4 AI platforms: ChatGPT, Gemini, Copilot & Perplexity</span>
+                <div className="text-center p-4">
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">3</div>
+                  <p className="text-sm text-gray-600">Test on 4 AI platforms</p>
                 </div>
-                <div className="flex gap-3">
-                  <span className="text-cyan-400 font-bold">4.</span>
-                  <span>Get visibility scores across all platforms {tier === "free" ? "(unlock detailed recommendations with Professional)" : "and actionable recommendations"}</span>
+                <div className="text-center p-4">
+                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">4</div>
+                  <p className="text-sm text-gray-600">Get visibility scores</p>
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Phase 2: Select Questions */}
+        {/* Phase 2: Select Questions - Apple Style */}
         {phase === 2 && (
-          <div className="space-y-0">
+          <div className="space-y-6">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-20 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-900 pb-4 pt-2">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-xl">
+            <div className="sticky top-16 z-20 bg-[#F5F5F7]/95 backdrop-blur-xl pb-4 pt-2">
+              <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold">Select Questions to Test</h2>
-                    <p className="text-gray-300">Choose from any stage (minimum 3 questions)</p>
+                    <h2 className="text-2xl font-bold text-gray-900">Select Questions to Test</h2>
+                    <p className="text-gray-500">Minimum 3 questions from any stage</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className={`px-5 py-2.5 rounded-xl font-bold text-lg ${
+                    <div className={`px-5 py-2.5 rounded-full font-bold text-lg transition-all ${
                       getTotalSelected() >= 3 
-                        ? "bg-green-600 text-white" 
-                        : "bg-white/20 text-white"
+                        ? "bg-green-500 text-white" 
+                        : "bg-gray-100 text-gray-600"
                     }`}>
-                      {getTotalSelected()} selected {getTotalSelected() >= 3 && "✓"}
+                      {getTotalSelected()} / 3 minimum {getTotalSelected() >= 3 && "✓"}
                     </div>
                   </div>
                 </div>
                 
-                {/* Legend */}
-                <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-white/10">
+                {/* Simple Legend */}
+                <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="text-sm text-gray-300">📊 <strong>Real Search Data</strong> - Questions people actually search (with monthly volume)</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-gray-600">Real Search Data</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                    <span className="text-sm text-gray-300">🎯 <strong>Strategic Questions</strong> - AI-crafted to understand brand positioning</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
+                    <span className="text-sm text-gray-600">Strategic Questions</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Educational Section: Understanding the Customer Journey */}
-            <div className="bg-gradient-to-r from-blue-900/30 to-slate-900/30 rounded-2xl p-8 mt-4 border border-white/20">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2">🎯 Why These 3 Stages Matter</h3>
-                <p className="text-lg text-gray-300">
-                  People asking AI questions are on a <strong className="text-white">buying journey</strong>. 
-                  Test all stages to see how AI guides them to (or away from) your brand.
-                </p>
+            {/* Simplified Stage Cards */}
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 text-center">
+                <div className="text-2xl mb-2">🔍</div>
+                <h4 className="font-semibold text-purple-800">Awareness</h4>
+                <p className="text-xs text-purple-600">"What is...?"</p>
               </div>
-              
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Awareness */}
-                <div className="bg-blue-500/20 border-2 border-blue-500/40 rounded-xl p-5 text-center">
-                  <div className="text-4xl mb-3">🔍</div>
-                  <h4 className="text-xl font-bold text-blue-400 mb-2">Awareness</h4>
-                  <p className="text-base text-gray-300 mb-3">"What is...?" "How does...?"</p>
-                  <p className="text-sm text-blue-200">
-                    Users are <strong>learning</strong>. If AI doesn't mention you here, you're invisible from the start.
-                  </p>
-                </div>
-
-                {/* Consideration */}
-                <div className="bg-amber-500/20 border-2 border-amber-500/40 rounded-xl p-5 text-center">
-                  <div className="text-4xl mb-3">⚖️</div>
-                  <h4 className="text-xl font-bold text-amber-400 mb-2">Consideration</h4>
-                  <p className="text-base text-gray-300 mb-3">"Best...?" "X vs Y?"</p>
-                  <p className="text-sm text-amber-200">
-                    Users are <strong>comparing</strong>. If competitors are mentioned but you're not, you lose.
-                  </p>
-                </div>
-
-                {/* Decision */}
-                <div className="bg-green-500/20 border-2 border-green-500/40 rounded-xl p-5 text-center">
-                  <div className="text-4xl mb-3">✅</div>
-                  <h4 className="text-xl font-bold text-green-400 mb-2">Decision</h4>
-                  <p className="text-base text-gray-300 mb-3">"Should I buy...?" "Worth it?"</p>
-                  <p className="text-sm text-green-200">
-                    Users are <strong>ready to buy</strong>. A positive mention here = conversions.
-                  </p>
-                </div>
+              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 text-center">
+                <div className="text-2xl mb-2">⚖️</div>
+                <h4 className="font-semibold text-orange-800">Consideration</h4>
+                <p className="text-xs text-orange-600">"Best...?"</p>
               </div>
-
-              <div className="mt-6 bg-white/10 rounded-xl p-4 text-center">
-                <p className="text-base text-gray-300">
-                  💡 <strong>Tip:</strong> Select questions from <strong>all 3 stages</strong> for a complete picture, 
-                  or focus on one stage if that's your priority.
-                </p>
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
+                <div className="text-2xl mb-2">✅</div>
+                <h4 className="font-semibold text-green-800">Decision</h4>
+                <p className="text-xs text-green-600">"Should I buy...?"</p>
               </div>
             </div>
 
-            {/* 3-Column Grid for Questions */}
+            {/* 3-Column Grid for Questions - Apple Style */}
             <div className="grid md:grid-cols-3 gap-4 mt-4">
               {questionGroups.map((group) => {
                 const stageSelected = selectedQuestions[group.stage]?.length || 0;
@@ -768,63 +727,62 @@ export default function AnalyzePage() {
                 const hasSelection = stageSelected > 0;
                 const isLocked = !isStageAllowed(group.stage);
                 
+                const stageColors = {
+                  awareness: { bg: "bg-purple-50", border: "border-purple-200", accent: "text-purple-600", selected: "bg-purple-100 border-purple-400" },
+                  consideration: { bg: "bg-orange-50", border: "border-orange-200", accent: "text-orange-600", selected: "bg-orange-100 border-orange-400" },
+                  decision: { bg: "bg-green-50", border: "border-green-200", accent: "text-green-600", selected: "bg-green-100 border-green-400" },
+                };
+                const colors = stageColors[group.stage];
+                
                 return (
                   <div 
                     key={group.stage} 
-                    className={`rounded-xl border-2 transition-all relative ${
+                    className={`rounded-2xl border transition-all relative bg-white shadow-sm ${
                       isLocked 
-                        ? "border-gray-600/50 bg-gray-800/30" 
+                        ? "border-gray-200 opacity-60" 
                         : hasSelection 
-                          ? "border-cyan-500/50 bg-cyan-500/5" 
-                          : "border-white/10 bg-white/5"
+                          ? `${colors.border} shadow-md` 
+                          : "border-gray-200"
                     }`}
                   >
                     {/* Locked Overlay for restricted stages */}
                     {isLocked && (
                       <div 
-                        className="absolute inset-0 bg-gray-900/60 backdrop-blur-[1px] z-10 rounded-xl flex flex-col items-center justify-center cursor-pointer"
+                        className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-10 rounded-2xl flex flex-col items-center justify-center cursor-pointer"
                         onClick={() => openUpgradeModal(group.stage as UpgradeModalTrigger)}
                       >
-                        <div className="bg-white/10 rounded-full p-4 mb-3">
-                          <Lock className="w-8 h-8 text-gray-400" />
+                        <div className="bg-gray-100 rounded-full p-4 mb-3">
+                          <Lock className="w-6 h-6 text-gray-400" />
                         </div>
-                        <span className="text-lg font-semibold text-white mb-1">
-                          {group.stage === "consideration" ? "Consideration Stage" : "Decision Stage"}
+                        <span className="text-base font-semibold text-gray-700 mb-1">
+                          {group.stage === "consideration" ? "Consideration" : "Decision"}
                         </span>
-                        <span className="text-sm text-gray-400 mb-3">Included in Full Audit</span>
-                        <span className="text-xs text-cyan-400 flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> Click to unlock
+                        <span className="text-sm text-gray-500 mb-3">Upgrade to unlock</span>
+                        <span className="text-xs text-blue-500 flex items-center gap-1 font-medium">
+                          <Sparkles className="w-3 h-3" /> Unlock now
                         </span>
                       </div>
                     )}
                     {/* Column Header */}
-                    <div className={`p-4 border-b ${
-                      hasSelection ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/10 bg-white/5"
-                    } rounded-t-xl`}>
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h3 className="text-lg font-bold">{stageInfo[group.stage].label}</h3>
-                          <p className="text-xs text-gray-400 font-medium">{stageInfo[group.stage].shortDesc}</p>
-                        </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          hasSelection ? "bg-cyan-600 text-white" : "bg-white/20"
+                    <div className={`p-4 border-b border-gray-100 ${colors.bg} rounded-t-2xl`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className={`text-base font-bold ${colors.accent}`}>{stageInfo[group.stage].label}</h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          hasSelection ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-500"
                         }`}>
-                          {stageSelected} selected
+                          {stageSelected}
                         </span>
                       </div>
-                      <div className="bg-black/20 rounded-lg p-2 mb-2">
-                        <p className="text-xs text-gray-300 italic">{stageInfo[group.stage].userMindset}</p>
-                      </div>
-                      <p className="text-xs text-gray-500">{group.stageDescription}</p>
+                      <p className="text-xs text-gray-500">{stageInfo[group.stage].userMindset}</p>
                     </div>
                     
                     {/* Questions List */}
-                    <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
+                    <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
                       {/* Real Data Questions Section */}
                       <div className="mb-3">
                         <div className="flex items-center gap-2 mb-2 px-1">
                           <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          <span className="text-xs font-semibold text-green-400 uppercase tracking-wide">Real Search Data</span>
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Real Search Data</span>
                         </div>
                         {allQuestions.filter(q => q.source === "real_data").map((q) => {
                           const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
@@ -833,27 +791,22 @@ export default function AnalyzePage() {
                             <div
                               key={q.id}
                               onClick={() => toggleQuestion(q, group.stage)}
-                              className={`p-3 rounded-lg cursor-pointer transition-all mb-2 relative ${
+                              className={`p-3 rounded-xl cursor-pointer transition-all mb-2 border ${
                                 isSelected
-                                  ? "bg-cyan-600/40 border-2 border-cyan-400 shadow-lg shadow-cyan-500/20"
-                                  : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
+                                  ? `${colors.selected} border-2`
+                                  : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200"
                               }`}
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <span className={`text-sm ${isSelected ? "text-white font-medium" : "text-gray-200"}`}>
+                                <span className={`text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-700"}`}>
                                   {q.question}
                                 </span>
                                 {isSelected && (
-                                  <span className="text-cyan-300 text-lg">✓</span>
+                                  <span className="text-blue-500 text-base">✓</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-2 mt-2">
-                                <span className={`text-xs px-2 py-0.5 rounded ${
-                                  q.type === "brand" ? "bg-cyan-500/30 text-cyan-300" : "bg-blue-500/30 text-blue-300"
-                                }`}>
-                                  {q.type === "brand" ? "Brand" : "Category"}
-                                </span>
-                                <span className="text-xs font-semibold text-green-400">
+                                <span className="text-xs text-green-600 font-medium">
                                   {formatVolume(q.searchVolume)}
                                 </span>
                               </div>
@@ -865,8 +818,8 @@ export default function AnalyzePage() {
                       {/* Strategic Questions Section */}
                       <div>
                         <div className="flex items-center gap-2 mb-2 px-1">
-                          <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                          <span className="text-xs font-semibold text-amber-400 uppercase tracking-wide">Strategic Questions</span>
+                          <div className="w-2 h-2 rounded-full bg-orange-400"></div>
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Strategic</span>
                         </div>
                         {allQuestions.filter(q => q.source === "strategic").map((q) => {
                           const isSelected = selectedQuestions[group.stage]?.find(sq => sq.id === q.id);
@@ -875,29 +828,19 @@ export default function AnalyzePage() {
                             <div
                               key={q.id}
                               onClick={() => toggleQuestion(q, group.stage)}
-                              className={`p-3 rounded-lg cursor-pointer transition-all mb-2 ${
+                              className={`p-3 rounded-xl cursor-pointer transition-all mb-2 border ${
                                 isSelected
-                                  ? "bg-cyan-600/40 border-2 border-cyan-400 shadow-lg shadow-cyan-500/20"
-                                  : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
+                                  ? `${colors.selected} border-2`
+                                  : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200"
                               }`}
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <span className={`text-sm ${isSelected ? "text-white font-medium" : "text-gray-200"}`}>
+                                <span className={`text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-700"}`}>
                                   {q.question}
                                 </span>
                                 {isSelected && (
-                                  <span className="text-cyan-300 text-lg">✓</span>
+                                  <span className="text-blue-500 text-base">✓</span>
                                 )}
-                              </div>
-                              <div className="flex items-center gap-2 mt-2">
-                                <span className={`text-xs px-2 py-0.5 rounded ${
-                                  q.type === "brand" ? "bg-cyan-500/30 text-cyan-300" : "bg-blue-500/30 text-blue-300"
-                                }`}>
-                                  {q.type === "brand" ? "Brand" : "Category"}
-                                </span>
-                                <span className="text-xs text-amber-400/70">
-                                  AI-crafted
-                                </span>
                               </div>
                             </div>
                           );
@@ -909,9 +852,9 @@ export default function AnalyzePage() {
               })}
             </div>
 
-            {/* Platform selection */}
-            <div className="bg-white/5 rounded-xl p-6 mt-6 border border-white/10">
-              <h3 className="text-lg font-semibold mb-4">Select AI Platforms to Test</h3>
+            {/* Platform selection - Apple Style */}
+            <div className="bg-white rounded-2xl p-6 mt-6 border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">AI Platforms to Test</h3>
               
               <div className="grid grid-cols-4 gap-4">
                 {(["ChatGPT", "Gemini", "Copilot", "Perplexity"] as Platform[]).map((platform) => {
@@ -921,10 +864,10 @@ export default function AnalyzePage() {
                     <div
                       key={platform}
                       onClick={() => togglePlatform(platform)}
-                      className={`p-4 rounded-lg cursor-pointer text-center transition-all relative ${
+                      className={`p-4 rounded-xl cursor-pointer text-center transition-all border ${
                         isSelected
-                          ? "bg-green-600/30 border-2 border-green-500"
-                          : "bg-white/5 border-2 border-transparent hover:bg-white/10"
+                          ? "bg-green-50 border-2 border-green-400 shadow-sm"
+                          : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                       }`}
                     >
                       <div className="text-3xl mb-2">
@@ -933,9 +876,9 @@ export default function AnalyzePage() {
                         {platform === "Copilot" && "🔷"}
                         {platform === "Perplexity" && "🔮"}
                       </div>
-                      <div className="font-medium">{platform}</div>
+                      <div className="font-medium text-gray-700">{platform}</div>
                       {isSelected && (
-                        <div className="text-xs text-green-400 mt-1">✓ Selected</div>
+                        <div className="text-xs text-green-600 mt-1 font-medium">✓ Selected</div>
                       )}
                     </div>
                   );
@@ -943,87 +886,123 @@ export default function AnalyzePage() {
               </div>
               
               <p className="text-xs text-gray-500 mt-3 text-center">
-                All 4 AI platforms are included {tier === "free" ? "in the Free tier" : "in your plan"}. Test on all of them to see the full picture.
+                All 4 platforms included. Test on all for complete visibility.
               </p>
             </div>
 
-            {/* Actions - Also Sticky at Bottom */}
-            <div className="sticky bottom-0 z-20 bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent pt-6 pb-4 mt-6">
+            {/* FAQ Section - Questions Selection */}
+            <div className="bg-white rounded-2xl p-6 mt-6 border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-semibold mb-4 text-gray-900">Frequently Asked Questions</h3>
+              <div className="space-y-4">
+                <details className="group">
+                  <summary className="cursor-pointer text-gray-700 font-medium hover:text-gray-900 list-none flex items-center justify-between">
+                    Why select questions from different funnel stages?
+                    <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <p className="mt-2 text-sm text-gray-500 pl-4 border-l-2 border-gray-100">
+                    Users ask AI different questions at each stage of their buying journey. Awareness questions like "What is...?" help you get discovered. 
+                    Consideration questions like "Best...?" determine if you're being compared. Decision questions like "Should I buy...?" directly influence purchases.
+                  </p>
+                </details>
+                <details className="group">
+                  <summary className="cursor-pointer text-gray-700 font-medium hover:text-gray-900 list-none flex items-center justify-between">
+                    What's the difference between Real Search and Strategic questions?
+                    <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <p className="mt-2 text-sm text-gray-500 pl-4 border-l-2 border-gray-100">
+                    Real Search Data comes from actual search queries with monthly volume data. Strategic questions are AI-crafted to probe specific brand positioning aspects that users might not search directly but AI considers when forming opinions.
+                  </p>
+                </details>
+                <details className="group">
+                  <summary className="cursor-pointer text-gray-700 font-medium hover:text-gray-900 list-none flex items-center justify-between">
+                    How many questions should I select?
+                    <span className="text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+                  </summary>
+                  <p className="mt-2 text-sm text-gray-500 pl-4 border-l-2 border-gray-100">
+                    Minimum 3 questions are required. For a complete picture, we recommend 2-3 questions from each stage (6-9 total). 
+                    You can also focus on a single stage if that's your priority.
+                  </p>
+                </details>
+              </div>
+            </div>
+
+            {/* Actions - Apple Style Sticky Bottom */}
+            <div className="sticky bottom-0 z-20 bg-gradient-to-t from-[#F5F5F7] via-[#F5F5F7]/95 to-transparent pt-6 pb-4 mt-6">
               <div className="flex gap-4">
                 <Button
                   onClick={() => setPhase(1)}
                   variant="outline"
-                  className="flex-1 py-4 border-gray-600 bg-white/5"
+                  className="flex-1 py-4 border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                 >
                   ← Back
                 </Button>
                 <Button
                   onClick={handleRunClick}
                   disabled={!canRunAnalysis()}
-                  className={`flex-1 py-4 text-lg font-semibold ${
+                  className={`flex-1 py-4 text-lg font-semibold rounded-xl transition-all ${
                     canRunAnalysis() 
-                      ? "bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 shadow-lg shadow-cyan-500/30" 
-                      : "bg-gray-700 cursor-not-allowed"
+                      ? "bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:scale-[1.02]" 
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
                   }`}
                 >
                   {canRunAnalysis() 
-                    ? `🚀 Run Analysis (${getTotalSelected()} questions × ${selectedPlatforms.length} platforms)` 
+                    ? `Run My Analysis →` 
                     : getTotalSelected() === 0 
                       ? "Select at least 3 questions"
-                      : `Select ${Math.max(0, 3 - getTotalSelected())} more questions`
+                      : `Select ${Math.max(0, 3 - getTotalSelected())} more`
                   }
                 </Button>
               </div>
             </div>
 
-            {/* Confirmation Modal */}
+            {/* Confirmation Modal - Apple Style */}
             {showConfirmModal && (
-              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-cyan-500/30 shadow-2xl">
-                  <h3 className="text-xl font-bold mb-4 text-center">📋 Confirm Your Selection</h3>
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+                  <h3 className="text-xl font-bold mb-4 text-center text-gray-900">Confirm Your Selection</h3>
                   
                   <div className="space-y-3 mb-6">
-                    <div className={`flex justify-between items-center p-3 rounded-lg ${
-                      getSelectionBreakdown().awareness > 0 ? "bg-blue-500/20 border border-blue-500/30" : "bg-white/5"
+                    <div className={`flex justify-between items-center p-3 rounded-xl ${
+                      getSelectionBreakdown().awareness > 0 ? "bg-purple-50 border border-purple-200" : "bg-gray-50"
                     }`}>
-                      <span className="font-medium">🔍 Awareness</span>
+                      <span className="font-medium text-gray-700">🔍 Awareness</span>
                       <span className={`text-lg font-bold ${
-                        getSelectionBreakdown().awareness > 0 ? "text-blue-400" : "text-gray-500"
+                        getSelectionBreakdown().awareness > 0 ? "text-purple-600" : "text-gray-400"
                       }`}>
                         {getSelectionBreakdown().awareness} questions
                       </span>
                     </div>
                     
-                    <div className={`flex justify-between items-center p-3 rounded-lg ${
-                      getSelectionBreakdown().consideration > 0 ? "bg-amber-500/20 border border-amber-500/30" : "bg-white/5"
+                    <div className={`flex justify-between items-center p-3 rounded-xl ${
+                      getSelectionBreakdown().consideration > 0 ? "bg-orange-50 border border-orange-200" : "bg-gray-50"
                     }`}>
-                      <span className="font-medium">⚖️ Consideration</span>
+                      <span className="font-medium text-gray-700">⚖️ Consideration</span>
                       <span className={`text-lg font-bold ${
-                        getSelectionBreakdown().consideration > 0 ? "text-amber-400" : "text-gray-500"
+                        getSelectionBreakdown().consideration > 0 ? "text-orange-600" : "text-gray-400"
                       }`}>
                         {getSelectionBreakdown().consideration} questions
                       </span>
                     </div>
                     
-                    <div className={`flex justify-between items-center p-3 rounded-lg ${
-                      getSelectionBreakdown().decision > 0 ? "bg-green-500/20 border border-green-500/30" : "bg-white/5"
+                    <div className={`flex justify-between items-center p-3 rounded-xl ${
+                      getSelectionBreakdown().decision > 0 ? "bg-green-50 border border-green-200" : "bg-gray-50"
                     }`}>
-                      <span className="font-medium">✅ Decision</span>
+                      <span className="font-medium text-gray-700">✅ Decision</span>
                       <span className={`text-lg font-bold ${
-                        getSelectionBreakdown().decision > 0 ? "text-green-400" : "text-gray-500"
+                        getSelectionBreakdown().decision > 0 ? "text-green-600" : "text-gray-400"
                       }`}>
                         {getSelectionBreakdown().decision} questions
                       </span>
                     </div>
                     
-                    <div className="border-t border-white/10 pt-3 mt-3">
+                    <div className="border-t border-gray-200 pt-3 mt-3">
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold text-lg">Total</span>
-                        <span className="text-2xl font-bold text-cyan-400">
+                        <span className="font-semibold text-lg text-gray-900">Total</span>
+                        <span className="text-2xl font-bold text-blue-500">
                           {getSelectionBreakdown().total} questions
                         </span>
                       </div>
-                      <div className="text-sm text-gray-400 mt-1">
+                      <div className="text-sm text-gray-500 mt-1">
                         Testing on {selectedPlatforms.length} platform{selectedPlatforms.length > 1 ? "s" : ""}: {selectedPlatforms.join(", ")}
                       </div>
                     </div>
@@ -1033,16 +1012,15 @@ export default function AnalyzePage() {
                   {(getSelectionBreakdown().awareness === 0 || 
                     getSelectionBreakdown().consideration === 0 || 
                     getSelectionBreakdown().decision === 0) && (
-                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-4">
-                      <p className="text-amber-400 text-sm">
-                        ⚠️ Note: Some funnel stages have no questions selected. 
-                        Your analysis will only cover the selected stages.
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
+                      <p className="text-amber-700 text-sm">
+                        ⚠️ Note: Some funnel stages have no questions selected.
                       </p>
                     </div>
                   )}
 
-                  <p className="text-center text-gray-300 mb-6">
-                    Is this your final pick?
+                  <p className="text-center text-gray-500 mb-6">
+                    Ready to run your analysis?
                   </p>
                   
                   <div className="flex gap-3">

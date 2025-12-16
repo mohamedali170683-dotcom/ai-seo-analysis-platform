@@ -1,57 +1,59 @@
 /**
- * Design Tokens - Behavioral Science Optimized
- * Based on research from Baymard Institute, Nielsen Norman Group, Stanford Web Credibility Project
+ * Design Tokens - Apple-Inspired Design System
+ * Based on Apple Human Interface Guidelines + Behavioral Science Research
  * 
- * Key optimizations:
- * - 48px minimum touch targets (Microsoft Research + MIT Touch Lab)
- * - 40% increased spacing for 20% comprehension improvement
- * - Navy + Cyan color system (replacing purple)
- * - Traffic light status colors for intuitive understanding
+ * Key features:
+ * - Light, clean backgrounds (Apple style)
+ * - High contrast text for readability
+ * - Subtle shadows and rounded corners
+ * - Apple Blue (#007AFF) as primary accent
  */
 
 :root {
-  /* PRIMARY COLORS - Navy + Cyan (replacing purple) */
-  --color-navy-900: #0F172A;
-  --color-navy-800: #1E293B;
-  --color-navy-700: #334155;
-  --color-navy-600: #475569;
+  /* APPLE-INSPIRED PRIMARY COLORS */
+  --color-apple-blue: #007AFF;
+  --color-apple-blue-hover: #0056CC;
+  --color-apple-green: #34C759;
+  --color-apple-red: #FF3B30;
+  --color-apple-orange: #FF9500;
+  --color-apple-gray: #8E8E93;
   
-  --color-cyan-600: #0891B2;
-  --color-cyan-500: #06B6D4;
-  --color-cyan-400: #22D3EE;
+  /* BACKGROUNDS - Light, clean Apple style */
+  --color-background-primary: #F5F5F7;
+  --color-background-secondary: #FFFFFF;
+  --color-background-card: #FFFFFF;
+  --color-background-subtle: #F2F2F7;
+  --color-background-elevated: #FFFFFF;
+  
+  /* TEXT - High contrast for readability */
+  --color-text-primary: #1D1D1F;
+  --color-text-secondary: #6E6E73;
+  --color-text-tertiary: #86868B;
+  --color-text-on-dark: #FFFFFF;
+  --color-text-link: #007AFF;
   
   /* STATUS COLORS - Traffic light system */
-  --color-green-600: #059669;
-  --color-green-500: #10B981;
-  --color-amber-600: #D97706;
-  --color-amber-500: #F59E0B;
-  --color-red-600: #DC2626;
-  --color-red-500: #EF4444;
+  --color-green-600: #34C759;
+  --color-green-500: #30D158;
+  --color-amber-600: #FF9500;
+  --color-amber-500: #FFB800;
+  --color-red-600: #FF3B30;
+  --color-red-500: #FF453A;
   
-  /* FUNNEL STAGE COLORS */
-  --color-awareness: #8B5CF6;
-  --color-consideration: #F97316;
-  --color-decision: #059669;
+  /* FUNNEL STAGE COLORS - Softer, Apple-inspired */
+  --color-awareness: #AF52DE;
+  --color-consideration: #FF9500;
+  --color-decision: #34C759;
   
-  /* BACKGROUNDS */
-  --color-background-primary: #F9FAFB;
-  --color-background-card: #FFFFFF;
-  --color-background-subtle: #F1F5F9;
+  /* BORDERS - Subtle, barely visible */
+  --color-border-default: #E5E5EA;
+  --color-border-hover: #D1D1D6;
+  --color-border-focus: #007AFF;
   
-  /* TEXT */
-  --color-text-primary: #1E293B;
-  --color-text-secondary: #475569;
-  --color-text-tertiary: #94A3B8;
-  
-  /* BORDERS */
-  --color-border-default: #E2E8F0;
-  --color-border-hover: #CBD5E1;
-  --color-border-focus: #06B6D4;
-  
-  /* TYPOGRAPHY */
-  --font-headline: 'IBM Plex Sans', -apple-system, system-ui, sans-serif;
-  --font-body: 'Inter', -apple-system, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  /* TYPOGRAPHY - System fonts (Apple style) */
+  --font-headline: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
   
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
@@ -70,7 +72,7 @@
   --font-semibold: 600;
   --font-bold: 700;
   
-  /* SPACING - Increased 40% for comprehension */
+  /* SPACING - Generous whitespace (Apple style) */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -82,30 +84,32 @@
   --card-padding: 2rem;
   --card-padding-mobile: 1.5rem;
   
-  /* TOUCH TARGETS - Research: 48px minimum */
+  /* TOUCH TARGETS */
   --touch-target-min: 48px;
   --button-height: 48px;
   --button-height-large: 56px;
   
-  /* BORDERS & RADIUS */
+  /* BORDERS & RADIUS - Apple's generous rounding */
   --border-width: 1px;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
   
-  /* SHADOWS */
-  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-focus: 0 0 0 3px rgba(6, 182, 212, 0.1);
+  /* SHADOWS - Soft, subtle (Apple style) */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+  --shadow-focus: 0 0 0 4px rgba(0, 122, 255, 0.2);
   
-  /* TRANSITIONS */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* TRANSITIONS - Smooth, natural */
+  --transition-fast: 150ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-base: 250ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-slow: 350ms cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 /* Box sizing reset */
@@ -113,11 +117,38 @@
   box-sizing: border-box;
 }
 
-/* Body defaults */
+/* Body defaults - Apple style */
 body {
   background-color: var(--color-background-primary);
   color: var(--color-text-primary);
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Apple-style card */
+.apple-card {
+  background: var(--color-background-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: var(--card-padding);
+}
+
+/* Apple-style button */
+.apple-button {
+  background: var(--color-apple-blue);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 14px 28px;
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.apple-button:hover {
+  background: var(--color-apple-blue-hover);
+  transform: scale(1.02);
 }
