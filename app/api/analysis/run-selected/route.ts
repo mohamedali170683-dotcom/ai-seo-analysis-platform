@@ -488,13 +488,13 @@ async function executeSelectedAnalysis(
       stageResults.forEach((r: any) => {
         r.responses?.forEach((resp: any) => {
           const competitorsMentioned = resp.competitorsMentioned || [];
-          competitorsMentioned.forEach((comp: any) => {
-            if (!competitorMentions[comp.name]) {
-              competitorMentions[comp.name] = { count: 0, positions: [] };
-            }
-            competitorMentions[comp.name].count++;
-            if (comp.position > 0) {
-              competitorMentions[comp.name].positions.push(comp.position);
+          // competitorsMentioned is an array of strings (competitor names)
+          competitorsMentioned.forEach((compName: string) => {
+            if (typeof compName === 'string' && compName.length > 0) {
+              if (!competitorMentions[compName]) {
+                competitorMentions[compName] = { count: 0, positions: [] };
+              }
+              competitorMentions[compName].count++;
             }
           });
         });
