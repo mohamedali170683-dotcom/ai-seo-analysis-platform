@@ -548,6 +548,98 @@ export default function ResultsPage() {
               </div>
             </div>
 
+            {/* Platform Performance Breakdown */}
+            {reportData.platformBreakdown && (
+              <div className="mb-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <span>🤖</span> Visibility Across AI Platforms
+                </h3>
+                <div className="grid md:grid-cols-4 gap-4">
+                  {[
+                    { name: "ChatGPT", icon: "🤖", color: "green" },
+                    { name: "Gemini", icon: "✨", color: "blue" },
+                    { name: "Copilot", icon: "🔷", color: "cyan" },
+                    { name: "Perplexity", icon: "🔮", color: "purple" },
+                  ].map((platform) => {
+                    const data = reportData.platformBreakdown?.[platform.name] || {
+                      mentionRate: 0,
+                      avgPosition: 0,
+                      visibilityShare: 0,
+                      totalTests: 0,
+                    };
+                    const colorClasses = {
+                      green: "border-green-200 bg-green-50",
+                      blue: "border-blue-200 bg-blue-50",
+                      cyan: "border-cyan-200 bg-cyan-50",
+                      purple: "border-purple-200 bg-purple-50",
+                    };
+                    return (
+                      <div key={platform.name} className={`rounded-xl p-4 border-2 ${colorClasses[platform.color as keyof typeof colorClasses]}`}>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-2xl">{platform.icon}</span>
+                          <span className="font-semibold text-gray-900">{platform.name}</span>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-xs text-gray-500">Mention Rate</span>
+                            <span className={`font-bold ${data.mentionRate >= 50 ? "text-green-600" : data.mentionRate >= 25 ? "text-yellow-600" : "text-red-600"}`}>
+                              {Math.round(data.mentionRate)}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${data.mentionRate >= 50 ? "bg-green-500" : data.mentionRate >= 25 ? "bg-yellow-500" : "bg-red-500"}`}
+                              style={{ width: `${Math.min(100, data.mentionRate)}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-gray-500">Avg Position</span>
+                            <span className="font-semibold text-gray-700">
+                              {data.avgPosition > 0 ? `#${data.avgPosition.toFixed(1)}` : "—"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-gray-500">Visibility Share</span>
+                            <span className="font-semibold text-gray-700">{Math.round(data.visibilityShare)}%</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Overall Platform Summary */}
+                <div className="mt-4 bg-gray-50 rounded-xl p-4">
+                  <div className="grid md:grid-cols-3 gap-6 text-center">
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {Math.round(
+                          Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.mentionRate || 0), 0) / 
+                          Math.max(Object.keys(reportData.platformBreakdown || {}).length, 1)
+                        )}%
+                      </div>
+                      <div className="text-sm text-gray-500">Avg Mention Rate</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        #{(
+                          Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.avgPosition || 0), 0) / 
+                          Math.max(Object.values(reportData.platformBreakdown || {}).filter((p: any) => p.avgPosition > 0).length, 1)
+                        ).toFixed(1)}
+                      </div>
+                      <div className="text-sm text-gray-500">Avg Position</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        {Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.totalTests || 0), 0)}
+                      </div>
+                      <div className="text-sm text-gray-500">Total AI Responses</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Journey Stages */}
             <div className="space-y-8">
               {journeyStages.length === 0 && (
@@ -1410,6 +1502,79 @@ function transformAnalysisData(data: any) {
     ? [data.competitor] 
     : (data.competitors || []);
 
+  // Calculate platform breakdown from AI test results
+  const platformBreakdown: Record<string, {
+    mentionRate: number;
+    avgPosition: number;
+    visibilityShare: number;
+    totalTests: number;
+    mentions: number;
+  }> = {};
+
+  // Initialize platforms
+  const platforms = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+  platforms.forEach(p => {
+    platformBreakdown[p] = {
+      mentionRate: 0,
+      avgPosition: 0,
+      visibilityShare: 0,
+      totalTests: 0,
+      mentions: 0,
+    };
+  });
+
+  // Aggregate data from journey stages (which contain AI response data)
+  let totalMentionsAcrossAll = 0;
+  journeyStages.forEach((stage: any) => {
+    const examples = stage.portrayal?.aiAnswerExamples || [];
+    examples.forEach((example: any) => {
+      const platform = example.platform;
+      if (platform && platformBreakdown[platform]) {
+        platformBreakdown[platform].totalTests++;
+        if (example.sentiment !== "not_mentioned") {
+          platformBreakdown[platform].mentions++;
+          totalMentionsAcrossAll++;
+          if (example.brandPosition > 0) {
+            // Accumulate positions for averaging later
+            platformBreakdown[platform].avgPosition += example.brandPosition;
+          }
+        }
+      }
+    });
+  });
+
+  // Also check AI test results directly if available
+  const aiTestResults = data.aiTestResults || [];
+  aiTestResults.forEach((result: any) => {
+    const platform = result.platform;
+    if (platform && platformBreakdown[platform]) {
+      platformBreakdown[platform].totalTests++;
+      if (result.brandMentioned) {
+        platformBreakdown[platform].mentions++;
+        totalMentionsAcrossAll++;
+        if (result.position > 0) {
+          platformBreakdown[platform].avgPosition += result.position;
+        }
+      }
+    }
+  });
+
+  // Calculate final metrics for each platform
+  platforms.forEach(p => {
+    const pd = platformBreakdown[p];
+    if (pd.totalTests > 0) {
+      pd.mentionRate = (pd.mentions / pd.totalTests) * 100;
+      // Average position (only if there were mentions with positions)
+      if (pd.mentions > 0) {
+        pd.avgPosition = pd.avgPosition / pd.mentions;
+      }
+    }
+    // Visibility share = what % of total mentions came from this platform
+    if (totalMentionsAcrossAll > 0) {
+      pd.visibilityShare = (pd.mentions / totalMentionsAcrossAll) * 100;
+    }
+  });
+
   return {
     brandOrKeyword: data.brandOrKeyword,
     domain: data.domain,
@@ -1420,5 +1585,6 @@ function transformAnalysisData(data: any) {
     scoringMethodology,
     journeyStages,
     websiteAudit,
+    platformBreakdown,
   };
 }
