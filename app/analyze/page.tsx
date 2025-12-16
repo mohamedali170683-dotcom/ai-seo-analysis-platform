@@ -393,7 +393,7 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-900 to-slate-900 text-white">
       {/* Header */}
       <header className="border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -414,9 +414,9 @@ export default function AnalyzePage() {
             { num: 3, label: "Analyze" },
           ].map((step, i) => (
             <div key={step.num} className="flex items-center">
-              <div className={`flex items-center gap-2 ${phase >= step.num ? "text-purple-400" : "text-gray-600"}`}>
+              <div className={`flex items-center gap-2 ${phase >= step.num ? "text-cyan-400" : "text-gray-600"}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                  phase >= step.num ? "bg-purple-600" : "bg-gray-700"
+                  phase >= step.num ? "bg-cyan-600" : "bg-gray-700"
                 }`}>
                   {step.num}
                 </div>
@@ -446,7 +446,7 @@ export default function AnalyzePage() {
               {tier === "free" && (
                 <button
                   onClick={() => openUpgradeModal("funnel_stages")}
-                  className="text-sm text-purple-400 hover:text-purple-300 underline"
+                  className="text-sm text-cyan-400 hover:text-cyan-300 underline"
                 >
                   Upgrade to Full Audit →
                 </button>
@@ -454,7 +454,7 @@ export default function AnalyzePage() {
             </div>
 
             {/* Value Proposition */}
-            <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-2xl p-8 border border-purple-500/30">
+            <div className="bg-gradient-to-r from-slate-900/50 to-blue-900/50 rounded-2xl p-8 border border-cyan-500/30">
               <h2 className="text-3xl font-bold mb-4">
                 {tier === "free" ? "Get Your AI Visibility Check" : "Take Control of Your AI Visibility"}
               </h2>
@@ -526,7 +526,7 @@ export default function AnalyzePage() {
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
                     placeholder="e.g., Nike"
-                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
 
@@ -537,7 +537,7 @@ export default function AnalyzePage() {
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     placeholder="e.g., running shoes, sportswear"
-                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
 
@@ -548,7 +548,7 @@ export default function AnalyzePage() {
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
                     placeholder="e.g., nike.com"
-                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   />
                 </div>
 
@@ -562,7 +562,7 @@ export default function AnalyzePage() {
                     value={competitors}
                     onChange={(e) => setCompetitors(e.target.value)}
                     placeholder={tier === "free" ? "e.g., Adidas" : `e.g., Adidas, Puma, New Balance${limits.maxCompetitors >= 10 ? ", etc." : ""}`}
-                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-text"
+                    className="w-full bg-white/10 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-text"
                   />
                   <p className="text-xs text-gray-500 mt-1">
                     {tier === "free" 
@@ -578,7 +578,7 @@ export default function AnalyzePage() {
               <Button
                 onClick={handleDiscoverQuestions}
                 disabled={loading || !brandName || !category}
-                className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 py-4 text-lg mt-6 font-semibold"
+                className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 py-4 text-lg mt-6 font-semibold"
               >
                 {loading ? (
                   <span className="flex items-center justify-center gap-3">
@@ -600,7 +600,7 @@ export default function AnalyzePage() {
             {/* Discovery Loading Overlay */}
             {loading && (
               <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-                <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-purple-500/30 shadow-2xl">
+                <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-cyan-500/30 shadow-2xl">
                   <div className="text-center">
                     <div className="text-6xl mb-4 animate-bounce">{discoveryCountdown <= 0 ? "🤔" : "🔍"}</div>
                     <h3 className="text-2xl font-bold mb-2">
@@ -614,26 +614,26 @@ export default function AnalyzePage() {
                           Oops! Taking longer than expected... 🐌
                         </p>
                         <p className="text-gray-400 text-sm">
-                          Our AI is being extra thorough with <strong className="text-purple-400">{brandName}</strong>. 
+                          Our AI is being extra thorough with <strong className="text-cyan-400">{brandName}</strong>. 
                           Almost there, we promise! ☕
                         </p>
                         <div className="mt-4 flex justify-center">
                           <div className="flex gap-1">
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                            <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
                           </div>
                         </div>
                       </div>
                     ) : (
                       <>
                         <p className="text-gray-400 mb-6">
-                          Finding real questions people ask about <strong className="text-purple-400">{brandName}</strong> and generating strategic ones.
+                          Finding real questions people ask about <strong className="text-cyan-400">{brandName}</strong> and generating strategic ones.
                         </p>
                         
                         {/* Countdown Timer */}
-                        <div className="bg-purple-900/50 rounded-xl p-4 mb-6">
-                          <div className="text-4xl font-mono font-bold text-purple-400 mb-1">
+                        <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
+                          <div className="text-4xl font-mono font-bold text-cyan-400 mb-1">
                             {Math.floor(discoveryCountdown / 60)}:{(discoveryCountdown % 60).toString().padStart(2, '0')}
                           </div>
                           <p className="text-xs text-gray-500">estimated time remaining</p>
@@ -674,19 +674,19 @@ export default function AnalyzePage() {
               <h3 className="text-lg font-semibold mb-4">How It Works</h3>
               <div className="space-y-3 text-gray-300">
                 <div className="flex gap-3">
-                  <span className="text-purple-400 font-bold">1.</span>
+                  <span className="text-cyan-400 font-bold">1.</span>
                   <span>We'll discover questions people actually search for about your brand and category</span>
                 </div>
                 <div className="flex gap-3">
-                  <span className="text-purple-400 font-bold">2.</span>
+                  <span className="text-cyan-400 font-bold">2.</span>
                   <span>Select questions from any funnel stage (minimum 3, you decide the mix)</span>
                 </div>
                 <div className="flex gap-3">
-                  <span className="text-purple-400 font-bold">3.</span>
+                  <span className="text-cyan-400 font-bold">3.</span>
                   <span>Test on all 4 AI platforms: ChatGPT, Gemini, Copilot & Perplexity</span>
                 </div>
                 <div className="flex gap-3">
-                  <span className="text-purple-400 font-bold">4.</span>
+                  <span className="text-cyan-400 font-bold">4.</span>
                   <span>Get visibility scores across all platforms {tier === "free" ? "(unlock detailed recommendations with Professional)" : "and actionable recommendations"}</span>
                 </div>
               </div>
@@ -698,7 +698,7 @@ export default function AnalyzePage() {
         {phase === 2 && (
           <div className="space-y-0">
             {/* Sticky Header */}
-            <div className="sticky top-0 z-20 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 pb-4 pt-2">
+            <div className="sticky top-0 z-20 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-900 pb-4 pt-2">
               <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 shadow-xl">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
@@ -731,7 +731,7 @@ export default function AnalyzePage() {
             </div>
 
             {/* Educational Section: Understanding the Customer Journey */}
-            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 rounded-2xl p-8 mt-4 border border-white/20">
+            <div className="bg-gradient-to-r from-blue-900/30 to-slate-900/30 rounded-2xl p-8 mt-4 border border-white/20">
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold mb-2">🎯 Why These 3 Stages Matter</h3>
                 <p className="text-lg text-gray-300">
@@ -795,7 +795,7 @@ export default function AnalyzePage() {
                       isLocked 
                         ? "border-gray-600/50 bg-gray-800/30" 
                         : hasSelection 
-                          ? "border-purple-500/50 bg-purple-500/5" 
+                          ? "border-cyan-500/50 bg-cyan-500/5" 
                           : "border-white/10 bg-white/5"
                     }`}
                   >
@@ -812,14 +812,14 @@ export default function AnalyzePage() {
                           {group.stage === "consideration" ? "Consideration Stage" : "Decision Stage"}
                         </span>
                         <span className="text-sm text-gray-400 mb-3">Included in Full Audit</span>
-                        <span className="text-xs text-purple-400 flex items-center gap-1">
+                        <span className="text-xs text-cyan-400 flex items-center gap-1">
                           <Sparkles className="w-3 h-3" /> Click to unlock
                         </span>
                       </div>
                     )}
                     {/* Column Header */}
                     <div className={`p-4 border-b ${
-                      hasSelection ? "border-purple-500/30 bg-purple-500/10" : "border-white/10 bg-white/5"
+                      hasSelection ? "border-cyan-500/30 bg-cyan-500/10" : "border-white/10 bg-white/5"
                     } rounded-t-xl`}>
                       <div className="flex items-center justify-between mb-2">
                         <div>
@@ -827,7 +827,7 @@ export default function AnalyzePage() {
                           <p className="text-xs text-gray-400 font-medium">{stageInfo[group.stage].shortDesc}</p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                          hasSelection ? "bg-purple-600 text-white" : "bg-white/20"
+                          hasSelection ? "bg-cyan-600 text-white" : "bg-white/20"
                         }`}>
                           {stageSelected} selected
                         </span>
@@ -855,7 +855,7 @@ export default function AnalyzePage() {
                               onClick={() => toggleQuestion(q, group.stage)}
                               className={`p-3 rounded-lg cursor-pointer transition-all mb-2 relative ${
                                 isSelected
-                                  ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
+                                  ? "bg-cyan-600/40 border-2 border-cyan-400 shadow-lg shadow-cyan-500/20"
                                   : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
                               }`}
                             >
@@ -864,12 +864,12 @@ export default function AnalyzePage() {
                                   {q.question}
                                 </span>
                                 {isSelected && (
-                                  <span className="text-purple-300 text-lg">✓</span>
+                                  <span className="text-cyan-300 text-lg">✓</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-2 mt-2">
                                 <span className={`text-xs px-2 py-0.5 rounded ${
-                                  q.type === "brand" ? "bg-purple-500/30 text-purple-300" : "bg-blue-500/30 text-blue-300"
+                                  q.type === "brand" ? "bg-cyan-500/30 text-cyan-300" : "bg-blue-500/30 text-blue-300"
                                 }`}>
                                   {q.type === "brand" ? "Brand" : "Category"}
                                 </span>
@@ -897,7 +897,7 @@ export default function AnalyzePage() {
                               onClick={() => toggleQuestion(q, group.stage)}
                               className={`p-3 rounded-lg cursor-pointer transition-all mb-2 ${
                                 isSelected
-                                  ? "bg-purple-600/40 border-2 border-purple-400 shadow-lg shadow-purple-500/20"
+                                  ? "bg-cyan-600/40 border-2 border-cyan-400 shadow-lg shadow-cyan-500/20"
                                   : "bg-white/5 hover:bg-white/10 border-2 border-transparent hover:border-white/20"
                               }`}
                             >
@@ -906,12 +906,12 @@ export default function AnalyzePage() {
                                   {q.question}
                                 </span>
                                 {isSelected && (
-                                  <span className="text-purple-300 text-lg">✓</span>
+                                  <span className="text-cyan-300 text-lg">✓</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-2 mt-2">
                                 <span className={`text-xs px-2 py-0.5 rounded ${
-                                  q.type === "brand" ? "bg-purple-500/30 text-purple-300" : "bg-blue-500/30 text-blue-300"
+                                  q.type === "brand" ? "bg-cyan-500/30 text-cyan-300" : "bg-blue-500/30 text-blue-300"
                                 }`}>
                                   {q.type === "brand" ? "Brand" : "Category"}
                                 </span>
@@ -982,7 +982,7 @@ export default function AnalyzePage() {
                   disabled={!canRunAnalysis()}
                   className={`flex-1 py-4 text-lg font-semibold ${
                     canRunAnalysis() 
-                      ? "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg shadow-purple-500/30" 
+                      ? "bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 shadow-lg shadow-cyan-500/30" 
                       : "bg-gray-700 cursor-not-allowed"
                   }`}
                 >
@@ -999,7 +999,7 @@ export default function AnalyzePage() {
             {/* Confirmation Modal */}
             {showConfirmModal && (
               <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-purple-500/30 shadow-2xl">
+                <div className="bg-slate-800 rounded-2xl max-w-md w-full p-6 border border-cyan-500/30 shadow-2xl">
                   <h3 className="text-xl font-bold mb-4 text-center">📋 Confirm Your Selection</h3>
                   
                   <div className="space-y-3 mb-6">
@@ -1039,7 +1039,7 @@ export default function AnalyzePage() {
                     <div className="border-t border-white/10 pt-3 mt-3">
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-lg">Total</span>
-                        <span className="text-2xl font-bold text-purple-400">
+                        <span className="text-2xl font-bold text-cyan-400">
                           {getSelectionBreakdown().total} questions
                         </span>
                       </div>
@@ -1075,7 +1075,7 @@ export default function AnalyzePage() {
                     </Button>
                     <Button
                       onClick={handleRunAnalysis}
-                      className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 font-semibold"
+                      className="flex-1 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 font-semibold"
                     >
                       ✓ Yes, Run Analysis
                     </Button>
@@ -1090,7 +1090,7 @@ export default function AnalyzePage() {
         {phase === 3 && (
           <div className="max-w-3xl mx-auto space-y-6">
             {/* Main Progress Card */}
-            <div className="bg-gradient-to-br from-purple-900/50 to-blue-900/50 rounded-2xl p-8 border border-purple-500/30">
+            <div className="bg-gradient-to-br from-slate-900/50 to-blue-900/50 rounded-2xl p-8 border border-cyan-500/30">
               {/* Header with Timers */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-4">
@@ -1115,7 +1115,7 @@ export default function AnalyzePage() {
                   </div>
                   {/* Elapsed */}
                   <div className="text-center bg-white/5 rounded-xl px-4 py-2">
-                    <div className="text-3xl font-mono font-bold text-purple-400">
+                    <div className="text-3xl font-mono font-bold text-cyan-400">
                       {formatTime(elapsedTime)}
                     </div>
                     <div className="text-xs text-gray-500">elapsed</div>
@@ -1127,11 +1127,11 @@ export default function AnalyzePage() {
               <div className="mb-4">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-400">Progress</span>
-                  <span className="text-purple-400 font-bold">{analysisProgress}%</span>
+                  <span className="text-cyan-400 font-bold">{analysisProgress}%</span>
                 </div>
                 <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 h-4 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-400 h-4 rounded-full transition-all duration-500"
                     style={{ width: `${analysisProgress}%` }}
                   />
                 </div>
@@ -1152,7 +1152,7 @@ export default function AnalyzePage() {
                   <div className="text-xs text-gray-500">Questions</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
-                  <div className="text-2xl font-bold text-purple-400">{selectedPlatforms.length}</div>
+                  <div className="text-2xl font-bold text-cyan-400">{selectedPlatforms.length}</div>
                   <div className="text-xs text-gray-500">AI Platforms</div>
                 </div>
                 <div className="bg-white/5 rounded-lg p-3">
@@ -1181,12 +1181,12 @@ export default function AnalyzePage() {
                   
                   return (
                     <div key={item.step} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
-                      isCurrent ? "bg-purple-500/20 border border-purple-500/50" : 
+                      isCurrent ? "bg-cyan-500/20 border border-cyan-500/50" : 
                       isComplete ? "opacity-100" : "opacity-40"
                     }`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg ${
                         isComplete ? "bg-green-500/20" : 
-                        isCurrent ? "bg-purple-500/20 animate-pulse" : "bg-white/5"
+                        isCurrent ? "bg-cyan-500/20 animate-pulse" : "bg-white/5"
                       }`}>
                         {isComplete ? "✓" : item.icon}
                       </div>
@@ -1195,9 +1195,9 @@ export default function AnalyzePage() {
                       </span>
                       {isCurrent && (
                         <div className="flex gap-1 items-center">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                          <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
-                          <div className="w-2 h-2 bg-purple-300 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-cyan-300 rounded-full animate-pulse"></div>
                         </div>
                       )}
                       {isComplete && (

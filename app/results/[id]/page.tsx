@@ -157,7 +157,7 @@ export default function ResultsPage() {
         <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-2xl w-full mx-4">
           <div className="text-center">
             <div className="mb-8">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-6 animate-pulse">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-full mb-6 animate-pulse">
                 <Brain className="w-12 h-12 text-white" />
               </div>
             </div>
@@ -172,7 +172,7 @@ export default function ResultsPage() {
             <div className="mb-6">
               <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-4 rounded-full transition-all duration-500 ease-out"
+                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 h-4 rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>
@@ -205,7 +205,7 @@ export default function ResultsPage() {
             <p className="text-gray-600 mb-8">{error}</p>
             <button
               onClick={() => router.push("/")}
-              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700"
+              className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg font-semibold hover:from-cyan-700 hover:to-cyan-600"
             >
               Start My New Analysis
             </button>
@@ -351,7 +351,7 @@ export default function ResultsPage() {
           <div 
             onClick={() => toggleSection("technical")}
             className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
-              expandedSection === "technical" ? "ring-2 ring-purple-500" : ""
+              expandedSection === "technical" ? "ring-2 ring-cyan-500" : ""
             }`}
           >
             <div className="p-6">
@@ -375,7 +375,7 @@ export default function ResultsPage() {
               </div>
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>{reportData.websiteAudit ? "Schema & content audit" : "No domain provided"}</span>
-                <span className="flex items-center gap-1 text-purple-600 font-medium">
+                <span className="flex items-center gap-1 text-cyan-600 font-medium">
                   {reportData.websiteAudit && <>Details {expandedSection === "technical" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}</>}
                 </span>
               </div>
@@ -556,7 +556,7 @@ export default function ResultsPage() {
               {journeyStages.map((stage: any, index: number) => (
                 <div key={stage?.stage || index} className={`border-2 rounded-xl p-6 ${
                   stage?.stage === "awareness" ? "border-blue-200 bg-blue-50/30" :
-                  stage?.stage === "consideration" ? "border-purple-200 bg-purple-50/30" : "border-green-200 bg-green-50/30"
+                  stage?.stage === "consideration" ? "border-cyan-200 bg-cyan-50/30" : "border-green-200 bg-green-50/30"
                 }`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -593,7 +593,7 @@ export default function ResultsPage() {
                           <div key={qIdx} className="flex items-start gap-2 text-sm">
                             <span className={`text-xs px-2 py-0.5 rounded-full mt-0.5 ${
                               stage?.stage === "awareness" ? "bg-blue-100 text-blue-700" :
-                              stage?.stage === "consideration" ? "bg-purple-100 text-purple-700" : "bg-green-100 text-green-700"
+                              stage?.stage === "consideration" ? "bg-cyan-100 text-cyan-700" : "bg-green-100 text-green-700"
                             }`}>Q{qIdx + 1}</span>
                             <span className="text-gray-700">{typeof q === 'string' ? q : q.question || q.text || 'Question'}</span>
                           </div>
@@ -714,7 +714,7 @@ export default function ResultsPage() {
                               <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                                 example?.platform === "ChatGPT" ? "bg-green-100 text-green-700" :
                                 example?.platform === "Gemini" ? "bg-blue-100 text-blue-700" :
-                                example?.platform === "Perplexity" ? "bg-amber-100 text-amber-700" : "bg-purple-100 text-purple-700"
+                                example?.platform === "Perplexity" ? "bg-amber-100 text-amber-700" : "bg-cyan-100 text-cyan-700"
                               }`}>{example?.platform || "AI"}</span>
                               <span className={`text-xs px-2 py-0.5 rounded ${
                                 example?.sentiment === "positive" ? "bg-green-50 text-green-600" :
@@ -834,7 +834,7 @@ export default function ResultsPage() {
                 return (
                   <div key={i} className={`rounded-xl p-6 border-2 relative ${
                     rec.stage === "Awareness" ? "bg-blue-50 border-blue-200" :
-                    rec.stage === "Consideration" ? "bg-purple-50 border-purple-200" : "bg-green-50 border-green-200"
+                    rec.stage === "Consideration" ? "bg-cyan-50 border-cyan-200" : "bg-green-50 border-green-200"
                   } ${isLocked ? "opacity-60" : ""}`}>
                     {/* Lock overlay for additional recommendations on free tier */}
                     {isLocked && (
@@ -975,7 +975,7 @@ export default function ResultsPage() {
             </p>
 
             {/* Overall Comparison */}
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl p-6 mb-8">
+            <div className="bg-gradient-to-r from-cyan-50 to-slate-50 rounded-xl p-6 mb-8">
               <h3 className="text-lg font-bold text-gray-900 mb-4">Overall AI Visibility Comparison</h3>
               <div className="space-y-4">
                 {/* Your Brand */}
@@ -1047,7 +1047,7 @@ export default function ResultsPage() {
                 {journeyStages.map((stage: any, stageIdx: number) => (
                   <div key={stageIdx} className={`rounded-xl p-5 ${
                     stage?.stage === "awareness" ? "bg-blue-50 border-2 border-blue-200" :
-                    stage?.stage === "consideration" ? "bg-purple-50 border-2 border-purple-200" : "bg-green-50 border-2 border-green-200"
+                    stage?.stage === "consideration" ? "bg-cyan-50 border-2 border-cyan-200" : "bg-green-50 border-2 border-green-200"
                   }`}>
                     <div className="flex items-center gap-2 mb-4">
                       <span className="text-2xl">
@@ -1062,7 +1062,7 @@ export default function ResultsPage() {
                         <div className="flex justify-between text-sm mb-1">
                           <span className={`font-bold ${
                             stage?.stage === "awareness" ? "text-blue-700" :
-                            stage?.stage === "consideration" ? "text-purple-700" : "text-green-700"
+                            stage?.stage === "consideration" ? "text-cyan-700" : "text-green-700"
                           }`}>{reportData.brandOrKeyword || "You"}</span>
                           <span className="font-bold">{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
                         </div>
@@ -1070,7 +1070,7 @@ export default function ResultsPage() {
                           <div 
                             className={`h-2 rounded-full ${
                               stage?.stage === "awareness" ? "bg-blue-500" :
-                              stage?.stage === "consideration" ? "bg-purple-500" : "bg-green-500"
+                              stage?.stage === "consideration" ? "bg-cyan-500" : "bg-green-500"
                             }`}
                             style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
                           />
@@ -1185,8 +1185,8 @@ export default function ResultsPage() {
                     <div className="font-semibold text-gray-900">Mention Rate</div>
                     <p className="text-sm text-gray-600">How often AI platforms mention your brand when answering relevant questions.</p>
                   </div>
-                  <div className="bg-purple-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-purple-700 mb-1">30%</div>
+                  <div className="bg-cyan-50 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-cyan-700 mb-1">30%</div>
                     <div className="font-semibold text-gray-900">Position</div>
                     <p className="text-sm text-gray-600">Where your brand appears in responses. Being mentioned first is better than being listed third.</p>
                   </div>
@@ -1201,35 +1201,35 @@ export default function ResultsPage() {
               {/* What is the audit process? */}
               <div className="border-b pb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <span className="text-purple-500">🔬</span> What is the audit process?
+                  <span className="text-cyan-500">🔬</span> What is the audit process?
                 </h3>
                 <p className="text-gray-600 mb-3">
                   Our analysis follows a rigorous, multi-step process:
                 </p>
                 <div className="space-y-3">
                   <div className="flex gap-3 items-start">
-                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
                     <div>
                       <span className="font-semibold text-gray-900">Question Discovery</span>
                       <p className="text-sm text-gray-600">We pull real questions from search data (DataForSEO) and generate strategic questions based on your industry.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
-                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
                     <div>
                       <span className="font-semibold text-gray-900">Multi-Platform Testing</span>
                       <p className="text-sm text-gray-600">Each question is sent to all 4 AI platforms: ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. We run multiple tests per platform for statistical reliability.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
-                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
                     <div>
                       <span className="font-semibold text-gray-900">Response Analysis</span>
                       <p className="text-sm text-gray-600">We analyze each response for brand mentions, positioning, sentiment, and competitor references using pattern matching and NLP.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
-                    <span className="bg-purple-100 text-purple-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
+                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
                     <div>
                       <span className="font-semibold text-gray-900">Technical Audit</span>
                       <p className="text-sm text-gray-600">If you provided a domain, we scan your website for schema markup, content structure, FAQ sections, and robots.txt settings that affect AI visibility.</p>
@@ -1340,7 +1340,7 @@ function transformAnalysisData(data: any) {
       icon: iconMap[stageData.stage] || "Brain",
       color: 
         stageData.stage === "awareness" ? "from-blue-500 to-blue-600" :
-        stageData.stage === "consideration" ? "from-purple-500 to-purple-600" :
+        stageData.stage === "consideration" ? "from-cyan-500 to-cyan-600" :
         "from-pink-500 to-pink-600",
       questions: stageData.questions || [],
       portrayal: stageData.portrayal || {

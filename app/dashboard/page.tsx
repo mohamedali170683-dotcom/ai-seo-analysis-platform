@@ -224,7 +224,7 @@ export default function DashboardPage() {
                 tier === "free" 
                   ? "bg-gray-100 text-gray-700 border border-gray-200" 
                   : tier === "professional"
-                    ? "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200"
+                    ? "bg-gradient-to-r from-cyan-100 to-cyan-50 text-cyan-700 border border-blue-200"
                     : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200"
               }`}>
                 {tier === "free" ? (
@@ -255,7 +255,7 @@ export default function DashboardPage() {
               {tier === "free" && (
                 <Link
                   href="/pricing"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
+                  className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
                   Upgrade
@@ -285,7 +285,7 @@ export default function DashboardPage() {
             <div className="text-xs opacity-75 mt-1">{stats.completedAnalyses} completed</div>
           </div>
 
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+          <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold opacity-90">Questions Tested</span>
               <HelpCircle className="w-5 h-5 opacity-75" />
@@ -308,7 +308,7 @@ export default function DashboardPage() {
         <div className="mb-8">
           <Link
             href="/analyze"
-            className="block bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all hover:scale-[1.01]"
+            className="block bg-gradient-to-br from-slate-800 via-slate-700 to-cyan-700 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all hover:scale-[1.01]"
           >
             <div className="flex items-center mb-4">
               <div className="bg-white bg-opacity-20 p-4 rounded-xl mr-4">
@@ -407,7 +407,7 @@ export default function DashboardPage() {
               <p className="text-gray-500 mb-4">No analyses yet. Start my first AI visibility analysis!</p>
               <Link
                 href="/analyze"
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 inline-flex items-center gap-2 font-semibold"
+                className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 inline-flex items-center gap-2 font-semibold"
               >
                 <Brain className="w-5 h-5" />
                 Start My First Analysis
@@ -435,7 +435,7 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-3">
                             <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden max-w-xs">
                               <div
-                                className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-500"
+                                className="bg-gradient-to-r from-cyan-500 to-cyan-400 h-2 rounded-full transition-all duration-500"
                                 style={{ width: `${analysis.progress || 0}%` }}
                               ></div>
                             </div>
@@ -463,7 +463,7 @@ export default function DashboardPage() {
                       {analysis.status === "completed" ? (
                         <Link
                           href={`/results/${analysis.id}`}
-                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 flex items-center gap-1 font-semibold"
+                          className="px-4 py-2 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 flex items-center gap-1 font-semibold"
                         >
                           Show My Report
                           <ArrowRight className="w-4 h-4" />

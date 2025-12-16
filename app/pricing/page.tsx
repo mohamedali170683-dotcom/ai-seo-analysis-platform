@@ -53,7 +53,7 @@ export default function PricingPage() {
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-br from-cyan-600 to-cyan-500 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900">Velaris</span>
@@ -173,10 +173,10 @@ export default function PricingPage() {
           </div>
 
           {/* PROFESSIONAL TIER - TARGET (highlighted) */}
-          <div className="order-1 lg:order-2 relative border-2 border-blue-500 rounded-2xl p-8 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-2xl scale-105 lg:scale-110 z-10">
+          <div className="order-1 lg:order-2 relative border-2 border-blue-500 rounded-2xl p-8 bg-gradient-to-br from-cyan-50 via-white to-slate-50 shadow-2xl scale-105 lg:scale-110 z-10">
             {/* Most Popular Badge */}
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-lg">
+              <span className="bg-gradient-to-r from-cyan-600 to-cyan-500 text-white text-sm font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-lg">
                 <Star className="w-4 h-4" /> Most Popular
               </span>
             </div>
@@ -230,7 +230,7 @@ export default function PricingPage() {
 
             <button
               onClick={handleStartTrial}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+              className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-4 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
             >
               Start My {TRIAL_DAYS}-Day Free Trial
               <ArrowRight className="w-5 h-5" />
@@ -414,7 +414,7 @@ export default function PricingPage() {
         </div>
 
         {/* Final CTA */}
-        <div className="text-center mt-16 p-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl text-white">
+        <div className="text-center mt-16 p-8 bg-gradient-to-r from-cyan-600 to-cyan-500 rounded-2xl text-white">
           <h2 className="text-3xl font-bold mb-4">Ready to improve your AI visibility?</h2>
           <p className="text-white/90 mb-6 max-w-xl mx-auto">
             Start with a free check to see where you stand, or jump into Professional for the complete picture.

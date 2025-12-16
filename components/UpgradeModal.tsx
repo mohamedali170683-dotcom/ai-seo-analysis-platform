@@ -59,7 +59,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
         </button>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-6 text-white text-center">
+        <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-cyan-700 p-6 text-white text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="w-5 h-5" />
             <span className="text-sm font-medium opacity-90">Unlock Full AI Visibility Analysis</span>
@@ -250,7 +250,7 @@ export function PremiumBadge({
   className?: string;
 }) {
   const colors = tier === "professional" 
-    ? "from-blue-100 to-purple-100 text-blue-700 border-blue-200"
+    ? "from-cyan-100 to-cyan-50 text-cyan-700 border-blue-200"
     : "from-amber-100 to-yellow-100 text-amber-700 border-amber-200";
   
   return (
@@ -396,7 +396,7 @@ export function VisibilityGapAlert({
 
       <button
         onClick={onUpgrade}
-        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
       >
         Get My Fix Recommendations — €590/mo
         <ArrowRight className="w-4 h-4" />
