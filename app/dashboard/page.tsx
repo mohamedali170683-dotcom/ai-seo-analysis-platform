@@ -255,7 +255,7 @@ export default function DashboardPage() {
               {tier === "free" && (
                 <Link
                   href="/pricing"
-                  className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all"
+                  className="px-6 py-3 min-h-[48px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl flex items-center gap-2 font-semibold transition-all"
                 >
                   <Sparkles className="w-4 h-4" />
                   Upgrade
@@ -263,7 +263,7 @@ export default function DashboardPage() {
               )}
               <Link
                 href="/analyze"
-                className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 flex items-center gap-2 font-semibold shadow-lg"
+                className="px-6 py-3 min-h-[48px] bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center gap-2 font-semibold shadow-lg transition-all hover:scale-[1.02]"
               >
                 <Brain className="w-4 h-4" />
                 Start My Analysis
@@ -274,55 +274,61 @@ export default function DashboardPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Stats Cards */}
+        {/* Stats Cards - Apple Style */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-8 text-white">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold opacity-90">AI Visibility Analyses</span>
-              <Brain className="w-5 h-5 opacity-75" />
+              <span className="text-sm font-medium text-gray-500">AI Visibility Analyses</span>
+              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                <Brain className="w-5 h-5 text-blue-500" />
+              </div>
             </div>
-            <div className="text-3xl font-bold">{stats.totalAnalyses}</div>
-            <div className="text-xs opacity-75 mt-1">{stats.completedAnalyses} completed</div>
+            <div className="text-3xl font-bold text-gray-900">{stats.totalAnalyses}</div>
+            <div className="text-sm text-gray-500 mt-1">{stats.completedAnalyses} completed</div>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl shadow-lg p-8 text-white">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold opacity-90">Questions Tested</span>
-              <HelpCircle className="w-5 h-5 opacity-75" />
+              <span className="text-sm font-medium text-gray-500">Questions Tested</span>
+              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                <HelpCircle className="w-5 h-5 text-purple-500" />
+              </div>
             </div>
-            <div className="text-3xl font-bold">{stats.totalAnalyses * 9}</div>
-            <div className="text-xs opacity-75 mt-1">Across all analyses</div>
+            <div className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 9}</div>
+            <div className="text-sm text-gray-500 mt-1">Across all analyses</div>
           </div>
 
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg p-8 text-white">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-semibold opacity-90">AI Responses Analyzed</span>
-              <Bot className="w-5 h-5 opacity-75" />
+              <span className="text-sm font-medium text-gray-500">AI Responses</span>
+              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                <Bot className="w-5 h-5 text-green-500" />
+              </div>
             </div>
-            <div className="text-3xl font-bold">{stats.totalAnalyses * 81}</div>
-            <div className="text-xs opacity-75 mt-1">3 tests × 4 platforms × questions</div>
+            <div className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 81}</div>
+            <div className="text-sm text-gray-500 mt-1">3 tests × 4 platforms</div>
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Apple Style */}
         <div className="mb-8">
           <Link
             href="/analyze"
-            className="block bg-gradient-to-br from-slate-800 via-slate-700 to-cyan-700 rounded-xl shadow-lg p-8 text-white hover:shadow-xl transition-all hover:scale-[1.01]"
+            className="block bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-md transition-all hover:border-blue-200"
           >
             <div className="flex items-center mb-4">
-              <div className="bg-white bg-opacity-20 p-4 rounded-xl mr-4">
-                <Brain className="w-8 h-8" />
+              <div className="bg-blue-50 p-4 rounded-2xl mr-4">
+                <Brain className="w-8 h-8 text-blue-500" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">Run My Next Audit</h2>
-                <p className="text-blue-100">You choose the questions & platforms</p>
+                <h2 className="text-2xl font-bold text-gray-900">Run My Next Audit</h2>
+                <p className="text-gray-500">You choose the questions & platforms</p>
               </div>
             </div>
-            <p className="text-sm text-blue-100 mb-4">
-              Select from real search data questions and strategic questions. Test on ChatGPT, Gemini, Copilot, and Perplexity. Get data-driven recommendations.
+            <p className="text-sm text-gray-600 mb-4">
+              Test your brand on ChatGPT, Gemini, Copilot, and Perplexity. Get visibility scores and recommendations.
             </p>
-            <div className="flex items-center text-sm font-semibold">
+            <div className="flex items-center text-sm font-semibold text-blue-500">
               Start My Analysis
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
