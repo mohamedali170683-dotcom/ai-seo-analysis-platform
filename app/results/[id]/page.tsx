@@ -93,6 +93,7 @@ export default function ResultsPage() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("pending");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [expandedSchemas, setExpandedSchemas] = useState<string[]>([]);
 
   // Helper to show upgrade modal
   const openUpgradeModal = (trigger: UpgradeModalTrigger) => {
@@ -837,108 +838,257 @@ export default function ResultsPage() {
               </button>
             </div>
 
-            {/* Crawl Transparency - Show what was actually crawled */}
-            {reportData.websiteAudit.pagesCrawled && reportData.websiteAudit.pagesCrawled.length > 0 && (
-              <div className="mb-8 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-2xl">🕷️</span>
-                  <h3 className="text-lg font-bold text-gray-900">Real Crawler Results</h3>
-                  <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                    ✓ {reportData.websiteAudit.totalPagesCrawled || reportData.websiteAudit.pagesCrawled.length} pages crawled
-                  </span>
-                </div>
-                
-                {/* Sitemap status */}
-                <div className="flex items-center gap-4 mb-4 text-sm">
-                  <div className={`flex items-center gap-1 ${reportData.websiteAudit.sitemapFound ? 'text-green-600' : 'text-amber-600'}`}>
-                    {reportData.websiteAudit.sitemapFound ? '✅' : '⚠️'}
-                    <span>Sitemap: {reportData.websiteAudit.sitemapFound ? 'Found' : 'Not found'}</span>
-                  </div>
-                  {reportData.websiteAudit.sitemapUrl && (
-                    <span className="text-gray-500 text-xs">{reportData.websiteAudit.sitemapUrl}</span>
-                  )}
-                </div>
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* SECTION 1: STATUS QUO - What We Found */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">1</div>
+                <h3 className="text-xl font-bold text-gray-900">Status Quo: What We Analyzed</h3>
+              </div>
 
-                {/* Pages list */}
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {reportData.websiteAudit.pagesCrawled.map((page: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between bg-white rounded-lg px-4 py-2 text-sm">
-                      <div className="flex-1 min-w-0">
-                        <span className="text-gray-700 truncate block" title={page.url}>
-                          {page.url?.replace(/^https?:\/\/[^\/]+/, '') || '/'}
-                        </span>
-                        {page.title && <span className="text-xs text-gray-400 truncate block">{page.title}</span>}
+              {/* Crawl Overview Cards */}
+              {reportData.websiteAudit.pagesCrawled && reportData.websiteAudit.pagesCrawled.length > 0 && (() => {
+                const pages = reportData.websiteAudit.pagesCrawled;
+                const productPages = pages.filter((p: any) => {
+                  const path = p.url?.replace(/^https?:\/\/[^\/]+/, '') || '';
+                  return /-\d{5,}$/.test(path) || /\d{8,}/.test(path) || (path.split('-').length >= 3 && path.length > 15);
+                });
+                const faqPages = pages.filter((p: any) => /faq|help|support/i.test(p.url || ''));
+                const pagesWithSchema = pages.filter((p: any) => p.schemas && p.schemas.length > 0);
+                
+                return (
+                  <div className="space-y-6">
+                    {/* Summary Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-blue-700">{pages.length}</div>
+                        <div className="text-sm text-blue-600 font-medium">Pages Crawled</div>
                       </div>
-                      <div className="flex items-center gap-3 ml-4 flex-shrink-0">
-                        <span className="text-xs text-gray-500">{page.wordCount || 0} words</span>
-                        {page.schemas && page.schemas.length > 0 && (
-                          <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded">
-                            {page.schemas.join(', ')}
-                          </span>
-                        )}
-                        {page.hasFAQ && (
-                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded">FAQ</span>
-                        )}
-                        <span className={`text-xs ${page.status === 200 ? 'text-green-500' : 'text-red-500'}`}>
-                          {page.status === 200 ? '✓' : '✗'}
-                        </span>
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-purple-700">{productPages.length}</div>
+                        <div className="text-sm text-purple-600 font-medium">Product Pages</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-cyan-700">{faqPages.length}</div>
+                        <div className="text-sm text-cyan-600 font-medium">FAQ Pages</div>
+                      </div>
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-green-700">{pagesWithSchema.length}</div>
+                        <div className="text-sm text-green-600 font-medium">With Schema</div>
                       </div>
                     </div>
-                  ))}
-                </div>
-                
-                <p className="text-xs text-gray-500 mt-3">
-                  Our crawler fetched these pages in real-time, checking robots.txt, schema markup, content structure, and FAQ sections.
-                </p>
-              </div>
-            )}
 
-            {/* Schema Markup Status */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">📋 Schema Markup Status</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {/* URLs Analyzed */}
+                    <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="font-semibold text-gray-900">🕷️ URLs Analyzed</span>
+                        {reportData.websiteAudit.sitemapFound && (
+                          <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                            from sitemap
+                          </span>
+                        )}
+                      </div>
+                      <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {pages.map((page: any, i: number) => {
+                          const path = page.url?.replace(/^https?:\/\/[^\/]+/, '') || '/';
+                          const isProduct = /-\d{5,}$/.test(path) || /\d{8,}/.test(path) || (path.split('-').length >= 3 && path.length > 15);
+                          const isFaq = /faq|help|support/i.test(path);
+                          const hasSchema = page.schemas && page.schemas.length > 0;
+                          
+                          return (
+                            <div key={i} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 text-sm">
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                                hasSchema ? 'bg-green-500' : 'bg-gray-300'
+                              }`} />
+                              <span className="text-gray-700 truncate flex-1" title={page.url}>
+                                {path}
+                              </span>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                {isProduct && (
+                                  <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded">Product</span>
+                                )}
+                                {isFaq && (
+                                  <span className="text-xs bg-cyan-100 text-cyan-600 px-2 py-0.5 rounded">FAQ</span>
+                                )}
+                                {hasSchema && (
+                                  <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded">
+                                    {page.schemas.join(', ')}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Technical Checks */}
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className={`rounded-xl p-4 border-2 ${
+                        reportData.websiteAudit.sitemapFound ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xl">{reportData.websiteAudit.sitemapFound ? '✅' : '⚠️'}</span>
+                          <span className="font-semibold text-gray-900">Sitemap</span>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {reportData.websiteAudit.sitemapFound ? 'Found and accessible' : 'Not found or inaccessible'}
+                        </p>
+                      </div>
+                      <div className={`rounded-xl p-4 border-2 ${
+                        reportData.websiteAudit.robotsAllowsAI !== false ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xl">{reportData.websiteAudit.robotsAllowsAI !== false ? '✅' : '❌'}</span>
+                          <span className="font-semibold text-gray-900">AI Bots</span>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {reportData.websiteAudit.robotsAllowsAI !== false ? 'Allowed to crawl' : 'Blocked in robots.txt'}
+                        </p>
+                      </div>
+                      <div className={`rounded-xl p-4 border-2 ${
+                        reportData.websiteAudit.faqContent?.hasFAQSection ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'
+                      }`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xl">{reportData.websiteAudit.faqContent?.hasFAQSection ? '✅' : '⚠️'}</span>
+                          <span className="font-semibold text-gray-900">FAQ Content</span>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {reportData.websiteAudit.faqContent?.hasFAQSection ? 'Detected on pages' : 'No FAQ sections found'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* SECTION 2: CHALLENGES - What's Missing */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-bold text-sm">2</div>
+                <h3 className="text-xl font-bold text-gray-900">Challenges: Schema Gaps Identified</h3>
+              </div>
+
+              {/* Schema Status Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
-                  { name: "Organization", has: reportData.websiteAudit.schemas?.hasOrganization },
-                  { name: "Product", has: reportData.websiteAudit.schemas?.hasProduct },
-                  { name: "FAQ", has: reportData.websiteAudit.schemas?.hasFAQ },
-                  { name: "Review", has: reportData.websiteAudit.schemas?.hasReview },
+                  { name: "Organization", has: reportData.websiteAudit.schemas?.hasOrganization, icon: "🏢", impact: "Brand identity" },
+                  { name: "Product", has: reportData.websiteAudit.schemas?.hasProduct, icon: "🛍️", impact: "Shopping AI" },
+                  { name: "FAQ", has: reportData.websiteAudit.schemas?.hasFAQ, icon: "❓", impact: "3x AI citations" },
+                  { name: "Review", has: reportData.websiteAudit.schemas?.hasReview, icon: "⭐", impact: "Trust signals" },
                 ].map((schema) => (
-                  <div key={schema.name} className={`p-4 rounded-xl text-center ${
-                    schema.has ? "bg-green-50 border-2 border-green-200" : "bg-red-50 border-2 border-red-200"
+                  <div key={schema.name} className={`p-4 rounded-xl text-center transition-all ${
+                    schema.has 
+                      ? "bg-green-50 border-2 border-green-200" 
+                      : "bg-red-50 border-2 border-red-200"
                   }`}>
                     <div className="text-2xl mb-1">{schema.has ? "✅" : "❌"}</div>
                     <div className="font-semibold text-gray-900">{schema.name}</div>
-                    <div className="text-xs text-gray-600">{schema.has ? "Found" : "Missing"}</div>
+                    <div className="text-xs text-gray-500 mt-1">{schema.impact}</div>
                   </div>
                 ))}
               </div>
+
+              {/* Transparency - Why we reached these conclusions */}
+              <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-5 border border-gray-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-lg">🔍</span>
+                  <span className="font-semibold text-gray-900">Our Analysis Explained</span>
+                </div>
+                <div className="space-y-3">
+                  {reportData.websiteAudit.robotsAnalysisReason && (
+                    <div className="bg-white rounded-lg p-3 border-l-4 border-blue-400">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-gray-900 text-sm">🤖 robots.txt</span>
+                        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                          reportData.websiteAudit.robotsAllowsAI !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {reportData.websiteAudit.robotsAllowsAI !== false ? 'OK' : 'Blocked'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600">{reportData.websiteAudit.robotsAnalysisReason}</p>
+                    </div>
+                  )}
+                  {reportData.websiteAudit.sitemapAnalysisReason && (
+                    <div className="bg-white rounded-lg p-3 border-l-4 border-cyan-400">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-gray-900 text-sm">🗺️ Sitemap</span>
+                        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                          reportData.websiteAudit.sitemapFound ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {reportData.websiteAudit.sitemapFound ? 'Found' : 'Missing'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600">{reportData.websiteAudit.sitemapAnalysisReason}</p>
+                    </div>
+                  )}
+                  {reportData.websiteAudit.productSchemaReason && (
+                    <div className="bg-white rounded-lg p-3 border-l-4 border-purple-400">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-gray-900 text-sm">🛍️ Product Schema</span>
+                        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
+                          reportData.websiteAudit.schemas?.hasProduct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {reportData.websiteAudit.schemas?.hasProduct ? 'Found' : 'Missing'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-600">{reportData.websiteAudit.productSchemaReason}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
-            {/* Schema Examples - Show what's missing and how to add it */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* SECTION 3: ACTIONS - What to Do */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
             {(!reportData.websiteAudit.schemas?.hasOrganization || 
               !reportData.websiteAudit.schemas?.hasProduct || 
               !reportData.websiteAudit.schemas?.hasFAQ) && (
               <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">💡 Schema Markup Examples to Add</h3>
-                <p className="text-gray-600 mb-4">
-                  Schema markup (JSON-LD) helps AI platforms understand your content structure. Add these scripts to your HTML <code className="bg-gray-100 px-1 rounded">&lt;head&gt;</code> section:
+                <div className="flex items-center gap-2 mb-6">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold text-sm">3</div>
+                  <h3 className="text-xl font-bold text-gray-900">Actions: Schema Markup to Add</h3>
+                </div>
+
+                <p className="text-gray-600 mb-4 text-sm">
+                  Click each schema type below to see the exact code to add. Place these in your HTML <code className="bg-gray-100 px-1 rounded text-xs">&lt;head&gt;</code> section.
                 </p>
                 
-                <div className="space-y-6">
-                  {/* Organization Schema Example */}
+                <div className="space-y-3">
+                  {/* Organization Schema - Expandable */}
                   {!reportData.websiteAudit.schemas?.hasOrganization && (
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                      <div className="flex items-start gap-3 mb-4">
-                        <span className="text-2xl">🏢</span>
-                        <div>
-                          <h4 className="font-bold text-gray-900">Organization Schema</h4>
-                          <p className="text-sm text-gray-600">
-                            <strong>Why it matters:</strong> Helps AI understand your brand identity, making it more likely to mention your company correctly in responses. AI platforms use this to verify company information and associate your brand with your domain.
-                          </p>
+                    <div className="border border-blue-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setExpandedSchemas(prev => 
+                          prev.includes('organization') 
+                            ? prev.filter(s => s !== 'organization')
+                            : [...prev, 'organization']
+                        )}
+                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">🏢</span>
+                          <div className="text-left">
+                            <span className="font-bold text-gray-900">Organization Schema</span>
+                            <p className="text-xs text-gray-600">Helps AI identify your brand • Add to homepage</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                        <pre className="text-sm text-green-400 whitespace-pre-wrap">
+                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${
+                          expandedSchemas.includes('organization') ? 'rotate-180' : ''
+                        }`} />
+                      </button>
+                      {expandedSchemas.includes('organization') && (
+                        <div className="p-4 bg-white border-t border-blue-100">
+                          <p className="text-sm text-gray-600 mb-3">
+                            <strong>Why it matters:</strong> Helps AI understand your brand identity, making it more likely to mention your company correctly in responses.
+                          </p>
+                          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                            <pre className="text-xs text-green-400 whitespace-pre-wrap">
 {`<script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -946,94 +1096,103 @@ export default function ResultsPage() {
   "name": "${reportData.brandName || 'Your Company Name'}",
   "url": "${reportData.domain ? `https://${reportData.domain}` : 'https://yourwebsite.com'}",
   "logo": "${reportData.domain ? `https://${reportData.domain}/logo.png` : 'https://yourwebsite.com/logo.png'}",
-  "description": "Brief description of your company and what you do",
-  "foundingDate": "2020",
+  "description": "Brief description of your company",
   "sameAs": [
-    "https://www.linkedin.com/company/yourcompany",
-    "https://twitter.com/yourcompany",
-    "https://www.facebook.com/yourcompany"
-  ],
-  "contactPoint": {
-    "@type": "ContactPoint",
-    "telephone": "+1-XXX-XXX-XXXX",
-    "contactType": "customer service"
-  }
+    "https://linkedin.com/company/yourcompany",
+    "https://twitter.com/yourcompany"
+  ]
 }
 </script>`}
-                        </pre>
-                      </div>
-                      <p className="text-xs text-blue-600 mt-3">
-                        📍 Add this to your homepage and About page
-                      </p>
+                            </pre>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {/* Product Schema Example */}
+                  {/* Product Schema - Expandable */}
                   {!reportData.websiteAudit.schemas?.hasProduct && (
-                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
-                      <div className="flex items-start gap-3 mb-4">
-                        <span className="text-2xl">🛍️</span>
-                        <div>
-                          <h4 className="font-bold text-gray-900">Product Schema</h4>
-                          <p className="text-sm text-gray-600">
-                            <strong>Why it matters:</strong> When users ask AI "What's the best [product category]?" or "Where can I buy [product]?", AI platforms look for Product schema to provide accurate recommendations. Without it, your products won't appear in AI shopping recommendations.
-                          </p>
+                    <div className="border border-purple-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setExpandedSchemas(prev => 
+                          prev.includes('product') 
+                            ? prev.filter(s => s !== 'product')
+                            : [...prev, 'product']
+                        )}
+                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">🛍️</span>
+                          <div className="text-left">
+                            <span className="font-bold text-gray-900">Product Schema</span>
+                            <p className="text-xs text-gray-600">Required for AI shopping recommendations • Add to each product page</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                        <pre className="text-sm text-green-400 whitespace-pre-wrap">
+                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${
+                          expandedSchemas.includes('product') ? 'rotate-180' : ''
+                        }`} />
+                      </button>
+                      {expandedSchemas.includes('product') && (
+                        <div className="p-4 bg-white border-t border-purple-100">
+                          <p className="text-sm text-gray-600 mb-3">
+                            <strong>Why it matters:</strong> When users ask AI "What's the best [product]?", AI platforms look for Product schema. Without it, your products won't appear in recommendations.
+                          </p>
+                          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                            <pre className="text-xs text-green-400 whitespace-pre-wrap">
 {`<script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Product",
   "name": "Your Product Name",
-  "image": "https://yourwebsite.com/product-image.jpg",
-  "description": "Detailed product description",
-  "brand": {
-    "@type": "Brand",
-    "name": "${reportData.brandName || 'Your Brand'}"
-  },
-  "sku": "PRODUCT-SKU-123",
+  "image": "https://yoursite.com/product.jpg",
+  "description": "Product description",
+  "brand": { "@type": "Brand", "name": "${reportData.brandName || 'Your Brand'}" },
+  "sku": "SKU-123",
   "offers": {
     "@type": "Offer",
-    "url": "https://yourwebsite.com/product-page",
     "priceCurrency": "EUR",
     "price": "29.99",
-    "availability": "https://schema.org/InStock",
-    "seller": {
-      "@type": "Organization",
-      "name": "${reportData.brandName || 'Your Company'}"
-    }
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.5",
-    "reviewCount": "89"
+    "availability": "https://schema.org/InStock"
   }
 }
 </script>`}
-                        </pre>
-                      </div>
-                      <p className="text-xs text-purple-600 mt-3">
-                        📍 Add this to each product page (customize for each product)
-                      </p>
+                            </pre>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  {/* FAQ Schema Example */}
+                  {/* FAQ Schema - Expandable */}
                   {!reportData.websiteAudit.schemas?.hasFAQ && (
-                    <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl p-6 border border-cyan-200">
-                      <div className="flex items-start gap-3 mb-4">
-                        <span className="text-2xl">❓</span>
-                        <div>
-                          <h4 className="font-bold text-gray-900">FAQ Schema</h4>
-                          <p className="text-sm text-gray-600">
-                            <strong>Why it matters:</strong> This is the HIGHEST IMPACT schema for AI visibility. When users ask questions, AI platforms directly cite FAQ schema content. Pages with FAQ schema are <strong>3x more likely</strong> to be referenced in AI responses.
-                          </p>
+                    <div className="border border-cyan-200 rounded-xl overflow-hidden">
+                      <button
+                        onClick={() => setExpandedSchemas(prev => 
+                          prev.includes('faq') 
+                            ? prev.filter(s => s !== 'faq')
+                            : [...prev, 'faq']
+                        )}
+                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-teal-50 hover:from-cyan-100 hover:to-teal-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl">❓</span>
+                          <div className="text-left">
+                            <span className="font-bold text-gray-900">FAQ Schema</span>
+                            <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Highest Impact!</span>
+                            <p className="text-xs text-gray-600">3x more likely to be cited by AI • Add to FAQ & landing pages</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                        <pre className="text-sm text-green-400 whitespace-pre-wrap">
+                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${
+                          expandedSchemas.includes('faq') ? 'rotate-180' : ''
+                        }`} />
+                      </button>
+                      {expandedSchemas.includes('faq') && (
+                        <div className="p-4 bg-white border-t border-cyan-100">
+                          <p className="text-sm text-gray-600 mb-3">
+                            <strong>Why it matters:</strong> AI platforms directly cite FAQ schema content. Pages with FAQ schema are <strong>3x more likely</strong> to be referenced in AI responses.
+                          </p>
+                          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                            <pre className="text-xs text-green-400 whitespace-pre-wrap">
 {`<script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -1041,156 +1200,68 @@ export default function ResultsPage() {
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What is ${reportData.brandName || 'your product/service'}?",
+      "name": "What is ${reportData.brandName || 'your product'}?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Provide a clear, comprehensive answer here. Be specific and include key details that differentiate you from competitors."
+        "text": "Clear answer with key differentiators."
       }
     },
     {
       "@type": "Question",
-      "name": "How does ${reportData.brandName || 'your product'} compare to alternatives?",
+      "name": "How does it compare to alternatives?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Explain your unique value proposition and key differentiators. AI will use this when users ask comparison questions."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "What are the benefits of using ${reportData.brandName || 'your product'}?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "List concrete benefits with specific details. Include statistics or outcomes if available."
+        "text": "Your unique value proposition."
       }
     }
   ]
 }
 </script>`}
-                        </pre>
-                      </div>
-                      <p className="text-xs text-cyan-600 mt-3">
-                        📍 Add this to your FAQ page and key landing pages. Include questions that match how users ask AI assistants.
-                      </p>
+                            </pre>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Implementation Tips */}
-                <div className="mt-6 bg-amber-50 rounded-xl p-4 border border-amber-200">
-                  <div className="flex items-start gap-2">
-                    <span className="text-xl">💡</span>
-                    <div>
-                      <h4 className="font-semibold text-amber-900">Implementation Tips</h4>
-                      <ul className="text-sm text-amber-800 mt-2 space-y-1 list-disc list-inside">
-                        <li>Place JSON-LD scripts in the <code className="bg-amber-100 px-1 rounded">&lt;head&gt;</code> or at the end of <code className="bg-amber-100 px-1 rounded">&lt;body&gt;</code></li>
-                        <li>Validate your schema at <a href="https://validator.schema.org/" target="_blank" rel="noopener noreferrer" className="underline text-amber-700 hover:text-amber-900">validator.schema.org</a></li>
-                        <li>Test with Google's <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener noreferrer" className="underline text-amber-700 hover:text-amber-900">Rich Results Test</a></li>
-                        <li>Schema changes take 2-4 weeks to be indexed by AI platforms</li>
-                        <li>Keep answers comprehensive but concise (50-200 words per FAQ answer)</li>
-                      </ul>
-                    </div>
-                  </div>
+                {/* Quick Implementation Tips */}
+                <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                  <a href="https://validator.schema.org/" target="_blank" rel="noopener noreferrer" 
+                     className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors">
+                    🔗 Validate Schema
+                  </a>
+                  <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener noreferrer"
+                     className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors">
+                    🔗 Google Rich Results Test
+                  </a>
+                  <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full">
+                    ⏱️ Takes 2-4 weeks to index
+                  </span>
                 </div>
               </div>
             )}
 
-            {/* Content Analysis */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">📝 Content Analysis</h3>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-blue-50 rounded-xl p-4">
-                  <div className="text-3xl font-bold text-blue-700">{reportData.websiteAudit.content?.wordCount || 0}</div>
-                  <div className="text-sm text-gray-600">Total Words Crawled</div>
-                </div>
-                <div className={`rounded-xl p-4 ${reportData.websiteAudit.faqContent?.hasFAQSection ? "bg-green-50" : "bg-red-50"}`}>
-                  <div className="text-3xl font-bold">{reportData.websiteAudit.faqContent?.hasFAQSection ? "✅" : "❌"}</div>
-                  <div className="text-sm text-gray-600">FAQ Section</div>
-                </div>
-                <div className={`rounded-xl p-4 ${reportData.websiteAudit.robotsAllowsAI !== false ? "bg-green-50" : "bg-red-50"}`}>
-                  <div className="text-3xl font-bold">{reportData.websiteAudit.robotsAllowsAI !== false ? "✅" : "❌"}</div>
-                  <div className="text-sm text-gray-600">AI Bots Allowed</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Transparency Section - How we reached our conclusions */}
-            <div className="mb-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🔍</span>
-                <h3 className="text-lg font-bold text-gray-900">How We Analyzed Your Site</h3>
-              </div>
-              
-              <div className="space-y-4">
-                {/* robots.txt Analysis */}
-                {reportData.websiteAudit.robotsAnalysisReason && (
-                  <div className="bg-white rounded-lg p-4 border-l-4 border-blue-400">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🤖</span>
-                      <span className="font-semibold text-gray-900">robots.txt Analysis</span>
-                      <span className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${
-                        reportData.websiteAudit.robotsAllowsAI !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {reportData.websiteAudit.robotsAllowsAI !== false ? 'AI Allowed' : 'AI Blocked'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">{reportData.websiteAudit.robotsAnalysisReason}</p>
-                  </div>
-                )}
-
-                {/* Sitemap Analysis */}
-                {reportData.websiteAudit.sitemapAnalysisReason && (
-                  <div className="bg-white rounded-lg p-4 border-l-4 border-cyan-400">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🗺️</span>
-                      <span className="font-semibold text-gray-900">Sitemap Analysis</span>
-                      <span className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${
-                        reportData.websiteAudit.sitemapFound ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {reportData.websiteAudit.sitemapFound ? 'Found' : 'Not Found'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">{reportData.websiteAudit.sitemapAnalysisReason}</p>
-                  </div>
-                )}
-
-                {/* Product Schema Analysis */}
-                {reportData.websiteAudit.productSchemaReason && (
-                  <div className="bg-white rounded-lg p-4 border-l-4 border-purple-400">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-lg">🛍️</span>
-                      <span className="font-semibold text-gray-900">Product Schema Analysis</span>
-                      <span className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${
-                        reportData.websiteAudit.schemas?.hasProduct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                      }`}>
-                        {reportData.websiteAudit.schemas?.hasProduct ? 'Found' : 'Not Found'}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600">{reportData.websiteAudit.productSchemaReason}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Issues & Recommendations */}
+            {/* Issues Found */}
             {reportData.websiteAudit.issues?.length > 0 && (
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">⚠️ Issues Found</h3>
-                <div className="space-y-3">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">⚠️ Additional Issues</h3>
+                <div className="space-y-2">
                   {reportData.websiteAudit.issues.map((issue: any, i: number) => (
-                    <div key={i} className={`p-4 rounded-lg border-l-4 ${
-                      issue.severity === "high" ? "bg-red-50 border-red-500" :
-                      issue.severity === "medium" ? "bg-yellow-50 border-yellow-500" : "bg-blue-50 border-blue-500"
+                    <div key={i} className={`p-3 rounded-lg border-l-4 ${
+                      issue.severity === "critical" ? "bg-red-50 border-red-500" :
+                      issue.severity === "warning" ? "bg-yellow-50 border-yellow-500" : "bg-blue-50 border-blue-500"
                     }`}>
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                          issue.severity === "high" ? "bg-red-200 text-red-800" :
-                          issue.severity === "medium" ? "bg-yellow-200 text-yellow-800" : "bg-blue-200 text-blue-800"
+                          issue.severity === "critical" ? "bg-red-200 text-red-800" :
+                          issue.severity === "warning" ? "bg-yellow-200 text-yellow-800" : "bg-blue-200 text-blue-800"
                         }`}>
                           {issue.severity?.toUpperCase()}
                         </span>
-                        <span className="font-semibold text-gray-900">{issue.issue}</span>
+                        <span className="font-medium text-gray-900 text-sm">{issue.issue}</span>
                       </div>
-                      <p className="text-sm text-gray-600">{issue.impact}</p>
+                      <p className="text-xs text-gray-600 mt-1 ml-16">{issue.impact}</p>
                     </div>
                   ))}
                 </div>
