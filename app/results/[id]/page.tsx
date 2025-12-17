@@ -837,6 +837,62 @@ export default function ResultsPage() {
               </button>
             </div>
 
+            {/* Crawl Transparency - Show what was actually crawled */}
+            {reportData.websiteAudit.pagesCrawled && reportData.websiteAudit.pagesCrawled.length > 0 && (
+              <div className="mb-8 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-100">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🕷️</span>
+                  <h3 className="text-lg font-bold text-gray-900">Real Crawler Results</h3>
+                  <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                    ✓ {reportData.websiteAudit.totalPagesCrawled || reportData.websiteAudit.pagesCrawled.length} pages crawled
+                  </span>
+                </div>
+                
+                {/* Sitemap status */}
+                <div className="flex items-center gap-4 mb-4 text-sm">
+                  <div className={`flex items-center gap-1 ${reportData.websiteAudit.sitemapFound ? 'text-green-600' : 'text-amber-600'}`}>
+                    {reportData.websiteAudit.sitemapFound ? '✅' : '⚠️'}
+                    <span>Sitemap: {reportData.websiteAudit.sitemapFound ? 'Found' : 'Not found'}</span>
+                  </div>
+                  {reportData.websiteAudit.sitemapUrl && (
+                    <span className="text-gray-500 text-xs">{reportData.websiteAudit.sitemapUrl}</span>
+                  )}
+                </div>
+
+                {/* Pages list */}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {reportData.websiteAudit.pagesCrawled.map((page: any, i: number) => (
+                    <div key={i} className="flex items-center justify-between bg-white rounded-lg px-4 py-2 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-gray-700 truncate block" title={page.url}>
+                          {page.url?.replace(/^https?:\/\/[^\/]+/, '') || '/'}
+                        </span>
+                        {page.title && <span className="text-xs text-gray-400 truncate block">{page.title}</span>}
+                      </div>
+                      <div className="flex items-center gap-3 ml-4 flex-shrink-0">
+                        <span className="text-xs text-gray-500">{page.wordCount || 0} words</span>
+                        {page.schemas && page.schemas.length > 0 && (
+                          <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded">
+                            {page.schemas.join(', ')}
+                          </span>
+                        )}
+                        {page.hasFAQ && (
+                          <span className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded">FAQ</span>
+                        )}
+                        <span className={`text-xs ${page.status === 200 ? 'text-green-500' : 'text-red-500'}`}>
+                          {page.status === 200 ? '✓' : '✗'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <p className="text-xs text-gray-500 mt-3">
+                  Our crawler fetched these pages in real-time, checking robots.txt, schema markup, content structure, and FAQ sections.
+                </p>
+              </div>
+            )}
+
             {/* Schema Markup Status */}
             <div className="mb-8">
               <h3 className="text-lg font-bold text-gray-900 mb-4">📋 Schema Markup Status</h3>
@@ -864,7 +920,7 @@ export default function ResultsPage() {
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 rounded-xl p-4">
                   <div className="text-3xl font-bold text-blue-700">{reportData.websiteAudit.content?.wordCount || 0}</div>
-                  <div className="text-sm text-gray-600">Words on Homepage</div>
+                  <div className="text-sm text-gray-600">Total Words Crawled</div>
                 </div>
                 <div className={`rounded-xl p-4 ${reportData.websiteAudit.faqContent?.hasFAQSection ? "bg-green-50" : "bg-red-50"}`}>
                   <div className="text-3xl font-bold">{reportData.websiteAudit.faqContent?.hasFAQSection ? "✅" : "❌"}</div>

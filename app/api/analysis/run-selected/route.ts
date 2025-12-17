@@ -597,6 +597,14 @@ async function executeSelectedAnalysis(
     
     if (websiteAudit) {
       console.log(`📊 [EXEC] Website audit complete - Score: ${websiteAudit.technicalScore}/100`);
+      console.log(`   Pages crawled: ${websiteAudit.totalPagesCrawled || 1}`);
+      console.log(`   Sitemap found: ${websiteAudit.sitemapFound || false}`);
+      if (websiteAudit.pagesCrawled && websiteAudit.pagesCrawled.length > 0) {
+        console.log(`   Crawled URLs:`);
+        websiteAudit.pagesCrawled.forEach((page: any) => {
+          console.log(`     - ${page.url} (${page.status === 200 ? '✓' : '✗'} ${page.wordCount} words)`);
+        });
+      }
       
       // Save website audit as an insight
       await prisma.aIInsight.create({
@@ -629,6 +637,11 @@ async function executeSelectedAnalysis(
             technicalScore: websiteAudit.technicalScore,
             issues: websiteAudit.issues,
             recommendations: websiteAudit.recommendations,
+            // Crawl transparency - show what pages were actually crawled
+            pagesCrawled: websiteAudit.pagesCrawled || [],
+            totalPagesCrawled: websiteAudit.totalPagesCrawled || 1,
+            sitemapFound: websiteAudit.sitemapFound || false,
+            sitemapUrl: websiteAudit.sitemapUrl || null,
             schemas: {
               hasOrganization: websiteAudit.hasOrganizationSchema,
               hasProduct: websiteAudit.hasProductSchema,

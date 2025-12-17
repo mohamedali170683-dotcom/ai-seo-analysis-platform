@@ -1,17 +1,40 @@
 /**
  * Website Audit Service
  * Scrapes and analyzes websites for technical SEO factors that impact AI visibility
+ * 
+ * REAL CRAWLER: This service makes actual HTTP requests to:
+ * 1. Homepage
+ * 2. robots.txt
+ * 3. sitemap.xml (if available)
+ * 4. Key pages discovered from sitemap or links (FAQ, Products, About, etc.)
  */
 
 export interface SchemaMarkup {
   type: string;
   found: boolean;
+  foundOnPages?: string[];
   details?: any;
+}
+
+export interface CrawledPage {
+  url: string;
+  status: number | 'error';
+  title: string;
+  schemas: string[];
+  wordCount: number;
+  hasFAQ: boolean;
+  crawlTimeMs: number;
 }
 
 export interface WebsiteAuditResult {
   url: string;
   crawledAt: Date;
+  
+  // Crawl Info - NEW: Shows exactly what was crawled
+  pagesCrawled: CrawledPage[];
+  totalPagesCrawled: number;
+  sitemapFound: boolean;
+  sitemapUrl: string | null;
   
   // Basic Info
   title: string;
@@ -72,74 +95,195 @@ export interface TechnicalRecommendation {
 
 export class WebsiteAuditService {
   private timeout: number;
+  private maxPagesToCrawl: number;
 
-  constructor(timeout: number = 15000) { // Reduced default timeout to 15 seconds
+  constructor(timeout: number = 10000, maxPagesToCrawl: number = 10) {
     this.timeout = timeout;
+    this.maxPagesToCrawl = maxPagesToCrawl;
   }
 
   /**
-   * Run full website audit
+   * Run full website audit with MULTI-PAGE CRAWLING
+   * 
+   * Crawl order:
+   * 1. Homepage (always)
+   * 2. robots.txt (always)
+   * 3. sitemap.xml (if available)
+   * 4. Key pages from sitemap OR discovered from homepage links
    */
   async auditWebsite(domain: string): Promise<WebsiteAuditResult> {
-    const url = domain.startsWith("http") ? domain : `https://${domain}`;
+    const baseUrl = domain.startsWith("http") ? domain : `https://${domain}`;
     const startTime = Date.now();
     
-    console.log(`🔍 [AUDIT] Starting website audit for: ${url}`);
+    console.log(`\n${"=".repeat(60)}`);
+    console.log(`🔍 [AUDIT] REAL WEBSITE CRAWLER - Starting audit for: ${baseUrl}`);
+    console.log(`${"=".repeat(60)}`);
+
+    const crawledPages: CrawledPage[] = [];
+    const allSchemaTypes = new Map<string, string[]>(); // type -> pages where found
+    let allFaqQuestions: string[] = [];
+    let totalWordCount = 0;
+    let totalH1Count = 0;
+    let totalH2Count = 0;
+    let totalH3Count = 0;
+    let allH1Text: string[] = [];
 
     try {
-      // Fetch homepage
-      const [homepageData, robotsData] = await Promise.all([
-        this.fetchAndParsePage(url),
-        this.checkRobotsTxt(url),
-      ]);
+      // Step 1: Fetch robots.txt
+      console.log(`\n📋 [CRAWL] Step 1: Checking robots.txt...`);
+      const robotsData = await this.checkRobotsTxt(baseUrl);
+      console.log(`   ✓ robots.txt accessible: ${robotsData.accessible}`);
+      console.log(`   ✓ AI bots allowed: ${robotsData.allowsAIBots}`);
+
+      // Step 2: Fetch homepage
+      console.log(`\n📄 [CRAWL] Step 2: Fetching homepage: ${baseUrl}`);
+      const homepageStart = Date.now();
+      const homepageData = await this.fetchAndParsePage(baseUrl);
+      const homepageCrawlTime = Date.now() - homepageStart;
+      
+      const homepageSchemas = this.analyzeSchemas(homepageData.html);
+      const homepageContent = this.analyzeContent(homepageData.html);
+      const homepageFaq = this.detectFAQSections(homepageData.html);
+      
+      crawledPages.push({
+        url: baseUrl,
+        status: 200,
+        title: homepageData.title,
+        schemas: homepageSchemas.filter(s => s.found).map(s => s.type),
+        wordCount: homepageContent.wordCount,
+        hasFAQ: homepageFaq.hasFAQ,
+        crawlTimeMs: homepageCrawlTime,
+      });
+      
+      // Track schemas found on homepage
+      homepageSchemas.filter(s => s.found).forEach(s => {
+        if (!allSchemaTypes.has(s.type)) allSchemaTypes.set(s.type, []);
+        allSchemaTypes.get(s.type)!.push(baseUrl);
+      });
+      
+      totalWordCount += homepageContent.wordCount;
+      totalH1Count += homepageContent.h1Count;
+      totalH2Count += homepageContent.h2Count;
+      totalH3Count += homepageContent.h3Count;
+      allH1Text = [...allH1Text, ...homepageContent.h1Text];
+      allFaqQuestions = [...allFaqQuestions, ...homepageFaq.questions];
+
+      console.log(`   ✓ Title: "${homepageData.title}"`);
+      console.log(`   ✓ Word count: ${homepageContent.wordCount}`);
+      console.log(`   ✓ Schemas found: ${homepageSchemas.filter(s => s.found).map(s => s.type).join(", ") || "none"}`);
+      console.log(`   ✓ FAQ detected: ${homepageFaq.hasFAQ}`);
+
+      // Step 3: Try to fetch sitemap.xml
+      console.log(`\n🗺️  [CRAWL] Step 3: Looking for sitemap.xml...`);
+      const sitemapData = await this.fetchSitemap(baseUrl);
+      
+      // Step 4: Discover pages to crawl
+      let pagesToCrawl: string[] = [];
+      
+      if (sitemapData.found && sitemapData.urls.length > 0) {
+        console.log(`   ✓ Sitemap found at: ${sitemapData.url}`);
+        console.log(`   ✓ URLs in sitemap: ${sitemapData.urls.length}`);
+        pagesToCrawl = this.selectKeyPagesFromSitemap(sitemapData.urls, baseUrl);
+      } else {
+        console.log(`   ✗ No sitemap found, discovering pages from homepage links...`);
+        pagesToCrawl = this.discoverPagesFromLinks(homepageData.html, baseUrl);
+      }
+      
+      // Also add common important pages that might not be linked
+      const commonPages = ['/faq', '/faqs', '/products', '/services', '/about', '/contact', '/pricing'];
+      for (const page of commonPages) {
+        const fullUrl = new URL(page, baseUrl).toString();
+        if (!pagesToCrawl.includes(fullUrl) && fullUrl !== baseUrl) {
+          pagesToCrawl.push(fullUrl);
+        }
+      }
+      
+      // Limit pages to crawl
+      pagesToCrawl = pagesToCrawl.slice(0, this.maxPagesToCrawl - 1); // -1 because homepage already crawled
+      
+      console.log(`\n📑 [CRAWL] Step 4: Crawling ${pagesToCrawl.length} additional pages...`);
+      
+      // Step 5: Crawl additional pages in parallel (batches of 3)
+      for (let i = 0; i < pagesToCrawl.length; i += 3) {
+        const batch = pagesToCrawl.slice(i, i + 3);
+        const batchResults = await Promise.all(
+          batch.map(url => this.crawlSinglePage(url, allSchemaTypes))
+        );
+        
+        for (const result of batchResults) {
+          if (result) {
+            crawledPages.push(result.crawledPage);
+            totalWordCount += result.content.wordCount;
+            totalH1Count += result.content.h1Count;
+            totalH2Count += result.content.h2Count;
+            totalH3Count += result.content.h3Count;
+            allH1Text = [...allH1Text, ...result.content.h1Text];
+            allFaqQuestions = [...allFaqQuestions, ...result.faq.questions];
+          }
+        }
+      }
 
       const loadTimeMs = Date.now() - startTime;
 
-      // Analyze schemas
-      const schemas = this.analyzeSchemas(homepageData.html);
-      
-      // Analyze content
-      const contentAnalysis = this.analyzeContent(homepageData.html);
-      
-      // Detect FAQ sections
-      const faqAnalysis = this.detectFAQSections(homepageData.html);
-      
-      // Generate issues and recommendations
-      const issues = this.identifyIssues(schemas, contentAnalysis, faqAnalysis, robotsData);
-      const recommendations = this.generateRecommendations(schemas, contentAnalysis, faqAnalysis, robotsData, domain);
+      // Build final schema list with pages where each was found
+      const schemas: SchemaMarkup[] = [
+        "Organization", "Product", "FAQPage", "Review", "AggregateRating",
+        "BreadcrumbList", "Article", "WebPage", "LocalBusiness", "Brand"
+      ].map(type => ({
+        type,
+        found: allSchemaTypes.has(type),
+        foundOnPages: allSchemaTypes.get(type) || [],
+      }));
+
+      // Generate issues and recommendations based on ALL crawled pages
+      const issues = this.identifyIssues(schemas, { h1Count: totalH1Count, h2Count: totalH2Count, wordCount: totalWordCount }, { hasFAQ: allFaqQuestions.length > 0 }, robotsData);
+      const recommendations = this.generateRecommendations(schemas, { h1Count: totalH1Count, h2Count: totalH2Count, h3Count: totalH3Count, wordCount: totalWordCount }, { hasFAQ: allFaqQuestions.length > 0, questions: allFaqQuestions }, robotsData, domain);
       
       // Calculate score
-      const technicalScore = this.calculateScore(schemas, contentAnalysis, faqAnalysis, robotsData);
+      const technicalScore = this.calculateScore(schemas, { h1Count: totalH1Count, h2Count: totalH2Count, wordCount: totalWordCount }, { hasFAQ: allFaqQuestions.length > 0 }, robotsData);
+
+      console.log(`\n${"=".repeat(60)}`);
+      console.log(`✅ [AUDIT] COMPLETE - Crawled ${crawledPages.length} pages in ${loadTimeMs}ms`);
+      console.log(`   Technical Score: ${technicalScore}/100`);
+      console.log(`   Schemas found: ${Array.from(allSchemaTypes.keys()).join(", ") || "none"}`);
+      console.log(`   Total FAQ questions: ${allFaqQuestions.length}`);
+      console.log(`${"=".repeat(60)}\n`);
 
       const result: WebsiteAuditResult = {
-        url,
+        url: baseUrl,
         crawledAt: new Date(),
+        
+        // Crawl transparency
+        pagesCrawled: crawledPages,
+        totalPagesCrawled: crawledPages.length,
+        sitemapFound: sitemapData.found,
+        sitemapUrl: sitemapData.url,
         
         title: homepageData.title,
         description: homepageData.description,
         canonical: homepageData.canonical,
         
         schemas,
-        hasOrganizationSchema: schemas.some(s => s.type === "Organization" && s.found),
-        hasProductSchema: schemas.some(s => s.type === "Product" && s.found),
-        hasFAQSchema: schemas.some(s => s.type === "FAQPage" && s.found),
-        hasReviewSchema: schemas.some(s => s.type === "Review" && s.found),
-        hasBreadcrumbSchema: schemas.some(s => s.type === "BreadcrumbList" && s.found),
+        hasOrganizationSchema: allSchemaTypes.has("Organization"),
+        hasProductSchema: allSchemaTypes.has("Product"),
+        hasFAQSchema: allSchemaTypes.has("FAQPage"),
+        hasReviewSchema: allSchemaTypes.has("Review"),
+        hasBreadcrumbSchema: allSchemaTypes.has("BreadcrumbList"),
         
-        h1Count: contentAnalysis.h1Count,
-        h2Count: contentAnalysis.h2Count,
-        h3Count: contentAnalysis.h3Count,
-        h1Text: contentAnalysis.h1Text,
-        wordCount: contentAnalysis.wordCount,
+        h1Count: totalH1Count,
+        h2Count: totalH2Count,
+        h3Count: totalH3Count,
+        h1Text: allH1Text.slice(0, 10), // Limit to 10
+        wordCount: totalWordCount,
         
-        hasFAQSection: faqAnalysis.hasFAQ,
-        faqQuestions: faqAnalysis.questions,
+        hasFAQSection: allFaqQuestions.length > 0,
+        faqQuestions: [...new Set(allFaqQuestions)].slice(0, 15), // Unique, limit to 15
         
         robotsTxtAccessible: robotsData.accessible,
         robotsTxtContent: robotsData.content,
         allowsAIBots: robotsData.allowsAIBots,
         
-        hasSSL: url.startsWith("https"),
+        hasSSL: baseUrl.startsWith("https"),
         loadTimeMs,
         
         issues,
@@ -147,16 +291,18 @@ export class WebsiteAuditService {
         technicalScore,
       };
 
-      console.log(`✅ [AUDIT] Completed in ${loadTimeMs}ms - Score: ${technicalScore}/100`);
       return result;
 
     } catch (error: any) {
       console.error(`❌ [AUDIT] Failed: ${error.message}`);
       
-      // Return minimal result on error
       return {
-        url,
+        url: baseUrl,
         crawledAt: new Date(),
+        pagesCrawled: crawledPages,
+        totalPagesCrawled: crawledPages.length,
+        sitemapFound: false,
+        sitemapUrl: null,
         title: "",
         description: "",
         canonical: null,
@@ -176,7 +322,7 @@ export class WebsiteAuditService {
         robotsTxtAccessible: false,
         robotsTxtContent: null,
         allowsAIBots: true,
-        hasSSL: url.startsWith("https"),
+        hasSSL: baseUrl.startsWith("https"),
         loadTimeMs: Date.now() - startTime,
         issues: [{
           severity: "critical",
@@ -194,6 +340,177 @@ export class WebsiteAuditService {
         }],
         technicalScore: 0,
       };
+    }
+  }
+
+  /**
+   * Fetch and parse sitemap.xml
+   */
+  private async fetchSitemap(baseUrl: string): Promise<{
+    found: boolean;
+    url: string | null;
+    urls: string[];
+  }> {
+    const sitemapUrls = [
+      '/sitemap.xml',
+      '/sitemap_index.xml',
+      '/sitemap/sitemap.xml',
+    ];
+
+    for (const path of sitemapUrls) {
+      try {
+        const sitemapUrl = new URL(path, baseUrl).toString();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(sitemapUrl, {
+          signal: controller.signal,
+          headers: { "User-Agent": "VelarisAuditBot/1.0" },
+        });
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const xml = await response.text();
+          const urls = this.parseUrlsFromSitemap(xml, baseUrl);
+          if (urls.length > 0) {
+            return { found: true, url: sitemapUrl, urls };
+          }
+        }
+      } catch {
+        // Continue to next sitemap URL
+      }
+    }
+
+    return { found: false, url: null, urls: [] };
+  }
+
+  /**
+   * Parse URLs from sitemap XML
+   */
+  private parseUrlsFromSitemap(xml: string, baseUrl: string): string[] {
+    const urls: string[] = [];
+    
+    // Match <loc> tags
+    const locMatches = xml.matchAll(/<loc>([^<]+)<\/loc>/gi);
+    for (const match of locMatches) {
+      const url = match[1].trim();
+      // Filter to same domain and not the homepage
+      if (url.startsWith(baseUrl) && url !== baseUrl && url !== baseUrl + '/') {
+        urls.push(url);
+      }
+    }
+
+    return urls;
+  }
+
+  /**
+   * Select key pages from sitemap based on importance
+   */
+  private selectKeyPagesFromSitemap(urls: string[], baseUrl: string): string[] {
+    const priorityPatterns = [
+      /\/faq/i, /\/faqs/i, /\/help/i,
+      /\/product/i, /\/products/i, /\/shop/i,
+      /\/service/i, /\/services/i,
+      /\/about/i, /\/company/i,
+      /\/pricing/i, /\/plans/i,
+      /\/blog\/?$/i, // Blog index, not individual posts
+      /\/contact/i,
+    ];
+
+    const selected: string[] = [];
+    
+    // First, add high-priority pages
+    for (const url of urls) {
+      for (const pattern of priorityPatterns) {
+        if (pattern.test(url) && !selected.includes(url)) {
+          selected.push(url);
+          break;
+        }
+      }
+    }
+
+    // Then add some random pages if we have room
+    const remaining = urls.filter(u => !selected.includes(u));
+    const randomSample = remaining.slice(0, this.maxPagesToCrawl - selected.length);
+    
+    return [...selected, ...randomSample];
+  }
+
+  /**
+   * Discover pages from homepage links
+   */
+  private discoverPagesFromLinks(html: string, baseUrl: string): string[] {
+    const urls: string[] = [];
+    const baseHost = new URL(baseUrl).host;
+    
+    // Find all links
+    const linkMatches = html.matchAll(/<a[^>]*href=["']([^"'#]+)["'][^>]*>/gi);
+    
+    for (const match of linkMatches) {
+      try {
+        const href = match[1];
+        const fullUrl = new URL(href, baseUrl).toString();
+        const urlHost = new URL(fullUrl).host;
+        
+        // Only same domain, not already in list, not homepage
+        if (urlHost === baseHost && !urls.includes(fullUrl) && fullUrl !== baseUrl && fullUrl !== baseUrl + '/') {
+          // Skip common non-content pages
+          if (!/\.(pdf|jpg|png|gif|css|js|xml|json)$/i.test(fullUrl) &&
+              !/\/(login|logout|signin|signup|cart|checkout|admin)/i.test(fullUrl)) {
+            urls.push(fullUrl);
+          }
+        }
+      } catch {
+        // Invalid URL, skip
+      }
+    }
+
+    return urls;
+  }
+
+  /**
+   * Crawl a single page and return analysis
+   */
+  private async crawlSinglePage(url: string, allSchemaTypes: Map<string, string[]>): Promise<{
+    crawledPage: CrawledPage;
+    content: { h1Count: number; h2Count: number; h3Count: number; h1Text: string[]; wordCount: number };
+    faq: { hasFAQ: boolean; questions: string[] };
+  } | null> {
+    const startTime = Date.now();
+    
+    try {
+      console.log(`   → Crawling: ${url}`);
+      const pageData = await this.fetchAndParsePage(url);
+      const crawlTime = Date.now() - startTime;
+      
+      const schemas = this.analyzeSchemas(pageData.html);
+      const content = this.analyzeContent(pageData.html);
+      const faq = this.detectFAQSections(pageData.html);
+      
+      // Track schemas found
+      schemas.filter(s => s.found).forEach(s => {
+        if (!allSchemaTypes.has(s.type)) allSchemaTypes.set(s.type, []);
+        allSchemaTypes.get(s.type)!.push(url);
+      });
+      
+      console.log(`     ✓ "${pageData.title}" - ${content.wordCount} words, schemas: ${schemas.filter(s => s.found).map(s => s.type).join(", ") || "none"}`);
+      
+      return {
+        crawledPage: {
+          url,
+          status: 200,
+          title: pageData.title,
+          schemas: schemas.filter(s => s.found).map(s => s.type),
+          wordCount: content.wordCount,
+          hasFAQ: faq.hasFAQ,
+          crawlTimeMs: crawlTime,
+        },
+        content,
+        faq,
+      };
+    } catch (error: any) {
+      console.log(`     ✗ Failed: ${error.message}`);
+      return null;
     }
   }
 
