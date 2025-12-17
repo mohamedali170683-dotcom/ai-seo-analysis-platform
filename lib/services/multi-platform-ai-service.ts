@@ -78,12 +78,13 @@ export class MultiPlatformAIService {
     };
     
     // Initialize Gemini client if API key provided
-    if (geminiApiKey) {
+    if (geminiApiKey && geminiApiKey !== "your-google-gemini-api-key") {
       this.geminiClient = new GoogleGenerativeAI(geminiApiKey);
       this.platformStatus.Gemini = { isReal: true, reason: "Google Gemini API (gemini-1.5-flash)" };
-      console.log("✅ [AI] Gemini API initialized (REAL)");
+      console.log("✅ [AI] Gemini API initialized (REAL) - key: " + geminiApiKey.substring(0, 10) + "...");
     } else {
-      console.log("⚠️ [AI] Gemini API key not provided - will use simulation");
+      console.log("⚠️ [AI] Gemini API key not provided or is placeholder - will SIMULATE via OpenAI");
+      console.log("   → To enable REAL Gemini, set GEMINI_API_KEY in your environment");
     }
     
     // Initialize Perplexity client if API key provided
@@ -419,7 +420,12 @@ export class MultiPlatformAIService {
     competitors: string[],
     numTests: number
   ): Promise<AIResponse[]> {
-    if (!this.geminiClient) return [];
+    if (!this.geminiClient) {
+      console.warn(`⚠️ [Gemini] No client - this shouldn't happen in testGeminiReal`);
+      return [];
+    }
+
+    console.log(`  🔵 [Gemini] Starting ${numTests} REAL API calls...`);
 
     const testPromises = Array.from({ length: numTests }, async (_, idx) => {
       const i = idx + 1;
@@ -434,18 +440,22 @@ export class MultiPlatformAIService {
 
         // Add timeout using Promise.race
         const timeoutPromise = new Promise<null>((resolve) => {
-          setTimeout(() => resolve(null), 10000); // 10s timeout
+          setTimeout(() => resolve(null), 12000); // 12s timeout (increased)
         });
 
         const resultPromise = model.generateContent(question);
         const result = await Promise.race([resultPromise, timeoutPromise]);
         
-        if (!result) return null;
+        if (!result) {
+          console.warn(`  ⚠️ [Gemini] Test ${i} TIMEOUT after 12s`);
+          return null;
+        }
         
         const response = await (result as any).response;
         const fullResponse = response.text();
         
         if (fullResponse) {
+          console.log(`  ✓ [Gemini] Test ${i} got response (${fullResponse.length} chars), mentions "${brandName}": ${fullResponse.toLowerCase().includes(brandName.toLowerCase())}`);
           const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
           return {
             platform: "Gemini" as const,
@@ -457,15 +467,22 @@ export class MultiPlatformAIService {
             ...analysis,
           } as AIResponse;
         }
+        console.warn(`  ⚠️ [Gemini] Test ${i} empty response`);
         return null;
       } catch (error: any) {
-        console.warn(`⚠️ [Gemini] Test ${i} failed: ${error.message}`);
+        console.error(`  ❌ [Gemini] Test ${i} ERROR: ${error.message}`);
+        // Log full error for debugging
+        if (error.message?.includes('API key')) {
+          console.error(`     → Check your GEMINI_API_KEY is valid`);
+        }
         return null;
       }
     });
 
     const results = await Promise.all(testPromises);
-    return results.filter((r): r is AIResponse => r !== null);
+    const validResults = results.filter((r): r is AIResponse => r !== null);
+    console.log(`  🔵 [Gemini] Completed: ${validResults.length}/${numTests} successful`);
+    return validResults;
   }
 
   private analyzeResponse(

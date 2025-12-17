@@ -567,7 +567,9 @@ export default function ResultsPage() {
                       avgPosition: 0,
                       visibilityShare: 0,
                       totalTests: 0,
+                      mentions: 0,
                     };
+                    const hasNoData = data.totalTests === 0;
                     const colorClasses = {
                       green: "border-green-200 bg-green-50",
                       blue: "border-blue-200 bg-blue-50",
@@ -575,35 +577,60 @@ export default function ResultsPage() {
                       purple: "border-purple-200 bg-purple-50",
                     };
                     return (
-                      <div key={platform.name} className={`rounded-xl p-4 border-2 ${colorClasses[platform.color as keyof typeof colorClasses]}`}>
+                      <div key={platform.name} className={`rounded-xl p-4 border-2 ${hasNoData ? 'border-gray-200 bg-gray-50' : colorClasses[platform.color as keyof typeof colorClasses]} relative`}>
+                        {/* Warning badge if no data */}
+                        {hasNoData && (
+                          <div className="absolute -top-2 -right-2 bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">
+                            No data
+                          </div>
+                        )}
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-2xl">{platform.icon}</span>
-                          <span className="font-semibold text-gray-900">{platform.name}</span>
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs text-gray-500">Mention Rate</span>
-                            <span className={`font-bold ${data.mentionRate >= 50 ? "text-green-600" : data.mentionRate >= 25 ? "text-yellow-600" : "text-red-600"}`}>
-                              {Math.round(data.mentionRate)}%
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className={`h-2 rounded-full ${data.mentionRate >= 50 ? "bg-green-500" : data.mentionRate >= 25 ? "bg-yellow-500" : "bg-red-500"}`}
-                              style={{ width: `${Math.min(100, data.mentionRate)}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-500">Avg Position</span>
-                            <span className="font-semibold text-gray-700">
-                              {data.avgPosition > 0 ? `#${data.avgPosition.toFixed(1)}` : "—"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-xs">
-                            <span className="text-gray-500">Visibility Share</span>
-                            <span className="font-semibold text-gray-700">{Math.round(data.visibilityShare)}%</span>
+                          <div>
+                            <span className="font-semibold text-gray-900">{platform.name}</span>
+                            <span className="text-xs text-gray-400 ml-1">({data.totalTests} tests)</span>
                           </div>
                         </div>
+                        {hasNoData ? (
+                          <div className="text-center py-2">
+                            <p className="text-xs text-gray-500">
+                              No responses received.
+                              {platform.name === "Gemini" && " Check GEMINI_API_KEY."}
+                              {platform.name === "Perplexity" && " Check PERPLEXITY_API_KEY."}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-500">Mention Rate</span>
+                              <span className={`font-bold ${data.mentionRate >= 50 ? "text-green-600" : data.mentionRate >= 25 ? "text-yellow-600" : "text-red-600"}`}>
+                                {Math.round(data.mentionRate)}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full ${data.mentionRate >= 50 ? "bg-green-500" : data.mentionRate >= 25 ? "bg-yellow-500" : "bg-red-500"}`}
+                                style={{ width: `${Math.min(100, data.mentionRate)}%` }}
+                              />
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-gray-500">Mentioned</span>
+                              <span className="font-semibold text-gray-700">
+                                {data.mentions || 0} / {data.totalTests}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-gray-500">Avg Position</span>
+                              <span className="font-semibold text-gray-700">
+                                {data.avgPosition > 0 ? `#${data.avgPosition.toFixed(1)}` : "—"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-gray-500">Visibility Share</span>
+                              <span className="font-semibold text-gray-700">{Math.round(data.visibilityShare)}%</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
