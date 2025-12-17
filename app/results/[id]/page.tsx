@@ -914,6 +914,186 @@ export default function ResultsPage() {
               </div>
             </div>
 
+            {/* Schema Examples - Show what's missing and how to add it */}
+            {(!reportData.websiteAudit.schemas?.hasOrganization || 
+              !reportData.websiteAudit.schemas?.hasProduct || 
+              !reportData.websiteAudit.schemas?.hasFAQ) && (
+              <div className="mb-8">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">💡 Schema Markup Examples to Add</h3>
+                <p className="text-gray-600 mb-4">
+                  Schema markup (JSON-LD) helps AI platforms understand your content structure. Add these scripts to your HTML <code className="bg-gray-100 px-1 rounded">&lt;head&gt;</code> section:
+                </p>
+                
+                <div className="space-y-6">
+                  {/* Organization Schema Example */}
+                  {!reportData.websiteAudit.schemas?.hasOrganization && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+                      <div className="flex items-start gap-3 mb-4">
+                        <span className="text-2xl">🏢</span>
+                        <div>
+                          <h4 className="font-bold text-gray-900">Organization Schema</h4>
+                          <p className="text-sm text-gray-600">
+                            <strong>Why it matters:</strong> Helps AI understand your brand identity, making it more likely to mention your company correctly in responses. AI platforms use this to verify company information and associate your brand with your domain.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                        <pre className="text-sm text-green-400 whitespace-pre-wrap">
+{`<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "${reportData.brandName || 'Your Company Name'}",
+  "url": "${reportData.domain ? `https://${reportData.domain}` : 'https://yourwebsite.com'}",
+  "logo": "${reportData.domain ? `https://${reportData.domain}/logo.png` : 'https://yourwebsite.com/logo.png'}",
+  "description": "Brief description of your company and what you do",
+  "foundingDate": "2020",
+  "sameAs": [
+    "https://www.linkedin.com/company/yourcompany",
+    "https://twitter.com/yourcompany",
+    "https://www.facebook.com/yourcompany"
+  ],
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+1-XXX-XXX-XXXX",
+    "contactType": "customer service"
+  }
+}
+</script>`}
+                        </pre>
+                      </div>
+                      <p className="text-xs text-blue-600 mt-3">
+                        📍 Add this to your homepage and About page
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Product Schema Example */}
+                  {!reportData.websiteAudit.schemas?.hasProduct && (
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+                      <div className="flex items-start gap-3 mb-4">
+                        <span className="text-2xl">🛍️</span>
+                        <div>
+                          <h4 className="font-bold text-gray-900">Product Schema</h4>
+                          <p className="text-sm text-gray-600">
+                            <strong>Why it matters:</strong> When users ask AI "What's the best [product category]?" or "Where can I buy [product]?", AI platforms look for Product schema to provide accurate recommendations. Without it, your products won't appear in AI shopping recommendations.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                        <pre className="text-sm text-green-400 whitespace-pre-wrap">
+{`<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": "Your Product Name",
+  "image": "https://yourwebsite.com/product-image.jpg",
+  "description": "Detailed product description",
+  "brand": {
+    "@type": "Brand",
+    "name": "${reportData.brandName || 'Your Brand'}"
+  },
+  "sku": "PRODUCT-SKU-123",
+  "offers": {
+    "@type": "Offer",
+    "url": "https://yourwebsite.com/product-page",
+    "priceCurrency": "EUR",
+    "price": "29.99",
+    "availability": "https://schema.org/InStock",
+    "seller": {
+      "@type": "Organization",
+      "name": "${reportData.brandName || 'Your Company'}"
+    }
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.5",
+    "reviewCount": "89"
+  }
+}
+</script>`}
+                        </pre>
+                      </div>
+                      <p className="text-xs text-purple-600 mt-3">
+                        📍 Add this to each product page (customize for each product)
+                      </p>
+                    </div>
+                  )}
+
+                  {/* FAQ Schema Example */}
+                  {!reportData.websiteAudit.schemas?.hasFAQ && (
+                    <div className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-xl p-6 border border-cyan-200">
+                      <div className="flex items-start gap-3 mb-4">
+                        <span className="text-2xl">❓</span>
+                        <div>
+                          <h4 className="font-bold text-gray-900">FAQ Schema</h4>
+                          <p className="text-sm text-gray-600">
+                            <strong>Why it matters:</strong> This is the HIGHEST IMPACT schema for AI visibility. When users ask questions, AI platforms directly cite FAQ schema content. Pages with FAQ schema are <strong>3x more likely</strong> to be referenced in AI responses.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                        <pre className="text-sm text-green-400 whitespace-pre-wrap">
+{`<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is ${reportData.brandName || 'your product/service'}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Provide a clear, comprehensive answer here. Be specific and include key details that differentiate you from competitors."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does ${reportData.brandName || 'your product'} compare to alternatives?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Explain your unique value proposition and key differentiators. AI will use this when users ask comparison questions."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the benefits of using ${reportData.brandName || 'your product'}?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "List concrete benefits with specific details. Include statistics or outcomes if available."
+      }
+    }
+  ]
+}
+</script>`}
+                        </pre>
+                      </div>
+                      <p className="text-xs text-cyan-600 mt-3">
+                        📍 Add this to your FAQ page and key landing pages. Include questions that match how users ask AI assistants.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Implementation Tips */}
+                <div className="mt-6 bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <div className="flex items-start gap-2">
+                    <span className="text-xl">💡</span>
+                    <div>
+                      <h4 className="font-semibold text-amber-900">Implementation Tips</h4>
+                      <ul className="text-sm text-amber-800 mt-2 space-y-1 list-disc list-inside">
+                        <li>Place JSON-LD scripts in the <code className="bg-amber-100 px-1 rounded">&lt;head&gt;</code> or at the end of <code className="bg-amber-100 px-1 rounded">&lt;body&gt;</code></li>
+                        <li>Validate your schema at <a href="https://validator.schema.org/" target="_blank" rel="noopener noreferrer" className="underline text-amber-700 hover:text-amber-900">validator.schema.org</a></li>
+                        <li>Test with Google's <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener noreferrer" className="underline text-amber-700 hover:text-amber-900">Rich Results Test</a></li>
+                        <li>Schema changes take 2-4 weeks to be indexed by AI platforms</li>
+                        <li>Keep answers comprehensive but concise (50-200 words per FAQ answer)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Content Analysis */}
             <div className="mb-8">
               <h3 className="text-lg font-bold text-gray-900 mb-4">📝 Content Analysis</h3>
