@@ -642,6 +642,10 @@ async function executeSelectedAnalysis(
             totalPagesCrawled: websiteAudit.totalPagesCrawled || 1,
             sitemapFound: websiteAudit.sitemapFound || false,
             sitemapUrl: websiteAudit.sitemapUrl || null,
+            // Analysis reasoning - explain WHY we made each determination
+            robotsAnalysisReason: websiteAudit.robotsAnalysisReason || null,
+            sitemapAnalysisReason: websiteAudit.sitemapAnalysisReason || null,
+            productSchemaReason: websiteAudit.productSchemaReason || null,
             schemas: {
               hasOrganization: websiteAudit.hasOrganizationSchema,
               hasProduct: websiteAudit.hasProductSchema,

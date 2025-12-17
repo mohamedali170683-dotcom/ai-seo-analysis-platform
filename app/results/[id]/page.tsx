@@ -926,10 +926,68 @@ export default function ResultsPage() {
                   <div className="text-3xl font-bold">{reportData.websiteAudit.faqContent?.hasFAQSection ? "✅" : "❌"}</div>
                   <div className="text-sm text-gray-600">FAQ Section</div>
                 </div>
-                <div className={`rounded-xl p-4 ${reportData.websiteAudit.robots?.allowsAIBots ? "bg-green-50" : "bg-red-50"}`}>
-                  <div className="text-3xl font-bold">{reportData.websiteAudit.robots?.allowsAIBots ? "✅" : "❌"}</div>
+                <div className={`rounded-xl p-4 ${reportData.websiteAudit.robotsAllowsAI !== false ? "bg-green-50" : "bg-red-50"}`}>
+                  <div className="text-3xl font-bold">{reportData.websiteAudit.robotsAllowsAI !== false ? "✅" : "❌"}</div>
                   <div className="text-sm text-gray-600">AI Bots Allowed</div>
                 </div>
+              </div>
+            </div>
+
+            {/* Transparency Section - How we reached our conclusions */}
+            <div className="mb-8 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 border border-gray-200">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">🔍</span>
+                <h3 className="text-lg font-bold text-gray-900">How We Analyzed Your Site</h3>
+              </div>
+              
+              <div className="space-y-4">
+                {/* robots.txt Analysis */}
+                {reportData.websiteAudit.robotsAnalysisReason && (
+                  <div className="bg-white rounded-lg p-4 border-l-4 border-blue-400">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🤖</span>
+                      <span className="font-semibold text-gray-900">robots.txt Analysis</span>
+                      <span className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${
+                        reportData.websiteAudit.robotsAllowsAI !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {reportData.websiteAudit.robotsAllowsAI !== false ? 'AI Allowed' : 'AI Blocked'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{reportData.websiteAudit.robotsAnalysisReason}</p>
+                  </div>
+                )}
+
+                {/* Sitemap Analysis */}
+                {reportData.websiteAudit.sitemapAnalysisReason && (
+                  <div className="bg-white rounded-lg p-4 border-l-4 border-cyan-400">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🗺️</span>
+                      <span className="font-semibold text-gray-900">Sitemap Analysis</span>
+                      <span className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${
+                        reportData.websiteAudit.sitemapFound ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {reportData.websiteAudit.sitemapFound ? 'Found' : 'Not Found'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{reportData.websiteAudit.sitemapAnalysisReason}</p>
+                  </div>
+                )}
+
+                {/* Product Schema Analysis */}
+                {reportData.websiteAudit.productSchemaReason && (
+                  <div className="bg-white rounded-lg p-4 border-l-4 border-purple-400">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-lg">🛍️</span>
+                      <span className="font-semibold text-gray-900">Product Schema Analysis</span>
+                      <span className={`ml-auto text-xs px-2 py-1 rounded-full font-medium ${
+                        reportData.websiteAudit.schemas?.hasProduct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {reportData.websiteAudit.schemas?.hasProduct ? 'Found' : 'Not Found'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{reportData.websiteAudit.productSchemaReason}</p>
+                  </div>
+                )}
               </div>
             </div>
 

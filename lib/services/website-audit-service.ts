@@ -65,6 +65,11 @@ export interface WebsiteAuditResult {
   robotsTxtContent: string | null;
   allowsAIBots: boolean;
   
+  // Transparency - explain WHY we made each determination
+  robotsAnalysisReason: string;
+  sitemapAnalysisReason: string;
+  productSchemaReason: string;
+  
   // Performance Indicators
   hasSSL: boolean;
   loadTimeMs: number;
@@ -173,9 +178,9 @@ export class WebsiteAuditService {
       console.log(`   ✓ Schemas found: ${homepageSchemas.filter(s => s.found).map(s => s.type).join(", ") || "none"}`);
       console.log(`   ✓ FAQ detected: ${homepageFaq.hasFAQ}`);
 
-      // Step 3: Try to fetch sitemap.xml
+      // Step 3: Try to fetch sitemap.xml (using URL from robots.txt if available)
       console.log(`\n🗺️  [CRAWL] Step 3: Looking for sitemap.xml...`);
-      const sitemapData = await this.fetchSitemap(baseUrl);
+      const sitemapData = await this.fetchSitemap(baseUrl, robotsData.sitemapFromRobots);
       
       // Step 4: Discover pages to crawl
       let pagesToCrawl: string[] = [];
@@ -235,6 +240,17 @@ export class WebsiteAuditService {
         foundOnPages: allSchemaTypes.get(type) || [],
       }));
 
+      // Generate transparency reasons for Product schema
+      let productSchemaReason = '';
+      const productSchemaFound = allSchemaTypes.has("Product");
+      if (productSchemaFound) {
+        const productPages = allSchemaTypes.get("Product") || [];
+        productSchemaReason = `Product schema FOUND on ${productPages.length} page(s): ${productPages.slice(0, 3).map(u => u.replace(baseUrl, '')).join(', ')}${productPages.length > 3 ? ` (+${productPages.length - 3} more)` : ''}.`;
+      } else {
+        const crawledPagesList = crawledPages.map(p => p.url.replace(baseUrl, '') || '/').join(', ');
+        productSchemaReason = `Product schema NOT FOUND. We crawled ${crawledPages.length} pages (${crawledPagesList.substring(0, 150)}${crawledPagesList.length > 150 ? '...' : ''}). None of these pages contained Product schema markup (JSON-LD). If you have product pages with schema, ensure they are linked from your homepage or included in your sitemap.`;
+      }
+
       // Generate issues and recommendations based on ALL crawled pages
       const issues = this.identifyIssues(schemas, { h1Count: totalH1Count, h2Count: totalH2Count, wordCount: totalWordCount }, { hasFAQ: allFaqQuestions.length > 0 }, robotsData);
       const recommendations = this.generateRecommendations(schemas, { h1Count: totalH1Count, h2Count: totalH2Count, h3Count: totalH3Count, wordCount: totalWordCount }, { hasFAQ: allFaqQuestions.length > 0, questions: allFaqQuestions }, robotsData, domain);
@@ -283,6 +299,11 @@ export class WebsiteAuditService {
         robotsTxtContent: robotsData.content,
         allowsAIBots: robotsData.allowsAIBots,
         
+        // Transparency - explain WHY we made each determination
+        robotsAnalysisReason: robotsData.analysisReason,
+        sitemapAnalysisReason: sitemapData.reason,
+        productSchemaReason,
+        
         hasSSL: baseUrl.startsWith("https"),
         loadTimeMs,
         
@@ -322,6 +343,9 @@ export class WebsiteAuditService {
         robotsTxtAccessible: false,
         robotsTxtContent: null,
         allowsAIBots: true,
+        robotsAnalysisReason: `Could not analyze robots.txt due to error: ${error.message}`,
+        sitemapAnalysisReason: `Could not check sitemap due to error: ${error.message}`,
+        productSchemaReason: `Could not analyze Product schema due to error: ${error.message}`,
         hasSSL: baseUrl.startsWith("https"),
         loadTimeMs: Date.now() - startTime,
         issues: [{
@@ -345,58 +369,181 @@ export class WebsiteAuditService {
 
   /**
    * Fetch and parse sitemap.xml
+   * 
+   * Priority:
+   * 1. Use sitemap URL from robots.txt (most reliable)
+   * 2. Try common sitemap locations
+   * 3. Handle domain variations (www vs non-www)
    */
-  private async fetchSitemap(baseUrl: string): Promise<{
+  private async fetchSitemap(baseUrl: string, sitemapFromRobots: string | null): Promise<{
     found: boolean;
     url: string | null;
     urls: string[];
+    reason: string;
   }> {
-    const sitemapUrls = [
-      '/sitemap.xml',
-      '/sitemap_index.xml',
-      '/sitemap/sitemap.xml',
-    ];
+    // Build list of sitemap URLs to try
+    const sitemapUrlsToTry: string[] = [];
+    
+    // Priority 1: Use the sitemap from robots.txt if available
+    if (sitemapFromRobots) {
+      sitemapUrlsToTry.push(sitemapFromRobots);
+    }
+    
+    // Priority 2: Try common paths with current domain
+    const commonPaths = ['/sitemap.xml', '/sitemap_index.xml', '/sitemap/sitemap.xml'];
+    for (const path of commonPaths) {
+      const url = new URL(path, baseUrl).toString();
+      if (!sitemapUrlsToTry.includes(url)) {
+        sitemapUrlsToTry.push(url);
+      }
+    }
+    
+    // Priority 3: Try www/non-www variations
+    try {
+      const urlObj = new URL(baseUrl);
+      const altHost = urlObj.host.startsWith('www.') 
+        ? urlObj.host.replace('www.', '') 
+        : 'www.' + urlObj.host;
+      const altBase = `${urlObj.protocol}//${altHost}`;
+      for (const path of commonPaths) {
+        const altUrl = new URL(path, altBase).toString();
+        if (!sitemapUrlsToTry.includes(altUrl)) {
+          sitemapUrlsToTry.push(altUrl);
+        }
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
 
-    for (const path of sitemapUrls) {
+    console.log(`   Trying ${sitemapUrlsToTry.length} sitemap URLs...`);
+
+    for (const sitemapUrl of sitemapUrlsToTry) {
       try {
-        const sitemapUrl = new URL(path, baseUrl).toString();
+        console.log(`   → Trying: ${sitemapUrl}`);
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
 
         const response = await fetch(sitemapUrl, {
           signal: controller.signal,
           headers: { "User-Agent": "VelarisAuditBot/1.0" },
+          redirect: 'follow', // Follow redirects
         });
         clearTimeout(timeoutId);
 
         if (response.ok) {
+          const contentType = response.headers.get('content-type') || '';
           const xml = await response.text();
-          const urls = this.parseUrlsFromSitemap(xml, baseUrl);
-          if (urls.length > 0) {
-            return { found: true, url: sitemapUrl, urls };
+          
+          // Check if it's actually XML/sitemap content
+          if (xml.includes('<urlset') || xml.includes('<sitemapindex') || contentType.includes('xml')) {
+            // For sitemap index, we need to fetch child sitemaps
+            if (xml.includes('<sitemapindex')) {
+              console.log(`   ✓ Found sitemap index at: ${sitemapUrl}`);
+              const childSitemapUrls = this.parseUrlsFromSitemap(xml, baseUrl);
+              
+              // Fetch first few child sitemaps to get actual page URLs
+              const allUrls: string[] = [];
+              for (const childUrl of childSitemapUrls.slice(0, 3)) {
+                try {
+                  const childResponse = await fetch(childUrl, {
+                    headers: { "User-Agent": "VelarisAuditBot/1.0" },
+                  });
+                  if (childResponse.ok) {
+                    const childXml = await childResponse.text();
+                    const childUrls = this.parseUrlsFromSitemap(childXml, baseUrl, true);
+                    allUrls.push(...childUrls);
+                  }
+                } catch {
+                  // Skip failed child sitemaps
+                }
+              }
+              
+              if (allUrls.length > 0) {
+                return { 
+                  found: true, 
+                  url: sitemapUrl, 
+                  urls: allUrls,
+                  reason: `Found sitemap index at ${sitemapUrl} with ${childSitemapUrls.length} child sitemaps, extracted ${allUrls.length} URLs.`
+                };
+              }
+            } else {
+              // Regular sitemap
+              const urls = this.parseUrlsFromSitemap(xml, baseUrl, true);
+              if (urls.length > 0) {
+                console.log(`   ✓ Found sitemap at: ${sitemapUrl} with ${urls.length} URLs`);
+                return { 
+                  found: true, 
+                  url: sitemapUrl, 
+                  urls,
+                  reason: `Found sitemap at ${sitemapUrl} containing ${urls.length} URLs.`
+                };
+              } else {
+                console.log(`   ⚠ Sitemap found but contains 0 URLs matching domain`);
+              }
+            }
+          } else {
+            console.log(`   ✗ Not XML content: ${contentType.substring(0, 50)}`);
           }
+        } else {
+          console.log(`   ✗ HTTP ${response.status}`);
         }
-      } catch {
-        // Continue to next sitemap URL
+      } catch (error: any) {
+        console.log(`   ✗ Error: ${error.message}`);
       }
     }
 
-    return { found: false, url: null, urls: [] };
+    return { 
+      found: false, 
+      url: null, 
+      urls: [],
+      reason: `No sitemap found. Tried: ${sitemapUrlsToTry.slice(0, 3).join(', ')}${sitemapUrlsToTry.length > 3 ? ` (+${sitemapUrlsToTry.length - 3} more)` : ''}. Consider adding a sitemap.xml to help AI crawlers discover your pages.`
+    };
   }
 
   /**
    * Parse URLs from sitemap XML
+   * 
+   * @param xml - The sitemap XML content
+   * @param baseUrl - The base URL of the site
+   * @param flexibleDomain - If true, accept URLs from www/non-www variations
    */
-  private parseUrlsFromSitemap(xml: string, baseUrl: string): string[] {
+  private parseUrlsFromSitemap(xml: string, baseUrl: string, flexibleDomain: boolean = false): string[] {
     const urls: string[] = [];
+    
+    // Get base domain for flexible matching
+    let baseDomain = '';
+    try {
+      const urlObj = new URL(baseUrl);
+      baseDomain = urlObj.host.replace(/^www\./, '');
+    } catch {
+      return urls;
+    }
     
     // Match <loc> tags
     const locMatches = xml.matchAll(/<loc>([^<]+)<\/loc>/gi);
     for (const match of locMatches) {
-      const url = match[1].trim();
-      // Filter to same domain and not the homepage
-      if (url.startsWith(baseUrl) && url !== baseUrl && url !== baseUrl + '/') {
-        urls.push(url);
+      let url = match[1].trim();
+      
+      // Decode HTML entities
+      url = url.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+      
+      try {
+        const urlObj = new URL(url);
+        const urlDomain = urlObj.host.replace(/^www\./, '');
+        
+        // Check if URL is from the same domain (or www variation)
+        const isDomainMatch = flexibleDomain 
+          ? urlDomain === baseDomain
+          : url.startsWith(baseUrl);
+        
+        // Skip homepage
+        const isHomepage = urlObj.pathname === '/' || urlObj.pathname === '';
+        
+        if (isDomainMatch && !isHomepage && !urls.includes(url)) {
+          urls.push(url);
+        }
+      } catch {
+        // Invalid URL, skip
       }
     }
 
@@ -562,18 +709,31 @@ export class WebsiteAuditService {
   }
 
   /**
-   * Check robots.txt
+   * Check robots.txt with PROPER analysis
+   * 
+   * AI bots are considered BLOCKED only if:
+   * 1. Specific AI bot user-agents are blocked (GPTBot, ChatGPT-User, Anthropic-AI, etc.)
+   * 2. OR User-agent: * has Disallow: / (blocking entire site for all bots)
+   * 
+   * AI bots are NOT blocked if:
+   * - Only specific paths are blocked (e.g., /checkout/, /admin/)
    */
   private async checkRobotsTxt(baseUrl: string): Promise<{
     accessible: boolean;
     content: string | null;
     allowsAIBots: boolean;
+    sitemapFromRobots: string | null;
+    analysisReason: string;
+    blockedBots: string[];
+    blockedPaths: string[];
   }> {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
     try {
       const robotsUrl = new URL("/robots.txt", baseUrl).toString();
+      console.log(`   Fetching: ${robotsUrl}`);
+      
       const response = await fetch(robotsUrl, {
         signal: controller.signal,
         headers: { "User-Agent": "VelarisAuditBot/1.0" },
@@ -581,32 +741,114 @@ export class WebsiteAuditService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        return { accessible: false, content: null, allowsAIBots: true };
+        return { 
+          accessible: false, 
+          content: null, 
+          allowsAIBots: true,
+          sitemapFromRobots: null,
+          analysisReason: `robots.txt returned HTTP ${response.status} - file not found or inaccessible. When no robots.txt exists, all bots (including AI) are allowed by default.`,
+          blockedBots: [],
+          blockedPaths: [],
+        };
       }
 
       const content = await response.text();
+      console.log(`   robots.txt content length: ${content.length} chars`);
       
-      // Check for AI bot blocks
-      const aiBotPatterns = [
-        /disallow.*gptbot/i,
-        /disallow.*chatgpt/i,
-        /disallow.*anthropic/i,
-        /disallow.*claude/i,
-        /disallow.*bingbot/i,
-        /disallow.*googlebot/i,
-        /user-agent:\s*\*[\s\S]*?disallow:\s*\//i,
-      ];
+      // Extract sitemap URL from robots.txt
+      const sitemapMatch = content.match(/^Sitemap:\s*(.+)$/mi);
+      const sitemapFromRobots = sitemapMatch ? sitemapMatch[1].trim() : null;
+      if (sitemapFromRobots) {
+        console.log(`   Found sitemap in robots.txt: ${sitemapFromRobots}`);
+      }
 
-      const blocksAI = aiBotPatterns.some(pattern => pattern.test(content));
+      // Parse robots.txt properly - look for specific AI bot blocks
+      const aiUserAgents = [
+        'gptbot', 'chatgpt-user', 'chatgpt', 'openai',
+        'anthropic-ai', 'claude-web', 'claudebot',
+        'google-extended', 'bard',
+        'perplexitybot', 'cohere-ai',
+        'ccbot', 'omgilibot', 'diffbot'
+      ];
+      
+      const blockedBots: string[] = [];
+      const blockedPaths: string[] = [];
+      let currentUserAgent = '';
+      let wildcardBlocksRoot = false;
+      
+      // Parse line by line
+      const lines = content.split('\n');
+      for (const line of lines) {
+        const trimmed = line.trim().toLowerCase();
+        
+        // Track current user-agent
+        if (trimmed.startsWith('user-agent:')) {
+          currentUserAgent = trimmed.replace('user-agent:', '').trim();
+        }
+        
+        // Check disallow rules
+        if (trimmed.startsWith('disallow:')) {
+          const path = trimmed.replace('disallow:', '').trim();
+          
+          // Check if this is a root block (blocks entire site)
+          if (path === '/' || path === '/*') {
+            if (currentUserAgent === '*') {
+              wildcardBlocksRoot = true;
+            }
+            // Check if current user-agent is an AI bot
+            if (aiUserAgents.some(bot => currentUserAgent.includes(bot))) {
+              blockedBots.push(currentUserAgent);
+            }
+          }
+          
+          // Track blocked paths for wildcard user-agent
+          if (currentUserAgent === '*' && path && path !== '/') {
+            blockedPaths.push(path);
+          }
+        }
+      }
+
+      // Determine if AI bots are actually blocked
+      let allowsAIBots = true;
+      let analysisReason = '';
+
+      if (blockedBots.length > 0) {
+        allowsAIBots = false;
+        analysisReason = `The following AI bots are explicitly blocked with "Disallow: /": ${blockedBots.join(', ')}. This prevents these AI platforms from crawling your content.`;
+      } else if (wildcardBlocksRoot) {
+        allowsAIBots = false;
+        analysisReason = `robots.txt has "User-agent: *" with "Disallow: /", which blocks ALL bots including AI crawlers from accessing the entire site.`;
+      } else if (blockedPaths.length > 0) {
+        allowsAIBots = true;
+        analysisReason = `AI bots are ALLOWED. Only specific paths are blocked for all bots: ${blockedPaths.slice(0, 5).join(', ')}${blockedPaths.length > 5 ? ` (+${blockedPaths.length - 5} more)` : ''}. This is normal and does not block AI crawlers from indexing your main content.`;
+      } else {
+        allowsAIBots = true;
+        analysisReason = `AI bots are ALLOWED. No blocking rules found for AI crawlers. Your content is accessible to ChatGPT, Claude, Perplexity, and other AI platforms.`;
+      }
+
+      console.log(`   AI bots allowed: ${allowsAIBots}`);
+      console.log(`   Reason: ${analysisReason.substring(0, 100)}...`);
 
       return {
         accessible: true,
         content,
-        allowsAIBots: !blocksAI,
+        allowsAIBots,
+        sitemapFromRobots,
+        analysisReason,
+        blockedBots,
+        blockedPaths,
       };
-    } catch {
+    } catch (error: any) {
       clearTimeout(timeoutId);
-      return { accessible: false, content: null, allowsAIBots: true };
+      return { 
+        accessible: false, 
+        content: null, 
+        allowsAIBots: true,
+        sitemapFromRobots: null,
+        analysisReason: `Could not fetch robots.txt: ${error.message}. When robots.txt is unavailable, all bots are allowed by default.`,
+        blockedBots: [],
+        blockedPaths: [],
+      };
     }
   }
 
