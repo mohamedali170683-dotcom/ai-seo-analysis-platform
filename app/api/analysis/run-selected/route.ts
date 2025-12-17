@@ -455,9 +455,17 @@ async function executeSelectedAnalysis(
         : 0;
 
       // Calculate visibility score (weighted)
-      const positionScore = avgPosition > 0 ? Math.max(0, 100 - (avgPosition - 1) * 20) : 50;
-      const sentimentScore = Math.max(0, Math.min(100, ((sentimentBreakdown.positive - sentimentBreakdown.negative + 100) / 2)));
-      const visibilityScore = Math.round((mentionRate * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2));
+      // IMPORTANT: If brand is NOT mentioned (mentionRate = 0), visibility MUST be 0
+      // Position and sentiment only matter IF the brand is mentioned
+      const positionScore = mentionRate > 0 && avgPosition > 0 
+        ? Math.max(0, 100 - (avgPosition - 1) * 20) 
+        : (mentionRate > 0 ? 50 : 0);  // Only default to 50 if brand IS mentioned but no position data
+      const sentimentScore = mentionRate > 0
+        ? Math.max(0, Math.min(100, ((sentimentBreakdown.positive - sentimentBreakdown.negative + 100) / 2)))
+        : 0;  // Sentiment is 0 if brand not mentioned
+      const visibilityScore = mentionRate > 0
+        ? Math.round((mentionRate * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2))
+        : 0;  // If not mentioned at all, visibility is 0%
 
       // Get AI answer examples - ONE PER PLATFORM with varied sentiment
       const allResponses = stageResults.flatMap((r: any) => 

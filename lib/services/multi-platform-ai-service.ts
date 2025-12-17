@@ -312,7 +312,7 @@ export class MultiPlatformAIService {
         messages.push({ role: "user", content: question });
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10s
 
         const completion = await this.openaiClient.chat.completions.create(
           {
@@ -345,14 +345,22 @@ export class MultiPlatformAIService {
             ...analysis,
           } as AIResponse;
         }
+        console.warn(`  ⚠️ [${platform}] Test ${i} returned empty response`);
         return null;
       } catch (error: any) {
+        console.error(`  ❌ [${platform}] Test ${i} error: ${error.message}`);
         return null;
       }
     });
 
     const results = await Promise.all(testPromises);
-    return results.filter((r): r is AIResponse => r !== null);
+    const validResults = results.filter((r): r is AIResponse => r !== null);
+    
+    if (validResults.length < numTests) {
+      console.warn(`  ⚠️ [${platform}] Only ${validResults.length}/${numTests} tests succeeded`);
+    }
+    
+    return validResults;
   }
   
   /**

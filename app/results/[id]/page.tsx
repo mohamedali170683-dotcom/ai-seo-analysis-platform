@@ -1857,16 +1857,23 @@ function transformAnalysisData(data: any) {
   const avgSentimentNegative = journeyStages.reduce((sum: number, stage: any) => sum + (stage.portrayal.sentiment.negative || 0), 0) / Math.max(journeyStages.length, 1);
   
   // Calculate position score (1st = 100pts, 5th = 20pts)
-  const positionScore = avgPosition > 0 ? Math.max(0, 100 - (avgPosition - 1) * 20) : 50;
+  // IMPORTANT: If brand is NOT mentioned, position doesn't matter - use 0
+  const positionScore = avgMentionRate > 0 && avgPosition > 0 
+    ? Math.max(0, 100 - (avgPosition - 1) * 20) 
+    : (avgMentionRate > 0 ? 50 : 0);  // Only default to 50 if mentioned but no position
   
   // Calculate sentiment score (-100 to +100, normalized to 0-100)
+  // IMPORTANT: If brand is NOT mentioned, sentiment is meaningless - use 0
   const sentimentDiff = avgSentimentPositive - avgSentimentNegative;
-  const normalizedSentimentScore = Math.max(0, Math.min(100, ((sentimentDiff + 100) / 2)));
+  const normalizedSentimentScore = avgMentionRate > 0
+    ? Math.max(0, Math.min(100, ((sentimentDiff + 100) / 2)))
+    : 0;  // Sentiment is 0 if brand not mentioned
 
   // Overall visibility score with proper weights
-  const overallScore = Math.round(
-    (avgMentionRate * 0.50) + (positionScore * 0.30) + (normalizedSentimentScore * 0.20)
-  );
+  // If not mentioned at all (avgMentionRate = 0), score MUST be 0
+  const overallScore = avgMentionRate > 0
+    ? Math.round((avgMentionRate * 0.50) + (positionScore * 0.30) + (normalizedSentimentScore * 0.20))
+    : 0;
 
   const scoringMethodology = {
     mentionRate: {
