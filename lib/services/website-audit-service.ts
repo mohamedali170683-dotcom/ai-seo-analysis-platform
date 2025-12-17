@@ -102,9 +102,9 @@ export class WebsiteAuditService {
   private timeout: number;
   private maxPagesToCrawl: number;
 
-  constructor(timeout: number = 10000, maxPagesToCrawl: number = 10) {
+  constructor(timeout: number = 10000, maxPagesToCrawl: number = 15) {
     this.timeout = timeout;
-    this.maxPagesToCrawl = maxPagesToCrawl;
+    this.maxPagesToCrawl = maxPagesToCrawl; // Increased from 10 to 15 for better schema coverage
   }
 
   /**
@@ -243,12 +243,19 @@ export class WebsiteAuditService {
       // Generate transparency reasons for Product schema
       let productSchemaReason = '';
       const productSchemaFound = allSchemaTypes.has("Product");
+      
+      // Count how many likely product pages we crawled
+      const likelyProductPages = crawledPages.filter(p => {
+        const path = p.url.replace(baseUrl, '');
+        return /-\d{5,}$/.test(path) || /\d{8,}/.test(path) || path.split('-').length >= 3;
+      });
+      
       if (productSchemaFound) {
         const productPages = allSchemaTypes.get("Product") || [];
-        productSchemaReason = `Product schema FOUND on ${productPages.length} page(s): ${productPages.slice(0, 3).map(u => u.replace(baseUrl, '')).join(', ')}${productPages.length > 3 ? ` (+${productPages.length - 3} more)` : ''}.`;
+        productSchemaReason = `Product schema FOUND on ${productPages.length} page(s): ${productPages.slice(0, 3).map(u => u.replace(baseUrl, '')).join(', ')}${productPages.length > 3 ? ` (+${productPages.length - 3} more)` : ''}. This helps AI recommend your products!`;
       } else {
-        const crawledPagesList = crawledPages.map(p => p.url.replace(baseUrl, '') || '/').join(', ');
-        productSchemaReason = `Product schema NOT FOUND. We crawled ${crawledPages.length} pages (${crawledPagesList.substring(0, 150)}${crawledPagesList.length > 150 ? '...' : ''}). None of these pages contained Product schema markup (JSON-LD). If you have product pages with schema, ensure they are linked from your homepage or included in your sitemap.`;
+        const crawledPagesList = crawledPages.map(p => p.url.replace(baseUrl, '') || '/').slice(0, 8).join(', ');
+        productSchemaReason = `Product schema NOT FOUND. We intelligently selected ${crawledPages.length} pages from ${sitemapData.urls.length > 0 ? `your sitemap's ${sitemapData.urls.length} URLs` : 'your site'}, including ${likelyProductPages.length} likely product pages (${crawledPagesList}${crawledPages.length > 8 ? '...' : ''}). None contained Product schema markup (JSON-LD). Add Product schema to your product pages to appear in AI shopping recommendations.`;
       }
 
       // Generate issues and recommendations based on ALL crawled pages
@@ -552,35 +559,125 @@ export class WebsiteAuditService {
 
   /**
    * Select key pages from sitemap based on importance
+   * 
+   * SMART PAGE SELECTION:
+   * 1. Identify likely PRODUCT pages (URLs with SKUs, long slugs, etc.)
+   * 2. Include FAQ/About/Service pages
+   * 3. Sample diverse page types to maximize schema discovery
    */
   private selectKeyPagesFromSitemap(urls: string[], baseUrl: string): string[] {
-    const priorityPatterns = [
-      /\/faq/i, /\/faqs/i, /\/help/i,
-      /\/product/i, /\/products/i, /\/shop/i,
-      /\/service/i, /\/services/i,
-      /\/about/i, /\/company/i,
-      /\/pricing/i, /\/plans/i,
-      /\/blog\/?$/i, // Blog index, not individual posts
-      /\/contact/i,
-    ];
-
-    const selected: string[] = [];
+    console.log(`   Analyzing ${urls.length} URLs to select best pages to crawl...`);
     
-    // First, add high-priority pages
+    // Categorize URLs by likely page type
+    const categories: {
+      products: string[];
+      faq: string[];
+      informational: string[];
+      category: string[];
+      other: string[];
+    } = {
+      products: [],
+      faq: [],
+      informational: [],
+      category: [],
+      other: [],
+    };
+
     for (const url of urls) {
-      for (const pattern of priorityPatterns) {
-        if (pattern.test(url) && !selected.includes(url)) {
-          selected.push(url);
-          break;
+      try {
+        const urlObj = new URL(url);
+        const path = urlObj.pathname.toLowerCase();
+        const pathParts = path.split('/').filter(Boolean);
+        const lastSegment = pathParts[pathParts.length - 1] || '';
+        
+        // FAQ pages
+        if (/faq|help|support|questions/i.test(path)) {
+          categories.faq.push(url);
         }
+        // Informational pages (about, contact, etc.)
+        else if (/about|company|contact|impressum|datenschutz|agb|terms|privacy/i.test(path)) {
+          categories.informational.push(url);
+        }
+        // Category/Collection pages
+        else if (/category|collection|kategorie|shop\/?$/i.test(path) || 
+                 (pathParts.length === 1 && lastSegment.length < 20 && !/-\d+$/.test(lastSegment))) {
+          categories.category.push(url);
+        }
+        // Likely PRODUCT pages - detect by various patterns:
+        else if (
+          // Has SKU/ID number at end (like "product-name-4021457657872")
+          /-\d{5,}$/.test(lastSegment) ||
+          /\d{8,}/.test(lastSegment) ||
+          // Explicit product path
+          /\/product[s]?\//i.test(path) ||
+          /\/shop\//i.test(path) ||
+          /\/item\//i.test(path) ||
+          /\/artikel\//i.test(path) ||
+          // Long hyphenated slug at root (likely product name)
+          (pathParts.length === 1 && lastSegment.includes('-') && lastSegment.length > 15) ||
+          // Multiple hyphens suggest product name
+          (lastSegment.split('-').length >= 3 && lastSegment.length > 10)
+        ) {
+          categories.products.push(url);
+        }
+        else {
+          categories.other.push(url);
+        }
+      } catch {
+        categories.other.push(url);
       }
     }
 
-    // Then add some random pages if we have room
-    const remaining = urls.filter(u => !selected.includes(u));
-    const randomSample = remaining.slice(0, this.maxPagesToCrawl - selected.length);
+    console.log(`   Categorized: ${categories.products.length} products, ${categories.faq.length} FAQ, ${categories.informational.length} info, ${categories.category.length} categories, ${categories.other.length} other`);
+
+    // Select pages with priority for PRODUCTS (to find Product schema)
+    const selected: string[] = [];
+    const maxPerCategory = Math.ceil(this.maxPagesToCrawl / 4);
+
+    // PRIORITY 1: Sample product pages (most important for Product schema!)
+    const productSample = this.sampleArray(categories.products, Math.min(maxPerCategory * 2, 6)); // Up to 6 product pages
+    selected.push(...productSample);
+    console.log(`   Selected ${productSample.length} product pages to check for Product schema`);
+
+    // PRIORITY 2: FAQ pages (for FAQ schema)
+    const faqSample = this.sampleArray(categories.faq, Math.min(maxPerCategory, 2));
+    selected.push(...faqSample.filter(u => !selected.includes(u)));
+
+    // PRIORITY 3: Informational pages (for Organization schema)
+    const infoSample = this.sampleArray(categories.informational, Math.min(maxPerCategory, 2));
+    selected.push(...infoSample.filter(u => !selected.includes(u)));
+
+    // PRIORITY 4: Category pages
+    const catSample = this.sampleArray(categories.category, 1);
+    selected.push(...catSample.filter(u => !selected.includes(u)));
+
+    // Fill remaining slots with other pages
+    const remaining = this.maxPagesToCrawl - selected.length - 1; // -1 for homepage
+    if (remaining > 0) {
+      const otherSample = this.sampleArray(categories.other, remaining);
+      selected.push(...otherSample.filter(u => !selected.includes(u)));
+    }
+
+    console.log(`   Final selection: ${selected.length} pages (+ homepage)`);
     
-    return [...selected, ...randomSample];
+    return selected.slice(0, this.maxPagesToCrawl - 1);
+  }
+
+  /**
+   * Sample random items from an array
+   */
+  private sampleArray<T>(arr: T[], count: number): T[] {
+    if (arr.length <= count) return [...arr];
+    
+    // Take items from different parts of the array for diversity
+    const result: T[] = [];
+    const step = Math.floor(arr.length / count);
+    
+    for (let i = 0; i < count && i * step < arr.length; i++) {
+      result.push(arr[i * step]);
+    }
+    
+    return result;
   }
 
   /**
