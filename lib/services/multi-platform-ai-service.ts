@@ -16,6 +16,7 @@ export interface AIResponse {
   recommendationType: "direct" | "conditional" | "listed" | null;
   competitorsMentioned: string[];
   citedUrls: string[];
+  isRealAPI: boolean; // NEW: Track if this was a real API call
 }
 
 export interface PlatformStats {
@@ -50,24 +51,67 @@ export interface QuestionAnalysis {
 export class MultiPlatformAIService {
   private openaiClient: OpenAI;
   private geminiClient: GoogleGenerativeAI | null = null;
+  private perplexityClient: OpenAI | null = null; // Perplexity uses OpenAI-compatible API
   private testsPerPlatform: number;
+  
+  // Track which platforms have real API access
+  public platformStatus: Record<AIPlatform, { isReal: boolean; reason: string }>;
 
-  constructor(openaiApiKey: string, geminiApiKey?: string, testsPerPlatform: number = 3) {
+  constructor(
+    openaiApiKey: string, 
+    geminiApiKey?: string, 
+    testsPerPlatform: number = 3,
+    perplexityApiKey?: string
+  ) {
     this.openaiClient = new OpenAI({ 
       apiKey: openaiApiKey,
       timeout: 15000,
       maxRetries: 1,
     });
     
+    // Initialize platform status
+    this.platformStatus = {
+      ChatGPT: { isReal: true, reason: "OpenAI API (gpt-4o-mini)" },
+      Gemini: { isReal: false, reason: "No API key - simulated via OpenAI" },
+      Copilot: { isReal: false, reason: "No public API - simulated via OpenAI" },
+      Perplexity: { isReal: false, reason: "No API key - simulated via OpenAI" },
+    };
+    
     // Initialize Gemini client if API key provided
     if (geminiApiKey) {
       this.geminiClient = new GoogleGenerativeAI(geminiApiKey);
+      this.platformStatus.Gemini = { isReal: true, reason: "Google Gemini API (gemini-1.5-flash)" };
       console.log("✅ [AI] Gemini API initialized (REAL)");
     } else {
       console.log("⚠️ [AI] Gemini API key not provided - will use simulation");
     }
     
+    // Initialize Perplexity client if API key provided
+    // Perplexity uses an OpenAI-compatible API
+    if (perplexityApiKey) {
+      this.perplexityClient = new OpenAI({
+        apiKey: perplexityApiKey,
+        baseURL: "https://api.perplexity.ai",
+        timeout: 20000,
+        maxRetries: 1,
+      });
+      this.platformStatus.Perplexity = { isReal: true, reason: "Perplexity API (llama-3.1-sonar-small-128k-online)" };
+      console.log("✅ [AI] Perplexity API initialized (REAL)");
+    } else {
+      console.log("⚠️ [AI] Perplexity API key not provided - will use simulation");
+    }
+    
+    // Note: Microsoft Copilot does not have a public consumer API
+    // Enterprise Copilot requires Azure setup - keeping simulated for now
+    console.log("ℹ️ [AI] Copilot: No public API available - using simulation");
+    
     this.testsPerPlatform = Math.min(testsPerPlatform, 10);
+    
+    // Log overall status
+    console.log("🤖 [AI] Platform Status:");
+    Object.entries(this.platformStatus).forEach(([platform, status]) => {
+      console.log(`   ${status.isReal ? "✅" : "⚠️"} ${platform}: ${status.reason}`);
+    });
   }
 
   /**
@@ -241,12 +285,20 @@ export class MultiPlatformAIService {
       return this.testGeminiReal(question, brandName, competitors, numTests);
     }
     
-    // Use OpenAI for ChatGPT, Copilot (simulated), and Perplexity (simulated)
+    // Use real Perplexity API if available
+    if (platform === "Perplexity" && this.perplexityClient) {
+      return this.testPerplexityReal(question, brandName, competitors, numTests);
+    }
+    
+    // Use OpenAI for ChatGPT, Copilot (simulated), and Perplexity (simulated if no API key)
     const systemPrompts: Record<string, string> = {
       "ChatGPT": "",
       "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers with references when possible.",
       "Perplexity": "You are Perplexity AI, an AI-powered answer engine. Provide comprehensive, well-researched answers with citations and sources when available. Focus on accuracy and include relevant context.",
+      "Gemini": "You are Google Gemini. Provide helpful, accurate, and comprehensive answers.",
     };
+
+    const isRealAPI = platform === "ChatGPT"; // Only ChatGPT is real when using OpenAI directly
 
     // Run all tests for this platform in PARALLEL
     const testPromises = Array.from({ length: numTests }, async (_, idx) => {
@@ -278,9 +330,9 @@ export class MultiPlatformAIService {
           const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
           const modelVersionMap: Record<AIPlatform, string> = {
             "ChatGPT": "gpt-4o-mini",
-            "Copilot": "copilot-sim",
-            "Perplexity": "perplexity-sim",
-            "Gemini": "gemini-sim",
+            "Copilot": "gpt-4o-mini (simulated)",
+            "Perplexity": "gpt-4o-mini (simulated)",
+            "Gemini": "gpt-4o-mini (simulated)",
           };
           return {
             platform,
@@ -288,11 +340,68 @@ export class MultiPlatformAIService {
             queryNumber: i,
             question,
             fullResponse,
+            isRealAPI,
             ...analysis,
           } as AIResponse;
         }
         return null;
       } catch (error: any) {
+        return null;
+      }
+    });
+
+    const results = await Promise.all(testPromises);
+    return results.filter((r): r is AIResponse => r !== null);
+  }
+  
+  /**
+   * Test using REAL Perplexity API
+   * Perplexity has an OpenAI-compatible API with online search capabilities
+   */
+  private async testPerplexityReal(
+    question: string,
+    brandName: string,
+    competitors: string[],
+    numTests: number
+  ): Promise<AIResponse[]> {
+    if (!this.perplexityClient) return [];
+
+    const testPromises = Array.from({ length: numTests }, async (_, idx) => {
+      const i = idx + 1;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // Perplexity can be slower due to search
+
+        const completion = await this.perplexityClient!.chat.completions.create(
+          {
+            model: "llama-3.1-sonar-small-128k-online", // Perplexity's online model with web search
+            messages: [
+              { role: "user", content: question }
+            ],
+            max_tokens: 400,
+            temperature: 0.7,
+          },
+          { signal: controller.signal }
+        );
+
+        clearTimeout(timeoutId);
+        const fullResponse = completion?.choices?.[0]?.message?.content || "";
+        
+        if (fullResponse) {
+          const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+          return {
+            platform: "Perplexity" as const,
+            modelVersion: "llama-3.1-sonar-small-128k-online",
+            queryNumber: i,
+            question,
+            fullResponse,
+            isRealAPI: true,
+            ...analysis,
+          } as AIResponse;
+        }
+        return null;
+      } catch (error: any) {
+        console.warn(`⚠️ [Perplexity] Test ${i} failed: ${error.message}`);
         return null;
       }
     });
@@ -344,6 +453,7 @@ export class MultiPlatformAIService {
             queryNumber: i,
             question,
             fullResponse,
+            isRealAPI: true,
             ...analysis,
           } as AIResponse;
         }
@@ -362,7 +472,7 @@ export class MultiPlatformAIService {
     response: string,
     brandName: string,
     competitors: string[]
-  ): Omit<AIResponse, 'platform' | 'modelVersion' | 'queryNumber' | 'question' | 'fullResponse'> {
+  ): Omit<AIResponse, 'platform' | 'modelVersion' | 'queryNumber' | 'question' | 'fullResponse' | 'isRealAPI'> {
     const lowerResponse = response.toLowerCase();
     const lowerBrand = brandName.toLowerCase();
     const brandMentioned = lowerResponse.includes(lowerBrand);

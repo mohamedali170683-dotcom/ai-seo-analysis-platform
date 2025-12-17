@@ -183,6 +183,7 @@ export async function POST(request: Request) {
     const envVars = {
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
+      perplexityApiKey: process.env.PERPLEXITY_API_KEY,
     };
 
     // Run analysis in background
@@ -232,19 +233,28 @@ async function executeSelectedAnalysis(
   selectedQuestions: SelectedQuestion[],
   selectedPlatforms: AIPlatform[],
   testsPerPlatform: number,
-  envVars: { openaiApiKey: string; geminiApiKey?: string }
+  envVars: { openaiApiKey: string; geminiApiKey?: string; perplexityApiKey?: string }
 ) {
   const startTime = Date.now();
   console.log(`🔄 [EXEC] Starting execution for ${analysisId}`);
 
   try {
-    // Initialize services
+    // Initialize services with all available API keys
     const aiService = new MultiPlatformAIService(
       envVars.openaiApiKey,
       envVars.geminiApiKey,
-      testsPerPlatform
+      testsPerPlatform,
+      envVars.perplexityApiKey
     );
     const auditService = new WebsiteAuditService(30000);
+    
+    // Log platform status
+    console.log(`🤖 [EXEC] Platform API Status:`);
+    Object.entries(aiService.platformStatus).forEach(([platform, status]) => {
+      if (selectedPlatforms.includes(platform as AIPlatform)) {
+        console.log(`   ${status.isReal ? "✅ REAL" : "⚠️ SIM"} ${platform}: ${status.reason}`);
+      }
+    });
 
     // Progress tracking
     const updateProgress = async (progress: number, step: string) => {
