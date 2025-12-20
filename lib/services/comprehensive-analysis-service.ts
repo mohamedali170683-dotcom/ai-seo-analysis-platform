@@ -45,6 +45,7 @@ export interface AnalysisConfig {
   category?: string; // The vertical/industry (e.g., "running shoes", "electric cars")
   openaiApiKey: string;
   geminiApiKey?: string;
+  perplexityApiKey?: string;
   dataForSEOLogin?: string;
   dataForSEOPassword?: string;
   testsPerPlatform?: number;
@@ -64,6 +65,7 @@ export class ComprehensiveAnalysisService {
     console.log(`🔧 [ANALYSIS] - category: ${config.category}`);
     console.log(`🔧 [ANALYSIS] - OpenAI API: ${config.openaiApiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [ANALYSIS] - Gemini API: ${config.geminiApiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [ANALYSIS] - Perplexity API: ${config.perplexityApiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [ANALYSIS] - DataForSEO Login: ${config.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [ANALYSIS] - DataForSEO Password: ${config.dataForSEOPassword ? 'SET' : 'NOT SET'}`);
     
@@ -74,7 +76,8 @@ export class ComprehensiveAnalysisService {
     this.aiTestingService = new MultiPlatformAIService(
       config.openaiApiKey,
       config.geminiApiKey,
-      Math.min(config.testsPerPlatform || 2, 2)
+      Math.min(config.testsPerPlatform || 2, 2),
+      config.perplexityApiKey
     );
     
     // Log platform status for debugging

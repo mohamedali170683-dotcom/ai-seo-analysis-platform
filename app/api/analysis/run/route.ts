@@ -57,6 +57,7 @@ export async function POST(request: Request) {
     const envVars = {
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
+      perplexityApiKey: process.env.PERPLEXITY_API_KEY,
       dataForSEOLogin: process.env.DATAFORSEO_LOGIN,
       dataForSEOPassword: process.env.DATAFORSEO_PASSWORD,
     };
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
     console.log(`🔧 [API] Captured env vars:`);
     console.log(`🔧 [API] - OPENAI: ${envVars.openaiApiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [API] - GEMINI: ${envVars.geminiApiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [API] - PERPLEXITY: ${envVars.perplexityApiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [API] - DATAFORSEO_LOGIN: ${envVars.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     
     // Use waitUntil to keep function alive while returning early
@@ -90,6 +92,7 @@ async function executeAnalysis(
   envVars?: {
     openaiApiKey: string;
     geminiApiKey?: string;
+    perplexityApiKey?: string;
     dataForSEOLogin?: string;
     dataForSEOPassword?: string;
   }
@@ -115,12 +118,14 @@ async function executeAnalysis(
     // Use passed env vars (from closure before waitUntil)
     const apiKey = envVars?.openaiApiKey || process.env.OPENAI_API_KEY!;
     const geminiKey = envVars?.geminiApiKey || process.env.GEMINI_API_KEY;
+    const perplexityKey = envVars?.perplexityApiKey || process.env.PERPLEXITY_API_KEY;
     const dataForSEOLogin = envVars?.dataForSEOLogin || process.env.DATAFORSEO_LOGIN;
     const dataForSEOPassword = envVars?.dataForSEOPassword || process.env.DATAFORSEO_PASSWORD;
     
     console.log(`🔧 [EXEC] Using credentials:`);
     console.log(`🔧 [EXEC] - OPENAI: ${apiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [EXEC] - GEMINI: ${geminiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [EXEC] - PERPLEXITY: ${perplexityKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [EXEC] - DATAFORSEO_LOGIN: ${dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [EXEC] - DATAFORSEO_PASSWORD: ${dataForSEOPassword ? 'SET' : 'NOT SET'}`);
     
@@ -133,6 +138,7 @@ async function executeAnalysis(
       category,
       openaiApiKey: apiKey,
       geminiApiKey: geminiKey,
+      perplexityApiKey: perplexityKey,
       dataForSEOLogin,
       dataForSEOPassword,
       testsPerPlatform: 3,    // 3 tests per platform for statistical significance

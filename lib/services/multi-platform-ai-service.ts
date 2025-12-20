@@ -440,6 +440,7 @@ export class MultiPlatformAIService {
 
   /**
    * Test using REAL Google Gemini API
+   * Using the correct SDK v0.24.x API
    */
   private async testGeminiReal(
     question: string,
@@ -454,99 +455,127 @@ export class MultiPlatformAIService {
 
     console.log(`  🔵 [Gemini] Starting ${numTests} REAL API calls...`);
 
-    const testPromises = Array.from({ length: numTests }, async (_, idx) => {
+    // Run tests sequentially to avoid rate limits
+    const results: (AIResponse | null)[] = [];
+    
+    for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       try {
-        // Try gemini-1.5-flash first, fall back to gemini-pro if needed
+        // Get the model - gemini-1.5-flash is fast and capable
         const model = this.geminiClient!.getGenerativeModel({ 
           model: "gemini-1.5-flash",
-          generationConfig: {
-            maxOutputTokens: 400,
-            temperature: 0.7,
-          },
         });
 
-        // Add timeout using Promise.race
-        const timeoutPromise = new Promise<null>((resolve) => {
-          setTimeout(() => resolve(null), 15000); // 15s timeout
-        });
-
-        console.log(`  → [Gemini] Test ${i} calling API...`);
-        const resultPromise = model.generateContent(question);
-        const result = await Promise.race([resultPromise, timeoutPromise]);
+        console.log(`  → [Gemini] Test ${i}/${numTests} calling API...`);
         
-        if (!result) {
-          console.warn(`  ⚠️ [Gemini] Test ${i} TIMEOUT after 15s`);
-          return null;
-        }
+        // Make the API call with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
         
-        const response = await (result as any).response;
-        
-        // Check for safety blocks or other issues
-        if (!response) {
-          console.warn(`  ⚠️ [Gemini] Test ${i} no response object`);
-          return null;
-        }
-        
-        // Check if response was blocked
-        const candidates = response.candidates;
-        if (!candidates || candidates.length === 0) {
-          const blockReason = response.promptFeedback?.blockReason;
-          if (blockReason) {
-            console.warn(`  ⚠️ [Gemini] Test ${i} BLOCKED: ${blockReason}`);
-          } else {
-            console.warn(`  ⚠️ [Gemini] Test ${i} no candidates in response`);
+        try {
+          const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: question }] }],
+            generationConfig: {
+              maxOutputTokens: 500,
+              temperature: 0.7,
+            },
+          });
+          
+          clearTimeout(timeoutId);
+          
+          // Get the response - in v0.24.x, response is a property not a promise
+          const response = result.response;
+          
+          if (!response) {
+            console.warn(`  ⚠️ [Gemini] Test ${i} no response object`);
+            results.push(null);
+            continue;
           }
-          return null;
+          
+          // Check for safety blocks
+          if (response.promptFeedback?.blockReason) {
+            console.warn(`  ⚠️ [Gemini] Test ${i} BLOCKED: ${response.promptFeedback.blockReason}`);
+            results.push(null);
+            continue;
+          }
+          
+          // Get text from response
+          const fullResponse = response.text();
+          
+          if (fullResponse && fullResponse.length > 0) {
+            const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
+            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars), mentions "${brandName}": ${mentionsBrand}`);
+            const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+            results.push({
+              platform: "Gemini" as const,
+              modelVersion: "gemini-1.5-flash",
+              queryNumber: i,
+              question,
+              fullResponse,
+              isRealAPI: true,
+              ...analysis,
+            } as AIResponse);
+          } else {
+            console.warn(`  ⚠️ [Gemini] Test ${i} empty response text`);
+            results.push(null);
+          }
+        } catch (apiError: any) {
+          clearTimeout(timeoutId);
+          throw apiError;
         }
         
-        const fullResponse = response.text();
-        
-        if (fullResponse && fullResponse.length > 0) {
-          const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
-          console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars), mentions "${brandName}": ${mentionsBrand}`);
-          const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
-          return {
-            platform: "Gemini" as const,
-            modelVersion: "gemini-1.5-flash",
-            queryNumber: i,
-            question,
-            fullResponse,
-            isRealAPI: true,
-            ...analysis,
-          } as AIResponse;
+        // Small delay between requests to avoid rate limiting
+        if (idx < numTests - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
-        console.warn(`  ⚠️ [Gemini] Test ${i} empty response text`);
-        return null;
       } catch (error: any) {
         console.error(`  ❌ [Gemini] Test ${i} ERROR: ${error.message}`);
-        // More detailed error logging
-        if (error.message?.includes('API key') || error.message?.includes('API_KEY')) {
+        
+        // Detailed error analysis
+        const errorMsg = error.message?.toLowerCase() || '';
+        const errorStr = String(error).toLowerCase();
+        
+        if (errorMsg.includes('api key') || errorMsg.includes('api_key') || errorMsg.includes('invalid')) {
           console.error(`     → GEMINI_API_KEY may be invalid or expired`);
-        } else if (error.message?.includes('quota') || error.message?.includes('QUOTA')) {
-          console.error(`     → Gemini API quota exceeded`);
-        } else if (error.message?.includes('not found') || error.message?.includes('404')) {
-          console.error(`     → Model not found - try updating @google/generative-ai package`);
+          console.error(`     → Get a new key at: https://aistudio.google.com/app/apikey`);
+        } else if (errorMsg.includes('quota') || errorMsg.includes('rate') || errorMsg.includes('429')) {
+          console.error(`     → Gemini API rate limit or quota exceeded`);
+          console.error(`     → Wait a minute and try again, or check your API quota`);
+        } else if (errorMsg.includes('not found') || errorMsg.includes('404')) {
+          console.error(`     → Model not found - gemini-1.5-flash may not be available in your region`);
+        } else if (errorMsg.includes('permission') || errorMsg.includes('403')) {
+          console.error(`     → Permission denied - API key may not have access to this model`);
+        } else if (errorMsg.includes('abort') || errorMsg.includes('timeout')) {
+          console.error(`     → Request timed out after 20 seconds`);
         } else if (error.status) {
           console.error(`     → HTTP Status: ${error.status}`);
         }
-        // Log the full error for debugging in development
-        if (process.env.NODE_ENV === 'development') {
-          console.error(`     → Full error:`, error);
-        }
-        return null;
+        
+        // Log full error in development
+        console.error(`     → Error details:`, {
+          name: error.name,
+          message: error.message,
+          status: error.status,
+          statusText: error.statusText,
+        });
+        
+        results.push(null);
       }
-    });
+    }
 
-    const results = await Promise.all(testPromises);
     const validResults = results.filter((r): r is AIResponse => r !== null);
     
     if (validResults.length === 0) {
-      console.error(`  ❌ [Gemini] ALL ${numTests} tests FAILED - check API key and quota`);
+      console.error(`  ❌ [Gemini] ALL ${numTests} tests FAILED`);
+      console.error(`     → Possible causes:`);
+      console.error(`        1. Invalid or expired API key`);
+      console.error(`        2. API quota exceeded`);
+      console.error(`        3. Network/firewall issues`);
+      console.error(`        4. Model not available in your region`);
     } else if (validResults.length < numTests) {
-      console.warn(`  ⚠️ [Gemini] Only ${validResults.length}/${numTests} tests succeeded`);
+      console.warn(`  ⚠️ [Gemini] ${validResults.length}/${numTests} tests succeeded`);
     } else {
-      console.log(`  ✅ [Gemini] All ${numTests} tests succeeded`);
+      console.log(`  ✅ [Gemini] All ${numTests} tests succeeded (REAL API)`);
     }
     
     return validResults;
