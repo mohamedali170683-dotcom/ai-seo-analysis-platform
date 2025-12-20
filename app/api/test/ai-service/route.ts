@@ -143,7 +143,74 @@ export async function POST(request: Request) {
       results.status = "Services initialized successfully";
       results.openaiConfigured = !!process.env.OPENAI_API_KEY;
       results.geminiConfigured = !!process.env.GEMINI_API_KEY;
+      results.geminiKeyInfo = process.env.GEMINI_API_KEY 
+        ? {
+            length: process.env.GEMINI_API_KEY.length,
+            startsWithAI: process.env.GEMINI_API_KEY.startsWith("AI"),
+            isPlaceholder: process.env.GEMINI_API_KEY === "your-google-gemini-api-key",
+          }
+        : null;
       results.dataForSEOConfigured = !!(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD);
+      
+      // Also show platform status from the AI service
+      const aiService = new MultiPlatformAIService(
+        process.env.OPENAI_API_KEY!,
+        process.env.GEMINI_API_KEY,
+        1
+      );
+      results.platformStatus = aiService.platformStatus;
+    }
+    
+    // Gemini-specific test
+    if (testType === "gemini") {
+      console.log("🔵 Testing Gemini API specifically...");
+      
+      if (!process.env.GEMINI_API_KEY) {
+        return NextResponse.json({
+          success: false,
+          error: "GEMINI_API_KEY not configured",
+          suggestion: "Get your key at: https://aistudio.google.com/app/apikey",
+        }, { status: 500 });
+      }
+      
+      const aiService = new MultiPlatformAIService(
+        process.env.OPENAI_API_KEY!,
+        process.env.GEMINI_API_KEY,
+        1
+      );
+      
+      results.geminiStatus = aiService.platformStatus.Gemini;
+      
+      if (aiService.platformStatus.Gemini.isReal) {
+        // Test actual Gemini API call
+        const testQuestion = `What is ${brand} known for?`;
+        const analysis = await aiService.testQuestionOnPlatforms(
+          testQuestion,
+          brand,
+          [],
+          ["Gemini"],
+          1
+        );
+        
+        const geminiResponses = analysis.responses.filter(r => r.platform === "Gemini");
+        results.geminiTest = {
+          question: testQuestion,
+          responsesReceived: geminiResponses.length,
+          responses: geminiResponses.map(r => ({
+            isRealAPI: r.isRealAPI,
+            modelVersion: r.modelVersion,
+            brandMentioned: r.brandMentioned,
+            sentiment: r.sentiment,
+            excerpt: r.fullResponse?.substring(0, 300) + "...",
+          })),
+        };
+        console.log(`✅ Gemini test complete - ${geminiResponses.length} responses`);
+      } else {
+        results.geminiTest = {
+          error: "Gemini not using real API",
+          reason: aiService.platformStatus.Gemini.reason,
+        };
+      }
     }
 
     return NextResponse.json({
@@ -161,6 +228,17 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  // Create service to get platform status
+  let platformStatus = null;
+  if (process.env.OPENAI_API_KEY) {
+    const aiService = new MultiPlatformAIService(
+      process.env.OPENAI_API_KEY,
+      process.env.GEMINI_API_KEY,
+      1
+    );
+    platformStatus = aiService.platformStatus;
+  }
+  
   return NextResponse.json({
     success: true,
     message: "AI Service Test Endpoint",
@@ -168,15 +246,18 @@ export async function GET() {
       method: "POST",
       body: {
         brand: "string (required)",
-        testType: "quick | questions | ai | full (optional, default: quick)",
+        testType: "quick | questions | ai | gemini | dataforseo | full (optional, default: quick)",
       },
     },
     configured: {
       openai: !!process.env.OPENAI_API_KEY,
       gemini: !!process.env.GEMINI_API_KEY,
+      geminiKeyLength: process.env.GEMINI_API_KEY?.length || 0,
       dataforseo: !!(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD),
       ahrefs: !!process.env.AHREFS_API_KEY,
+      perplexity: !!process.env.PERPLEXITY_API_KEY,
     },
+    platformStatus,
   });
 }
 // Force rebuild Wed Dec 10 09:48:36 AM UTC 2025

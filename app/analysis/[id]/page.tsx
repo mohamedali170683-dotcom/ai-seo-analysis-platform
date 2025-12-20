@@ -132,6 +132,7 @@ export default function AnalysisResultsPage({ params }: PageProps) {
   // Parse journey stage data from AI insights
   const journeyStages = analysis.journeyStages || [];
   const overallScore = analysis.stats?.visibilityScore ? Math.round(analysis.stats.visibilityScore) : 0;
+  const platformBreakdown = analysis.stats?.platformBreakdown || {};
 
   return (
     <JourneyStageReport
@@ -140,6 +141,7 @@ export default function AnalysisResultsPage({ params }: PageProps) {
       overallScore={overallScore}
       totalTests={analysis.stats?.totalTests || 0}
       totalQuestions={analysis.stats?.totalQuestions || 0}
+      platformBreakdown={platformBreakdown}
       journeyStages={journeyStages}
       showHeader={true}
       backLink="/"

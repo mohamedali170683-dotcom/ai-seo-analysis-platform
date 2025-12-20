@@ -9,6 +9,7 @@ interface JourneyStageReportProps {
   overallScore: number;
   totalTests: number;
   totalQuestions: number;
+  platformBreakdown?: Record<string, number>; // e.g., { "ChatGPT": 10, "Gemini": 10 }
   scoringMethodology?: {
     mentionRate: { weight: number; description: string; yourScore: number; calculation: string };
     averagePosition: { weight: number; description: string; yourScore: number; calculation: string };
@@ -26,6 +27,7 @@ export function JourneyStageReport({
   overallScore,
   totalTests,
   totalQuestions,
+  platformBreakdown,
   scoringMethodology,
   sentimentDefinitions,
   journeyStages,
@@ -126,7 +128,7 @@ export function JourneyStageReport({
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         {/* Analysis Effort Banner */}
         <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-2xl shadow-2xl p-8 mb-8">
-          <div className="grid md:grid-cols-3 gap-6 text-white text-center">
+          <div className="grid md:grid-cols-3 gap-6 text-white text-center mb-6">
             <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-xl p-4">
               <div className="text-5xl font-bold mb-2">{totalTests}</div>
               <div className="text-sm font-semibold opacity-90">AI Responses Analyzed</div>
@@ -143,6 +145,34 @@ export function JourneyStageReport({
               <div className="text-xs opacity-75 mt-1">Awareness • Consideration • Decision</div>
             </div>
           </div>
+          
+          {/* Platform Breakdown */}
+          {platformBreakdown && Object.keys(platformBreakdown).length > 0 && (
+            <div className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4">
+              <div className="text-sm font-semibold text-white opacity-90 mb-3 text-center">
+                🤖 AI Platforms Tested
+              </div>
+              <div className="flex flex-wrap justify-center gap-3">
+                {Object.entries(platformBreakdown).map(([platform, count]) => (
+                  <div 
+                    key={platform} 
+                    className="bg-white bg-opacity-20 rounded-lg px-4 py-2 flex items-center gap-2"
+                  >
+                    <span className="text-xl">
+                      {platform === "ChatGPT" && "🟢"}
+                      {platform === "Gemini" && "🔵"}
+                      {platform === "Copilot" && "🟣"}
+                      {platform === "Perplexity" && "🟠"}
+                    </span>
+                    <span className="font-semibold text-white">{platform}</span>
+                    <span className="bg-white bg-opacity-30 text-white text-xs font-bold px-2 py-1 rounded-full">
+                      {count} responses
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Overall Score Card */}

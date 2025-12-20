@@ -62,6 +62,8 @@ export class ComprehensiveAnalysisService {
     console.log(`🔧 [ANALYSIS] Creating service with:`);
     console.log(`🔧 [ANALYSIS] - brandName: ${config.brandName}`);
     console.log(`🔧 [ANALYSIS] - category: ${config.category}`);
+    console.log(`🔧 [ANALYSIS] - OpenAI API: ${config.openaiApiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [ANALYSIS] - Gemini API: ${config.geminiApiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [ANALYSIS] - DataForSEO Login: ${config.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [ANALYSIS] - DataForSEO Password: ${config.dataForSEOPassword ? 'SET' : 'NOT SET'}`);
     
@@ -74,6 +76,12 @@ export class ComprehensiveAnalysisService {
       config.geminiApiKey,
       Math.min(config.testsPerPlatform || 2, 2)
     );
+    
+    // Log platform status for debugging
+    console.log(`🤖 [ANALYSIS] AI Platform Status:`);
+    Object.entries(this.aiTestingService.platformStatus).forEach(([platform, status]) => {
+      console.log(`   ${status.isReal ? "✅" : "⚠️"} ${platform}: ${status.reason}`);
+    });
   }
 
   /**

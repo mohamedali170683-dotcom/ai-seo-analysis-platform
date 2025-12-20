@@ -61,7 +61,10 @@ export async function POST(request: Request) {
       dataForSEOPassword: process.env.DATAFORSEO_PASSWORD,
     };
     
-    console.log(`🔧 [API] Captured env vars: DATAFORSEO_LOGIN=${envVars.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [API] Captured env vars:`);
+    console.log(`🔧 [API] - OPENAI: ${envVars.openaiApiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [API] - GEMINI: ${envVars.geminiApiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [API] - DATAFORSEO_LOGIN: ${envVars.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     
     // Use waitUntil to keep function alive while returning early
     waitUntil(executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, envVars));
@@ -117,6 +120,7 @@ async function executeAnalysis(
     
     console.log(`🔧 [EXEC] Using credentials:`);
     console.log(`🔧 [EXEC] - OPENAI: ${apiKey ? 'SET' : 'NOT SET'}`);
+    console.log(`🔧 [EXEC] - GEMINI: ${geminiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [EXEC] - DATAFORSEO_LOGIN: ${dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [EXEC] - DATAFORSEO_PASSWORD: ${dataForSEOPassword ? 'SET' : 'NOT SET'}`);
     
