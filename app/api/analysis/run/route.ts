@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
-import { waitUntil } from "@vercel/functions";
 import { prisma } from "@/lib/db/prisma";
 import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analysis-service";
 
 // Allow up to 5 minutes for analysis
 export const maxDuration = 300;
+
+// Try to import waitUntil for Vercel, but don't fail if not available
+let waitUntil: ((promise: Promise<unknown>) => void) | null = null;
+try {
+  // Dynamic import to avoid issues when not on Vercel
+  const vercelFunctions = require("@vercel/functions");
+  waitUntil = vercelFunctions.waitUntil;
+} catch {
+  // Not on Vercel or package not available - will run inline
+  console.log("ℹ️ [API] @vercel/functions not available - running analysis inline");
+}
 
 export async function POST(request: Request) {
   try {
@@ -53,7 +63,7 @@ export async function POST(request: Request) {
 
     console.log(`✅ [API] Created analysis ${analysis.id}`);
 
-    // Capture env vars NOW before waitUntil (they might not be available later)
+    // Capture env vars
     const envVars = {
       openaiApiKey: process.env.OPENAI_API_KEY!,
       geminiApiKey: process.env.GEMINI_API_KEY,
@@ -68,15 +78,38 @@ export async function POST(request: Request) {
     console.log(`🔧 [API] - PERPLEXITY: ${envVars.perplexityApiKey ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [API] - DATAFORSEO_LOGIN: ${envVars.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     
-    // Use waitUntil to keep function alive while returning early
-    waitUntil(executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, envVars));
-
-    // Return immediately so frontend can start polling
-    return NextResponse.json({
-      success: true,
-      analysisId: analysis.id,
-      message: "Analysis started",
-    });
+    // Execute analysis - either in background (Vercel) or inline (local)
+    const analysisPromise = executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, envVars);
+    
+    if (waitUntil) {
+      // On Vercel: Use waitUntil to run in background
+      console.log(`🔄 [API] Using Vercel waitUntil for background execution`);
+      waitUntil(analysisPromise);
+      
+      // Return immediately so frontend can start polling
+      return NextResponse.json({
+        success: true,
+        analysisId: analysis.id,
+        message: "Analysis started (background)",
+      });
+    } else {
+      // Local/non-Vercel: Run inline and wait for completion
+      console.log(`🔄 [API] Running analysis inline (not on Vercel)`);
+      
+      // Run inline but don't block the response for too long
+      // Start the analysis but return immediately, let it run in the Node.js event loop
+      analysisPromise.catch((err) => {
+        console.error(`❌ [API] Analysis failed:`, err);
+      });
+      
+      // Return immediately - the analysis will continue in the background
+      // This works in Node.js because the promise continues to execute
+      return NextResponse.json({
+        success: true,
+        analysisId: analysis.id,
+        message: "Analysis started",
+      });
+    }
   } catch (error: any) {
     console.error("❌ [API] Error:", error.message);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
