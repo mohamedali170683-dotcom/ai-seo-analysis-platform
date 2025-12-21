@@ -70,7 +70,7 @@ export async function GET(
     // Calculate sentiment score
     const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
     analysis.aiTestResults.forEach((t: any) => {
-      if (t.sentiment && sentimentCounts.hasOwnProperty(t.sentiment)) {
+      if (t.sentiment && Object.prototype.hasOwnProperty.call(sentimentCounts, t.sentiment)) {
         sentimentCounts[t.sentiment as keyof typeof sentimentCounts]++;
       }
     });

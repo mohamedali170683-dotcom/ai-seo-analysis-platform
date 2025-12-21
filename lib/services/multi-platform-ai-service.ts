@@ -548,22 +548,33 @@ export class MultiPlatformAIService {
     for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       try {
-        // Try multiple models for compatibility - gemini-1.5-flash may not be available in all regions
-        const modelNames = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+        // Try multiple models for compatibility - ordered by preference, with older models as fallback
+        // Older models (gemini-1.0-pro) have wider global availability
+        const modelNames = [
+          "gemini-1.5-flash",       // Fast, modern model
+          "gemini-1.5-flash-latest", // Explicit latest version
+          "gemini-1.5-pro",          // More capable 
+          "gemini-1.0-pro",          // Older but more widely available
+          "gemini-1.0-pro-latest",   // Older but explicit latest
+          "gemini-pro",              // Fallback name
+          "models/gemini-pro",       // Explicit path format
+        ];
         let result = null;
         let usedModel = "";
+        let lastError = "";
         
-        console.log(`  → [Gemini] Test ${i}/${numTests} trying models...`);
+        console.log(`  → [Gemini] Test ${i}/${numTests} trying ${modelNames.length} models...`);
         
         for (const modelName of modelNames) {
           try {
+            console.log(`     Trying model: ${modelName}...`);
             const model = this.geminiClient!.getGenerativeModel({ 
               model: modelName,
             });
             
             // Make the API call with timeout
             const timeoutPromise = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error("Timeout")), 20000);
+              setTimeout(() => reject(new Error("Timeout after 20s")), 20000);
             });
             
             const apiPromise = model.generateContent({
@@ -576,21 +587,49 @@ export class MultiPlatformAIService {
             
             result = await Promise.race([apiPromise, timeoutPromise]) as any;
             usedModel = modelName;
-            console.log(`  ✓ [Gemini] Test ${i} using model: ${modelName}`);
+            console.log(`  ✓ [Gemini] Test ${i} SUCCESS with model: ${modelName}`);
             break;
           } catch (modelError: any) {
             const errMsg = modelError.message?.toLowerCase() || '';
-            if (errMsg.includes('not found') || errMsg.includes('404') || errMsg.includes('not supported')) {
-              console.warn(`  ⚠️ [Gemini] Model ${modelName} not available, trying next...`);
+            lastError = modelError.message || 'Unknown error';
+            
+            // Log detailed error for debugging
+            console.warn(`     ✗ ${modelName}: ${modelError.message?.substring(0, 100)}`);
+            
+            // These errors mean we should try the next model
+            if (errMsg.includes('not found') || 
+                errMsg.includes('404') || 
+                errMsg.includes('not supported') ||
+                errMsg.includes('not available') ||
+                errMsg.includes('does not exist') ||
+                errMsg.includes('region')) {
               continue;
             }
-            // For other errors (rate limit, etc.), throw to be caught by outer handler
+            
+            // Rate limiting - wait a bit then try next model
+            if (errMsg.includes('quota') || errMsg.includes('rate') || errMsg.includes('429')) {
+              console.warn(`     → Rate limited, waiting 2s before trying next model...`);
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              continue;
+            }
+            
+            // For permission/auth errors, try next model (might be model-specific permissions)
+            if (errMsg.includes('permission') || errMsg.includes('403') || errMsg.includes('denied')) {
+              continue;
+            }
+            
+            // For other errors (network, etc.), throw to be caught by outer handler
             throw modelError;
           }
         }
         
         if (!result) {
-          console.error(`  ❌ [Gemini] Test ${i} - No compatible model found`);
+          console.error(`  ❌ [Gemini] Test ${i} - No compatible model found after trying ${modelNames.length} models`);
+          console.error(`     Last error: ${lastError}`);
+          console.error(`     This usually means:`);
+          console.error(`     1. Your Gemini API key doesn't have access to any models`);
+          console.error(`     2. Gemini API is not available in Vercel's region`);
+          console.error(`     3. Your API key may be from a region where Gemini is restricted`);
           results.push(null);
           continue;
         }
@@ -708,8 +747,6 @@ export class MultiPlatformAIService {
           console.error(`     → Permission denied - API key may not have access to this model`);
         } else if (errorMsg.includes('abort') || errorMsg.includes('timeout')) {
           console.error(`     → Request timed out after 25 seconds`);
-        } else if (errorMsg.includes('not found') || errorMsg.includes('404')) {
-          console.error(`     → Model not available in your region. Will try fallback models.`);
         } else if (error.status) {
           console.error(`     → HTTP Status: ${error.status}`);
         }
@@ -730,11 +767,16 @@ export class MultiPlatformAIService {
     
     if (validResults.length === 0) {
       console.error(`  ❌ [Gemini] ALL ${numTests} tests FAILED`);
-      console.error(`     → Possible causes:`);
-      console.error(`        1. Invalid or expired API key`);
-      console.error(`        2. API quota exceeded`);
-      console.error(`        3. Network/firewall issues`);
-      console.error(`        4. Model not available in your region`);
+      console.error(`     ┌─────────────────────────────────────────────────────────────┐`);
+      console.error(`     │ GEMINI API TROUBLESHOOTING                                  │`);
+      console.error(`     ├─────────────────────────────────────────────────────────────┤`);
+      console.error(`     │ 1. Check your API key at: https://aistudio.google.com/apikey│`);
+      console.error(`     │ 2. Ensure 'Generative Language API' is enabled in GCP       │`);
+      console.error(`     │ 3. Check Vercel region - try deploying to US regions        │`);
+      console.error(`     │    (Settings > Functions > Region > iad1/sfo1/etc)          │`);
+      console.error(`     │ 4. Verify billing is enabled on your Google Cloud project  │`);
+      console.error(`     │ 5. If using free tier, wait 1 minute for rate limits       │`);
+      console.error(`     └─────────────────────────────────────────────────────────────┘`);
     } else if (validResults.length < numTests) {
       console.warn(`  ⚠️ [Gemini] ${validResults.length}/${numTests} tests succeeded`);
     } else {
@@ -760,7 +802,7 @@ export class MultiPlatformAIService {
    * Extract URLs from text
    */
   private extractUrlsFromText(text: string): string[] {
-    const urlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi;
+    const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi;
     const matches = text.match(urlRegex) || [];
     return [...new Set(matches)]; // Remove duplicates
   }
