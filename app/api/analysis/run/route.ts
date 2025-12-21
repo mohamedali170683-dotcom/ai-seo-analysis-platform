@@ -7,17 +7,33 @@ import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analy
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
+  console.log(`🚀 [API] POST /api/analysis/run called at ${new Date().toISOString()}`);
+  
   try {
-    const body = await request.json();
+    // Step 1: Parse request body
+    console.log(`📝 [API] Step 1: Parsing request body...`);
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError: any) {
+      console.error(`❌ [API] Failed to parse request body:`, parseError.message);
+      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+    }
+    
     const { brandOrKeyword, domain, competitors, category } = body;
+    console.log(`📝 [API] Received: brand="${brandOrKeyword}", domain="${domain}"`);
 
     if (!brandOrKeyword) {
       return NextResponse.json({ success: false, error: "Brand is required" }, { status: 400 });
     }
 
+    // Step 2: Check environment
+    console.log(`🔧 [API] Step 2: Checking environment...`);
     if (!process.env.OPENAI_API_KEY) {
+      console.error(`❌ [API] OPENAI_API_KEY not configured`);
       return NextResponse.json({ success: false, error: "OPENAI_API_KEY not configured" }, { status: 500 });
     }
+    console.log(`✅ [API] OPENAI_API_KEY is set`);
 
     // Parse competitors
     let competitorsArray: string[] = [];
@@ -31,27 +47,48 @@ export async function POST(request: Request) {
 
     console.log(`🚀 [API] Starting analysis for: ${brandOrKeyword}${category ? ` (category: ${category})` : ''}`);
 
-    // Create user
-    const user = await prisma.user.upsert({
-      where: { email: "demo@example.com" },
-      update: {},
-      create: { email: "demo@example.com" },
-    });
+    // Step 3: Database operations
+    console.log(`💾 [API] Step 3: Creating database records...`);
+    
+    let user;
+    try {
+      user = await prisma.user.upsert({
+        where: { email: "demo@example.com" },
+        update: {},
+        create: { email: "demo@example.com" },
+      });
+      console.log(`✅ [API] User ready: ${user.id}`);
+    } catch (userError: any) {
+      console.error(`❌ [API] Failed to create/find user:`, userError.message);
+      return NextResponse.json({ 
+        success: false, 
+        error: `Database error (user): ${userError.message}`,
+        hint: "Check POSTGRES_PRISMA_URL and run prisma db push"
+      }, { status: 500 });
+    }
 
-    // Create analysis record
-    const analysis = await prisma.analysis.create({
-      data: {
-        userId: user.id,
-        brandOrKeyword,
-        domain: domain || null,
-        competitors: competitorsArray,
-        status: "running",
-        progress: 1,
-        currentStep: "Starting...",
-      },
-    });
-
-    console.log(`✅ [API] Created analysis ${analysis.id}`);
+    let analysis;
+    try {
+      analysis = await prisma.analysis.create({
+        data: {
+          userId: user.id,
+          brandOrKeyword,
+          domain: domain || null,
+          competitors: competitorsArray,
+          status: "running",
+          progress: 1,
+          currentStep: "Initializing...",
+        },
+      });
+      console.log(`✅ [API] Created analysis ${analysis.id}`);
+    } catch (analysisError: any) {
+      console.error(`❌ [API] Failed to create analysis:`, analysisError.message);
+      return NextResponse.json({ 
+        success: false, 
+        error: `Database error (analysis): ${analysisError.message}`,
+        hint: "Check database connection and schema"
+      }, { status: 500 });
+    }
 
     // Capture env vars
     const envVars = {
