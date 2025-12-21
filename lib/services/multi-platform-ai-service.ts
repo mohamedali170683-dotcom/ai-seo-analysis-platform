@@ -548,36 +548,54 @@ export class MultiPlatformAIService {
     for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       try {
-        // Get the model with Google Search grounding enabled for citations
-        const model = this.geminiClient!.getGenerativeModel({ 
-          model: "gemini-1.5-flash",
-          // Enable Google Search grounding for source citations
-          tools: [{
-            googleSearchRetrieval: {
-              dynamicRetrievalConfig: {
-                mode: "MODE_DYNAMIC" as any,
-                dynamicThreshold: 0.3,
-              },
-            },
-          }] as any,
-        });
-
-        console.log(`  → [Gemini] Test ${i}/${numTests} calling API with grounding...`);
+        // Try multiple models for compatibility - gemini-1.5-flash may not be available in all regions
+        const modelNames = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+        let result = null;
+        let usedModel = "";
         
-        // Make the API call with timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout for grounded search
+        console.log(`  → [Gemini] Test ${i}/${numTests} trying models...`);
+        
+        for (const modelName of modelNames) {
+          try {
+            const model = this.geminiClient!.getGenerativeModel({ 
+              model: modelName,
+            });
+            
+            // Make the API call with timeout
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error("Timeout")), 20000);
+            });
+            
+            const apiPromise = model.generateContent({
+              contents: [{ role: "user", parts: [{ text: question }] }],
+              generationConfig: {
+                maxOutputTokens: 600,
+                temperature: 0.7,
+              },
+            });
+            
+            result = await Promise.race([apiPromise, timeoutPromise]) as any;
+            usedModel = modelName;
+            console.log(`  ✓ [Gemini] Test ${i} using model: ${modelName}`);
+            break;
+          } catch (modelError: any) {
+            const errMsg = modelError.message?.toLowerCase() || '';
+            if (errMsg.includes('not found') || errMsg.includes('404') || errMsg.includes('not supported')) {
+              console.warn(`  ⚠️ [Gemini] Model ${modelName} not available, trying next...`);
+              continue;
+            }
+            // For other errors (rate limit, etc.), throw to be caught by outer handler
+            throw modelError;
+          }
+        }
+        
+        if (!result) {
+          console.error(`  ❌ [Gemini] Test ${i} - No compatible model found`);
+          results.push(null);
+          continue;
+        }
         
         try {
-          const result = await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: question }] }],
-            generationConfig: {
-              maxOutputTokens: 600,
-              temperature: 0.7,
-            },
-          });
-          
-          clearTimeout(timeoutId);
           
           // Get the response
           const response = result.response;
@@ -646,11 +664,11 @@ export class MultiPlatformAIService {
           
           if (fullResponse && fullResponse.length > 0) {
             const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
-            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars), mentions "${brandName}": ${mentionsBrand}, sources: ${sources.length}`);
+            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars, model: ${usedModel}), mentions "${brandName}": ${mentionsBrand}, sources: ${sources.length}`);
             const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
             results.push({
               platform: "Gemini" as const,
-              modelVersion: "gemini-1.5-flash",
+              modelVersion: usedModel,
               queryNumber: i,
               question,
               fullResponse,
@@ -663,9 +681,9 @@ export class MultiPlatformAIService {
             console.warn(`  ⚠️ [Gemini] Test ${i} empty response text`);
             results.push(null);
           }
-        } catch (apiError: any) {
-          clearTimeout(timeoutId);
-          throw apiError;
+        } catch (parseError: any) {
+          console.warn(`  ⚠️ [Gemini] Test ${i} response parsing error: ${parseError.message}`);
+          results.push(null);
         }
         
         // Small delay between requests to avoid rate limiting
@@ -690,6 +708,8 @@ export class MultiPlatformAIService {
           console.error(`     → Permission denied - API key may not have access to this model`);
         } else if (errorMsg.includes('abort') || errorMsg.includes('timeout')) {
           console.error(`     → Request timed out after 25 seconds`);
+        } else if (errorMsg.includes('not found') || errorMsg.includes('404')) {
+          console.error(`     → Model not available in your region. Will try fallback models.`);
         } else if (error.status) {
           console.error(`     → HTTP Status: ${error.status}`);
         }

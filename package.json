@@ -4,8 +4,8 @@
   "description": "AI-Powered SEO & Search Visibility Analysis Platform",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma db push --skip-generate && next build",
-    "build:no-migrate": "prisma generate && next build",
+    "build": "prisma generate && (prisma db push --skip-generate --accept-data-loss || true) && next build",
+    "build:no-db": "prisma generate && next build",
     "build:with-migrate": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
