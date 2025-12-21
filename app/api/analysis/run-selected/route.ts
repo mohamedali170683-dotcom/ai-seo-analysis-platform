@@ -186,7 +186,9 @@ export async function POST(request: Request) {
       perplexityApiKey: process.env.PERPLEXITY_API_KEY,
     };
 
-    // Run analysis in background
+    // Run analysis in background with error handling
+    console.log(`🔄 [RUN-SELECTED] Starting background execution with waitUntil`);
+    
     waitUntil(
       executeSelectedAnalysis(
         analysis.id,
@@ -199,6 +201,25 @@ export async function POST(request: Request) {
         finalTestsPerPlatform,
         envVars
       )
+        .then(() => {
+          console.log(`✅ [RUN-SELECTED] Background analysis ${analysis.id} completed`);
+        })
+        .catch(async (err) => {
+          console.error(`❌ [RUN-SELECTED] Background analysis ${analysis.id} FAILED:`, err.message);
+          console.error(err.stack);
+          // Update analysis status to failed
+          try {
+            await prisma.analysis.update({
+              where: { id: analysis.id },
+              data: {
+                status: "failed",
+                currentStep: `Error: ${err.message?.substring(0, 200) || "Unknown error"}`,
+              },
+            });
+          } catch (updateErr: any) {
+            console.error(`❌ [RUN-SELECTED] Failed to update status:`, updateErr.message);
+          }
+        })
     );
 
     return NextResponse.json({
@@ -236,16 +257,26 @@ async function executeSelectedAnalysis(
   envVars: { openaiApiKey: string; geminiApiKey?: string; perplexityApiKey?: string }
 ) {
   const startTime = Date.now();
-  console.log(`🔄 [EXEC] Starting execution for ${analysisId}`);
+  console.log(`🔄 [EXEC-SELECTED] Starting execution for ${analysisId}`);
+  console.log(`   Brand: ${brandName}`);
+  console.log(`   Questions: ${selectedQuestions.length}`);
+  console.log(`   Platforms: ${selectedPlatforms.join(", ")}`);
+  console.log(`   Tests/platform: ${testsPerPlatform}`);
+  console.log(`   OpenAI key: ${envVars.openaiApiKey ? "SET" : "NOT SET"}`);
+  console.log(`   Gemini key: ${envVars.geminiApiKey ? "SET" : "NOT SET"}`);
+  console.log(`   Perplexity key: ${envVars.perplexityApiKey ? "SET" : "NOT SET"}`);
 
   try {
     // Initialize services with all available API keys
+    console.log(`🤖 [EXEC-SELECTED] Initializing AI service...`);
     const aiService = new MultiPlatformAIService(
       envVars.openaiApiKey,
       envVars.geminiApiKey,
       testsPerPlatform,
       envVars.perplexityApiKey
     );
+    console.log(`✅ [EXEC-SELECTED] AI service initialized`);
+    
     const auditService = new WebsiteAuditService(30000);
     
     // Log platform status
@@ -365,40 +396,56 @@ async function executeSelectedAnalysis(
 
     // Save to database
     await updateProgress(95, "Saving results...");
+    console.log(`💾 [EXEC-SELECTED] Saving ${selectedQuestions.length} questions and ${successfulResults.length} result sets...`);
 
     // Save questions
     for (const q of selectedQuestions) {
-      await prisma.discoveredQuestion.create({
-        data: {
-          analysisId,
-          question: q.question,
-          searchVolume: q.searchVolume,
-          difficulty: 50,
-          intent: q.category === "decision" ? "commercial" : "informational",
-          category: q.category,
-          score: Math.min(100, Math.floor(Math.log10(q.searchVolume + 1) * 20)),
-        },
-      });
-    }
-
-    // Save AI results
-    for (const result of successfulResults) {
-      for (const response of (result.responses || [])) {
-        await prisma.aITestResult.create({
+      try {
+        await prisma.discoveredQuestion.create({
           data: {
             analysisId,
-            question: result.question,
-            platform: response.platform,
-            brandMentioned: response.brandMentioned,
-            position: response.brandPosition,
-            sentiment: response.sentiment,
-            context: response.contextExtract,
-            fullResponse: response.fullResponse?.substring(0, 5000) || "",
-            citations: response.citedUrls || [],
+            question: q.question,
+            searchVolume: q.searchVolume,
+            difficulty: 50,
+            intent: q.category === "decision" ? "commercial" : "informational",
+            category: q.category,
+            score: Math.min(100, Math.floor(Math.log10(q.searchVolume + 1) * 20)),
           },
         });
+      } catch (qErr: any) {
+        console.error(`⚠️ [EXEC-SELECTED] Failed to save question: ${qErr.message}`);
       }
     }
+    console.log(`✅ [EXEC-SELECTED] Questions saved`);
+
+    // Save AI results with sources
+    let savedResponses = 0;
+    for (const result of successfulResults) {
+      for (const response of (result.responses || [])) {
+        try {
+          await prisma.aITestResult.create({
+            data: {
+              analysisId,
+              question: result.questionText || result.question || "",
+              platform: response.platform,
+              brandMentioned: response.brandMentioned,
+              position: response.brandPosition,
+              sentiment: response.sentiment,
+              context: response.contextExtract,
+              fullResponse: response.fullResponse?.substring(0, 5000) || "",
+              citations: response.citedUrls || [],
+              sources: (response.sources || []) as any,
+              hasGrounding: response.hasGrounding || false,
+              isRealAPI: response.isRealAPI || false,
+            },
+          });
+          savedResponses++;
+        } catch (rErr: any) {
+          console.error(`⚠️ [EXEC-SELECTED] Failed to save response: ${rErr.message}`);
+        }
+      }
+    }
+    console.log(`✅ [EXEC-SELECTED] Saved ${savedResponses} AI responses`);
 
     // Create journey stage insights (REQUIRED for results page)
     const stageLabels: Record<string, string> = {
