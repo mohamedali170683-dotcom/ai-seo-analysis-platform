@@ -66,6 +66,9 @@ model AITestResult {
   context        String?
   fullResponse   String?
   citations      String[]
+  sources        Json?    // Detailed source citations with url, title, domain
+  hasGrounding   Boolean  @default(false) // Whether response has verifiable sources
+  isRealAPI      Boolean  @default(true)  // Whether this was from real API (not simulated)
   createdAt      DateTime @default(now())
 
   @@index([analysisId])

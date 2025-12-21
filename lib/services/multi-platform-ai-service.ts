@@ -3,6 +3,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
 
+export interface SourceCitation {
+  url: string;
+  title?: string;
+  snippet?: string;
+  domain?: string;
+}
+
 export interface AIResponse {
   platform: AIPlatform;
   modelVersion: string;
@@ -16,7 +23,9 @@ export interface AIResponse {
   recommendationType: "direct" | "conditional" | "listed" | null;
   competitorsMentioned: string[];
   citedUrls: string[];
-  isRealAPI: boolean; // NEW: Track if this was a real API call
+  sources: SourceCitation[]; // NEW: Detailed source citations
+  isRealAPI: boolean;
+  hasGrounding: boolean; // NEW: Whether response has verifiable sources
 }
 
 export interface PlatformStats {
@@ -354,6 +363,14 @@ export class MultiPlatformAIService {
             "Perplexity": "gpt-4o-mini (simulated)",
             "Gemini": "gpt-4o-mini (simulated)",
           };
+          
+          // Extract any URLs from the response (ChatGPT sometimes includes them)
+          const urlsInText = this.extractUrlsFromText(fullResponse);
+          const sources: SourceCitation[] = urlsInText.map(url => ({
+            url,
+            domain: this.extractDomain(url),
+          }));
+          
           return {
             platform,
             modelVersion: modelVersionMap[platform],
@@ -361,6 +378,8 @@ export class MultiPlatformAIService {
             question,
             fullResponse,
             isRealAPI,
+            hasGrounding: sources.length > 0, // ChatGPT doesn't have true grounding
+            sources,
             ...analysis,
           } as AIResponse;
         }
@@ -385,6 +404,7 @@ export class MultiPlatformAIService {
   /**
    * Test using REAL Perplexity API
    * Perplexity has an OpenAI-compatible API with online search capabilities
+   * It returns citations/sources with every response!
    */
   private async testPerplexityReal(
     question: string,
@@ -394,11 +414,18 @@ export class MultiPlatformAIService {
   ): Promise<AIResponse[]> {
     if (!this.perplexityClient) return [];
 
-    const testPromises = Array.from({ length: numTests }, async (_, idx) => {
+    console.log(`  🟠 [Perplexity] Starting ${numTests} REAL API calls with web search...`);
+    
+    const results: (AIResponse | null)[] = [];
+    
+    // Run sequentially to avoid rate limits
+    for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       try {
+        console.log(`  → [Perplexity] Test ${i}/${numTests} calling API...`);
+        
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // Perplexity can be slower due to search
+        const timeoutId = setTimeout(() => controller.abort(), 20000);
 
         const completion = await this.perplexityClient!.chat.completions.create(
           {
@@ -406,7 +433,7 @@ export class MultiPlatformAIService {
             messages: [
               { role: "user", content: question }
             ],
-            max_tokens: 400,
+            max_tokens: 500,
             temperature: 0.7,
           },
           { signal: controller.signal }
@@ -415,31 +442,91 @@ export class MultiPlatformAIService {
         clearTimeout(timeoutId);
         const fullResponse = completion?.choices?.[0]?.message?.content || "";
         
+        // Perplexity includes citations in the response
+        // They are typically returned in the 'citations' field or embedded in the response
+        const sources: SourceCitation[] = [];
+        let hasGrounding = false;
+        
+        try {
+          // Check for citations in the completion object
+          const citations = (completion as any).citations || [];
+          if (citations.length > 0) {
+            hasGrounding = true;
+            for (const citation of citations) {
+              if (typeof citation === 'string') {
+                sources.push({
+                  url: citation,
+                  domain: this.extractDomain(citation),
+                });
+              } else if (citation.url) {
+                sources.push({
+                  url: citation.url,
+                  title: citation.title || '',
+                  snippet: citation.snippet || '',
+                  domain: this.extractDomain(citation.url),
+                });
+              }
+            }
+            console.log(`  📎 [Perplexity] Test ${i} found ${sources.length} citations`);
+          }
+          
+          // Also extract URLs from response text (Perplexity often includes them)
+          const urlsInText = this.extractUrlsFromText(fullResponse);
+          for (const url of urlsInText) {
+            if (!sources.some(s => s.url === url)) {
+              sources.push({
+                url,
+                domain: this.extractDomain(url),
+              });
+              hasGrounding = true;
+            }
+          }
+        } catch (citationError: any) {
+          console.warn(`  ⚠️ [Perplexity] Test ${i} citation extraction failed: ${citationError.message}`);
+        }
+        
         if (fullResponse) {
+          const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
+          console.log(`  ✓ [Perplexity] Test ${i} OK (${fullResponse.length} chars), mentions "${brandName}": ${mentionsBrand}, sources: ${sources.length}`);
           const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
-          return {
+          results.push({
             platform: "Perplexity" as const,
             modelVersion: "llama-3.1-sonar-small-128k-online",
             queryNumber: i,
             question,
             fullResponse,
             isRealAPI: true,
+            hasGrounding,
+            sources,
             ...analysis,
-          } as AIResponse;
+          } as AIResponse);
+        } else {
+          results.push(null);
         }
-        return null;
+        
+        // Small delay between requests
+        if (idx < numTests - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       } catch (error: any) {
-        console.warn(`⚠️ [Perplexity] Test ${i} failed: ${error.message}`);
-        return null;
+        console.error(`  ❌ [Perplexity] Test ${i} ERROR: ${error.message}`);
+        results.push(null);
       }
-    });
+    }
 
-    const results = await Promise.all(testPromises);
-    return results.filter((r): r is AIResponse => r !== null);
+    const validResults = results.filter((r): r is AIResponse => r !== null);
+    
+    if (validResults.length === 0) {
+      console.error(`  ❌ [Perplexity] ALL ${numTests} tests FAILED`);
+    } else {
+      console.log(`  ✅ [Perplexity] ${validResults.length}/${numTests} tests succeeded (REAL API with citations)`);
+    }
+    
+    return validResults;
   }
 
   /**
-   * Test using REAL Google Gemini API
+   * Test using REAL Google Gemini API with Google Search grounding for citations
    * Using the correct SDK v0.24.x API
    */
   private async testGeminiReal(
@@ -453,7 +540,7 @@ export class MultiPlatformAIService {
       return [];
     }
 
-    console.log(`  🔵 [Gemini] Starting ${numTests} REAL API calls...`);
+    console.log(`  🔵 [Gemini] Starting ${numTests} REAL API calls with Google Search grounding...`);
 
     // Run tests sequentially to avoid rate limits
     const results: (AIResponse | null)[] = [];
@@ -461,29 +548,38 @@ export class MultiPlatformAIService {
     for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       try {
-        // Get the model - gemini-1.5-flash is fast and capable
+        // Get the model with Google Search grounding enabled for citations
         const model = this.geminiClient!.getGenerativeModel({ 
           model: "gemini-1.5-flash",
+          // Enable Google Search grounding for source citations
+          tools: [{
+            googleSearchRetrieval: {
+              dynamicRetrievalConfig: {
+                mode: "MODE_DYNAMIC" as any,
+                dynamicThreshold: 0.3,
+              },
+            },
+          }] as any,
         });
 
-        console.log(`  → [Gemini] Test ${i}/${numTests} calling API...`);
+        console.log(`  → [Gemini] Test ${i}/${numTests} calling API with grounding...`);
         
         // Make the API call with timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout for grounded search
         
         try {
           const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: question }] }],
             generationConfig: {
-              maxOutputTokens: 500,
+              maxOutputTokens: 600,
               temperature: 0.7,
             },
           });
           
           clearTimeout(timeoutId);
           
-          // Get the response - in v0.24.x, response is a property not a promise
+          // Get the response
           const response = result.response;
           
           if (!response) {
@@ -502,9 +598,55 @@ export class MultiPlatformAIService {
           // Get text from response
           const fullResponse = response.text();
           
+          // Extract grounding sources/citations from the response
+          const sources: SourceCitation[] = [];
+          let hasGrounding = false;
+          
+          try {
+            // Check for grounding metadata in the response
+            const candidate = response.candidates?.[0];
+            const groundingMetadata = (candidate as any)?.groundingMetadata;
+            
+            if (groundingMetadata) {
+              hasGrounding = true;
+              console.log(`  📚 [Gemini] Test ${i} has grounding metadata`);
+              
+              // Extract web search results if available
+              const webSearchQueries = groundingMetadata.webSearchQueries || [];
+              const groundingChunks = groundingMetadata.groundingChunks || [];
+              const groundingSupports = groundingMetadata.groundingSupports || [];
+              
+              // Process grounding chunks (sources)
+              for (const chunk of groundingChunks) {
+                if (chunk.web) {
+                  sources.push({
+                    url: chunk.web.uri || '',
+                    title: chunk.web.title || '',
+                    domain: this.extractDomain(chunk.web.uri || ''),
+                  });
+                }
+              }
+              
+              console.log(`  📎 [Gemini] Test ${i} found ${sources.length} sources`);
+            }
+          } catch (groundingError: any) {
+            console.warn(`  ⚠️ [Gemini] Test ${i} grounding extraction failed: ${groundingError.message}`);
+          }
+          
+          // Also extract any URLs from the response text
+          const urlsInText = this.extractUrlsFromText(fullResponse);
+          for (const url of urlsInText) {
+            if (!sources.some(s => s.url === url)) {
+              sources.push({
+                url,
+                domain: this.extractDomain(url),
+              });
+            }
+          }
+          
           if (fullResponse && fullResponse.length > 0) {
             const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
-            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars), mentions "${brandName}": ${mentionsBrand}`);
+            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars), mentions "${brandName}": ${mentionsBrand}, sources: ${sources.length}`);
             const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
             results.push({
               platform: "Gemini" as const,
@@ -513,6 +655,8 @@ export class MultiPlatformAIService {
               question,
               fullResponse,
               isRealAPI: true,
+              hasGrounding,
+              sources,
               ...analysis,
             } as AIResponse);
           } else {
@@ -533,7 +677,6 @@ export class MultiPlatformAIService {
         
         // Detailed error analysis
         const errorMsg = error.message?.toLowerCase() || '';
-        const errorStr = String(error).toLowerCase();
         
         if (errorMsg.includes('api key') || errorMsg.includes('api_key') || errorMsg.includes('invalid')) {
           console.error(`     → GEMINI_API_KEY may be invalid or expired`);
@@ -546,7 +689,7 @@ export class MultiPlatformAIService {
         } else if (errorMsg.includes('permission') || errorMsg.includes('403')) {
           console.error(`     → Permission denied - API key may not have access to this model`);
         } else if (errorMsg.includes('abort') || errorMsg.includes('timeout')) {
-          console.error(`     → Request timed out after 20 seconds`);
+          console.error(`     → Request timed out after 25 seconds`);
         } else if (error.status) {
           console.error(`     → HTTP Status: ${error.status}`);
         }
@@ -575,17 +718,38 @@ export class MultiPlatformAIService {
     } else if (validResults.length < numTests) {
       console.warn(`  ⚠️ [Gemini] ${validResults.length}/${numTests} tests succeeded`);
     } else {
-      console.log(`  ✅ [Gemini] All ${numTests} tests succeeded (REAL API)`);
+      console.log(`  ✅ [Gemini] All ${numTests} tests succeeded (REAL API with grounding)`);
     }
     
     return validResults;
+  }
+  
+  /**
+   * Extract domain from URL
+   */
+  private extractDomain(url: string): string {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.replace('www.', '');
+    } catch {
+      return '';
+    }
+  }
+  
+  /**
+   * Extract URLs from text
+   */
+  private extractUrlsFromText(text: string): string[] {
+    const urlRegex = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi;
+    const matches = text.match(urlRegex) || [];
+    return [...new Set(matches)]; // Remove duplicates
   }
 
   private analyzeResponse(
     response: string,
     brandName: string,
     competitors: string[]
-  ): Omit<AIResponse, 'platform' | 'modelVersion' | 'queryNumber' | 'question' | 'fullResponse' | 'isRealAPI'> {
+  ): Omit<AIResponse, 'platform' | 'modelVersion' | 'queryNumber' | 'question' | 'fullResponse' | 'isRealAPI' | 'hasGrounding' | 'sources'> {
     const lowerResponse = response.toLowerCase();
     const lowerBrand = brandName.toLowerCase();
     const brandMentioned = lowerResponse.includes(lowerBrand);

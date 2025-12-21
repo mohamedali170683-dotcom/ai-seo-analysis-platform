@@ -603,7 +603,7 @@ function JourneyStageDetailCard({ stage, brandName, stageNumber }: any) {
                   {stage.portrayal.aiAnswerExamples.map((example: any, i: number) => (
                     <div key={i} className="bg-white rounded-xl p-5 border-2 border-yellow-300 shadow-sm">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 flex-wrap">
                           <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold">
                             {example.platform}
                           </div>
@@ -621,6 +621,16 @@ function JourneyStageDetailCard({ stage, brandName, stageNumber }: any) {
                           <div className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold">
                             Position: #{example.brandPosition}
                           </div>
+                          {example.hasGrounding && (
+                            <div className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
+                              📚 Has Sources
+                            </div>
+                          )}
+                          {example.isRealAPI && (
+                            <div className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
+                              ✓ Real API
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="text-xs text-gray-600 mb-2 font-semibold">
@@ -629,6 +639,29 @@ function JourneyStageDetailCard({ stage, brandName, stageNumber }: any) {
                       <blockquote className="text-gray-800 text-sm leading-relaxed pl-4 border-l-4 border-yellow-400 italic">
                         {example.excerpt}
                       </blockquote>
+                      
+                      {/* Show sources if available */}
+                      {example.sources && example.sources.length > 0 && (
+                        <div className="mt-3 pt-3 border-t border-yellow-200">
+                          <div className="text-xs font-semibold text-gray-600 mb-2">📎 Sources Used:</div>
+                          <div className="flex flex-wrap gap-2">
+                            {example.sources.slice(0, 5).map((source: any, j: number) => (
+                              <a
+                                key={j}
+                                href={source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors flex items-center gap-1"
+                              >
+                                🔗 {source.domain || source.title || source.url.substring(0, 30) + '...'}
+                              </a>
+                            ))}
+                            {example.sources.length > 5 && (
+                              <span className="text-xs text-gray-500">+{example.sources.length - 5} more</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

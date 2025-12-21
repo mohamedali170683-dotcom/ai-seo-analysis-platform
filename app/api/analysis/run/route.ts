@@ -185,7 +185,7 @@ async function executeAnalysis(
       });
     }
 
-    // Save AI results
+    // Save AI results with sources
     for (const a of result.rawData.analyses) {
       for (const response of a.responses) {
         await prisma.aITestResult.create({
@@ -200,6 +200,9 @@ async function executeAnalysis(
             context: response.contextExtract,
             fullResponse: response.fullResponse?.substring(0, 5000) || "",
             citations: response.citedUrls,
+            sources: (response.sources || []) as any,
+            hasGrounding: response.hasGrounding || false,
+            isRealAPI: response.isRealAPI || false,
           },
         });
       }
