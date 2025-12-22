@@ -657,8 +657,42 @@ export class MultiPlatformAIService {
             continue;
           }
           
-          // Get text from response
-          const fullResponse = response.text();
+          // Log finish reason for debugging
+          const candidate = response.candidates?.[0];
+          const finishReason = candidate?.finishReason;
+          if (finishReason && finishReason !== 'STOP') {
+            console.warn(`  ⚠️ [Gemini] Test ${i} finish reason: ${finishReason}`);
+          }
+          
+          // Get text from response - try multiple methods
+          let fullResponse = '';
+          try {
+            // Method 1: Direct text() method
+            fullResponse = response.text();
+          } catch (textErr) {
+            console.warn(`  ⚠️ [Gemini] Test ${i} text() failed, trying candidates...`);
+          }
+          
+          // Method 2: If text() didn't work or is short, try extracting from candidates
+          if (!fullResponse || fullResponse.length < 50) {
+            try {
+              const candidate = response.candidates?.[0];
+              if (candidate?.content?.parts) {
+                const textParts = candidate.content.parts
+                  .filter((p: any) => p.text)
+                  .map((p: any) => p.text);
+                if (textParts.length > 0) {
+                  const candidateText = textParts.join('\n');
+                  if (candidateText.length > fullResponse.length) {
+                    fullResponse = candidateText;
+                    console.log(`  📝 [Gemini] Test ${i} extracted ${fullResponse.length} chars from candidates`);
+                  }
+                }
+              }
+            } catch (candidateErr) {
+              console.warn(`  ⚠️ [Gemini] Test ${i} candidate extraction failed`);
+            }
+          }
           
           // Extract grounding sources/citations from the response
           const sources: SourceCitation[] = [];
