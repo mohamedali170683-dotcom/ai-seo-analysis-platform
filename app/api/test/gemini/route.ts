@@ -101,15 +101,41 @@ export async function POST(request: Request) {
         });
         
         const response = result.response;
-        const text = response.text();
         
-        if (text && text.length > 0) {
+        // Try to get text via multiple methods
+        let text = '';
+        try {
+          text = response.text();
+        } catch (e) {
+          console.log(`[Gemini Test] text() failed for ${modelName}`);
+        }
+        
+        // Also try extracting from candidates
+        let candidateText = '';
+        try {
+          const candidate = response.candidates?.[0];
+          if (candidate?.content?.parts) {
+            candidateText = candidate.content.parts
+              .filter((p: any) => p.text)
+              .map((p: any) => p.text)
+              .join('\n');
+          }
+          // Log finish reason
+          console.log(`[Gemini Test] ${modelName} finish: ${candidate?.finishReason}, parts: ${candidate?.content?.parts?.length}`);
+        } catch (e) {
+          console.log(`[Gemini Test] candidate extraction failed for ${modelName}`);
+        }
+        
+        // Use whichever is longer
+        const finalText = candidateText.length > text.length ? candidateText : text;
+        
+        if (finalText && finalText.length > 0) {
           modelResults.push({ model: modelName, available: true });
-          console.log(`[Gemini Test] ✓ ${modelName} WORKS`);
+          console.log(`[Gemini Test] ✓ ${modelName} WORKS (${finalText.length} chars)`);
           
           if (!workingModel) {
             workingModel = modelName;
-            workingResponse = text;
+            workingResponse = finalText;
           }
         } else {
           modelResults.push({ model: modelName, available: false, error: "Empty response" });
