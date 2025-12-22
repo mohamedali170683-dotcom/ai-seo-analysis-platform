@@ -558,16 +558,14 @@ export class MultiPlatformAIService {
       }
       
       try {
-        // Try multiple models for compatibility - ordered by preference, with older models as fallback
-        // Older models (gemini-1.0-pro) have wider global availability
+        // Try multiple models for compatibility - ordered by preference
+        // Google has retired old gemini-1.x models, use gemini-2.x now
         const modelNames = [
-          "gemini-1.5-flash",       // Fast, modern model
-          "gemini-1.5-flash-latest", // Explicit latest version
-          "gemini-1.5-pro",          // More capable 
-          "gemini-1.0-pro",          // Older but more widely available
-          "gemini-1.0-pro-latest",   // Older but explicit latest
-          "gemini-pro",              // Fallback name
-          "models/gemini-pro",       // Explicit path format
+          "gemini-2.5-flash",        // Latest and fastest
+          "gemini-2.0-flash",        // Stable fast model
+          "gemini-2.5-pro",          // Most capable
+          "gemini-2.0-flash-001",    // Specific version
+          "gemini-flash-latest",     // Latest flash alias
         ];
         let result = null;
         let usedModel = "";

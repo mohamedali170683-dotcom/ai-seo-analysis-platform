@@ -599,7 +599,7 @@ export default function ResultsPage() {
                           <div className="text-center py-2">
                             <p className="text-xs text-gray-500">
                               No responses received.
-                              {platform.name === "Gemini" && " (Gemini API not available in server region)"}
+                              {platform.name === "Gemini" && " (Check GEMINI_API_KEY)"}
                               {platform.name === "Perplexity" && " (PERPLEXITY_API_KEY not configured)"}
                             </p>
                           </div>
