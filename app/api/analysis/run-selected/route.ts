@@ -488,11 +488,12 @@ async function executeSelectedAnalysis(
     
     // Track stage visibility scores for weighted overall calculation
     // Awareness counts less (20%) since users are seeking info, not brands
-    // Consideration (40%) and Decision (40%) matter more for brand visibility
+    // Consideration (35%) and Decision (45%) matter more for brand visibility
+    // Decision stage is most critical for conversion
     const stageWeights: Record<string, number> = {
-      awareness: 0.20,    // 20% weight - source citations matter more than mentions
-      consideration: 0.40, // 40% weight - comparison/evaluation is key
-      decision: 0.40,      // 40% weight - final purchase influence is critical
+      awareness: 0.20,     // 20% weight - source citations matter more than mentions
+      consideration: 0.35, // 35% weight - comparison/evaluation is key
+      decision: 0.45,      // 45% weight - final purchase influence is MOST critical
     };
     const stageVisibilityScores: Record<string, number> = {};
 

@@ -20,8 +20,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
     }
     
-    const { brandOrKeyword, domain, competitors, category } = body;
-    console.log(`📝 [API] Received: brand="${brandOrKeyword}", domain="${domain}"`);
+    const { 
+      brandOrKeyword, 
+      domain, 
+      competitors, 
+      category,
+      // New fields for persona-informed analysis
+      subcategory,
+      buyerPersona,
+      industryCategory,
+    } = body;
+    console.log(`📝 [API] Received: brand="${brandOrKeyword}", domain="${domain}", subcategory="${subcategory}", persona="${buyerPersona}"`);
 
     if (!brandOrKeyword) {
       return NextResponse.json({ success: false, error: "Brand is required" }, { status: 400 });
@@ -109,7 +118,7 @@ export async function POST(request: Request) {
     console.log(`🔄 [API] Starting background execution with waitUntil`);
     
     waitUntil(
-      executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, envVars)
+      executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, subcategory, buyerPersona, envVars)
         .then(() => {
           console.log(`✅ [API] Background analysis ${analysis.id} completed successfully`);
         })
@@ -147,6 +156,8 @@ async function executeAnalysis(
   domain: string | undefined,
   competitors: string[],
   category?: string,
+  subcategory?: string,
+  buyerPersona?: string,
   envVars?: {
     openaiApiKey: string;
     geminiApiKey?: string;
@@ -187,20 +198,24 @@ async function executeAnalysis(
     console.log(`🔧 [EXEC] - DATAFORSEO_LOGIN: ${dataForSEOLogin ? 'SET' : 'NOT SET'}`);
     console.log(`🔧 [EXEC] - DATAFORSEO_PASSWORD: ${dataForSEOPassword ? 'SET' : 'NOT SET'}`);
     
-    // Run analysis with statistical significance
-    // 3 questions per stage × 3 platforms × 3 tests = 27 AI calls per stage = 81 total
+    // Run analysis with statistical significance and persona-informed questions
+    // Uses adaptive repetition: 1x awareness, 2x consideration, 3x decision
+    // Stage weights: 20% awareness, 35% consideration, 45% decision
     const service = new ComprehensiveAnalysisService({
       brandName: brandOrKeyword,
       domain,
       competitors,
-      category,
+      category: subcategory || category, // Prefer subcategory over broad category
+      subcategory,
+      persona: buyerPersona, // Persona for informed question generation
       openaiApiKey: apiKey,
       geminiApiKey: geminiKey,
       perplexityApiKey: perplexityKey,
       dataForSEOLogin,
       dataForSEOPassword,
-      testsPerPlatform: 3,    // 3 tests per platform for statistical significance
+      testsPerPlatform: 2,    // Base tests per platform (adaptive repetition will adjust)
       questionsPerStage: 3,   // 3 questions per funnel stage
+      useAdaptiveRepetition: true, // Enable 1x/2x/3x repetition by stage
       onProgress,
     });
 

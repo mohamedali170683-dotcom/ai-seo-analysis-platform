@@ -9,7 +9,7 @@ export interface DiscoveredQuestion {
   category: "awareness" | "consideration" | "decision";
   questionType: "brand" | "category";
   score: number;
-  source: "dataforseo" | "ahrefs" | "google_autocomplete" | "generated";
+  source: "dataforseo" | "ahrefs" | "google_autocomplete" | "generated" | "persona";
 }
 
 export interface QuestionDiscoveryConfig {
