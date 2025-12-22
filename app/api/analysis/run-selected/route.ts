@@ -455,7 +455,7 @@ async function executeSelectedAnalysis(
               position: response.brandPosition,
               sentiment: response.sentiment,
               context: response.contextExtract,
-              fullResponse: response.fullResponse?.substring(0, 5000) || "",
+              fullResponse: response.fullResponse || "",  // Store full response - no truncation
               citations: response.citedUrls || [],
               sources: (response.sources || []) as any,
               hasGrounding: response.hasGrounding || false,

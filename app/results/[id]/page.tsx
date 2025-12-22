@@ -842,10 +842,11 @@ export default function ResultsPage() {
                                         </span>
                                       </div>
                                     </div>
-                                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                                      {platformAnswer.fullResponse?.substring(0, 500) || platformAnswer.context || 'No response recorded'}
-                                      {platformAnswer.fullResponse?.length > 500 && '...'}
-                                    </p>
+                                    <div className="text-sm text-gray-600">
+                                      <p className="whitespace-pre-wrap">
+                                        {platformAnswer.fullResponse || platformAnswer.context || 'No response recorded'}
+                                      </p>
+                                    </div>
                                   </div>
                                 );
                               })}
@@ -1370,10 +1371,11 @@ export default function ResultsPage() {
                                               }`}>{platformAnswer.sentiment}</span>
                                             </div>
                                           </div>
-                                          <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                            {platformAnswer.fullResponse?.substring(0, 600) || platformAnswer.context || 'No response'}
-                                            {platformAnswer.fullResponse?.length > 600 && '...'}
-                                          </p>
+                                          <div className="text-sm text-gray-700">
+                                            <p className="whitespace-pre-wrap">
+                                              {platformAnswer.fullResponse || platformAnswer.context || 'No response'}
+                                            </p>
+                                          </div>
                                         </div>
                                       );
                                     })}
@@ -2513,11 +2515,15 @@ function transformAnalysisData(data: any) {
     }
   });
 
+  // Use executive summary score (weighted by stage) as the main score if available
+  // This ensures consistency between executive summary and visibility card
+  const finalScore = analysis.executiveSummary?.overallScore ?? overallScore;
+
   return {
     brandOrKeyword: analysis.brandOrKeyword,
     domain: analysis.domain,
     competitors: competitors,
-    overallScore: overallScore,
+    overallScore: finalScore,  // Use consistent score from executive summary
     totalTests: totalTests || 18, // Default to 18 (9 questions × 2 tests)
     totalQuestions: totalQuestions || 9, // Default to 9
     scoringMethodology,

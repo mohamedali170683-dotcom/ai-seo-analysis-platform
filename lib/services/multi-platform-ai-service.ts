@@ -332,13 +332,13 @@ export class MultiPlatformAIService {
         messages.push({ role: "user", content: question });
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // Increased to 10s
+        const timeoutId = setTimeout(() => controller.abort(), 25000); // Increased for full responses
 
         const completion = await this.openaiClient.chat.completions.create(
           {
             model: "gpt-4o-mini",
             messages,
-            max_tokens: 250,
+            max_tokens: 2048,  // Increased from 250 to get full responses
             temperature: 0.7,
           },
           { signal: controller.signal }
@@ -425,7 +425,7 @@ export class MultiPlatformAIService {
             messages: [
               { role: "user", content: question }
             ],
-            max_tokens: 500,
+            max_tokens: 2048,  // Increased from 500 to get full responses
             temperature: 0.7,
           },
           { signal: controller.signal }
@@ -584,7 +584,7 @@ export class MultiPlatformAIService {
             body: JSON.stringify({
               contents: [{ parts: [{ text: question }] }],
               generationConfig: {
-                maxOutputTokens: 2048,
+                maxOutputTokens: 4096,  // Increased for full comprehensive responses
                 temperature: 0.7,
               },
             }),
