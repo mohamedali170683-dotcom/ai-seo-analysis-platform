@@ -748,37 +748,47 @@ export default function ResultsPage() {
           {(tier === 'partner' || tier === 'professional') ? (
             <div className="p-6">
               {/* Answers by Stage */}
-              {['awareness', 'consideration', 'decision'].map((stage) => {
-                const stageIcon = stage === 'awareness' ? '🔍' : stage === 'consideration' ? '⚖️' : '✅';
-                const stageColor = stage === 'awareness' ? 'blue' : stage === 'consideration' ? 'yellow' : 'green';
+              {['awareness', 'consideration', 'decision'].map((stageName) => {
+                const stageIcon = stageName === 'awareness' ? '🔍' : stageName === 'consideration' ? '⚖️' : '✅';
+                const stageColor = stageName === 'awareness' ? 'blue' : stageName === 'consideration' ? 'yellow' : 'green';
                 
-                // Get questions for this stage
+                // Try multiple ways to match questions to stage
                 const stageQuestions = reportData.discoveredQuestions?.filter(
-                  (q: any) => q.category === stage
+                  (q: any) => q.category === stageName || q.stage === stageName
                 ) || [];
                 
-                // Get answers for this stage
-                const stageAnswers = reportData.aiTestResults?.filter((r: any) => {
+                // Get all AI test results and filter to this stage
+                // Try matching by category from discoveredQuestions first, then fallback to direct matching
+                const stageAnswers = (reportData.aiTestResults || []).filter((r: any) => {
+                  // First try: Find question in discoveredQuestions
                   const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
-                  return questionObj?.category === stage;
-                }) || [];
+                  if (questionObj) {
+                    return questionObj.category === stageName || questionObj.stage === stageName;
+                  }
+                  // Fallback: Check if the answer itself has a category/stage
+                  return r.category === stageName || r.stage === stageName;
+                });
                 
                 // Group answers by question
                 const answersByQuestion: Record<string, any[]> = {};
                 stageAnswers.forEach((answer: any) => {
-                  if (!answersByQuestion[answer.question]) {
-                    answersByQuestion[answer.question] = [];
+                  const q = answer.question || 'Unknown question';
+                  if (!answersByQuestion[q]) {
+                    answersByQuestion[q] = [];
                   }
-                  answersByQuestion[answer.question].push(answer);
+                  answersByQuestion[q].push(answer);
                 });
+                
+                const totalAnswers = stageAnswers.length;
+                const questionCount = Object.keys(answersByQuestion).length;
 
                 return (
-                  <div key={stage} className="mb-6">
+                  <div key={stageName} className="mb-6">
                     <button
                       onClick={() => setExpandedSchemas(prev => 
-                        prev.includes(`answers-${stage}`) 
-                          ? prev.filter(s => s !== `answers-${stage}`) 
-                          : [...prev, `answers-${stage}`]
+                        prev.includes(`answers-${stageName}`) 
+                          ? prev.filter(s => s !== `answers-${stageName}`) 
+                          : [...prev, `answers-${stageName}`]
                       )}
                       className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
                         stageColor === 'blue' ? 'bg-blue-50 hover:bg-blue-100' :
@@ -788,10 +798,10 @@ export default function ResultsPage() {
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{stageIcon}</span>
-                        <span className="font-semibold text-gray-900 capitalize">{stage} Stage</span>
-                        <span className="text-sm text-gray-500">({Object.keys(answersByQuestion).length} questions)</span>
+                        <span className="font-semibold text-gray-900 capitalize">{stageName} Stage</span>
+                        <span className="text-sm text-gray-500">({totalAnswers} answers from {questionCount} questions)</span>
                       </div>
-                      {expandedSchemas.includes(`answers-${stage}`) ? (
+                      {expandedSchemas.includes(`answers-${stageName}`) ? (
                         <ChevronUp className="w-5 h-5 text-gray-400" />
                       ) : (
                         <ChevronDown className="w-5 h-5 text-gray-400" />
@@ -799,9 +809,14 @@ export default function ResultsPage() {
                     </button>
                     
                     {/* Expanded answers */}
-                    {expandedSchemas.includes(`answers-${stage}`) && (
+                    {expandedSchemas.includes(`answers-${stageName}`) && (
                       <div className="mt-4 space-y-4 pl-4 border-l-2 border-gray-200">
-                        {Object.entries(answersByQuestion).map(([question, answers]) => (
+                        {Object.entries(answersByQuestion).length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <p>No AI responses recorded for this stage yet.</p>
+                            <p className="text-sm mt-2">Run an analysis to see AI responses here.</p>
+                          </div>
+                        ) : Object.entries(answersByQuestion).map(([question, answers]) => (
                           <div key={question} className="bg-gray-50 rounded-xl p-4">
                             <h4 className="font-medium text-gray-900 mb-3">{question}</h4>
                             <div className="space-y-3">
@@ -842,6 +857,14 @@ export default function ResultsPage() {
                   </div>
                 );
               })}
+              
+              {/* Show message if no AI test results at all */}
+              {(!reportData.aiTestResults || reportData.aiTestResults.length === 0) && (
+                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl">
+                  <p className="font-medium">No AI responses recorded yet</p>
+                  <p className="text-sm mt-2">Run an analysis to see AI responses from ChatGPT, Gemini, Copilot, and Perplexity.</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="p-8 text-center">
@@ -1101,32 +1124,97 @@ export default function ResultsPage() {
 
                   {/* Stage Metrics with Explanations */}
                   <div className="grid md:grid-cols-2 gap-4 mb-6">
-                    {/* Mention Rate Explained */}
-                    <div className="bg-white rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">📢 Mention Rate</h4>
-                        <span className={`text-2xl font-bold ${
-                          (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
-                          (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
-                        }`}>{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
+                    {/* For Awareness Stage: Citation-focused metrics */}
+                    {stage?.stage === 'awareness' ? (
+                      <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-blue-900">📚 Content Citation Analysis</h4>
+                          <span className={`text-2xl font-bold ${
+                            (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 ? "text-green-600" :
+                            (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 25 ? "text-yellow-600" : "text-red-600"
+                          }`}>{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
+                        </div>
+                        <div className="bg-blue-100 rounded-lg p-3 mb-3">
+                          <p className="text-sm font-medium text-blue-900 mb-1">Is your brand/content used as a source?</p>
+                          <p className="text-xs text-blue-700">
+                            When users ask AI for awareness-level information, does the AI cite your content, website, or brand as an authoritative source?
+                          </p>
+                        </div>
+                        <div className="space-y-2 mb-3">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-blue-700">Citation Rate (60% weight)</span>
+                            <span className="font-bold text-blue-800">{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
+                          </div>
+                          <div className="w-full bg-blue-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full ${
+                                (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 ? "bg-green-500" :
+                                (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 25 ? "bg-yellow-500" : "bg-red-500"
+                              }`}
+                              style={{ width: `${stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-blue-700">Mention Rate (25% weight)</span>
+                            <span className="font-bold text-blue-800">{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
+                          </div>
+                          <div className="w-full bg-blue-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full bg-blue-500`}
+                              style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
+                            />
+                          </div>
+                        </div>
+                        <div className="bg-white/60 rounded p-2">
+                          <p className="text-xs text-blue-700">
+                            {(() => {
+                              const citedSources = stage?.portrayal?.citedSources || [];
+                              if (citedSources.length > 0) {
+                                return (
+                                  <>
+                                    <span className="font-semibold">📎 Sources detected: </span>
+                                    {citedSources.slice(0, 3).join(', ')}
+                                    {citedSources.length > 3 && ` +${citedSources.length - 3} more`}
+                                  </>
+                                );
+                              }
+                              return (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 
+                                ? "✅ Good visibility - Your content is being cited by AI platforms"
+                                : (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 25
+                                ? "⚠️ Moderate visibility - Some AI platforms cite your content"
+                                : "❌ Low visibility - AI platforms are not citing your content as a source";
+                            })()}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        Out of {stage?.portrayal?.totalTests || 0} tests across all AI platforms, your brand was mentioned in {Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)} responses.
-                      </p>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className={`h-2 rounded-full ${
-                            (stage?.portrayal?.mentionRate || 0) >= 70 ? "bg-green-500" :
-                            (stage?.portrayal?.mentionRate || 0) >= 40 ? "bg-yellow-500" : "bg-red-500"
-                          }`}
-                          style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
-                        />
+                    ) : (
+                      /* For Consideration/Decision: Standard Mention Rate */
+                      <div className="bg-white rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-gray-900">📢 Mention Rate</h4>
+                          <span className={`text-2xl font-bold ${
+                            (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
+                            (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
+                          }`}>{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">
+                          Out of {stage?.portrayal?.totalTests || 0} tests across all AI platforms, your brand was mentioned in {Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)} responses.
+                        </p>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full ${
+                              (stage?.portrayal?.mentionRate || 0) >= 70 ? "bg-green-500" :
+                              (stage?.portrayal?.mentionRate || 0) >= 40 ? "bg-yellow-500" : "bg-red-500"
+                            }`}
+                            style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {(stage?.portrayal?.mentionRate || 0) >= 70 ? "✅ Strong presence - AI consistently mentions your brand" :
+                           (stage?.portrayal?.mentionRate || 0) >= 40 ? "⚠️ Moderate presence - Room for improvement" : "❌ Low presence - Significant opportunity to improve"}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(stage?.portrayal?.mentionRate || 0) >= 70 ? "✅ Strong presence - AI consistently mentions your brand" :
-                         (stage?.portrayal?.mentionRate || 0) >= 40 ? "⚠️ Moderate presence - Room for improvement" : "❌ Low presence - Significant opportunity to improve"}
-                      </p>
-                    </div>
+                    )}
 
                     {/* Audience Sentiment Explained */}
                     <div className="bg-white rounded-lg p-4">
@@ -1195,37 +1283,109 @@ export default function ResultsPage() {
                     </div>
                   )}
 
-                  {/* AI Answer Examples - Show multiple platforms */}
-                  {stage?.portrayal?.aiAnswerExamples && stage.portrayal.aiAnswerExamples.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                        <span>🤖</span> Sample AI Responses
-                      </h4>
-                      <div className="space-y-3">
-                        {stage.portrayal.aiAnswerExamples.slice(0, 3).map((example: any, exIdx: number) => (
-                          <div key={exIdx} className={`bg-white rounded-lg p-4 border-l-4 ${
-                            example?.sentiment === "positive" ? "border-green-400" :
-                            example?.sentiment === "negative" ? "border-red-400" : "border-gray-400"
-                          }`}>
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                                example?.platform === "ChatGPT" ? "bg-green-100 text-green-700" :
-                                example?.platform === "Gemini" ? "bg-blue-100 text-blue-700" :
-                                example?.platform === "Perplexity" ? "bg-amber-100 text-amber-700" : "bg-cyan-100 text-cyan-700"
-                              }`}>{example?.platform || "AI"}</span>
-                              <span className={`text-xs px-2 py-0.5 rounded ${
-                                example?.sentiment === "positive" ? "bg-green-50 text-green-600" :
-                                example?.sentiment === "negative" ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-600"
-                              }`}>{example?.sentiment || "neutral"}</span>
-                            </div>
-                            <p className="text-sm text-gray-600 italic">
-                              &quot;{(example?.excerpt || "").substring(0, 250)}{(example?.excerpt || "").length > 250 ? "..." : ""}&quot;
-                            </p>
+                  {/* See All Answers Button - replaces sample responses */}
+                  {(() => {
+                    const stageAnswers = reportData.aiTestResults?.filter((r: any) => {
+                      const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                      return questionObj?.category === stage?.stage;
+                    }) || [];
+                    const answerCount = stageAnswers.length;
+                    
+                    return (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => {
+                            if (tier === 'partner' || tier === 'professional') {
+                              setExpandedSchemas(prev => 
+                                prev.includes(`stage-answers-${stage?.stage}`) 
+                                  ? prev.filter(s => s !== `stage-answers-${stage?.stage}`) 
+                                  : [...prev, `stage-answers-${stage?.stage}`]
+                              );
+                            } else {
+                              openUpgradeModal("funnel_stages");
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
+                            tier === 'partner' || tier === 'professional'
+                              ? 'bg-blue-50 hover:bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>💬</span>
+                            <span className="font-medium">
+                              See All {answerCount} AI Answers for {stage?.stageLabel}
+                            </span>
                           </div>
-                        ))}
+                          {tier === 'partner' || tier === 'professional' ? (
+                            expandedSchemas.includes(`stage-answers-${stage?.stage}`) ? (
+                              <ChevronUp className="w-5 h-5" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5" />
+                            )
+                          ) : (
+                            <div className="flex items-center gap-1 text-amber-600">
+                              <Lock className="w-4 h-4" />
+                              <span className="text-xs">Partner/Pro</span>
+                            </div>
+                          )}
+                        </button>
+                        
+                        {/* Expanded answers for this stage */}
+                        {expandedSchemas.includes(`stage-answers-${stage?.stage}`) && (tier === 'partner' || tier === 'professional') && (
+                          <div className="mt-4 space-y-4 border-l-2 border-blue-200 pl-4">
+                            {(() => {
+                              // Group by question
+                              const byQuestion: Record<string, any[]> = {};
+                              stageAnswers.forEach((answer: any) => {
+                                if (!byQuestion[answer.question]) byQuestion[answer.question] = [];
+                                byQuestion[answer.question].push(answer);
+                              });
+                              
+                              return Object.entries(byQuestion).map(([question, answers]) => (
+                                <div key={question} className="bg-white rounded-xl p-4 shadow-sm">
+                                  <h5 className="font-medium text-gray-900 mb-3">{question}</h5>
+                                  <div className="space-y-3">
+                                    {['ChatGPT', 'Gemini', 'Copilot', 'Perplexity'].map(platform => {
+                                      const platformAnswer = answers.find((a: any) => a.platform === platform);
+                                      if (!platformAnswer) return null;
+                                      
+                                      return (
+                                        <div key={platform} className="bg-gray-50 rounded-lg p-3">
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                                              platform === "ChatGPT" ? "bg-green-100 text-green-700" :
+                                              platform === "Gemini" ? "bg-blue-100 text-blue-700" :
+                                              platform === "Perplexity" ? "bg-purple-100 text-purple-700" : 
+                                              "bg-cyan-100 text-cyan-700"
+                                            }`}>{platform}</span>
+                                            <div className="flex items-center gap-2">
+                                              {platformAnswer.brandMentioned && (
+                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">✓ Mentioned</span>
+                                              )}
+                                              <span className={`text-xs px-2 py-0.5 rounded ${
+                                                platformAnswer.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                                platformAnswer.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                                'bg-gray-200 text-gray-600'
+                                              }`}>{platformAnswer.sentiment}</span>
+                                            </div>
+                                          </div>
+                                          <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                            {platformAnswer.fullResponse?.substring(0, 600) || platformAnswer.context || 'No response'}
+                                            {platformAnswer.fullResponse?.length > 600 && '...'}
+                                          </p>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ));
+                            })()}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -2364,5 +2524,12 @@ function transformAnalysisData(data: any) {
     journeyStages,
     websiteAudit,
     platformBreakdown,
+    // Include raw data for detailed answers display
+    aiTestResults: analysis.aiTestResults || [],
+    discoveredQuestions: analysis.discoveredQuestions || [],
+    // Executive summary and patterns
+    executiveSummary: analysis.executiveSummary || null,
+    patterns: analysis.patterns || null,
+    stageWeights: analysis.stageWeights || { awareness: 0.20, consideration: 0.35, decision: 0.45 },
   };
 }
