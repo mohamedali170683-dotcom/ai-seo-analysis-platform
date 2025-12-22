@@ -134,9 +134,22 @@ export class EnhancedQuestionService {
       }
     }
 
-    // PRIORITY 3: Generated questions (final fallback)
-    if (allQuestions.length < maxQuestionsPerStage * 3) {
-      console.log(`📝 [QUESTIONS] Adding generated questions as final fallback...`);
+    // PRIORITY 3: Generated questions - ALWAYS ensure all stages have coverage
+    // Check if any stage is missing questions
+    const stagesCovered = {
+      awareness: allQuestions.filter(q => q.category === "awareness").length,
+      consideration: allQuestions.filter(q => q.category === "consideration").length,
+      decision: allQuestions.filter(q => q.category === "decision").length,
+    };
+    
+    const needsFallback = allQuestions.length < maxQuestionsPerStage * 3 ||
+      stagesCovered.awareness === 0 ||
+      stagesCovered.consideration === 0 ||
+      stagesCovered.decision === 0;
+    
+    if (needsFallback) {
+      console.log(`📝 [QUESTIONS] Adding generated questions for missing stages...`);
+      console.log(`   Current coverage: awareness=${stagesCovered.awareness}, consideration=${stagesCovered.consideration}, decision=${stagesCovered.decision}`);
       const generated = this.generateFallbackQuestions(brandName, competitors, category);
       const existing = new Set(allQuestions.map(q => q.question.toLowerCase()));
       for (const q of generated) {
@@ -188,28 +201,42 @@ export class EnhancedQuestionService {
   }
 
   /**
-   * Generate fallback questions
+   * Generate fallback questions for all funnel stages
    */
   private generateFallbackQuestions(brandName: string, competitors: string[], category?: string): DiscoveredQuestion[] {
     const questions: DiscoveredQuestion[] = [];
 
-    // Brand questions
+    // AWARENESS stage - educational/informational questions
     questions.push(
       { question: `What is ${brandName}?`, searchVolume: 5000, difficulty: 25, intent: "informational", category: "awareness", questionType: "brand", score: 80, source: "generated" },
       { question: `Is ${brandName} good?`, searchVolume: 4000, difficulty: 30, intent: "informational", category: "awareness", questionType: "brand", score: 75, source: "generated" },
-      { question: `${brandName} reviews`, searchVolume: 8000, difficulty: 45, intent: "commercial", category: "consideration", questionType: "brand", score: 85, source: "generated" },
-      { question: competitors[0] ? `${brandName} vs ${competitors[0]}` : `${brandName} alternatives`, searchVolume: 3000, difficulty: 40, intent: "commercial", category: "consideration", questionType: "brand", score: 70, source: "generated" },
-      { question: `Where to buy ${brandName}?`, searchVolume: 6000, difficulty: 30, intent: "commercial", category: "decision", questionType: "brand", score: 78, source: "generated" },
-      { question: `${brandName} price`, searchVolume: 7000, difficulty: 25, intent: "commercial", category: "decision", questionType: "brand", score: 82, source: "generated" },
+      { question: `How does ${brandName} work?`, searchVolume: 3500, difficulty: 28, intent: "informational", category: "awareness", questionType: "brand", score: 73, source: "generated" },
     );
 
-    // Category questions
+    // CONSIDERATION stage - comparison/evaluation questions
+    questions.push(
+      { question: `${brandName} reviews`, searchVolume: 8000, difficulty: 45, intent: "commercial", category: "consideration", questionType: "brand", score: 85, source: "generated" },
+      { question: competitors[0] ? `${brandName} vs ${competitors[0]}` : `${brandName} alternatives`, searchVolume: 3000, difficulty: 40, intent: "commercial", category: "consideration", questionType: "brand", score: 70, source: "generated" },
+      { question: `${brandName} pros and cons`, searchVolume: 2500, difficulty: 35, intent: "commercial", category: "consideration", questionType: "brand", score: 68, source: "generated" },
+    );
+
+    // DECISION stage - purchase/pricing/signup questions
+    questions.push(
+      { question: `${brandName} pricing`, searchVolume: 7000, difficulty: 25, intent: "commercial", category: "decision", questionType: "brand", score: 82, source: "generated" },
+      { question: `How much does ${brandName} cost?`, searchVolume: 6000, difficulty: 30, intent: "commercial", category: "decision", questionType: "brand", score: 78, source: "generated" },
+      { question: `${brandName} free trial`, searchVolume: 4000, difficulty: 28, intent: "commercial", category: "decision", questionType: "brand", score: 75, source: "generated" },
+      { question: `How to sign up for ${brandName}?`, searchVolume: 3000, difficulty: 22, intent: "commercial", category: "decision", questionType: "brand", score: 72, source: "generated" },
+      { question: `${brandName} subscription plans`, searchVolume: 2800, difficulty: 30, intent: "commercial", category: "decision", questionType: "brand", score: 70, source: "generated" },
+    );
+
+    // Category questions (if provided)
     if (category) {
       questions.push(
-        { question: `Best ${category}`, searchVolume: 12000, difficulty: 50, intent: "commercial", category: "awareness", questionType: "category", score: 90, source: "generated" },
+        { question: `Best ${category}?`, searchVolume: 12000, difficulty: 50, intent: "commercial", category: "awareness", questionType: "category", score: 90, source: "generated" },
         { question: `Top ${category} ${new Date().getFullYear()}`, searchVolume: 8000, difficulty: 45, intent: "commercial", category: "consideration", questionType: "category", score: 85, source: "generated" },
         { question: `${category} comparison`, searchVolume: 5000, difficulty: 40, intent: "commercial", category: "consideration", questionType: "category", score: 75, source: "generated" },
-        { question: `Where to buy ${category}?`, searchVolume: 4000, difficulty: 35, intent: "commercial", category: "decision", questionType: "category", score: 72, source: "generated" },
+        { question: `Best free ${category}?`, searchVolume: 6000, difficulty: 35, intent: "commercial", category: "decision", questionType: "category", score: 78, source: "generated" },
+        { question: `${category} pricing comparison`, searchVolume: 4000, difficulty: 38, intent: "commercial", category: "decision", questionType: "category", score: 72, source: "generated" },
       );
     }
 
