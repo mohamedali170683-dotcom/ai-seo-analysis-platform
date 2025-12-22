@@ -516,9 +516,8 @@ export class MultiPlatformAIService {
   }
 
   /**
-   * Test using REAL Google Gemini API with Google Search grounding for citations
-   * Using the correct SDK v0.24.x API
-   * Has a global 30-second timeout to fail fast if region doesn't support Gemini
+   * Test using REAL Google Gemini API via direct REST calls
+   * Uses REST API instead of SDK to avoid response truncation issues
    */
   private async testGeminiReal(
     question: string,
@@ -526,195 +525,87 @@ export class MultiPlatformAIService {
     competitors: string[],
     numTests: number
   ): Promise<AIResponse[]> {
-    if (!this.geminiClient) {
-      console.warn(`⚠️ [Gemini] No client available`);
+    // Get API key from environment
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "your-google-gemini-api-key") {
+      console.warn(`⚠️ [Gemini] No valid API key available`);
       return [];
     }
 
-    // Global timeout - fail fast if Gemini isn't working in this region
-    const globalTimeout = 30000; // 30 seconds max for all Gemini tests
+    // Global timeout - fail fast if Gemini isn't working
+    const globalTimeout = 45000; // 45 seconds max for all Gemini tests
     const startTime = Date.now();
     
-    console.log(`  🔵 [Gemini] Starting ${numTests} tests (${globalTimeout/1000}s max)...`);
+    console.log(`  🔵 [Gemini] Starting ${numTests} tests via REST API (${globalTimeout/1000}s max)...`);
 
-    // Run tests sequentially to avoid rate limits
+    // Models to try - spread load to avoid rate limits
+    const modelNames = [
+      "gemini-2.0-flash",
+      "gemini-2.0-flash-001",
+      "gemini-2.5-flash",
+      "gemini-flash-latest",
+      "gemini-pro-latest",
+    ];
+
     const results: (AIResponse | null)[] = [];
     let consecutiveFailures = 0;
-    const maxConsecutiveFailures = 2; // If 2 tests fail in a row, abort
+    const maxConsecutiveFailures = 2;
     
     for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       
-      // Check global timeout
       if (Date.now() - startTime > globalTimeout) {
-        console.warn(`  ⚠️ [Gemini] Global timeout reached (${globalTimeout/1000}s), aborting remaining tests`);
+        console.warn(`  ⚠️ [Gemini] Global timeout reached, aborting remaining tests`);
         break;
       }
       
-      // If we've had consecutive failures, abort early
       if (consecutiveFailures >= maxConsecutiveFailures) {
-        console.warn(`  ⚠️ [Gemini] ${consecutiveFailures} consecutive failures, aborting (models likely unavailable in this region)`);
+        console.warn(`  ⚠️ [Gemini] ${consecutiveFailures} consecutive failures, aborting`);
         break;
       }
       
-      try {
-        // Try multiple models for compatibility - spread load to avoid rate limits
-        // Each model has its own quota, so rotating helps avoid 429 errors
-        const modelNames = [
-          "gemini-2.0-flash",        // Start with 2.0 (less popular)
-          "gemini-2.0-flash-001",    // Specific version
-          "gemini-2.5-flash",        // Latest and fastest
-          "gemini-flash-latest",     // Latest flash alias
-          "gemini-pro-latest",       // Pro variant
-          "gemini-2.5-pro",          // Most capable (higher limits)
-        ];
-        let result = null;
-        let usedModel = "";
-        let lastError = "";
-        
-        console.log(`  → [Gemini] Test ${i}/${numTests}...`);
-        
-        for (const modelName of modelNames) {
-          try {
-            console.log(`     Trying model: ${modelName}...`);
-            const model = this.geminiClient!.getGenerativeModel({ 
-              model: modelName,
-            });
-            
-            // Make the API call with timeout
-            const timeoutPromise = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error("Timeout after 20s")), 20000);
-            });
-            
-            const apiPromise = model.generateContent({
-              contents: [{ role: "user", parts: [{ text: question }] }],
+      let fullResponse = '';
+      let usedModel = '';
+      const sources: SourceCitation[] = [];
+      let hasGrounding = false;
+      
+      console.log(`  → [Gemini] Test ${i}/${numTests}...`);
+      
+      // Try each model until one works
+      for (const modelName of modelNames) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+          
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: question }] }],
               generationConfig: {
                 maxOutputTokens: 2048,
                 temperature: 0.7,
               },
-            });
+            }),
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.candidates?.[0]?.content?.parts) {
+            // Extract full text from all parts
+            const parts = data.candidates[0].content.parts;
+            fullResponse = parts
+              .filter((p: any) => p.text)
+              .map((p: any) => p.text)
+              .join('\n');
             
-            result = await Promise.race([apiPromise, timeoutPromise]) as any;
             usedModel = modelName;
-            console.log(`  ✓ [Gemini] Test ${i} SUCCESS with model: ${modelName}`);
-            break;
-          } catch (modelError: any) {
-            const errMsg = modelError.message?.toLowerCase() || '';
-            lastError = modelError.message || 'Unknown error';
             
-            // Log detailed error for debugging
-            console.warn(`     ✗ ${modelName}: ${modelError.message?.substring(0, 100)}`);
-            
-            // These errors mean we should try the next model
-            if (errMsg.includes('not found') || 
-                errMsg.includes('404') || 
-                errMsg.includes('not supported') ||
-                errMsg.includes('not available') ||
-                errMsg.includes('does not exist') ||
-                errMsg.includes('region')) {
-              continue;
-            }
-            
-            // Rate limiting - wait a bit then try next model
-            if (errMsg.includes('quota') || errMsg.includes('rate') || errMsg.includes('429')) {
-              console.warn(`     → Rate limited, waiting 2s before trying next model...`);
-              await new Promise(resolve => setTimeout(resolve, 2000));
-              continue;
-            }
-            
-            // For permission/auth errors, try next model (might be model-specific permissions)
-            if (errMsg.includes('permission') || errMsg.includes('403') || errMsg.includes('denied')) {
-              continue;
-            }
-            
-            // For other errors (network, etc.), throw to be caught by outer handler
-            throw modelError;
-          }
-        }
-        
-        if (!result) {
-          console.error(`  ❌ [Gemini] Test ${i} - No model worked (tried ${modelNames.length})`);
-          console.error(`     Last error: ${lastError.substring(0, 100)}`);
-          results.push(null);
-          consecutiveFailures++;
-          continue;
-        }
-        
-        try {
-          
-          // Get the response
-          const response = result.response;
-          
-          if (!response) {
-            console.warn(`  ⚠️ [Gemini] Test ${i} no response object`);
-            results.push(null);
-            continue;
-          }
-          
-          // Check for safety blocks
-          if (response.promptFeedback?.blockReason) {
-            console.warn(`  ⚠️ [Gemini] Test ${i} BLOCKED: ${response.promptFeedback.blockReason}`);
-            results.push(null);
-            continue;
-          }
-          
-          // Log finish reason for debugging
-          const candidate = response.candidates?.[0];
-          const finishReason = candidate?.finishReason;
-          if (finishReason && finishReason !== 'STOP') {
-            console.warn(`  ⚠️ [Gemini] Test ${i} finish reason: ${finishReason}`);
-          }
-          
-          // Get text from response - try multiple methods
-          let fullResponse = '';
-          try {
-            // Method 1: Direct text() method
-            fullResponse = response.text();
-          } catch (textErr) {
-            console.warn(`  ⚠️ [Gemini] Test ${i} text() failed, trying candidates...`);
-          }
-          
-          // Method 2: If text() didn't work or is short, try extracting from candidates
-          if (!fullResponse || fullResponse.length < 50) {
-            try {
-              const candidate = response.candidates?.[0];
-              if (candidate?.content?.parts) {
-                const textParts = candidate.content.parts
-                  .filter((p: any) => p.text)
-                  .map((p: any) => p.text);
-                if (textParts.length > 0) {
-                  const candidateText = textParts.join('\n');
-                  if (candidateText.length > fullResponse.length) {
-                    fullResponse = candidateText;
-                    console.log(`  📝 [Gemini] Test ${i} extracted ${fullResponse.length} chars from candidates`);
-                  }
-                }
-              }
-            } catch (candidateErr) {
-              console.warn(`  ⚠️ [Gemini] Test ${i} candidate extraction failed`);
-            }
-          }
-          
-          // Extract grounding sources/citations from the response
-          const sources: SourceCitation[] = [];
-          let hasGrounding = false;
-          
-          try {
-            // Check for grounding metadata in the response
-            const candidate = response.candidates?.[0];
-            const groundingMetadata = (candidate as any)?.groundingMetadata;
-            
+            // Check for grounding metadata
+            const groundingMetadata = data.candidates[0].groundingMetadata;
             if (groundingMetadata) {
               hasGrounding = true;
-              console.log(`  📚 [Gemini] Test ${i} has grounding metadata`);
-              
-              // Extract web search results if available
-              const webSearchQueries = groundingMetadata.webSearchQueries || [];
-              const groundingChunks = groundingMetadata.groundingChunks || [];
-              const groundingSupports = groundingMetadata.groundingSupports || [];
-              
-              // Process grounding chunks (sources)
-              for (const chunk of groundingChunks) {
+              const chunks = groundingMetadata.groundingChunks || [];
+              for (const chunk of chunks) {
                 if (chunk.web) {
                   sources.push({
                     url: chunk.web.uri || '',
@@ -723,59 +614,58 @@ export class MultiPlatformAIService {
                   });
                 }
               }
-              
-              console.log(`  📎 [Gemini] Test ${i} found ${sources.length} sources`);
             }
-          } catch (groundingError: any) {
-            console.warn(`  ⚠️ [Gemini] Test ${i} grounding extraction failed: ${groundingError.message}`);
+            
+            console.log(`  ✓ [Gemini] Test ${i} SUCCESS: ${modelName} (${fullResponse.length} chars)`);
+            break;
+          } else if (data.error?.code === 429) {
+            // Rate limited - try next model
+            console.warn(`     ✗ ${modelName}: Rate limited`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          } else if (data.error) {
+            console.warn(`     ✗ ${modelName}: ${data.error.message?.substring(0, 80)}`);
+            continue;
           }
-          
-          // Also extract any URLs from the response text
-          const urlsInText = this.extractUrlsFromText(fullResponse);
-          for (const url of urlsInText) {
-            if (!sources.some(s => s.url === url)) {
-              sources.push({
-                url,
-                domain: this.extractDomain(url),
-              });
-            }
+        } catch (fetchError: any) {
+          console.warn(`     ✗ ${modelName}: ${fetchError.message?.substring(0, 50)}`);
+          continue;
+        }
+      }
+      
+      if (fullResponse && fullResponse.length > 0) {
+        // Extract any URLs from the response text
+        const urlsInText = this.extractUrlsFromText(fullResponse);
+        for (const url of urlsInText) {
+          if (!sources.some(s => s.url === url)) {
+            sources.push({ url, domain: this.extractDomain(url) });
           }
-          
-          if (fullResponse && fullResponse.length > 0) {
-            const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
-            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars, model: ${usedModel}), mentions "${brandName}": ${mentionsBrand}`);
-            const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
-            results.push({
-              platform: "Gemini" as const,
-              modelVersion: usedModel,
-              queryNumber: i,
-              question,
-              fullResponse,
-              isRealAPI: true,
-              hasGrounding,
-              sources,
-              ...analysis,
-            } as AIResponse);
-            consecutiveFailures = 0; // Reset on success
-          } else {
-            console.warn(`  ⚠️ [Gemini] Test ${i} empty response text`);
-            results.push(null);
-            consecutiveFailures++;
-          }
-        } catch (parseError: any) {
-          console.warn(`  ⚠️ [Gemini] Test ${i} response parsing error: ${parseError.message}`);
-          results.push(null);
-          consecutiveFailures++;
         }
         
-        // Small delay between requests to avoid rate limiting
-        if (idx < numTests - 1) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      } catch (error: any) {
-        console.error(`  ❌ [Gemini] Test ${i} ERROR: ${error.message?.substring(0, 80)}`);
+        const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
+        console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars), mentions "${brandName}": ${mentionsBrand}`);
+        
+        const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
+        results.push({
+          platform: "Gemini" as const,
+          modelVersion: usedModel,
+          queryNumber: i,
+          question,
+          fullResponse,
+          isRealAPI: true,
+          hasGrounding,
+          sources,
+          ...analysis,
+        } as AIResponse);
+      } else {
+        console.warn(`  ⚠️ [Gemini] Test ${i} - no response from any model`);
         results.push(null);
         consecutiveFailures++;
+      }
+      
+      // Small delay between requests to avoid rate limiting
+      if (idx < numTests - 1) {
+        await new Promise(resolve => setTimeout(resolve, 800));
       }
     }
 

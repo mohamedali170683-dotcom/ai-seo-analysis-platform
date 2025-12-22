@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Lock, Sparkles } from "lucide-react";
+import { Lock, Sparkles, ChevronDown } from "lucide-react";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
+import { INDUSTRY_CATEGORIES, getPersonasForSubcategory, BuyerPersona } from "@/lib/data/industry-personas";
 
 interface Question {
   id: string;
@@ -38,6 +39,48 @@ export default function AnalyzePage() {
   const [domain, setDomain] = useState("");
   const [category, setCategory] = useState("");
   const [competitors, setCompetitors] = useState("");
+  
+  // Industry & Persona selection
+  const [selectedIndustry, setSelectedIndustry] = useState("");
+  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  const [selectedPersona, setSelectedPersona] = useState("");
+  
+  // Get subcategories for selected industry
+  const subcategories = useMemo(() => {
+    const industry = INDUSTRY_CATEGORIES.find(c => c.id === selectedIndustry);
+    return industry?.subcategories || [];
+  }, [selectedIndustry]);
+  
+  // Get personas for selected subcategory
+  const personas = useMemo(() => {
+    if (selectedIndustry && selectedSubcategory) {
+      return getPersonasForSubcategory(selectedIndustry, selectedSubcategory);
+    }
+    return [];
+  }, [selectedIndustry, selectedSubcategory]);
+  
+  // When industry changes, reset subcategory and persona
+  const handleIndustryChange = (industryId: string) => {
+    setSelectedIndustry(industryId);
+    setSelectedSubcategory("");
+    setSelectedPersona("");
+    // Auto-populate category if empty
+    const industry = INDUSTRY_CATEGORIES.find(c => c.id === industryId);
+    if (industry && !category) {
+      setCategory(industry.name);
+    }
+  };
+  
+  // When subcategory changes, reset persona and update category
+  const handleSubcategoryChange = (subcatId: string) => {
+    setSelectedSubcategory(subcatId);
+    setSelectedPersona("");
+    // Update category to be more specific
+    const subcat = subcategories.find(s => s.id === subcatId);
+    if (subcat) {
+      setCategory(subcat.name);
+    }
+  };
 
   // Phase tracking
   const [phase, setPhase] = useState<1 | 2 | 3>(1);
@@ -122,6 +165,10 @@ export default function AnalyzePage() {
           category,
           competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           tier, // Pass tier to control real data vs strategic questions
+          // Persona context for question generation
+          industryCategory: selectedIndustry,
+          subcategory: selectedSubcategory,
+          buyerPersona: selectedPersona,
         }),
       });
 
@@ -276,6 +323,10 @@ export default function AnalyzePage() {
           selectedPlatforms: selectedPlatforms.filter(p => isPlatformAllowed(p)),
           testsPerPlatform: limits.testsPerQuestion,
           tier, // Pass tier for backend validation
+          // Persona context
+          industryCategory: selectedIndustry,
+          subcategory: selectedSubcategory,
+          buyerPersona: selectedPersona,
         }),
       });
 
@@ -524,6 +575,68 @@ export default function AnalyzePage() {
                   />
                 </div>
 
+                {/* Industry Category Dropdown */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Industry Category *</label>
+                  <div className="relative">
+                    <select
+                      value={selectedIndustry}
+                      onChange={(e) => handleIndustryChange(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px] appearance-none cursor-pointer"
+                    >
+                      <option value="">Select an industry...</option>
+                      {INDUSTRY_CATEGORIES.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* Subcategory Dropdown (shown when industry selected) */}
+                {subcategories.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Subcategory *</label>
+                    <div className="relative">
+                      <select
+                        value={selectedSubcategory}
+                        onChange={(e) => handleSubcategoryChange(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px] appearance-none cursor-pointer"
+                      >
+                        <option value="">Select a subcategory...</option>
+                        {subcategories.map(sub => (
+                          <option key={sub.id} value={sub.id}>{sub.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
+
+                {/* Buyer Persona Dropdown (shown when subcategory selected) */}
+                {personas.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Target Buyer Persona</label>
+                    <div className="relative">
+                      <select
+                        value={selectedPersona}
+                        onChange={(e) => setSelectedPersona(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px] appearance-none cursor-pointer"
+                      >
+                        <option value="">All personas (recommended)</option>
+                        {personas.map(persona => (
+                          <option key={persona.id} value={persona.id}>{persona.name}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">
+                      Select a specific persona to focus questions on their journey
+                    </p>
+                  </div>
+                )}
+
+                {/* Category / Vertical - now auto-populated but editable */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Category / Vertical *</label>
                   <input
@@ -533,6 +646,9 @@ export default function AnalyzePage() {
                     placeholder="e.g., running shoes, sportswear"
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
+                  <p className="text-xs text-gray-400 mt-2">
+                    Auto-populated from industry selection, or enter custom
+                  </p>
                 </div>
 
                 <div>

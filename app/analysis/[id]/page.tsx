@@ -133,9 +133,11 @@ export default function AnalysisResultsPage({ params }: PageProps) {
   const journeyStages = analysis.journeyStages || [];
   const overallScore = analysis.stats?.visibilityScore ? Math.round(analysis.stats.visibilityScore) : 0;
   const platformBreakdown = analysis.stats?.platformBreakdown || {};
+  const aiTestResults = analysis.aiTestResults || [];
 
   return (
     <JourneyStageReport
+      analysisId={id}
       brandName={analysis.brandOrKeyword}
       domain={analysis.domain}
       overallScore={overallScore}
@@ -143,6 +145,7 @@ export default function AnalysisResultsPage({ params }: PageProps) {
       totalQuestions={analysis.stats?.totalQuestions || 0}
       platformBreakdown={platformBreakdown}
       journeyStages={journeyStages}
+      aiTestResults={aiTestResults}
       showHeader={true}
       backLink="/"
     />

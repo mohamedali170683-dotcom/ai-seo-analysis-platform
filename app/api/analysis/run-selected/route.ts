@@ -485,6 +485,16 @@ async function executeSelectedAnalysis(
 
     let overallMentionRate = 0;
     let totalStageResponses = 0;
+    
+    // Track stage visibility scores for weighted overall calculation
+    // Awareness counts less (20%) since users are seeking info, not brands
+    // Consideration (40%) and Decision (40%) matter more for brand visibility
+    const stageWeights: Record<string, number> = {
+      awareness: 0.20,    // 20% weight - source citations matter more than mentions
+      consideration: 0.40, // 40% weight - comparison/evaluation is key
+      decision: 0.40,      // 40% weight - final purchase influence is critical
+    };
+    const stageVisibilityScores: Record<string, number> = {};
 
     for (const [stage, results] of Object.entries(stageGroups)) {
       const stageResults = results.filter((r: any) => !r.error);
@@ -524,18 +534,68 @@ async function executeSelectedAnalysis(
         ? Math.round(positions.reduce((a: number, b: number) => a + b, 0) / positions.length) 
         : 0;
 
-      // Calculate visibility score (weighted)
-      // IMPORTANT: If brand is NOT mentioned (mentionRate = 0), visibility MUST be 0
-      // Position and sentiment only matter IF the brand is mentioned
+      // NEW: Calculate source citation score for Awareness stage
+      // Check if brand domain is cited in any AI sources
+      const brandDomainLower = (domain || brandName).toLowerCase().replace(/^www\./, '');
+      let sourceCitationCount = 0;
+      let totalSourcesChecked = 0;
+      
+      stageResults.forEach((r: any) => {
+        r.responses?.forEach((resp: any) => {
+          const sources = resp.sources || [];
+          if (sources.length > 0) {
+            totalSourcesChecked += sources.length;
+            sources.forEach((source: any) => {
+              const sourceDomain = (source.domain || source.url || '').toLowerCase();
+              if (sourceDomain.includes(brandDomainLower) || 
+                  sourceDomain.includes(brandName.toLowerCase())) {
+                sourceCitationCount++;
+              }
+            });
+          }
+        });
+      });
+      
+      const sourceCitationRate = totalSourcesChecked > 0 
+        ? Math.round((sourceCitationCount / totalSourcesChecked) * 100)
+        : 0;
+      
+      // Calculate visibility score (weighted differently based on stage)
+      // AWARENESS stage: Source citations are MORE important than mentions
+      // Users are searching for information, not brands - so being cited as a source matters more
       const positionScore = mentionRate > 0 && avgPosition > 0 
         ? Math.max(0, 100 - (avgPosition - 1) * 20) 
-        : (mentionRate > 0 ? 50 : 0);  // Only default to 50 if brand IS mentioned but no position data
+        : (mentionRate > 0 ? 50 : 0);
       const sentimentScore = mentionRate > 0
         ? Math.max(0, Math.min(100, ((sentimentBreakdown.positive - sentimentBreakdown.negative + 100) / 2)))
-        : 0;  // Sentiment is 0 if brand not mentioned
-      const visibilityScore = mentionRate > 0
-        ? Math.round((mentionRate * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2))
-        : 0;  // If not mentioned at all, visibility is 0%
+        : 0;
+      
+      let visibilityScore: number;
+      
+      if (stage === "awareness") {
+        // AWARENESS: Source citations (60%) + Mention rate (25%) + Sentiment (15%)
+        // Being cited as a source is the primary metric
+        const citationScore = sourceCitationRate > 0 ? sourceCitationRate : 0;
+        visibilityScore = Math.round(
+          (citationScore * 0.60) + 
+          (mentionRate * 0.25) + 
+          (sentimentScore * 0.15)
+        );
+        // Ensure minimum visibility if brand IS mentioned or cited
+        if (visibilityScore === 0 && (mentionRate > 0 || sourceCitationRate > 0)) {
+          visibilityScore = Math.max(mentionRate, sourceCitationRate) > 0 ? 10 : 0;
+        }
+      } else {
+        // CONSIDERATION & DECISION: Traditional scoring
+        // Mention rate (50%) + Position (30%) + Sentiment (20%)
+        visibilityScore = mentionRate > 0
+          ? Math.round((mentionRate * 0.5) + (positionScore * 0.3) + (sentimentScore * 0.2))
+          : 0;
+      }
+      
+      // Store stage visibility score for weighted overall calculation
+      stageVisibilityScores[stage] = visibilityScore;
+      console.log(`📊 [EXEC] ${stage} visibility: ${visibilityScore}% (weight: ${(stageWeights[stage] || 0.33) * 100}%)`);
 
       // Get AI answer examples - ONE PER PLATFORM with varied sentiment
       const allResponses = stageResults.flatMap((r: any) => 
@@ -662,10 +722,28 @@ async function executeSelectedAnalysis(
       }
     }
 
-    // Calculate overall score
+    // Calculate overall score using weighted stage visibility
+    // Awareness (20%), Consideration (40%), Decision (40%)
+    let weightedVisibilityScore = 0;
+    let totalWeight = 0;
+    
+    for (const [stage, score] of Object.entries(stageVisibilityScores)) {
+      const weight = stageWeights[stage] || 0.33;
+      weightedVisibilityScore += score * weight;
+      totalWeight += weight;
+    }
+    
+    // Normalize in case not all stages have data
+    const overallVisibilityScore = totalWeight > 0 
+      ? Math.round(weightedVisibilityScore / totalWeight * (totalWeight < 1 ? totalWeight : 1))
+      : 0;
+    
     const avgMentionRate = Object.keys(stageGroups).length > 0 
       ? Math.round(overallMentionRate / Object.keys(stageGroups).length) 
       : 0;
+    
+    console.log(`📊 [EXEC] Weighted overall visibility: ${overallVisibilityScore}%`);
+    console.log(`   Stage scores:`, stageVisibilityScores);
 
     // Wait for website audit to complete (with safety timeout)
     await updateProgress(92, "Completing website technical audit...");

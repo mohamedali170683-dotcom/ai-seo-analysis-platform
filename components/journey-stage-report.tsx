@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, Download, Brain, Users, ShoppingCart, Info, CheckCircle2, BarChart3, ChevronDown } from "lucide-react";
+import { ArrowLeft, Download, Brain, Users, ShoppingCart, Info, CheckCircle2, BarChart3, ChevronDown, Eye, FileText, X } from "lucide-react";
 import { useState } from "react";
 
 interface JourneyStageReportProps {
+  analysisId?: string;
   brandName: string;
   domain?: string;
   overallScore: number;
@@ -17,11 +18,13 @@ interface JourneyStageReportProps {
   };
   sentimentDefinitions?: any;
   journeyStages: any[];
+  aiTestResults?: any[]; // All AI test results for viewing full answers
   showHeader?: boolean;
   backLink?: string;
 }
 
 export function JourneyStageReport({
+  analysisId,
   brandName,
   domain,
   overallScore,
@@ -31,13 +34,36 @@ export function JourneyStageReport({
   scoringMethodology,
   sentimentDefinitions,
   journeyStages,
+  aiTestResults = [],
   showHeader = true,
   backLink = "/",
 }: JourneyStageReportProps) {
   const [expandedStage, setExpandedStage] = useState<string | null>(null);
+  const [viewingAnswers, setViewingAnswers] = useState<string | null>(null);
 
   const toggleStage = (stage: string) => {
     setExpandedStage(expandedStage === stage ? null : stage);
+  };
+
+  const downloadAnswers = (stage?: string) => {
+    if (!analysisId) return;
+    const url = `/api/analysis/${analysisId}/export?format=json${stage ? `&stage=${stage}` : ''}`;
+    window.open(url, '_blank');
+  };
+
+  const downloadCSV = (stage?: string) => {
+    if (!analysisId) return;
+    const url = `/api/analysis/${analysisId}/export?format=csv${stage ? `&stage=${stage}` : ''}`;
+    window.open(url, '_blank');
+  };
+
+  // Group AI results by stage for viewing
+  const getAnswersForStage = (stageName: string) => {
+    return aiTestResults.filter((result: any) => {
+      // Try to match based on question category from discovered questions
+      const stageQuestions = journeyStages.find((s: any) => s.stage === stageName)?.questions || [];
+      return stageQuestions.some((q: any) => q.question === result.question);
+    });
   };
 
   // Default scoring methodology if not provided
@@ -367,6 +393,12 @@ export function JourneyStageReport({
                 stage={stage}
                 brandName={brandName}
                 stageNumber={index + 1}
+                analysisId={analysisId}
+                aiTestResults={getAnswersForStage(stage.stage)}
+                onDownloadJSON={() => downloadAnswers(stage.stage)}
+                onDownloadCSV={() => downloadCSV(stage.stage)}
+                viewingAnswers={viewingAnswers}
+                setViewingAnswers={setViewingAnswers}
               />
             ) : null
           )}
@@ -377,13 +409,24 @@ export function JourneyStageReport({
 }
 
 // Journey Stage Detail Card Component
-function JourneyStageDetailCard({ stage, brandName, stageNumber }: any) {
+function JourneyStageDetailCard({ 
+  stage, 
+  brandName, 
+  stageNumber,
+  analysisId,
+  aiTestResults = [],
+  onDownloadJSON,
+  onDownloadCSV,
+  viewingAnswers,
+  setViewingAnswers,
+}: any) {
   const iconMap: any = {
     Brain: Brain,
     Users: Users,
     ShoppingCart: ShoppingCart,
   };
   const Icon = iconMap[stage.icon] || Brain;
+  const isViewingThisStage = viewingAnswers === stage.stage;
 
   return (
     <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-100">
@@ -403,7 +446,78 @@ function JourneyStageDetailCard({ stage, brandName, stageNumber }: any) {
             <div className="text-sm opacity-90">Score</div>
           </div>
         </div>
+        
+        {/* Download & View Buttons */}
+        {analysisId && (
+          <div className="flex flex-wrap gap-3 mt-4">
+            <button
+              onClick={() => setViewingAnswers(isViewingThisStage ? null : stage.stage)}
+              className="flex items-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all text-sm font-semibold"
+            >
+              {isViewingThisStage ? <X className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {isViewingThisStage ? "Hide All Answers" : "View All Answers"}
+            </button>
+            <button
+              onClick={onDownloadJSON}
+              className="flex items-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all text-sm font-semibold"
+            >
+              <Download className="w-4 h-4" />
+              Download JSON
+            </button>
+            <button
+              onClick={onDownloadCSV}
+              className="flex items-center gap-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all text-sm font-semibold"
+            >
+              <FileText className="w-4 h-4" />
+              Download CSV
+            </button>
+          </div>
+        )}
       </div>
+      
+      {/* Full Answers Panel (expandable) */}
+      {isViewingThisStage && aiTestResults.length > 0 && (
+        <div className="bg-gray-50 border-b-4 border-gray-200 p-6">
+          <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Eye className="w-5 h-5" />
+            All AI Responses for {stage.stageLabel} Stage ({aiTestResults.length})
+          </h4>
+          <div className="space-y-4 max-h-[600px] overflow-y-auto">
+            {aiTestResults.map((result: any, idx: number) => (
+              <div key={idx} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                    {result.platform}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {result.brandMentioned && (
+                      <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                        ✓ Brand Mentioned
+                      </span>
+                    )}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      result.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                      result.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                      'bg-gray-100 text-gray-700'
+                    }`}>
+                      {result.sentiment || 'neutral'}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm font-semibold text-gray-900 mb-2">{result.question}</p>
+                <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+                  {result.fullResponse || result.context || "No response recorded"}
+                </div>
+                {result.sources && result.sources.length > 0 && (
+                  <div className="mt-2 text-xs text-gray-500">
+                    <strong>Sources:</strong> {result.sources.map((s: any) => s.domain || s.url).join(', ')}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="p-8">
         {/* Questions + Statistical Significance */}
