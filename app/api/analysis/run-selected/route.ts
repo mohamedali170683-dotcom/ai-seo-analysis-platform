@@ -595,42 +595,48 @@ async function executeSelectedAnalysis(
       // Create journey_stage insight (THIS IS WHAT THE RESULTS PAGE EXPECTS)
       const priorityMap: Record<string, number> = { awareness: 1, consideration: 2, decision: 3 };
       
-      await prisma.aIInsight.create({
-        data: {
-          analysisId,
-          category: "journey_stage",
-          priority: priorityMap[stage] || 1,
-          title: `${stageLabels[stage]} Stage`,
-          finding: `${mentionRate}% mention rate in ${stageLabels[stage].toLowerCase()} stage`,
-          dataEvidence: JSON.stringify({ stageResults: stageResults.length, patterns: responseAnalysis }),
-          aiReasoning: `Analyzed ${stageResponses} AI responses for ${stageResults.length} questions`,
-          actions: [
-            mentionRate < 50 ? `Improve ${stageLabels[stage].toLowerCase()} stage visibility` : `Maintain ${stageLabels[stage].toLowerCase()} stage presence`,
-            sentimentBreakdown.negative > 20 ? "Address negative sentiment in AI responses" : "Continue positive engagement",
-          ],
-          expectedImpact: {
-            stage,
-            stageLabel: stageLabels[stage],
-            stageDescription: stageDescriptions[stage],
-            questions: stageQuestions,
-            portrayal: {
-              mentionRate,
-              totalQuestions: stageResults.length,
-              totalTests: stageResponses,
-              totalAnswersAnalyzed: stageResponses,
-              visibilityScore,
-              averagePosition: avgPosition,
-              sentiment: sentimentBreakdown,
-              aiAnswerExamples,
-              competitorComparison,
+      try {
+        await prisma.aIInsight.create({
+          data: {
+            analysisId,
+            category: "journey_stage",
+            priority: priorityMap[stage] || 1,
+            title: `${stageLabels[stage]} Stage`,
+            finding: `${mentionRate}% mention rate in ${stageLabels[stage].toLowerCase()} stage`,
+            dataEvidence: JSON.stringify({ stageResults: stageResults.length, patterns: responseAnalysis }),
+            aiReasoning: `Analyzed ${stageResponses} AI responses for ${stageResults.length} questions`,
+            actions: [
+              mentionRate < 50 ? `Improve ${stageLabels[stage].toLowerCase()} stage visibility` : `Maintain ${stageLabels[stage].toLowerCase()} stage presence`,
+              sentimentBreakdown.negative > 20 ? "Address negative sentiment in AI responses" : "Continue positive engagement",
+            ],
+            expectedImpact: {
+              stage,
+              stageLabel: stageLabels[stage],
+              stageDescription: stageDescriptions[stage],
+              questions: stageQuestions,
+              portrayal: {
+                mentionRate,
+                totalQuestions: stageResults.length,
+                totalTests: stageResponses,
+                totalAnswersAnalyzed: stageResponses,
+                visibilityScore,
+                averagePosition: avgPosition,
+                sentiment: sentimentBreakdown,
+                aiAnswerExamples,
+                competitorComparison,
+              },
+              recommendation,
             },
-            recommendation,
+            effort: mentionRate < 50 ? "high" : "low",
+            timeline: mentionRate < 50 ? "3-6 months" : "ongoing",
+            confidence: stageResponses > 10 ? "high" : "medium",
           },
-          effort: mentionRate < 50 ? "high" : "low",
-          timeline: mentionRate < 50 ? "3-6 months" : "ongoing",
-          confidence: stageResponses > 10 ? "high" : "medium",
-        },
-      });
+        });
+        console.log(`✅ [EXEC] Created insight for ${stage} stage`);
+      } catch (insightErr: any) {
+        console.error(`⚠️ [EXEC] Failed to create ${stage} insight: ${insightErr.message}`);
+        // Continue - don't fail the whole analysis for one insight
+      }
     }
 
     // Calculate overall score
@@ -652,17 +658,10 @@ async function executeSelectedAnalysis(
     
     if (websiteAudit) {
       console.log(`📊 [EXEC] Website audit complete - Score: ${websiteAudit.technicalScore}/100`);
-      console.log(`   Pages crawled: ${websiteAudit.totalPagesCrawled || 1}`);
-      console.log(`   Sitemap found: ${websiteAudit.sitemapFound || false}`);
-      if (websiteAudit.pagesCrawled && websiteAudit.pagesCrawled.length > 0) {
-        console.log(`   Crawled URLs:`);
-        websiteAudit.pagesCrawled.forEach((page: any) => {
-          console.log(`     - ${page.url} (${page.status === 200 ? '✓' : '✗'} ${page.wordCount} words)`);
-        });
-      }
       
       // Save website audit as an insight
-      await prisma.aIInsight.create({
+      try {
+        await prisma.aIInsight.create({
         data: {
           analysisId,
           category: "website_audit",
@@ -724,38 +723,49 @@ async function executeSelectedAnalysis(
           confidence: "high",
         },
       });
+      console.log(`✅ [EXEC] Website audit insight saved`);
+      } catch (auditInsightErr: any) {
+        console.error(`⚠️ [EXEC] Failed to save website audit insight: ${auditInsightErr.message}`);
+      }
     }
 
-    // Update final status
+    // Update final status - THIS MUST ALWAYS RUN
     const duration = Math.round((Date.now() - startTime) / 1000);
     
-    await prisma.analysis.update({
-      where: { id: analysisId },
-      data: {
-        status: "completed",
-        progress: 100,
-        currentStep: `Analysis complete! Visibility: ${avgMentionRate}%${websiteAudit ? ` | Tech Score: ${websiteAudit.technicalScore}/100` : ""}`,
-        completedAt: new Date(),
-      },
-    });
-
-    console.log(`✅ [EXEC] Analysis completed in ${duration}s`);
-    console.log(`   Overall Visibility: ${avgMentionRate}%`);
-    console.log(`   Total Responses: ${totalStageResponses}`);
-    if (websiteAudit) {
-      console.log(`   Technical Score: ${websiteAudit.technicalScore}/100`);
+    console.log(`🏁 [EXEC] Setting status to completed...`);
+    
+    try {
+      await prisma.analysis.update({
+        where: { id: analysisId },
+        data: {
+          status: "completed",
+          progress: 100,
+          currentStep: `Analysis complete! Visibility: ${avgMentionRate}%${websiteAudit ? ` | Tech Score: ${websiteAudit.technicalScore}/100` : ""}`,
+          completedAt: new Date(),
+        },
+      });
+      console.log(`✅ [EXEC] Analysis ${analysisId} COMPLETED in ${duration}s`);
+      console.log(`   Overall Visibility: ${avgMentionRate}%`);
+      console.log(`   Total Responses: ${totalStageResponses}`);
+    } catch (statusErr: any) {
+      console.error(`❌ [EXEC] Failed to set completed status: ${statusErr.message}`);
     }
 
   } catch (error: any) {
     console.error(`❌ [EXEC] Analysis failed: ${error.message}`);
+    console.error(`   Stack: ${error.stack?.substring(0, 500)}`);
     
-    await prisma.analysis.update({
-      where: { id: analysisId },
-      data: {
-        status: "failed",
-        currentStep: `Error: ${error.message}`,
-      },
-    });
+    try {
+      await prisma.analysis.update({
+        where: { id: analysisId },
+        data: {
+          status: "failed",
+          currentStep: `Error: ${error.message?.substring(0, 200)}`,
+        },
+      });
+    } catch (failStatusErr: any) {
+      console.error(`❌ [EXEC] Failed to set failed status: ${failStatusErr.message}`);
+    }
   }
 }
 
