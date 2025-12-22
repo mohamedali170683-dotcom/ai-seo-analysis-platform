@@ -847,6 +847,34 @@ export default function ResultsPage() {
                                         {platformAnswer.fullResponse || platformAnswer.context || 'No response recorded'}
                                       </p>
                                     </div>
+                                    {/* Show citations if available */}
+                                    {((platformAnswer.citations && platformAnswer.citations.length > 0) || 
+                                      (platformAnswer.sources && platformAnswer.sources.length > 0)) && (
+                                      <div className="mt-3 pt-3 border-t border-gray-200">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <span className="text-xs font-medium text-gray-500">🔗 Sources Cited:</span>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                          {[...(platformAnswer.citations || []), ...(platformAnswer.sources || []).map((s: any) => s.url || s)]
+                                            .filter((url: string, idx: number, arr: string[]) => url && arr.indexOf(url) === idx)
+                                            .slice(0, 5)
+                                            .map((url: string, idx: number) => (
+                                              <a 
+                                                key={idx}
+                                                href={url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                                              >
+                                                <span>🔗</span>
+                                                <span className="max-w-32 truncate">
+                                                  {url.replace(/^https?:\/\//, '').split('/')[0]}
+                                                </span>
+                                              </a>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -1256,6 +1284,137 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
+                  {/* Sources Cited by AI - Show for Awareness stage */}
+                  {stage?.stage === 'awareness' && (() => {
+                    // Collect all citations from AI test results for this stage
+                    const stageAnswers = reportData.aiTestResults?.filter((r: any) => {
+                      const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                      return questionObj?.category === 'awareness' || questionObj?.stage === 'awareness';
+                    }) || [];
+                    
+                    // Extract all citations with their platforms
+                    const allCitations: { url: string; domain: string; title?: string; platform: string }[] = [];
+                    stageAnswers.forEach((answer: any) => {
+                      // From citations array
+                      (answer.citations || []).forEach((url: string) => {
+                        if (url && !allCitations.find(c => c.url === url)) {
+                          allCitations.push({
+                            url,
+                            domain: url.replace(/^https?:\/\//, '').split('/')[0],
+                            platform: answer.platform
+                          });
+                        }
+                      });
+                      // From sources JSON
+                      (answer.sources || []).forEach((source: any) => {
+                        const url = source.url || source;
+                        if (url && typeof url === 'string' && !allCitations.find(c => c.url === url)) {
+                          allCitations.push({
+                            url,
+                            domain: source.domain || url.replace(/^https?:\/\//, '').split('/')[0],
+                            title: source.title,
+                            platform: answer.platform
+                          });
+                        }
+                      });
+                    });
+                    
+                    // Check if brand domain is cited
+                    const brandDomain = reportData.domain?.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0] || '';
+                    const brandCitations = allCitations.filter(c => 
+                      brandDomain && c.domain.toLowerCase().includes(brandDomain.toLowerCase())
+                    );
+                    const otherCitations = allCitations.filter(c => 
+                      !brandDomain || !c.domain.toLowerCase().includes(brandDomain.toLowerCase())
+                    );
+                    
+                    return (
+                      <div className="mb-6">
+                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <span>🔗</span> Sources Cited by AI Platforms
+                        </h4>
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                          {/* Brand Citations */}
+                          <div className="mb-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className={`text-lg ${brandCitations.length > 0 ? '✅' : '⚠️'}`}>
+                                {brandCitations.length > 0 ? '✅' : '⚠️'}
+                              </span>
+                              <span className="font-medium text-blue-900">
+                                Your Content as Source: {brandCitations.length > 0 ? `Cited ${brandCitations.length} time(s)` : 'Not cited'}
+                              </span>
+                            </div>
+                            {brandCitations.length > 0 ? (
+                              <div className="space-y-2 ml-7">
+                                {brandCitations.map((citation, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 text-sm">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                      citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
+                                      citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
+                                      citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
+                                      'bg-cyan-100 text-cyan-700'
+                                    }`}>{citation.platform}</span>
+                                    <a href={citation.url} target="_blank" rel="noopener noreferrer" 
+                                       className="text-blue-600 hover:underline truncate max-w-md">
+                                      {citation.title || citation.domain}
+                                    </a>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-sm text-blue-700 ml-7">
+                                AI platforms did not cite your website as a source for awareness-level questions. 
+                                Consider creating more authoritative, citable content.
+                              </p>
+                            )}
+                          </div>
+                          
+                          {/* Other Sources */}
+                          {otherCitations.length > 0 && (
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-lg">📚</span>
+                                <span className="font-medium text-gray-700">
+                                  Other Sources Cited ({otherCitations.length})
+                                </span>
+                              </div>
+                              <div className="space-y-2 ml-7 max-h-48 overflow-y-auto">
+                                {otherCitations.slice(0, 10).map((citation, idx) => (
+                                  <div key={idx} className="flex items-center gap-2 text-sm">
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                      citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
+                                      citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
+                                      citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
+                                      'bg-cyan-100 text-cyan-700'
+                                    }`}>{citation.platform}</span>
+                                    <span className="text-gray-600">{citation.domain}</span>
+                                    {citation.title && (
+                                      <span className="text-gray-400 truncate max-w-xs">- {citation.title}</span>
+                                    )}
+                                  </div>
+                                ))}
+                                {otherCitations.length > 10 && (
+                                  <p className="text-xs text-gray-500">+{otherCitations.length - 10} more sources</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {allCitations.length === 0 && (
+                            <div className="text-center py-4">
+                              <p className="text-sm text-gray-600">
+                                No source citations detected in AI responses for this stage.
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Note: ChatGPT typically doesn&apos;t cite sources. Perplexity and Gemini with grounding do.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {/* Competitor Comparison (if available) */}
                   {stage?.portrayal?.competitorComparison && stage.portrayal.competitorComparison.length > 0 && (
                     <div className="mb-6">
@@ -1376,6 +1535,33 @@ export default function ResultsPage() {
                                               {platformAnswer.fullResponse || platformAnswer.context || 'No response'}
                                             </p>
                                           </div>
+                                          {/* Show citations if available */}
+                                          {((platformAnswer.citations && platformAnswer.citations.length > 0) || 
+                                            (platformAnswer.sources && platformAnswer.sources.length > 0)) && (
+                                            <div className="mt-3 pt-3 border-t border-gray-200">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <span className="text-xs font-medium text-gray-500">🔗 Sources Cited:</span>
+                                              </div>
+                                              <div className="flex flex-wrap gap-2">
+                                                {[...(platformAnswer.citations || []), ...(platformAnswer.sources || []).map((s: any) => s.url || s)]
+                                                  .filter((url: string, idx: number, arr: string[]) => url && arr.indexOf(url) === idx)
+                                                  .map((url: string, idx: number) => (
+                                                    <a 
+                                                      key={idx}
+                                                      href={url}
+                                                      target="_blank"
+                                                      rel="noopener noreferrer"
+                                                      className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                                                    >
+                                                      <span>🔗</span>
+                                                      <span className="max-w-48 truncate">
+                                                        {url.replace(/^https?:\/\//, '').split('/')[0]}
+                                                      </span>
+                                                    </a>
+                                                  ))}
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       );
                                     })}
