@@ -1798,7 +1798,9 @@ export default function ResultsPage() {
 
 // Transform database analysis data to report format
 function transformAnalysisData(data: any) {
-  const insights = data.aiInsights || [];
+  // API returns data nested under 'analysis' key
+  const analysis = data.analysis || data;
+  const insights = analysis.aiInsights || [];
   
   // Extract website audit insight
   const websiteAuditInsight = insights.find((i: any) => i.category === "website_audit");
@@ -1901,9 +1903,9 @@ function transformAnalysisData(data: any) {
   };
 
   // Extract competitors if available
-  const competitors = data.competitor 
-    ? [data.competitor] 
-    : (data.competitors || []);
+  const competitors = analysis.competitor 
+    ? [analysis.competitor] 
+    : (analysis.competitors || []);
 
   // Calculate platform breakdown from AI test results
   const platformBreakdown: Record<string, {
@@ -1947,7 +1949,7 @@ function transformAnalysisData(data: any) {
   });
 
   // Also check AI test results directly if available
-  const aiTestResults = data.aiTestResults || [];
+  const aiTestResults = analysis.aiTestResults || [];
   aiTestResults.forEach((result: any) => {
     const platform = result.platform;
     if (platform && platformBreakdown[platform]) {
@@ -1979,8 +1981,8 @@ function transformAnalysisData(data: any) {
   });
 
   return {
-    brandOrKeyword: data.brandOrKeyword,
-    domain: data.domain,
+    brandOrKeyword: analysis.brandOrKeyword,
+    domain: analysis.domain,
     competitors: competitors,
     overallScore: overallScore,
     totalTests: totalTests || 18, // Default to 18 (9 questions × 2 tests)
