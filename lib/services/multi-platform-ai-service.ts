@@ -90,20 +90,11 @@ export class MultiPlatformAIService {
     if (geminiApiKey && geminiApiKey !== "your-google-gemini-api-key" && geminiApiKey.length > 10) {
       try {
         this.geminiClient = new GoogleGenerativeAI(geminiApiKey);
-        this.platformStatus.Gemini = { isReal: true, reason: "Google Gemini API (gemini-1.5-flash)" };
-        console.log("✅ [AI] Gemini API initialized (REAL)");
-        console.log(`   → Key starts with: ${geminiApiKey.substring(0, 8)}...`);
-        console.log(`   → Key length: ${geminiApiKey.length} chars`);
-        
-        // Quick validation - try to get the model (doesn't make an API call)
-        try {
-          const testModel = this.geminiClient.getGenerativeModel({ model: "gemini-1.5-flash" });
-          console.log(`   → Model object created successfully`);
-        } catch (modelError: any) {
-          console.error(`   ⚠️ Model creation failed: ${modelError.message}`);
-        }
+        this.platformStatus.Gemini = { isReal: true, reason: "Google Gemini API" };
+        console.log("✅ [AI] Gemini client created");
+        console.log(`   → Key: ${geminiApiKey.substring(0, 8)}... (${geminiApiKey.length} chars)`);
       } catch (initError: any) {
-        console.error(`❌ [AI] Gemini client initialization FAILED: ${initError.message}`);
+        console.error(`❌ [AI] Gemini client init FAILED: ${initError.message}`);
         this.geminiClient = null;
         this.platformStatus.Gemini = { isReal: false, reason: `Init error: ${initError.message}` };
       }
@@ -111,8 +102,7 @@ export class MultiPlatformAIService {
       const reason = !geminiApiKey ? "No API key" : 
                      geminiApiKey === "your-google-gemini-api-key" ? "Placeholder key" :
                      geminiApiKey.length <= 10 ? "Key too short" : "Unknown";
-      console.log(`⚠️ [AI] Gemini API key issue: ${reason} - will SIMULATE via OpenAI`);
-      console.log("   → To enable REAL Gemini, set GEMINI_API_KEY in your environment");
+      console.log(`⚠️ [AI] Gemini: ${reason} - will SIMULATE`);
     }
     
     // Initialize Perplexity client if API key provided
@@ -528,6 +518,7 @@ export class MultiPlatformAIService {
   /**
    * Test using REAL Google Gemini API with Google Search grounding for citations
    * Using the correct SDK v0.24.x API
+   * Has a global 30-second timeout to fail fast if region doesn't support Gemini
    */
   private async testGeminiReal(
     question: string,
@@ -536,17 +527,36 @@ export class MultiPlatformAIService {
     numTests: number
   ): Promise<AIResponse[]> {
     if (!this.geminiClient) {
-      console.warn(`⚠️ [Gemini] No client - this shouldn't happen in testGeminiReal`);
+      console.warn(`⚠️ [Gemini] No client available`);
       return [];
     }
 
-    console.log(`  🔵 [Gemini] Starting ${numTests} REAL API calls with Google Search grounding...`);
+    // Global timeout - fail fast if Gemini isn't working in this region
+    const globalTimeout = 30000; // 30 seconds max for all Gemini tests
+    const startTime = Date.now();
+    
+    console.log(`  🔵 [Gemini] Starting ${numTests} tests (${globalTimeout/1000}s max)...`);
 
     // Run tests sequentially to avoid rate limits
     const results: (AIResponse | null)[] = [];
+    let consecutiveFailures = 0;
+    const maxConsecutiveFailures = 2; // If 2 tests fail in a row, abort
     
     for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
+      
+      // Check global timeout
+      if (Date.now() - startTime > globalTimeout) {
+        console.warn(`  ⚠️ [Gemini] Global timeout reached (${globalTimeout/1000}s), aborting remaining tests`);
+        break;
+      }
+      
+      // If we've had consecutive failures, abort early
+      if (consecutiveFailures >= maxConsecutiveFailures) {
+        console.warn(`  ⚠️ [Gemini] ${consecutiveFailures} consecutive failures, aborting (models likely unavailable in this region)`);
+        break;
+      }
+      
       try {
         // Try multiple models for compatibility - ordered by preference, with older models as fallback
         // Older models (gemini-1.0-pro) have wider global availability
@@ -563,7 +573,7 @@ export class MultiPlatformAIService {
         let usedModel = "";
         let lastError = "";
         
-        console.log(`  → [Gemini] Test ${i}/${numTests} trying ${modelNames.length} models...`);
+        console.log(`  → [Gemini] Test ${i}/${numTests}...`);
         
         for (const modelName of modelNames) {
           try {
@@ -624,13 +634,10 @@ export class MultiPlatformAIService {
         }
         
         if (!result) {
-          console.error(`  ❌ [Gemini] Test ${i} - No compatible model found after trying ${modelNames.length} models`);
-          console.error(`     Last error: ${lastError}`);
-          console.error(`     This usually means:`);
-          console.error(`     1. Your Gemini API key doesn't have access to any models`);
-          console.error(`     2. Gemini API is not available in Vercel's region`);
-          console.error(`     3. Your API key may be from a region where Gemini is restricted`);
+          console.error(`  ❌ [Gemini] Test ${i} - No model worked (tried ${modelNames.length})`);
+          console.error(`     Last error: ${lastError.substring(0, 100)}`);
           results.push(null);
+          consecutiveFailures++;
           continue;
         }
         
@@ -703,7 +710,7 @@ export class MultiPlatformAIService {
           
           if (fullResponse && fullResponse.length > 0) {
             const mentionsBrand = fullResponse.toLowerCase().includes(brandName.toLowerCase());
-            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars, model: ${usedModel}), mentions "${brandName}": ${mentionsBrand}, sources: ${sources.length}`);
+            console.log(`  ✓ [Gemini] Test ${i} OK (${fullResponse.length} chars, model: ${usedModel}), mentions "${brandName}": ${mentionsBrand}`);
             const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
             results.push({
               platform: "Gemini" as const,
@@ -716,13 +723,16 @@ export class MultiPlatformAIService {
               sources,
               ...analysis,
             } as AIResponse);
+            consecutiveFailures = 0; // Reset on success
           } else {
             console.warn(`  ⚠️ [Gemini] Test ${i} empty response text`);
             results.push(null);
+            consecutiveFailures++;
           }
         } catch (parseError: any) {
           console.warn(`  ⚠️ [Gemini] Test ${i} response parsing error: ${parseError.message}`);
           results.push(null);
+          consecutiveFailures++;
         }
         
         // Small delay between requests to avoid rate limiting
@@ -730,53 +740,18 @@ export class MultiPlatformAIService {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       } catch (error: any) {
-        console.error(`  ❌ [Gemini] Test ${i} ERROR: ${error.message}`);
-        
-        // Detailed error analysis
-        const errorMsg = error.message?.toLowerCase() || '';
-        
-        if (errorMsg.includes('api key') || errorMsg.includes('api_key') || errorMsg.includes('invalid')) {
-          console.error(`     → GEMINI_API_KEY may be invalid or expired`);
-          console.error(`     → Get a new key at: https://aistudio.google.com/app/apikey`);
-        } else if (errorMsg.includes('quota') || errorMsg.includes('rate') || errorMsg.includes('429')) {
-          console.error(`     → Gemini API rate limit or quota exceeded`);
-          console.error(`     → Wait a minute and try again, or check your API quota`);
-        } else if (errorMsg.includes('not found') || errorMsg.includes('404')) {
-          console.error(`     → Model not found - gemini-1.5-flash may not be available in your region`);
-        } else if (errorMsg.includes('permission') || errorMsg.includes('403')) {
-          console.error(`     → Permission denied - API key may not have access to this model`);
-        } else if (errorMsg.includes('abort') || errorMsg.includes('timeout')) {
-          console.error(`     → Request timed out after 25 seconds`);
-        } else if (error.status) {
-          console.error(`     → HTTP Status: ${error.status}`);
-        }
-        
-        // Log full error in development
-        console.error(`     → Error details:`, {
-          name: error.name,
-          message: error.message,
-          status: error.status,
-          statusText: error.statusText,
-        });
-        
+        console.error(`  ❌ [Gemini] Test ${i} ERROR: ${error.message?.substring(0, 80)}`);
         results.push(null);
+        consecutiveFailures++;
       }
     }
 
     const validResults = results.filter((r): r is AIResponse => r !== null);
     
+    const elapsed = Date.now() - startTime;
+    
     if (validResults.length === 0) {
-      console.error(`  ❌ [Gemini] ALL ${numTests} tests FAILED`);
-      console.error(`     ┌─────────────────────────────────────────────────────────────┐`);
-      console.error(`     │ GEMINI API TROUBLESHOOTING                                  │`);
-      console.error(`     ├─────────────────────────────────────────────────────────────┤`);
-      console.error(`     │ 1. Check your API key at: https://aistudio.google.com/apikey│`);
-      console.error(`     │ 2. Ensure 'Generative Language API' is enabled in GCP       │`);
-      console.error(`     │ 3. Check Vercel region - try deploying to US regions        │`);
-      console.error(`     │    (Settings > Functions > Region > iad1/sfo1/etc)          │`);
-      console.error(`     │ 4. Verify billing is enabled on your Google Cloud project  │`);
-      console.error(`     │ 5. If using free tier, wait 1 minute for rate limits       │`);
-      console.error(`     └─────────────────────────────────────────────────────────────┘`);
+      console.error(`  ❌ [Gemini] ALL tests failed in ${elapsed}ms - models not available in this region`);
     } else if (validResults.length < numTests) {
       console.warn(`  ⚠️ [Gemini] ${validResults.length}/${numTests} tests succeeded`);
     } else {
