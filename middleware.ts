@@ -5,14 +5,13 @@ import type { NextRequest } from 'next/server';
 const PUBLIC_ROUTES = [
   '/wpp-demo',
   '/login',
-  '/api/auth/login',
-  '/api/auth/logout',
+  '/api/',  // All API routes are public (they handle their own auth if needed)
 ];
 
 // Check if the path starts with any public route
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(route => 
-    pathname === route || pathname.startsWith(route + '/')
+    pathname === route || pathname.startsWith(route)
   );
 }
 
