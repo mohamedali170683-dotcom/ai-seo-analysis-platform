@@ -184,28 +184,63 @@ SOLUTIONS:
 }
 
 export async function GET() {
-  // Quick check without making an API call
+  // Direct REST API test - bypasses SDK completely
   const apiKey = process.env.GEMINI_API_KEY;
   
-  return NextResponse.json({
-    success: true,
-    message: "Gemini Test Endpoint",
-    usage: {
-      method: "POST",
-      body: {
-        question: "string (optional, default: 'What is Nike known for?')",
+  if (!apiKey) {
+    return NextResponse.json({
+      success: false,
+      error: "GEMINI_API_KEY not set",
+    });
+  }
+  
+  // Test with direct REST API call
+  const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  
+  try {
+    const response = await fetch(testUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    },
-    configuration: {
-      keyConfigured: !!apiKey,
-      keyLength: apiKey?.length || 0,
-      keyPrefix: apiKey ? apiKey.substring(0, 4) + "..." : null,
-      isPlaceholder: apiKey === "your-google-gemini-api-key",
-    },
-    nextSteps: !apiKey
-      ? "Set GEMINI_API_KEY in your .env file. Get one at https://aistudio.google.com/app/apikey"
-      : apiKey === "your-google-gemini-api-key"
-      ? "Replace the placeholder API key with a real one"
-      : "POST to this endpoint to test the API",
-  });
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: "Say hello" }]
+        }]
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (response.ok) {
+      return NextResponse.json({
+        success: true,
+        message: "Gemini API is working via REST!",
+        status: response.status,
+        response: data,
+      });
+    } else {
+      return NextResponse.json({
+        success: false,
+        error: "Gemini API returned an error",
+        status: response.status,
+        statusText: response.statusText,
+        errorDetails: data,
+        keyInfo: {
+          length: apiKey.length,
+          prefix: apiKey.substring(0, 8) + "...",
+        },
+        suggestion: data.error?.message || "Check your API key and project configuration",
+      });
+    }
+  } catch (fetchError: any) {
+    return NextResponse.json({
+      success: false,
+      error: `Network error: ${fetchError.message}`,
+      keyInfo: {
+        length: apiKey.length,
+        prefix: apiKey.substring(0, 8) + "...",
+      },
+    });
+  }
 }
