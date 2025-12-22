@@ -311,17 +311,20 @@ export default function AnalyzePage() {
       try {
         const response = await fetch(`/api/analysis/${id}`);
         const data = await response.json();
+        
+        // API returns data nested under 'analysis' key
+        const analysis = data.analysis || data;
+        
+        setAnalysisStatus(analysis.currentStep || "Processing...");
+        setCurrentStep(analysis.currentStep || "Processing...");
+        setAnalysisProgress(analysis.progress || 0);
 
-        setAnalysisStatus(data.currentStep || "Processing...");
-        setCurrentStep(data.currentStep || "Processing...");
-        setAnalysisProgress(data.progress || 0);
-
-        if (data.status === "completed") {
+        if (analysis.status === "completed") {
           clearInterval(timerInterval);
           window.location.href = `/results/${id}`;
-        } else if (data.status === "failed") {
+        } else if (analysis.status === "failed") {
           clearInterval(timerInterval);
-          alert("Analysis failed: " + data.currentStep);
+          alert("Analysis failed: " + (analysis.currentStep || "Unknown error"));
           setPhase(2);
           setAnalysisStartTime(null);
         } else {

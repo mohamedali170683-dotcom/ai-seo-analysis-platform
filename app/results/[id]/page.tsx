@@ -124,10 +124,14 @@ export default function ResultsPage() {
         }
 
         const data = await response.json();
-        setProgress(data.progress || 0);
-        setStatus(data.status);
+        
+        // API returns data nested under 'analysis' key
+        const analysis = data.analysis || data;
+        
+        setProgress(analysis.progress || 0);
+        setStatus(analysis.status);
 
-        if (data.status === "completed") {
+        if (analysis.status === "completed") {
           clearInterval(pollInterval);
           setReportData(transformAnalysisData(data));
           setLoading(false);
@@ -136,9 +140,9 @@ export default function ResultsPage() {
           if (tier === "free" && !userEmail && !hasSubmittedEmail) {
             setShowEmailGate(true);
           }
-        } else if (data.status === "failed") {
+        } else if (analysis.status === "failed") {
           clearInterval(pollInterval);
-          setError(data.error || "Analysis failed");
+          setError(data.error || analysis.currentStep || "Analysis failed");
           setLoading(false);
         }
       } catch (err: any) {
