@@ -558,14 +558,15 @@ export class MultiPlatformAIService {
       }
       
       try {
-        // Try multiple models for compatibility - ordered by preference
-        // Google has retired old gemini-1.x models, use gemini-2.x now
+        // Try multiple models for compatibility - spread load to avoid rate limits
+        // Each model has its own quota, so rotating helps avoid 429 errors
         const modelNames = [
-          "gemini-2.5-flash",        // Latest and fastest
-          "gemini-2.0-flash",        // Stable fast model
-          "gemini-2.5-pro",          // Most capable
+          "gemini-2.0-flash",        // Start with 2.0 (less popular)
           "gemini-2.0-flash-001",    // Specific version
+          "gemini-2.5-flash",        // Latest and fastest
           "gemini-flash-latest",     // Latest flash alias
+          "gemini-pro-latest",       // Pro variant
+          "gemini-2.5-pro",          // Most capable (higher limits)
         ];
         let result = null;
         let usedModel = "";

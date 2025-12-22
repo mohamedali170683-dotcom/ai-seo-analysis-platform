@@ -240,82 +240,81 @@ export async function GET() {
     listError = e.message;
   }
   
-  // If we have models, try the first one
+  // Try multiple models - spread load across different models to avoid rate limits
   if (availableModels.length > 0) {
-    const modelToUse = availableModels[0];
-    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+    // Prioritize models that might have less usage
+    const modelsToTry = [
+      "gemini-2.0-flash",      // Different from 2.5 to spread load
+      "gemini-2.0-flash-001",
+      "gemini-2.5-flash",
+      "gemini-flash-latest",
+      "gemini-pro-latest",
+    ].filter(m => availableModels.includes(m));
     
-    try {
-      const response = await fetch(testUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: "What are the top 3 running shoe brands? Please list them briefly." }] }],
-          generationConfig: {
-            maxOutputTokens: 1024,
-          }
-        }),
-      });
+    for (const modelToUse of modelsToTry) {
+      const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
       
-      const data = await response.json();
-      
-      if (response.ok) {
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        return NextResponse.json({
-          success: true,
-          message: `Gemini API is working! Model '${modelToUse}' responded.`,
-          workingModel: modelToUse,
-          availableModels,
-          response: responseText.substring(0, 200),
-          keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
+      try {
+        const response = await fetch(testUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: "What are the top 3 running shoe brands? Please list them briefly." }] }],
+            generationConfig: {
+              maxOutputTokens: 1024,
+            }
+          }),
         });
-      } else {
-        return NextResponse.json({
-          success: false,
-          error: `Model ${modelToUse} failed`,
-          availableModels,
-          errorDetails: data.error,
-          keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
-        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          return NextResponse.json({
+            success: true,
+            message: `Gemini API is working! Model '${modelToUse}' responded.`,
+            workingModel: modelToUse,
+            availableModels: modelsToTry,
+            response: responseText,
+            responseLength: responseText.length,
+            keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
+          });
+        } else if (data.error?.code === 429) {
+          // Rate limited - try next model
+          console.log(`[Gemini] ${modelToUse} rate limited, trying next...`);
+          continue;
+        } else {
+          return NextResponse.json({
+            success: false,
+            error: `Model ${modelToUse} failed`,
+            availableModels,
+            errorDetails: data.error,
+            keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
+          });
+        }
+      } catch (fetchError: any) {
+        console.log(`[Gemini] ${modelToUse} fetch error: ${fetchError.message}`);
+        continue;
       }
-    } catch (fetchError: any) {
-      return NextResponse.json({
-        success: false,
-        error: `Network error: ${fetchError.message}`,
-        availableModels,
-      });
     }
-  }
-  
-  // No models available - try a direct call anyway to get the actual error
-  const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-  
-  try {
-    const response = await fetch(testUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: "Say hello" }] }]
-      }),
-    });
     
-    const data = await response.json();
-    
+    // All models rate limited
     return NextResponse.json({
       success: false,
-      error: data.error?.message || "No models available",
-      listModelsError: listError,
-      availableModels,
-      status: response.status,
-      errorDetails: data.error,
+      error: "All models rate limited",
+      availableModels: modelsToTry,
+      suggestion: "The free tier has 20 requests/day per model. Wait or upgrade to a paid plan.",
       keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
-      suggestion: "Your API key may not have access to any Gemini models. Please ensure you created the key at https://aistudio.google.com/apikey and that the 'Generative Language API' is enabled.",
-    });
-  } catch (fetchError: any) {
-    return NextResponse.json({
-      success: false,
-      error: `Network error: ${fetchError.message}`,
-      listModelsError: listError,
     });
   }
+  
+  // No models available
+  return NextResponse.json({
+    success: false,
+    error: "No compatible Gemini models found",
+    availableModels,
+    listModelsError: listError,
+    keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
+    suggestion: "Your API key may not have access to any Gemini models. Please ensure you created the key at https://aistudio.google.com/apikey and that the 'Generative Language API' is enabled.",
+  });
 }
