@@ -249,6 +249,127 @@ export default function ResultsPage() {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  // Export all answers as PDF
+  const handleExportPDF = async () => {
+    try {
+      // Create a formatted content for PDF
+      const content = generatePDFContent();
+      
+      // Create blob and download
+      const blob = new Blob([content], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      
+      // Open in new window for printing
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+    } catch (error) {
+      console.error('Failed to export PDF:', error);
+      alert('Failed to export. Please try again.');
+    }
+  };
+
+  // Generate HTML content for PDF export
+  const generatePDFContent = () => {
+    const brand = reportData.brandOrKeyword || 'Brand';
+    const date = new Date().toLocaleDateString();
+    
+    let html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>AI Visibility Report - ${brand}</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; max-width: 900px; margin: 0 auto; }
+          h1 { color: #1a1a1a; border-bottom: 2px solid #3b82f6; padding-bottom: 10px; }
+          h2 { color: #374151; margin-top: 30px; }
+          h3 { color: #4b5563; margin-top: 20px; }
+          .summary { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+          .summary h2 { color: white; border: none; margin-top: 0; }
+          .stage { margin-bottom: 30px; page-break-inside: avoid; }
+          .stage-header { background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+          .question { margin-bottom: 20px; border-left: 3px solid #3b82f6; padding-left: 15px; }
+          .answer { background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 10px; }
+          .answer-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: 600; }
+          .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+          .badge-positive { background: #d1fae5; color: #065f46; }
+          .badge-negative { background: #fee2e2; color: #991b1b; }
+          .badge-neutral { background: #e5e7eb; color: #374151; }
+          .badge-mentioned { background: #dbeafe; color: #1e40af; }
+          .response-text { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+          @media print { body { padding: 20px; } }
+        </style>
+      </head>
+      <body>
+        <h1>AI Visibility Analysis Report</h1>
+        <p><strong>Brand:</strong> ${brand} | <strong>Date:</strong> ${date}</p>
+        
+        <div class="summary">
+          <h2>Executive Summary</h2>
+          <p><strong>Overall Score:</strong> ${reportData.stats?.visibilityScore || 0}%</p>
+          ${reportData.executiveSummary ? `
+            <p><strong>Key Finding:</strong> ${reportData.executiveSummary.keyFinding}</p>
+          ` : ''}
+        </div>
+    `;
+
+    // Add each stage
+    ['awareness', 'consideration', 'decision'].forEach(stage => {
+      const stageIcon = stage === 'awareness' ? '🔍' : stage === 'consideration' ? '⚖️' : '✅';
+      const stageData = reportData.journeyStages?.find((s: any) => s.stage === stage);
+      
+      html += `
+        <div class="stage">
+          <div class="stage-header">
+            <h2>${stageIcon} ${stage.charAt(0).toUpperCase() + stage.slice(1)} Stage</h2>
+            <p>Visibility: ${stageData?.portrayal?.visibilityScore || 0}% | Mention Rate: ${stageData?.portrayal?.mentionRate || 0}%</p>
+          </div>
+      `;
+
+      // Get questions and answers for this stage
+      const stageQuestions = reportData.discoveredQuestions?.filter(
+        (q: any) => q.category === stage
+      ) || [];
+
+      stageQuestions.forEach((question: any) => {
+        const answers = reportData.aiTestResults?.filter((r: any) => r.question === question.question) || [];
+        
+        html += `
+          <div class="question">
+            <h3>${question.question}</h3>
+        `;
+
+        answers.forEach((answer: any) => {
+          const sentimentClass = answer.sentiment === 'positive' ? 'badge-positive' : 
+                                 answer.sentiment === 'negative' ? 'badge-negative' : 'badge-neutral';
+          
+          html += `
+            <div class="answer">
+              <div class="answer-header">
+                <span>${answer.platform}</span>
+                <span>
+                  ${answer.brandMentioned ? '<span class="badge badge-mentioned">Mentioned</span>' : ''}
+                  <span class="badge ${sentimentClass}">${answer.sentiment}</span>
+                </span>
+              </div>
+              <div class="response-text">${answer.fullResponse || answer.context || 'No response recorded'}</div>
+            </div>
+          `;
+        });
+
+        html += '</div>';
+      });
+
+      html += '</div>';
+    });
+
+    html += '</body></html>';
+    return html;
+  };
+
   // Collect all recommendations from all stages with safety checks
   const journeyStages = reportData?.journeyStages || [];
   const allRecommendations = journeyStages.map((stage: any) => ({
@@ -524,6 +645,224 @@ export default function ResultsPage() {
           </div>
         </div>
 
+        {/* Executive Summary Section */}
+        {reportData.executiveSummary && (
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-8 mb-8 text-white">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">📋</span>
+                  <h2 className="text-2xl font-bold">Executive Summary</h2>
+                </div>
+                <p className="text-indigo-200">{reportData.executiveSummary.headline}</p>
+              </div>
+              <div className="text-right">
+                <div className="text-5xl font-bold">{reportData.executiveSummary.overallScore}%</div>
+                <div className="text-indigo-200 text-sm">Overall Score</div>
+              </div>
+            </div>
+
+            {/* Key Finding */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6">
+              <h3 className="font-semibold text-indigo-100 mb-2">🎯 Key Finding</h3>
+              <p className="text-white">{reportData.executiveSummary.keyFinding}</p>
+            </div>
+
+            {/* Stage Breakdown with Weights */}
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              {[
+                { stage: 'awareness', icon: '🔍', weight: '20%', label: 'Awareness' },
+                { stage: 'consideration', icon: '⚖️', weight: '35%', label: 'Consideration' },
+                { stage: 'decision', icon: '✅', weight: '45%', label: 'Decision' },
+              ].map((s) => {
+                const stageData = reportData.executiveSummary?.stageBreakdown?.[s.stage];
+                return (
+                  <div key={s.stage} className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-lg">{s.icon} {s.label}</span>
+                      <span className="text-xs bg-white/20 px-2 py-1 rounded">{s.weight} weight</span>
+                    </div>
+                    <div className="text-3xl font-bold mb-1">{stageData?.score || 0}%</div>
+                    <p className="text-xs text-indigo-200">{stageData?.insight || 'No data'}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Top Actions */}
+            {reportData.executiveSummary.topActions && reportData.executiveSummary.topActions.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-indigo-100 mb-3">🚀 Priority Actions</h3>
+                <div className="space-y-2">
+                  {reportData.executiveSummary.topActions.slice(0, 3).map((action: any, i: number) => (
+                    <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex items-start gap-3">
+                      <span className={`text-xs font-bold px-2 py-1 rounded ${
+                        action.priority === 'high' ? 'bg-red-500' : 
+                        action.priority === 'medium' ? 'bg-yellow-500 text-yellow-900' : 'bg-green-500'
+                      }`}>
+                        {action.priority?.toUpperCase()}
+                      </span>
+                      <div>
+                        <p className="font-medium">{action.action}</p>
+                        <p className="text-xs text-indigo-200 mt-1">{action.rationale}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Full Answers Section - Gated by tier */}
+        <div className="bg-white rounded-2xl shadow-lg mb-8">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">💬</span>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">All AI Responses</h2>
+                  <p className="text-sm text-gray-500">Full answers from each AI platform per question</p>
+                </div>
+              </div>
+              {(tier === 'partner' || tier === 'professional') ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleExportPDF()}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export PDF
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-amber-600">
+                  <Lock className="w-4 h-4" />
+                  <span className="text-sm font-medium">Partner/Professional tier</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Gated content */}
+          {(tier === 'partner' || tier === 'professional') ? (
+            <div className="p-6">
+              {/* Answers by Stage */}
+              {['awareness', 'consideration', 'decision'].map((stage) => {
+                const stageIcon = stage === 'awareness' ? '🔍' : stage === 'consideration' ? '⚖️' : '✅';
+                const stageColor = stage === 'awareness' ? 'blue' : stage === 'consideration' ? 'yellow' : 'green';
+                
+                // Get questions for this stage
+                const stageQuestions = reportData.discoveredQuestions?.filter(
+                  (q: any) => q.category === stage
+                ) || [];
+                
+                // Get answers for this stage
+                const stageAnswers = reportData.aiTestResults?.filter((r: any) => {
+                  const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                  return questionObj?.category === stage;
+                }) || [];
+                
+                // Group answers by question
+                const answersByQuestion: Record<string, any[]> = {};
+                stageAnswers.forEach((answer: any) => {
+                  if (!answersByQuestion[answer.question]) {
+                    answersByQuestion[answer.question] = [];
+                  }
+                  answersByQuestion[answer.question].push(answer);
+                });
+
+                return (
+                  <div key={stage} className="mb-6">
+                    <button
+                      onClick={() => setExpandedSchemas(prev => 
+                        prev.includes(`answers-${stage}`) 
+                          ? prev.filter(s => s !== `answers-${stage}`) 
+                          : [...prev, `answers-${stage}`]
+                      )}
+                      className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
+                        stageColor === 'blue' ? 'bg-blue-50 hover:bg-blue-100' :
+                        stageColor === 'yellow' ? 'bg-yellow-50 hover:bg-yellow-100' :
+                        'bg-green-50 hover:bg-green-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xl">{stageIcon}</span>
+                        <span className="font-semibold text-gray-900 capitalize">{stage} Stage</span>
+                        <span className="text-sm text-gray-500">({Object.keys(answersByQuestion).length} questions)</span>
+                      </div>
+                      {expandedSchemas.includes(`answers-${stage}`) ? (
+                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    
+                    {/* Expanded answers */}
+                    {expandedSchemas.includes(`answers-${stage}`) && (
+                      <div className="mt-4 space-y-4 pl-4 border-l-2 border-gray-200">
+                        {Object.entries(answersByQuestion).map(([question, answers]) => (
+                          <div key={question} className="bg-gray-50 rounded-xl p-4">
+                            <h4 className="font-medium text-gray-900 mb-3">{question}</h4>
+                            <div className="space-y-3">
+                              {/* Show one answer per platform in UI */}
+                              {['ChatGPT', 'Gemini', 'Copilot', 'Perplexity'].map(platform => {
+                                const platformAnswer = answers.find((a: any) => a.platform === platform);
+                                if (!platformAnswer) return null;
+                                
+                                return (
+                                  <div key={platform} className="bg-white rounded-lg p-3 border border-gray-200">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="font-medium text-gray-700">{platform}</span>
+                                      <div className="flex items-center gap-2">
+                                        {platformAnswer.brandMentioned && (
+                                          <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Mentioned</span>
+                                        )}
+                                        <span className={`text-xs px-2 py-0.5 rounded ${
+                                          platformAnswer.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                          platformAnswer.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                          'bg-gray-100 text-gray-700'
+                                        }`}>
+                                          {platformAnswer.sentiment}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                                      {platformAnswer.fullResponse?.substring(0, 500) || platformAnswer.context || 'No response recorded'}
+                                      {platformAnswer.fullResponse?.length > 500 && '...'}
+                                    </p>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="p-8 text-center">
+              <div className="bg-gray-50 rounded-2xl p-8">
+                <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Full Answers Available in Partner/Professional Tier</h3>
+                <p className="text-gray-500 mb-4">
+                  Upgrade to see all {reportData.aiTestResults?.length || 0} AI responses across all platforms and export them as PDF.
+                </p>
+                <button
+                  onClick={() => openUpgradeModal("funnel_stages")}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:opacity-90 transition-opacity"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Upgrade Now
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Expanded Section: AI Visibility Details */}
         {expandedSection === "visibility" && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
@@ -536,19 +875,53 @@ export default function ResultsPage() {
 
             {/* Scoring Methodology */}
             <div className="bg-blue-50 rounded-xl p-4 mb-6">
-              <h4 className="font-semibold text-blue-900 mb-2">How We Calculate Your Score</h4>
-              <div className="grid md:grid-cols-3 gap-4 text-sm">
-                <div>
-                  <span className="font-bold text-blue-700">50%</span> Mention Rate
-                  <p className="text-blue-600 text-xs">How often AI mentions your brand</p>
+              <h4 className="font-semibold text-blue-900 mb-3">How We Calculate Your Score</h4>
+              
+              {/* Overall Stage Weights */}
+              <div className="mb-4 p-3 bg-white/50 rounded-lg">
+                <p className="text-sm text-blue-800 font-medium mb-2">Stage Weights (Overall Score)</p>
+                <div className="flex gap-4 text-sm">
+                  <span className="bg-blue-100 px-2 py-1 rounded">🔍 Awareness: <strong>20%</strong></span>
+                  <span className="bg-yellow-100 px-2 py-1 rounded">⚖️ Consideration: <strong>35%</strong></span>
+                  <span className="bg-green-100 px-2 py-1 rounded">✅ Decision: <strong>45%</strong></span>
                 </div>
-                <div>
-                  <span className="font-bold text-blue-700">30%</span> Position
-                  <p className="text-blue-600 text-xs">Where your brand appears (1st is best)</p>
+              </div>
+
+              {/* Awareness Stage - Citation Based */}
+              <div className="mb-4 p-3 bg-blue-100/50 rounded-lg border-l-4 border-blue-400">
+                <p className="text-sm text-blue-800 font-medium mb-2">🔍 Awareness Stage (Citation-Based)</p>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <span className="font-bold text-blue-700">60%</span> Citation Rate
+                    <p className="text-blue-600 text-xs">Is your content cited as a source?</p>
+                  </div>
+                  <div>
+                    <span className="font-bold text-blue-700">25%</span> Mention Rate
+                    <p className="text-blue-600 text-xs">Is your brand mentioned?</p>
+                  </div>
+                  <div>
+                    <span className="font-bold text-blue-700">15%</span> Sentiment
+                    <p className="text-blue-600 text-xs">How positively portrayed?</p>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-bold text-blue-700">20%</span> Sentiment
-                  <p className="text-blue-600 text-xs">How positively you're portrayed</p>
+              </div>
+
+              {/* Consideration & Decision Stages */}
+              <div className="p-3 bg-green-100/50 rounded-lg border-l-4 border-green-400">
+                <p className="text-sm text-green-800 font-medium mb-2">⚖️✅ Consideration & Decision Stages (Standard)</p>
+                <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div>
+                    <span className="font-bold text-green-700">50%</span> Mention Rate
+                    <p className="text-green-600 text-xs">How often AI mentions you</p>
+                  </div>
+                  <div>
+                    <span className="font-bold text-green-700">30%</span> Position
+                    <p className="text-green-600 text-xs">Where you appear (1st = best)</p>
+                  </div>
+                  <div>
+                    <span className="font-bold text-green-700">20%</span> Sentiment
+                    <p className="text-green-600 text-xs">How positively portrayed?</p>
+                  </div>
                 </div>
               </div>
             </div>

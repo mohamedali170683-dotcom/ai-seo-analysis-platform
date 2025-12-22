@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { detectPatterns, generateExecutiveSummary } from "@/lib/services/analysis-insights-engine";
+import { AIResponse } from "@/lib/services/multi-platform-ai-service";
+
+// Stage weights for weighted scoring
+const STAGE_WEIGHTS = {
+  awareness: 0.20,
+  consideration: 0.35,
+  decision: 0.45,
+};
 
 export async function GET(
   request: Request,
@@ -89,6 +98,65 @@ export async function GET(
     });
     console.log(`[API] Analysis ${id} platform breakdown:`, platformCounts);
 
+    // Generate executive summary from analysis results
+    let executiveSummary = null;
+    let patterns = null;
+    
+    try {
+      // Convert aiTestResults to AIResponse format for pattern detection
+      const aiResponses: AIResponse[] = analysis.aiTestResults.map((t: any) => ({
+        platform: t.platform,
+        question: t.question,
+        brandMentioned: t.brandMentioned,
+        brandPosition: t.position,
+        sentiment: t.sentiment || 'neutral',
+        contextExtract: t.context || '',
+        fullResponse: t.fullResponse || '',
+        citedUrls: t.citations || [],
+        competitorsMentioned: [],
+        hasGrounding: t.hasGrounding || false,
+        sources: t.sources || [],
+        // Additional required fields
+        modelVersion: 'unknown',
+        queryNumber: 1,
+        recommendationType: null,
+        isRealAPI: t.isRealAPI ?? true,
+      }));
+
+      // Get stage visibility scores
+      const stageScores = {
+        awareness: journeyStages.find((s: any) => s.stage === 'awareness')?.portrayal?.visibilityScore || 0,
+        consideration: journeyStages.find((s: any) => s.stage === 'consideration')?.portrayal?.visibilityScore || 0,
+        decision: journeyStages.find((s: any) => s.stage === 'decision')?.portrayal?.visibilityScore || 0,
+      };
+
+      // Calculate weighted overall score
+      let weightedScore = 0;
+      let totalWeight = 0;
+      for (const [stage, score] of Object.entries(stageScores)) {
+        const weight = STAGE_WEIGHTS[stage as keyof typeof STAGE_WEIGHTS] || 0.33;
+        if (score > 0) {
+          weightedScore += score * weight;
+          totalWeight += weight;
+        }
+      }
+      const overallWeightedScore = totalWeight > 0 ? Math.round(weightedScore / totalWeight) : visibilityScore;
+
+      // Detect patterns
+      patterns = detectPatterns(aiResponses, analysis.brandOrKeyword, analysis.competitors || []);
+
+      // Generate executive summary
+      executiveSummary = generateExecutiveSummary(
+        analysis.brandOrKeyword,
+        overallWeightedScore,
+        stageScores,
+        patterns,
+        aiResponses
+      );
+    } catch (summaryError) {
+      console.error("Failed to generate executive summary:", summaryError);
+    }
+
     return NextResponse.json({
       success: true,
       analysis: {
@@ -114,6 +182,10 @@ export async function GET(
         aiTestResults: analysis.aiTestResults,
         detectedCompetitors: analysis.detectedCompetitors,
         aiInsights: analysis.aiInsights,
+        // New fields for executive summary
+        executiveSummary,
+        patterns,
+        stageWeights: STAGE_WEIGHTS,
       },
       error: analysis.status === "failed" ? analysis.currentStep : null,
     });

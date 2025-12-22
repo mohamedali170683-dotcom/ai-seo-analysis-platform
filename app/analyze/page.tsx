@@ -1,13 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Lock, Sparkles, ChevronDown } from "lucide-react";
+import { Lock, Sparkles, ChevronDown, Loader2, User, Wand2 } from "lucide-react";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
-import { INDUSTRY_CATEGORIES, getPersonasForSubcategory, BuyerPersona } from "@/lib/data/industry-personas";
+
+// Suggested persona interface
+interface SuggestedPersona {
+  id: string;
+  name: string;
+  motivation: string;
+  characteristics: string[];
+}
 
 interface Question {
   id: string;
@@ -40,46 +47,56 @@ export default function AnalyzePage() {
   const [category, setCategory] = useState("");
   const [competitors, setCompetitors] = useState("");
   
-  // Industry & Persona selection
-  const [selectedIndustry, setSelectedIndustry] = useState("");
-  const [selectedSubcategory, setSelectedSubcategory] = useState("");
+  // AI Persona suggestions - simplified approach
+  const [suggestedPersonas, setSuggestedPersonas] = useState<SuggestedPersona[]>([]);
   const [selectedPersona, setSelectedPersona] = useState("");
+  const [customPersona, setCustomPersona] = useState("");
+  const [loadingPersonas, setLoadingPersonas] = useState(false);
+  const [showCustomPersona, setShowCustomPersona] = useState(false);
   
-  // Get subcategories for selected industry
-  const subcategories = useMemo(() => {
-    const industry = INDUSTRY_CATEGORIES.find(c => c.id === selectedIndustry);
-    return industry?.subcategories || [];
-  }, [selectedIndustry]);
-  
-  // Get personas for selected subcategory
-  const personas = useMemo(() => {
-    if (selectedIndustry && selectedSubcategory) {
-      return getPersonasForSubcategory(selectedIndustry, selectedSubcategory);
+  // Generate AI persona suggestions when category changes
+  const generatePersonaSuggestions = useCallback(async (categoryValue: string) => {
+    if (!categoryValue || categoryValue.length < 3) {
+      setSuggestedPersonas([]);
+      return;
     }
-    return [];
-  }, [selectedIndustry, selectedSubcategory]);
+    
+    setLoadingPersonas(true);
+    try {
+      const response = await fetch("/api/analysis/suggest-personas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category: categoryValue, brandName }),
+      });
+      
+      const data = await response.json();
+      if (data.success && data.personas) {
+        setSuggestedPersonas(data.personas);
+      }
+    } catch (error) {
+      console.error("Failed to get persona suggestions:", error);
+    } finally {
+      setLoadingPersonas(false);
+    }
+  }, [brandName]);
   
-  // When industry changes, reset subcategory and persona
-  const handleIndustryChange = (industryId: string) => {
-    setSelectedIndustry(industryId);
-    setSelectedSubcategory("");
+  // Debounced category change handler
+  const handleCategoryChange = (value: string) => {
+    setCategory(value);
     setSelectedPersona("");
-    // Auto-populate category if empty
-    const industry = INDUSTRY_CATEGORIES.find(c => c.id === industryId);
-    if (industry && !category) {
-      setCategory(industry.name);
-    }
+    // Debounce the API call
+    const timeoutId = setTimeout(() => {
+      generatePersonaSuggestions(value);
+    }, 800);
+    return () => clearTimeout(timeoutId);
   };
   
-  // When subcategory changes, reset persona and update category
-  const handleSubcategoryChange = (subcatId: string) => {
-    setSelectedSubcategory(subcatId);
-    setSelectedPersona("");
-    // Update category to be more specific
-    const subcat = subcategories.find(s => s.id === subcatId);
-    if (subcat) {
-      setCategory(subcat.name);
+  // Get effective persona (selected or custom)
+  const getEffectivePersona = () => {
+    if (showCustomPersona && customPersona) {
+      return customPersona;
     }
+    return selectedPersona;
   };
 
   // Phase tracking
@@ -165,10 +182,9 @@ export default function AnalyzePage() {
           category,
           competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           tier, // Pass tier to control real data vs strategic questions
-          // Persona context for question generation
-          industryCategory: selectedIndustry,
-          subcategory: selectedSubcategory,
-          buyerPersona: selectedPersona,
+          // Persona context for question generation (simplified)
+          subcategory: category, // Use category as subcategory
+          buyerPersona: getEffectivePersona(),
         }),
       });
 
@@ -323,10 +339,9 @@ export default function AnalyzePage() {
           selectedPlatforms: selectedPlatforms.filter(p => isPlatformAllowed(p)),
           testsPerPlatform: limits.testsPerQuestion,
           tier, // Pass tier for backend validation
-          // Persona context
-          industryCategory: selectedIndustry,
-          subcategory: selectedSubcategory,
-          buyerPersona: selectedPersona,
+          // Persona context (simplified)
+          subcategory: category,
+          buyerPersona: getEffectivePersona(),
         }),
       });
 
@@ -575,81 +590,113 @@ export default function AnalyzePage() {
                   />
                 </div>
 
-                {/* Industry Category Dropdown */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Industry Category *</label>
-                  <div className="relative">
-                    <select
-                      value={selectedIndustry}
-                      onChange={(e) => handleIndustryChange(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px] appearance-none cursor-pointer"
-                    >
-                      <option value="">Select an industry...</option>
-                      {INDUSTRY_CATEGORIES.map(cat => (
-                        <option key={cat.id} value={cat.id}>{cat.name}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Subcategory Dropdown (shown when industry selected) */}
-                {subcategories.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Subcategory *</label>
-                    <div className="relative">
-                      <select
-                        value={selectedSubcategory}
-                        onChange={(e) => handleSubcategoryChange(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px] appearance-none cursor-pointer"
-                      >
-                        <option value="">Select a subcategory...</option>
-                        {subcategories.map(sub => (
-                          <option key={sub.id} value={sub.id}>{sub.name}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Buyer Persona Dropdown (shown when subcategory selected) */}
-                {personas.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Target Buyer Persona</label>
-                    <div className="relative">
-                      <select
-                        value={selectedPersona}
-                        onChange={(e) => setSelectedPersona(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px] appearance-none cursor-pointer"
-                      >
-                        <option value="">All personas (recommended)</option>
-                        {personas.map(persona => (
-                          <option key={persona.id} value={persona.id}>{persona.name}</option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                    </div>
-                    <p className="text-xs text-gray-400 mt-2">
-                      Select a specific persona to focus questions on their journey
-                    </p>
-                  </div>
-                )}
-
-                {/* Category / Vertical - now auto-populated but editable */}
+                {/* Category / Vertical - Simple text input with AI suggestions */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Category / Vertical *</label>
                   <input
                     type="text"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    placeholder="e.g., running shoes, sportswear"
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    placeholder="e.g., running shoes, SaaS productivity tools, skincare"
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">
-                    Auto-populated from industry selection, or enter custom
+                    Enter your product category or vertical. We'll suggest relevant buyer personas.
                   </p>
                 </div>
+
+                {/* AI-Generated Persona Suggestions */}
+                {(loadingPersonas || suggestedPersonas.length > 0) && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Wand2 className="w-4 h-4 text-purple-500" />
+                      Suggested Buyer Personas
+                      {loadingPersonas && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
+                    </label>
+                    
+                    {loadingPersonas ? (
+                      <div className="bg-gray-50 rounded-xl p-4 text-center text-gray-500 text-sm">
+                        Generating AI persona suggestions...
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {suggestedPersonas.map((persona) => (
+                          <button
+                            key={persona.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedPersona(persona.name);
+                              setShowCustomPersona(false);
+                            }}
+                            className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                              selectedPersona === persona.name
+                                ? "border-blue-500 bg-blue-50"
+                                : "border-gray-200 bg-gray-50 hover:border-blue-300"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <User className={`w-4 h-4 ${selectedPersona === persona.name ? "text-blue-600" : "text-gray-400"}`} />
+                              <span className="font-medium text-gray-900">{persona.name}</span>
+                              {selectedPersona === persona.name && (
+                                <span className="ml-auto text-blue-600 text-xs font-semibold">Selected</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1 ml-6">{persona.motivation}</p>
+                          </button>
+                        ))}
+                        
+                        {/* Option to use no persona or custom */}
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedPersona("");
+                              setShowCustomPersona(false);
+                            }}
+                            className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
+                              !selectedPersona && !showCustomPersona
+                                ? "border-blue-500 bg-blue-50 text-blue-700"
+                                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                            }`}
+                          >
+                            All personas
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowCustomPersona(true);
+                              setSelectedPersona("");
+                            }}
+                            className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
+                              showCustomPersona
+                                ? "border-blue-500 bg-blue-50 text-blue-700"
+                                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                            }`}
+                          >
+                            Custom persona
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Custom Persona Input (shown when user clicks "Custom persona") */}
+                {showCustomPersona && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Your Custom Persona</label>
+                    <input
+                      type="text"
+                      value={customPersona}
+                      onChange={(e) => setCustomPersona(e.target.value)}
+                      placeholder="e.g., Budget-conscious first-time buyer"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    />
+                    <p className="text-xs text-gray-400 mt-2">
+                      Describe the buyer persona you want to focus on
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Domain (optional)</label>
