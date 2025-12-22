@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { analyzeCitations, CitationAnalysis } from "./citation-detector";
 
 export type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
 
@@ -23,9 +24,10 @@ export interface AIResponse {
   recommendationType: "direct" | "conditional" | "listed" | null;
   competitorsMentioned: string[];
   citedUrls: string[];
-  sources: SourceCitation[]; // NEW: Detailed source citations
+  sources: SourceCitation[]; // Detailed source citations
   isRealAPI: boolean;
-  hasGrounding: boolean; // NEW: Whether response has verifiable sources
+  hasGrounding: boolean; // Whether response has verifiable sources
+  citationAnalysis?: CitationAnalysis; // Citation analysis for awareness scoring
 }
 
 export interface PlatformStats {
@@ -700,6 +702,7 @@ export class MultiPlatformAIService {
    * Extract URLs from text
    */
   private extractUrlsFromText(text: string): string[] {
+    // eslint-disable-next-line no-useless-escape
     const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi;
     const matches = text.match(urlRegex) || [];
     return [...new Set(matches)]; // Remove duplicates
@@ -745,6 +748,7 @@ export class MultiPlatformAIService {
 
     const sentiment = this.analyzeSentiment(response, brandName, brandMentioned);
     const competitorsMentioned = competitors.filter(c => lowerResponse.includes(c.toLowerCase()));
+    // eslint-disable-next-line no-useless-escape
     const citedUrls = response.match(/(https?:\/\/[^\s]+)/g) || [];
 
     return {

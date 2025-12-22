@@ -613,3 +613,153 @@ export function getFlatCategoryList(): { id: string; name: string; parentId?: st
   
   return result;
 }
+
+/**
+ * Subcategory to recommended personas mapping
+ * Auto-suggests 2-3 most relevant personas based on subcategory
+ */
+const SUBCATEGORY_PERSONA_RECOMMENDATIONS: Record<string, { personaId: string; relevance: number }[]> = {
+  // Fashion & Apparel
+  "fashion-apparel": [
+    { personaId: "trendsetter", relevance: 0.95 },
+    { personaId: "sustainable-changemaker", relevance: 0.85 },
+    { personaId: "algorithm-style", relevance: 0.80 },
+  ],
+  // Beauty & Personal Care  
+  "beauty-personal-care": [
+    { personaId: "skintellectual", relevance: 0.95 },
+    { personaId: "science-backer", relevance: 0.90 },
+    { personaId: "clean-beauty", relevance: 0.85 },
+  ],
+  // Food & Beverage
+  "food-beverage": [
+    { personaId: "mood-manager", relevance: 0.90 },
+    { personaId: "ingredient-purist", relevance: 0.85 },
+    { personaId: "value-budgeteer", relevance: 0.80 },
+  ],
+  // General Retail
+  "general-retail": [
+    { personaId: "connected-shopper", relevance: 0.95 },
+    { personaId: "impulse-buyer", relevance: 0.85 },
+    { personaId: "omni-channel", relevance: 0.80 },
+  ],
+  // Luxury Goods
+  "luxury-goods": [
+    { personaId: "quiet-luxury", relevance: 0.95 },
+    { personaId: "exclusivity-seeker", relevance: 0.90 },
+    { personaId: "investment-collector", relevance: 0.85 },
+  ],
+  // Enterprise SaaS
+  "enterprise-saas": [
+    { personaId: "cto", relevance: 0.95 },
+    { personaId: "ai-decision-maker", relevance: 0.90 },
+    { personaId: "it-procurement", relevance: 0.85 },
+  ],
+  // Consumer Electronics
+  "consumer-electronics": [
+    { personaId: "early-adopter", relevance: 0.95 },
+    { personaId: "connected-shopper-tech", relevance: 0.90 },
+    { personaId: "smart-home-integrator", relevance: 0.85 },
+  ],
+  // Fitness & Wellness
+  "fitness-wellness": [
+    { personaId: "hybrid-fitness", relevance: 0.95 },
+    { personaId: "recovery-biohacker", relevance: 0.90 },
+    { personaId: "community-gym", relevance: 0.85 },
+  ],
+  // Banking & Fintech
+  "banking-fintech": [
+    { personaId: "digital-investor", relevance: 0.95 },
+    { personaId: "financial-wellness", relevance: 0.90 },
+    { personaId: "crypto-curious", relevance: 0.80 },
+  ],
+  // Travel & Tourism
+  "travel-tourism": [
+    { personaId: "experience-hunter", relevance: 0.95 },
+    { personaId: "solo-traveler", relevance: 0.90 },
+    { personaId: "wellness-retreat", relevance: 0.85 },
+  ],
+};
+
+/**
+ * Get recommended personas for a subcategory
+ * Returns 2-3 most relevant personas instead of overwhelming with 100+ options
+ */
+export function getRecommendedPersonasForSubcategory(
+  subcategoryId: string, 
+  limit: number = 3
+): { personaId: string; personaName: string; relevance: number }[] {
+  const recommendations = SUBCATEGORY_PERSONA_RECOMMENDATIONS[subcategoryId];
+  
+  if (recommendations) {
+    return recommendations.slice(0, limit).map(rec => {
+      // Find the persona name from the main categories
+      let personaName = rec.personaId;
+      for (const category of INDUSTRY_CATEGORIES) {
+        if (category.subcategories) {
+          for (const sub of category.subcategories) {
+            const persona = sub.personas.find(p => p.id === rec.personaId);
+            if (persona) {
+              personaName = persona.name;
+              break;
+            }
+          }
+        }
+      }
+      return {
+        personaId: rec.personaId,
+        personaName,
+        relevance: rec.relevance,
+      };
+    });
+  }
+  
+  // Fallback: return common archetypes
+  return [
+    { personaId: "connected-shopper", personaName: "The Connected Shopper", relevance: 0.80 },
+    { personaId: "value-budgeteer", personaName: "The Value-Conscious Budgeteer", relevance: 0.75 },
+    { personaId: "experience-seeker", personaName: "The Experience Seeker", relevance: 0.70 },
+  ].slice(0, limit);
+}
+
+/**
+ * Simplified persona archetype selection
+ * Maps simple archetypes to specific personas
+ */
+export const PERSONA_ARCHETYPES = {
+  value: {
+    id: "value",
+    label: "Price-conscious buyer",
+    icon: "💰",
+    description: "Focused on value, deals, and budget optimization",
+    personas: ["value-budgeteer", "roi-pragmatist", "little-treat"],
+  },
+  research: {
+    id: "research", 
+    label: "Research-driven buyer",
+    icon: "🔬",
+    description: "Deep researchers who want data and evidence",
+    personas: ["skintellectual", "science-backer", "self-quantifier"],
+  },
+  impulse: {
+    id: "impulse",
+    label: "Quick decision maker",
+    icon: "⚡",
+    description: "Fast decisions, convenience-focused",
+    personas: ["impulse-buyer", "connected-shopper", "experience-seeker"],
+  },
+  values: {
+    id: "values",
+    label: "Values-driven buyer",
+    icon: "🌱",
+    description: "Sustainability and ethics-focused",
+    personas: ["circular-economist", "sustainable-changemaker", "clean-beauty"],
+  },
+  quality: {
+    id: "quality",
+    label: "Quality-focused buyer",
+    icon: "✨",
+    description: "Premium quality and longevity-focused",
+    personas: ["heirloom-investor", "brand-champion", "quiet-luxury"],
+  },
+};

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DataForSEOService } from "@/lib/services/dataforseo-service";
+import { PERSONA_QUERY_MAPPING, FUNNEL_STAGE_PATTERNS } from "@/lib/services/persona-query-engine";
 
 export const maxDuration = 60;
 
@@ -32,7 +33,16 @@ type UserTier = "free" | "professional" | "partner";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { brandName, category, competitors, tier = "free" } = body;
+    const { 
+      brandName, 
+      category, // This should be the SUBCATEGORY (specific, e.g., "running shoes")
+      competitors, 
+      tier = "free",
+      // Persona context for question generation
+      industryCategory,
+      subcategory,
+      buyerPersona,
+    } = body;
     
     // Validate tier
     const validTier: UserTier = tier === "professional" || tier === "partner" ? tier : "free";
@@ -51,9 +61,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Use subcategory if provided (more specific), otherwise fall back to category
+    const effectiveCategory = subcategory || category;
+
     // ALL tiers now get real search data (Free tier sees the problem, not the solution)
-    console.log(`🔍 [DISCOVER] Starting question discovery for: ${brandName} in ${category}`);
+    console.log(`🔍 [DISCOVER] Starting question discovery for: ${brandName} in ${effectiveCategory}`);
     console.log(`🎯 [TIER] Running as ${validTier} tier - Real search data: YES (all tiers)`);
+    if (buyerPersona) {
+      console.log(`👤 [PERSONA] Buyer persona selected: ${buyerPersona}`);
+    }
 
     let realBrandQuestions: any[] = [];
     let realCategoryQuestions: any[] = [];
@@ -73,12 +89,14 @@ export async function POST(request: Request) {
       realBrandQuestions = await dataForSEO.getBrandQuestions(brandName, 20);
 
       // Fetch REAL category questions from search data
-      console.log(`📡 [DISCOVER] Fetching real category questions...`);
-      realCategoryQuestions = await dataForSEO.getCategoryQuestions(category, 20);
+      // Use effectiveCategory (subcategory if available) for more specific results
+      console.log(`📡 [DISCOVER] Fetching real category questions for: ${effectiveCategory}`);
+      realCategoryQuestions = await dataForSEO.getCategoryQuestions(effectiveCategory, 20);
     }
 
     // Generate STRATEGIC questions for comprehensive brand positioning analysis
-    const strategicQuestions = generateStrategicQuestions(brandName, category, competitors || []);
+    // Uses persona-informed question generation when persona is provided
+    const strategicQuestions = generateStrategicQuestions(brandName, effectiveCategory, competitors || [], buyerPersona);
 
     // Stage descriptions for UI
     const stageDescriptions = {
@@ -204,56 +222,152 @@ export async function POST(request: Request) {
 
 /**
  * Generate strategic questions for comprehensive brand positioning analysis
- * These questions are designed to understand AI's perception of the brand
+ * Uses persona-informed question generation when persona is provided
+ * 
+ * CRITICAL: Persona names are NEVER included in generated questions.
+ * Persona only influences the framing, intent, and context.
  */
 function generateStrategicQuestions(
   brandName: string, 
-  category: string, 
-  competitors: string[]
+  category: string, // This is the SUBCATEGORY (specific, e.g., "running shoes")
+  competitors: string[],
+  buyerPersona?: string
 ): {
   brand: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
   category: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
 } {
-  const mainCompetitor = competitors[0] || "competitors";
+  const mainCompetitor = competitors[0] || "alternatives";
+  const currentYear = new Date().getFullYear();
+  
+  // Get persona-specific patterns if persona is selected
+  const personaConfig = buyerPersona ? PERSONA_QUERY_MAPPING[buyerPersona] : null;
+  
+  // Generate questions using funnel stage patterns + persona influence
+  const brandQuestions: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[] = [];
+  const categoryQuestions: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[] = [];
+  
+  // ============================================
+  // AWARENESS STAGE
+  // Persona has LOW influence - educational questions
+  // Primary metric: content_citation_rate
+  // ============================================
+  const awarenessPatterns = FUNNEL_STAGE_PATTERNS.awareness.patterns;
+  
+  // Category questions (no brand mention expected)
+  categoryQuestions.push(
+    { question: `What is ${category}`, searchVolume: 0, category: "awareness" },
+    { question: `How does ${category} work`, searchVolume: 0, category: "awareness" },
+    { question: `Types of ${category}`, searchVolume: 0, category: "awareness" },
+    { question: `${category} guide for beginners`, searchVolume: 0, category: "awareness" },
+  );
+  
+  // Brand questions (awareness level)
+  brandQuestions.push(
+    { question: `What is ${brandName} known for`, searchVolume: 0, category: "awareness" },
+    { question: `${brandName} company overview`, searchVolume: 0, category: "awareness" },
+    { question: `What does ${brandName} specialize in`, searchVolume: 0, category: "awareness" },
+  );
+  
+  // ============================================
+  // CONSIDERATION STAGE
+  // Persona has MEDIUM influence - comparison questions
+  // Primary metric: mention_rate_and_position
+  // ============================================
+  
+  // Base consideration questions
+  categoryQuestions.push(
+    { question: `Best ${category} ${currentYear}`, searchVolume: 0, category: "consideration" },
+    { question: `Top ${category} brands`, searchVolume: 0, category: "consideration" },
+    { question: `${category} comparison`, searchVolume: 0, category: "consideration" },
+    { question: `How to choose ${category}`, searchVolume: 0, category: "consideration" },
+  );
+  
+  // Add persona-influenced consideration questions
+  if (personaConfig) {
+    const intentType = personaConfig.intentType;
+    
+    if (intentType === 'price_sensitive') {
+      categoryQuestions.push(
+        { question: `Best budget ${category}`, searchVolume: 0, category: "consideration" },
+        { question: `${category} best value for money`, searchVolume: 0, category: "consideration" },
+      );
+    } else if (intentType === 'sustainability_focused' || intentType === 'ethical_consumption') {
+      categoryQuestions.push(
+        { question: `Most sustainable ${category}`, searchVolume: 0, category: "consideration" },
+        { question: `Eco-friendly ${category} brands`, searchVolume: 0, category: "consideration" },
+      );
+    } else if (intentType === 'technical_research' || intentType === 'evidence_seeking') {
+      categoryQuestions.push(
+        { question: `${category} with best technology`, searchVolume: 0, category: "consideration" },
+        { question: `Most advanced ${category}`, searchVolume: 0, category: "consideration" },
+      );
+    } else if (intentType === 'longevity_focused') {
+      categoryQuestions.push(
+        { question: `Most durable ${category}`, searchVolume: 0, category: "consideration" },
+        { question: `Highest quality ${category}`, searchVolume: 0, category: "consideration" },
+      );
+    } else if (intentType === 'experience_focused') {
+      categoryQuestions.push(
+        { question: `Best ${category} experience`, searchVolume: 0, category: "consideration" },
+        { question: `Premium ${category} worth it`, searchVolume: 0, category: "consideration" },
+      );
+    }
+  }
+  
+  // Brand consideration questions
+  brandQuestions.push(
+    { question: `${brandName} vs ${mainCompetitor}`, searchVolume: 0, category: "consideration" },
+    { question: `Is ${brandName} worth the price`, searchVolume: 0, category: "consideration" },
+    { question: `${brandName} ${category} reviews`, searchVolume: 0, category: "consideration" },
+    { question: `Pros and cons of ${brandName}`, searchVolume: 0, category: "consideration" },
+  );
+  
+  // ============================================
+  // DECISION STAGE
+  // Persona has HIGH influence - purchase intent questions
+  // Primary metric: sentiment_and_recommendation_strength
+  // ============================================
+  
+  // Base decision questions
+  categoryQuestions.push(
+    { question: `Best ${category} to buy right now`, searchVolume: 0, category: "decision" },
+    { question: `Top rated ${category} recommendations`, searchVolume: 0, category: "decision" },
+    { question: `Which ${category} should I buy`, searchVolume: 0, category: "decision" },
+  );
+  
+  // Add persona-influenced decision questions
+  if (personaConfig) {
+    const intentType = personaConfig.intentType;
+    
+    if (intentType === 'immediate_purchase') {
+      categoryQuestions.push(
+        { question: `${category} deals today`, searchVolume: 0, category: "decision" },
+        { question: `${category} with fast delivery`, searchVolume: 0, category: "decision" },
+      );
+    } else if (intentType === 'price_sensitive') {
+      const price = personaConfig.pricePoints?.[0] || '€100';
+      categoryQuestions.push(
+        { question: `Best ${category} under ${price}`, searchVolume: 0, category: "decision" },
+        { question: `Affordable ${category} worth buying`, searchVolume: 0, category: "decision" },
+      );
+    } else if (intentType === 'roi_focused') {
+      categoryQuestions.push(
+        { question: `Best ${category} for long-term use`, searchVolume: 0, category: "decision" },
+        { question: `${category} worth the investment`, searchVolume: 0, category: "decision" },
+      );
+    }
+  }
+  
+  // Brand decision questions
+  brandQuestions.push(
+    { question: `Should I buy ${brandName} ${category}`, searchVolume: 0, category: "decision" },
+    { question: `Best ${brandName} ${category} to buy`, searchVolume: 0, category: "decision" },
+    { question: `Where to buy ${brandName} ${category}`, searchVolume: 0, category: "decision" },
+    { question: `Is ${brandName} recommended by experts`, searchVolume: 0, category: "decision" },
+  );
   
   return {
-    brand: [
-      // Awareness - Understanding brand perception
-      { question: `What is ${brandName} known for?`, searchVolume: 0, category: "awareness" },
-      { question: `Is ${brandName} a premium brand?`, searchVolume: 0, category: "awareness" },
-      { question: `What makes ${brandName} unique?`, searchVolume: 0, category: "awareness" },
-      { question: `Who is ${brandName}'s target audience?`, searchVolume: 0, category: "awareness" },
-      
-      // Consideration - Comparison and evaluation
-      { question: `Is ${brandName} better than ${mainCompetitor}?`, searchVolume: 0, category: "consideration" },
-      { question: `What are the pros and cons of ${brandName}?`, searchVolume: 0, category: "consideration" },
-      { question: `Is ${brandName} worth the price?`, searchVolume: 0, category: "consideration" },
-      { question: `How does ${brandName} compare to alternatives?`, searchVolume: 0, category: "consideration" },
-      
-      // Decision - Purchase intent
-      { question: `Should I buy ${brandName}?`, searchVolume: 0, category: "decision" },
-      { question: `What is the best ${brandName} product to buy?`, searchVolume: 0, category: "decision" },
-      { question: `Where can I buy ${brandName}?`, searchVolume: 0, category: "decision" },
-      { question: `Is ${brandName} recommended by experts?`, searchVolume: 0, category: "decision" },
-    ],
-    category: [
-      // Awareness - Category understanding
-      { question: `What should I know about ${category}?`, searchVolume: 0, category: "awareness" },
-      { question: `What are the different types of ${category}?`, searchVolume: 0, category: "awareness" },
-      { question: `How do I choose ${category}?`, searchVolume: 0, category: "awareness" },
-      { question: `What features matter most in ${category}?`, searchVolume: 0, category: "awareness" },
-      
-      // Consideration - Category evaluation
-      { question: `What is the best ${category} brand?`, searchVolume: 0, category: "consideration" },
-      { question: `What ${category} do experts recommend?`, searchVolume: 0, category: "consideration" },
-      { question: `What is the best value ${category}?`, searchVolume: 0, category: "consideration" },
-      { question: `${category} comparison: which brand is best?`, searchVolume: 0, category: "consideration" },
-      
-      // Decision - Category purchase
-      { question: `Best ${category} to buy right now?`, searchVolume: 0, category: "decision" },
-      { question: `Top rated ${category} recommendations?`, searchVolume: 0, category: "decision" },
-      { question: `Where to buy quality ${category}?`, searchVolume: 0, category: "decision" },
-      { question: `Is it worth investing in premium ${category}?`, searchVolume: 0, category: "decision" },
-    ],
+    brand: brandQuestions,
+    category: categoryQuestions,
   };
 }

@@ -882,7 +882,7 @@ export default function ResultsPage() {
               {reportData.websiteAudit.pagesCrawled && reportData.websiteAudit.pagesCrawled.length > 0 && (() => {
                 const pages = reportData.websiteAudit.pagesCrawled;
                 const productPages = pages.filter((p: any) => {
-                  const path = p.url?.replace(/^https?:\/\/[^\/]+/, '') || '';
+                  const path = p.url?.replace(/^https?:\/\/[^/]+/, '') || '';
                   return /-\d{5,}$/.test(path) || /\d{8,}/.test(path) || (path.split('-').length >= 3 && path.length > 15);
                 });
                 const faqPages = pages.filter((p: any) => /faq|help|support/i.test(p.url || ''));
@@ -922,7 +922,7 @@ export default function ResultsPage() {
                       </div>
                       <div className="space-y-2 max-h-48 overflow-y-auto">
                         {pages.map((page: any, i: number) => {
-                          const path = page.url?.replace(/^https?:\/\/[^\/]+/, '') || '/';
+                          const path = page.url?.replace(/^https?:\/\/[^/]+/, '') || '/';
                           const isProduct = /-\d{5,}$/.test(path) || /\d{8,}/.test(path) || (path.split('-').length >= 3 && path.length > 15);
                           const isFaq = /faq|help|support/i.test(path);
                           const hasSchema = page.schemas && page.schemas.length > 0;
