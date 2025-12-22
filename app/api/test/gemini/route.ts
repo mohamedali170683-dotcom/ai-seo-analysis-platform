@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export const maxDuration = 60;
+export const preferredRegion = "iad1"; // US East - for Gemini API availability
 
 /**
  * Dedicated Gemini API test endpoint

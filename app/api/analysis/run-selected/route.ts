@@ -5,6 +5,7 @@ import { MultiPlatformAIService } from "@/lib/services/multi-platform-ai-service
 import { WebsiteAuditService, WebsiteAuditResult } from "@/lib/services/website-audit-service";
 
 export const maxDuration = 300; // 5 minutes for longer analyses
+export const preferredRegion = "iad1"; // US East - for Gemini API availability
 
 interface SelectedQuestion {
   question: string;
