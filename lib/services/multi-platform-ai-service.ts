@@ -588,7 +588,7 @@ export class MultiPlatformAIService {
             const apiPromise = model.generateContent({
               contents: [{ role: "user", parts: [{ text: question }] }],
               generationConfig: {
-                maxOutputTokens: 600,
+                maxOutputTokens: 2048,
                 temperature: 0.7,
               },
             });

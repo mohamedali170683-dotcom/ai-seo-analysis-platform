@@ -95,7 +95,7 @@ export async function POST(request: Request) {
         const result = await model.generateContent({
           contents: [{ role: "user", parts: [{ text: testQuestion }] }],
           generationConfig: {
-            maxOutputTokens: 200,
+            maxOutputTokens: 1024,
             temperature: 0.7,
           },
         });
@@ -250,7 +250,10 @@ export async function GET() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: "Say hello in one word" }] }]
+          contents: [{ parts: [{ text: "What are the top 3 running shoe brands? Please list them briefly." }] }],
+          generationConfig: {
+            maxOutputTokens: 1024,
+          }
         }),
       });
       
