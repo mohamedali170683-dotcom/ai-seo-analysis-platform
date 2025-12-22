@@ -66,17 +66,39 @@ const TIER_LIMITS: Record<UserTier, {
  */
 export async function POST(request: Request) {
   try {
-    const body: AnalysisRequest = await request.json();
-    const {
-      brandName,
-      domain,
-      competitors = [],
-      category,
-      selectedQuestions,
-      selectedPlatforms,
-      testsPerPlatform = 3,
-      tier = "free", // Default to free tier
-    } = body;
+    const body = await request.json();
+    
+    // Support both 'brandName' and 'brandOrKeyword' for flexibility
+    const brandName = body.brandName || body.brandOrKeyword;
+    const domain = body.domain;
+    const competitors = body.competitors || [];
+    const category = body.category || "general";
+    const testsPerPlatform = body.testsPerPlatform || 3;
+    const tier = body.tier || "free";
+    
+    // Handle questions - support both full objects and simple strings
+    let selectedQuestions: SelectedQuestion[] = [];
+    if (Array.isArray(body.selectedQuestions)) {
+      selectedQuestions = body.selectedQuestions.map((q: any, idx: number) => {
+        if (typeof q === "string") {
+          return { question: q, searchVolume: 100, category: "consideration" as const, type: "category" as const };
+        }
+        return q;
+      });
+    } else if (Array.isArray(body.questions)) {
+      // Support simple 'questions' array of strings
+      selectedQuestions = body.questions.map((q: string) => ({
+        question: q,
+        searchVolume: 100,
+        category: "consideration" as const,
+        type: "category" as const,
+      }));
+    }
+    
+    // Handle platforms - default to all if not specified
+    const selectedPlatforms: AIPlatform[] = Array.isArray(body.selectedPlatforms) 
+      ? body.selectedPlatforms 
+      : ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
 
     // Get tier limits (default to free if invalid tier)
     const validTier: UserTier = tier === "professional" || tier === "partner" ? tier : "free";
