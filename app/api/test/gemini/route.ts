@@ -194,53 +194,100 @@ export async function GET() {
     });
   }
   
-  // Test with direct REST API call
+  // First, list available models to see what we have access to
+  const listModelsUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
+  
+  let availableModels: string[] = [];
+  let listError: string | null = null;
+  
+  try {
+    const listResponse = await fetch(listModelsUrl);
+    const listData = await listResponse.json();
+    
+    if (listResponse.ok && listData.models) {
+      availableModels = listData.models
+        .filter((m: any) => m.supportedGenerationMethods?.includes('generateContent'))
+        .map((m: any) => m.name.replace('models/', ''));
+    } else {
+      listError = listData.error?.message || 'Failed to list models';
+    }
+  } catch (e: any) {
+    listError = e.message;
+  }
+  
+  // If we have models, try the first one
+  if (availableModels.length > 0) {
+    const modelToUse = availableModels[0];
+    const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+    
+    try {
+      const response = await fetch(testUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "Say hello in one word" }] }]
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        return NextResponse.json({
+          success: true,
+          message: `Gemini API is working! Model '${modelToUse}' responded.`,
+          workingModel: modelToUse,
+          availableModels,
+          response: responseText.substring(0, 200),
+          keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
+        });
+      } else {
+        return NextResponse.json({
+          success: false,
+          error: `Model ${modelToUse} failed`,
+          availableModels,
+          errorDetails: data.error,
+          keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
+        });
+      }
+    } catch (fetchError: any) {
+      return NextResponse.json({
+        success: false,
+        error: `Network error: ${fetchError.message}`,
+        availableModels,
+      });
+    }
+  }
+  
+  // No models available - try a direct call anyway to get the actual error
   const testUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
   
   try {
     const response = await fetch(testUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{
-          parts: [{ text: "Say hello" }]
-        }]
+        contents: [{ parts: [{ text: "Say hello" }] }]
       }),
     });
     
     const data = await response.json();
     
-    if (response.ok) {
-      return NextResponse.json({
-        success: true,
-        message: "Gemini API is working via REST!",
-        status: response.status,
-        response: data,
-      });
-    } else {
-      return NextResponse.json({
-        success: false,
-        error: "Gemini API returned an error",
-        status: response.status,
-        statusText: response.statusText,
-        errorDetails: data,
-        keyInfo: {
-          length: apiKey.length,
-          prefix: apiKey.substring(0, 8) + "...",
-        },
-        suggestion: data.error?.message || "Check your API key and project configuration",
-      });
-    }
+    return NextResponse.json({
+      success: false,
+      error: data.error?.message || "No models available",
+      listModelsError: listError,
+      availableModels,
+      status: response.status,
+      errorDetails: data.error,
+      keyInfo: { length: apiKey.length, prefix: apiKey.substring(0, 8) + "..." },
+      suggestion: "Your API key may not have access to any Gemini models. Please ensure you created the key at https://aistudio.google.com/apikey and that the 'Generative Language API' is enabled.",
+    });
   } catch (fetchError: any) {
     return NextResponse.json({
       success: false,
       error: `Network error: ${fetchError.message}`,
-      keyInfo: {
-        length: apiKey.length,
-        prefix: apiKey.substring(0, 8) + "...",
-      },
+      listModelsError: listError,
     });
   }
 }
