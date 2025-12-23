@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { analyzeCitations, CitationAnalysis } from "./citation-detector";
+import { CitationAnalysis } from "./citation-detector";
 
 export type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
 
@@ -421,15 +421,25 @@ export class MultiPlatformAIService {
     if (!this.perplexityClient) return [];
 
     console.log(`  🟠 [Perplexity] Starting ${numTests} REAL API calls with web search...`);
-    
+
+    // Country context
+    const countryNames: Record<string, string> = {
+      "US": "United States", "GB": "United Kingdom", "CA": "Canada", "AU": "Australia",
+      "DE": "Germany", "FR": "France", "ES": "Spain", "IT": "Italy", "NL": "Netherlands",
+      "SE": "Sweden", "JP": "Japan", "KR": "South Korea", "SG": "Singapore",
+      "IN": "India", "BR": "Brazil", "MX": "Mexico", "AE": "United Arab Emirates", "SA": "Saudi Arabia"
+    };
+    const countryName = countryNames[targetCountry] || targetCountry;
+    const geoContext = `You are answering for a user in ${countryName}. Provide information relevant to this market.`;
+
     const results: (AIResponse | null)[] = [];
-    
+
     // Run sequentially to avoid rate limits
     for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       try {
         console.log(`  → [Perplexity] Test ${i}/${numTests} calling API...`);
-        
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
 
@@ -437,6 +447,7 @@ export class MultiPlatformAIService {
           {
             model: "llama-3.1-sonar-small-128k-online", // Perplexity's online model with web search
             messages: [
+              { role: "system", content: geoContext },
               { role: "user", content: question }
             ],
             max_tokens: 2048,  // Increased from 500 to get full responses
@@ -555,6 +566,17 @@ export class MultiPlatformAIService {
     
     console.log(`  🔵 [Gemini] Starting ${numTests} tests via REST API (${globalTimeout/1000}s max)...`);
 
+    // Country context
+    const countryNames: Record<string, string> = {
+      "US": "United States", "GB": "United Kingdom", "CA": "Canada", "AU": "Australia",
+      "DE": "Germany", "FR": "France", "ES": "Spain", "IT": "Italy", "NL": "Netherlands",
+      "SE": "Sweden", "JP": "Japan", "KR": "South Korea", "SG": "Singapore",
+      "IN": "India", "BR": "Brazil", "MX": "Mexico", "AE": "United Arab Emirates", "SA": "Saudi Arabia"
+    };
+    const countryName = countryNames[targetCountry] || targetCountry;
+    const geoContext = `You are answering for a user in ${countryName}. Provide information relevant to this market.`;
+    const contextualQuestion = `${geoContext}\n\n${question}`;
+
     // Models to try - spread load to avoid rate limits
     const modelNames = [
       "gemini-2.0-flash",
@@ -597,7 +619,7 @@ export class MultiPlatformAIService {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: question }] }],
+              contents: [{ parts: [{ text: contextualQuestion }] }],
               generationConfig: {
                 maxOutputTokens: 4096,  // Increased for full comprehensive responses
                 temperature: 0.7,
@@ -721,7 +743,6 @@ export class MultiPlatformAIService {
    * Extract URLs from text
    */
   private extractUrlsFromText(text: string): string[] {
-    // eslint-disable-next-line no-useless-escape
     const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi;
     const matches = text.match(urlRegex) || [];
     return [...new Set(matches)]; // Remove duplicates
@@ -767,7 +788,6 @@ export class MultiPlatformAIService {
 
     const sentiment = this.analyzeSentiment(response, brandName, brandMentioned);
     const competitorsMentioned = competitors.filter(c => lowerResponse.includes(c.toLowerCase()));
-    // eslint-disable-next-line no-useless-escape
     const citedUrls = response.match(/(https?:\/\/[^\s]+)/g) || [];
 
     return {
