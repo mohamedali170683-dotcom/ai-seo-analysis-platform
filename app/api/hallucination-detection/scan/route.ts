@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/db/prisma';
+import { prisma } from '@/lib/db/prisma';
 import HallucinationDetectionEngine from '@/lib/services/hallucination-detection-engine';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
