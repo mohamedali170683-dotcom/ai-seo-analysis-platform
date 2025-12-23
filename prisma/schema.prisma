@@ -8,11 +8,12 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  createdAt DateTime   @default(now())
-  analyses  Analysis[]
-  projects  Project[]
+  id               String             @id @default(cuid())
+  email            String             @unique
+  createdAt        DateTime           @default(now())
+  analyses         Analysis[]
+  projects         Project[]
+  brandGroundTruths BrandGroundTruth[]
 }
 
 model Analysis {
@@ -22,6 +23,8 @@ model Analysis {
   brandOrKeyword       String
   domain               String?
   competitors          String[]
+  targetCountry        String?               // ISO country code (US, UK, DE, etc.)
+  targetRegion         String?               // Optional region specification
   status               String                @default("pending")
   progress             Int                   @default(0)
   currentStep          String?
@@ -34,6 +37,7 @@ model Analysis {
 
   @@index([userId])
   @@index([status])
+  @@index([targetCountry])
   @@map("analyses")
 }
 
@@ -172,4 +176,224 @@ model Assessment {
   @@index([projectId])
   @@index([status])
   @@map("assessments")
+}
+
+// Misinformation & Hallucination Detection Models
+model BrandGroundTruth {
+  id                          String                        @id @default(cuid())
+  userId                      String
+  user                        User                          @relation(fields: [userId], references: [id])
+
+  // Company Information
+  companyName                 String
+  foundedYear                 Int?
+  headquarters                String?
+  ceo                         String?
+  ceoSince                    Int?
+  parentCompany               String?
+  publiclyTraded              Boolean                       @default(false)
+  stockTicker                 String?
+  employeeCount               Int?
+  revenue                     String?
+
+  // Additional metadata
+  industry                    String?
+  description                 String?
+  websiteUrl                  String?
+
+  // Relations
+  products                    Product[]
+  historicalFacts             HistoricalFact[]
+  approvedClaims              ApprovedClaim[]
+  competitorDifferentiators   CompetitorDifferentiator[]
+  hallucinationDetections     HallucinationDetection[]
+
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+
+  @@index([userId])
+  @@index([companyName])
+  @@map("brand_ground_truths")
+}
+
+model Product {
+  id                  String            @id @default(cuid())
+  groundTruthId       String
+  groundTruth         BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  name                String
+  launchYear          Int?
+  currentlyAvailable  Boolean           @default(true)
+  priceMin            Float?
+  priceMax            Float?
+  currency            String?
+  keyFeatures         String[]
+  categories          String[]
+  discontinuedYear    Int?
+  successorProduct    String?
+  description         String?
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([groundTruthId])
+  @@index([name])
+  @@map("products")
+}
+
+model HistoricalFact {
+  id                  String            @id @default(cuid())
+  groundTruthId       String
+  groundTruth         BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  fact                String
+  year                Int
+  category            String            // founding, product_launch, acquisition, milestone, leadership
+  verificationSource  String?
+  description         String?
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([groundTruthId])
+  @@index([category])
+  @@map("historical_facts")
+}
+
+model ApprovedClaim {
+  id                      String            @id @default(cuid())
+  groundTruthId           String
+  groundTruth             BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  claim                   String
+  category                String            // performance, sustainability, safety, comparison, award
+  approved                Boolean           @default(true)
+  regulatoryRestrictions  String[]
+  expirationDate          DateTime?
+  verificationSource      String?
+
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  @@index([groundTruthId])
+  @@index([category])
+  @@map("approved_claims")
+}
+
+model CompetitorDifferentiator {
+  id                  String            @id @default(cuid())
+  groundTruthId       String
+  groundTruth         BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  competitor          String
+  theirFeature        String
+  ourEquivalent       String?
+  commonlyConfused    Boolean           @default(false)
+  description         String?
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([groundTruthId])
+  @@index([competitor])
+  @@map("competitor_differentiators")
+}
+
+model HallucinationDetection {
+  id                      String                 @id @default(cuid())
+  groundTruthId           String
+  groundTruth             BrandGroundTruth       @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  // Scan metadata
+  scanDate                DateTime               @default(now())
+  status                  String                 @default("pending") // pending, in_progress, completed, failed
+
+  // Overall scores
+  overallAccuracy         Float?
+  adjustedAccuracy        Float?
+  riskLevel               String?                // LOW, MEDIUM, HIGH, CRITICAL
+
+  // Per-LLM results
+  chatgptAccuracy         Float?
+  geminiAccuracy          Float?
+  copilotAccuracy         Float?
+  perplexityAccuracy      Float?
+
+  // Counts
+  totalClaims             Int                    @default(0)
+  correctClaims           Int                    @default(0)
+  incorrectClaims         Int                    @default(0)
+  unverifiableClaims      Int                    @default(0)
+
+  // Relations
+  hallucinations          Hallucination[]
+  recommendations         Recommendation[]
+
+  createdAt               DateTime               @default(now())
+  completedAt             DateTime?
+
+  @@index([groundTruthId])
+  @@index([status])
+  @@index([scanDate])
+  @@map("hallucination_detections")
+}
+
+model Hallucination {
+  id                  String                  @id @default(cuid())
+  detectionId         String
+  detection           HallucinationDetection  @relation(fields: [detectionId], references: [id], onDelete: Cascade)
+
+  // LLM and query info
+  llm                 String                  // chatgpt, gemini, copilot, perplexity
+  query               String
+
+  // Hallucination details
+  claimedFact         String
+  actualFact          String
+  category            String                  // DATE_ERROR, COMPETITOR_CONFUSION, FABRICATION, OUTDATED_INFO, EXAGGERATION, MISATTRIBUTION
+  severity            String                  // CRITICAL, HIGH, MEDIUM, LOW
+  severityScore       Int
+
+  // Context
+  fullContext         String?
+  responseSnippet     String?
+
+  // Actions
+  status              String                  @default("open") // open, addressed, ignored
+  suggestedAction     String?
+
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  @@index([detectionId])
+  @@index([llm])
+  @@index([category])
+  @@index([severity])
+  @@index([status])
+  @@map("hallucinations")
+}
+
+model Recommendation {
+  id                  String                  @id @default(cuid())
+  detectionId         String
+  detection           HallucinationDetection  @relation(fields: [detectionId], references: [id], onDelete: Cascade)
+
+  priority            String                  // critical, high, medium, low
+  category            String
+  title               String
+  description         String
+  affectedLLMs        String[]
+  suggestedContent    String?
+
+  // Tracking
+  status              String                  @default("pending") // pending, in_progress, completed, dismissed
+  implementedAt       DateTime?
+
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+
+  @@index([detectionId])
+  @@index([priority])
+  @@index([status])
+  @@map("recommendations")
 }

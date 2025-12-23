@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { analyzeCitations, CitationAnalysis } from "./citation-detector";
+import { CitationAnalysis } from "./citation-detector";
 
 export type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
 
@@ -142,19 +142,20 @@ export class MultiPlatformAIService {
     question: string,
     brandName: string,
     competitors: string[] = [],
-    testsPerPlatform?: number
+    testsPerPlatform?: number,
+    targetCountry: string = "US"
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
-    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × 4 platforms)`);
+    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × 4 platforms) [${targetCountry}]`);
     const startTime = Date.now();
 
     // Run all 4 platforms in PARALLEL using Promise.allSettled
     // Each platform will run numTests times for statistical significance
     const results = await Promise.allSettled([
-      this.testSinglePlatform("ChatGPT", question, brandName, competitors, numTests),
-      this.testSinglePlatform("Gemini", question, brandName, competitors, numTests),
-      this.testSinglePlatform("Copilot", question, brandName, competitors, numTests),
-      this.testSinglePlatform("Perplexity", question, brandName, competitors, numTests),
+      this.testSinglePlatform("ChatGPT", question, brandName, competitors, numTests, targetCountry),
+      this.testSinglePlatform("Gemini", question, brandName, competitors, numTests, targetCountry),
+      this.testSinglePlatform("Copilot", question, brandName, competitors, numTests, targetCountry),
+      this.testSinglePlatform("Perplexity", question, brandName, competitors, numTests, targetCountry),
     ]);
 
     // Collect successful responses
@@ -191,10 +192,11 @@ export class MultiPlatformAIService {
     brandName: string,
     competitors: string[] = [],
     platforms: AIPlatform[],
-    testsPerPlatform?: number
+    testsPerPlatform?: number,
+    targetCountry: string = "US"
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
-    console.log(`🤖 Q: "${question.substring(0, 30)}..." (${numTests}×${platforms.length})`);
+    console.log(`🤖 Q: "${question.substring(0, 30)}..." (${numTests}×${platforms.length}) [${targetCountry}]`);
     const startTime = Date.now();
 
     // Run ALL platforms in PARALLEL with individual timeouts
@@ -202,7 +204,7 @@ export class MultiPlatformAIService {
       try {
         // Strict 15-second timeout per platform
         const result = await this.withTimeout(
-          this.testSinglePlatform(platform, question, brandName, competitors, numTests),
+          this.testSinglePlatform(platform, question, brandName, competitors, numTests, targetCountry),
           15000,
           `${platform} timeout`
         );
@@ -299,24 +301,35 @@ export class MultiPlatformAIService {
     question: string,
     brandName: string,
     competitors: string[],
-    numTests: number
+    numTests: number,
+    targetCountry: string = "US"
   ): Promise<AIResponse[]> {
     // Use real Gemini API if available
     if (platform === "Gemini" && this.geminiClient) {
-      return this.testGeminiReal(question, brandName, competitors, numTests);
+      return this.testGeminiReal(question, brandName, competitors, numTests, targetCountry);
     }
-    
+
     // Use real Perplexity API if available
     if (platform === "Perplexity" && this.perplexityClient) {
-      return this.testPerplexityReal(question, brandName, competitors, numTests);
+      return this.testPerplexityReal(question, brandName, competitors, numTests, targetCountry);
     }
-    
+
+    // Country context map for natural language
+    const countryNames: Record<string, string> = {
+      "US": "United States", "GB": "United Kingdom", "CA": "Canada", "AU": "Australia",
+      "DE": "Germany", "FR": "France", "ES": "Spain", "IT": "Italy", "NL": "Netherlands",
+      "SE": "Sweden", "JP": "Japan", "KR": "South Korea", "SG": "Singapore",
+      "IN": "India", "BR": "Brazil", "MX": "Mexico", "AE": "United Arab Emirates", "SA": "Saudi Arabia"
+    };
+    const countryName = countryNames[targetCountry] || targetCountry;
+    const geoContext = `You are answering for a user in ${countryName}. Provide information relevant to this market, including local brands, availability, and cultural context where appropriate.`;
+
     // Use OpenAI for ChatGPT, Copilot (simulated), and Perplexity (simulated if no API key)
     const systemPrompts: Record<string, string> = {
-      "ChatGPT": "",
-      "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers with references when possible.",
-      "Perplexity": "You are Perplexity AI, an AI-powered answer engine. Provide comprehensive, well-researched answers with citations and sources when available. Focus on accuracy and include relevant context.",
-      "Gemini": "You are Google Gemini. Provide helpful, accurate, and comprehensive answers.",
+      "ChatGPT": geoContext,
+      "Copilot": `You are Microsoft Copilot. ${geoContext} Provide helpful, balanced answers with references when possible.`,
+      "Perplexity": `You are Perplexity AI, an AI-powered answer engine. ${geoContext} Provide comprehensive, well-researched answers with citations and sources when available. Focus on accuracy and include relevant context.`,
+      "Gemini": `You are Google Gemini. ${geoContext} Provide helpful, accurate, and comprehensive answers.`,
     };
 
     const isRealAPI = platform === "ChatGPT"; // Only ChatGPT is real when using OpenAI directly
@@ -402,20 +415,31 @@ export class MultiPlatformAIService {
     question: string,
     brandName: string,
     competitors: string[],
-    numTests: number
+    numTests: number,
+    targetCountry: string = "US"
   ): Promise<AIResponse[]> {
     if (!this.perplexityClient) return [];
 
     console.log(`  🟠 [Perplexity] Starting ${numTests} REAL API calls with web search...`);
-    
+
+    // Country context
+    const countryNames: Record<string, string> = {
+      "US": "United States", "GB": "United Kingdom", "CA": "Canada", "AU": "Australia",
+      "DE": "Germany", "FR": "France", "ES": "Spain", "IT": "Italy", "NL": "Netherlands",
+      "SE": "Sweden", "JP": "Japan", "KR": "South Korea", "SG": "Singapore",
+      "IN": "India", "BR": "Brazil", "MX": "Mexico", "AE": "United Arab Emirates", "SA": "Saudi Arabia"
+    };
+    const countryName = countryNames[targetCountry] || targetCountry;
+    const geoContext = `You are answering for a user in ${countryName}. Provide information relevant to this market.`;
+
     const results: (AIResponse | null)[] = [];
-    
+
     // Run sequentially to avoid rate limits
     for (let idx = 0; idx < numTests; idx++) {
       const i = idx + 1;
       try {
         console.log(`  → [Perplexity] Test ${i}/${numTests} calling API...`);
-        
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 20000);
 
@@ -423,6 +447,7 @@ export class MultiPlatformAIService {
           {
             model: "llama-3.1-sonar-small-128k-online", // Perplexity's online model with web search
             messages: [
+              { role: "system", content: geoContext },
               { role: "user", content: question }
             ],
             max_tokens: 2048,  // Increased from 500 to get full responses
@@ -525,7 +550,8 @@ export class MultiPlatformAIService {
     question: string,
     brandName: string,
     competitors: string[],
-    numTests: number
+    numTests: number,
+    targetCountry: string = "US"
   ): Promise<AIResponse[]> {
     // Get API key from environment
     const apiKey = process.env.GEMINI_API_KEY;
@@ -539,6 +565,17 @@ export class MultiPlatformAIService {
     const startTime = Date.now();
     
     console.log(`  🔵 [Gemini] Starting ${numTests} tests via REST API (${globalTimeout/1000}s max)...`);
+
+    // Country context
+    const countryNames: Record<string, string> = {
+      "US": "United States", "GB": "United Kingdom", "CA": "Canada", "AU": "Australia",
+      "DE": "Germany", "FR": "France", "ES": "Spain", "IT": "Italy", "NL": "Netherlands",
+      "SE": "Sweden", "JP": "Japan", "KR": "South Korea", "SG": "Singapore",
+      "IN": "India", "BR": "Brazil", "MX": "Mexico", "AE": "United Arab Emirates", "SA": "Saudi Arabia"
+    };
+    const countryName = countryNames[targetCountry] || targetCountry;
+    const geoContext = `You are answering for a user in ${countryName}. Provide information relevant to this market.`;
+    const contextualQuestion = `${geoContext}\n\n${question}`;
 
     // Models to try - spread load to avoid rate limits
     const modelNames = [
@@ -582,7 +619,7 @@ export class MultiPlatformAIService {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              contents: [{ parts: [{ text: question }] }],
+              contents: [{ parts: [{ text: contextualQuestion }] }],
               generationConfig: {
                 maxOutputTokens: 4096,  // Increased for full comprehensive responses
                 temperature: 0.7,
@@ -706,7 +743,6 @@ export class MultiPlatformAIService {
    * Extract URLs from text
    */
   private extractUrlsFromText(text: string): string[] {
-    // eslint-disable-next-line no-useless-escape
     const urlRegex = /https?:\/\/[^\s<>"{}|\\^`[\]]+/gi;
     const matches = text.match(urlRegex) || [];
     return [...new Set(matches)]; // Remove duplicates
@@ -752,7 +788,6 @@ export class MultiPlatformAIService {
 
     const sentiment = this.analyzeSentiment(response, brandName, brandMentioned);
     const competitorsMentioned = competitors.filter(c => lowerResponse.includes(c.toLowerCase()));
-    // eslint-disable-next-line no-useless-escape
     const citedUrls = response.match(/(https?:\/\/[^\s]+)/g) || [];
 
     return {

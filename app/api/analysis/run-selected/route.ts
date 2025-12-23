@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     const domain = body.domain;
     const competitors = body.competitors || [];
     const category = body.category || "general";
+    const targetCountry = body.targetCountry || "US"; // Default to US if not specified
     const testsPerPlatform = body.testsPerPlatform || 3;
     const tier = body.tier || "free";
     
@@ -194,6 +195,7 @@ export async function POST(request: Request) {
         brandOrKeyword: brandName,
         domain: domain || null,
         competitors: finalCompetitors,
+        targetCountry: targetCountry,
         status: "running",
         progress: 0,
         currentStep: "Starting analysis...",
@@ -219,6 +221,7 @@ export async function POST(request: Request) {
         domain,
         finalCompetitors,
         category,
+        targetCountry,
         finalQuestions,
         finalPlatforms,
         finalTestsPerPlatform,
@@ -274,6 +277,7 @@ async function executeSelectedAnalysis(
   domain: string | undefined,
   competitors: string[],
   category: string,
+  targetCountry: string,
   selectedQuestions: SelectedQuestion[],
   selectedPlatforms: AIPlatform[],
   testsPerPlatform: number,
@@ -282,6 +286,7 @@ async function executeSelectedAnalysis(
   const startTime = Date.now();
   console.log(`🔄 [EXEC-SELECTED] Starting execution for ${analysisId}`);
   console.log(`   Brand: ${brandName}`);
+  console.log(`   Target Country: ${targetCountry}`);
   console.log(`   Questions: ${selectedQuestions.length}`);
   console.log(`   Platforms: ${selectedPlatforms.join(", ")}`);
   console.log(`   Tests/platform: ${testsPerPlatform}`);
@@ -366,7 +371,8 @@ async function executeSelectedAnalysis(
           brandName,
           competitors,
           selectedPlatforms,
-          testsPerPlatform
+          testsPerPlatform,
+          targetCountry
         );
 
         allResults.push({

@@ -45,6 +45,7 @@ export default function AnalyzePage() {
   const [brandName, setBrandName] = useState("");
   const [domain, setDomain] = useState("");
   const [category, setCategory] = useState("");
+  const [targetCountry, setTargetCountry] = useState("US");
   const [competitors, setCompetitors] = useState("");
   
   // AI Persona suggestions - simplified approach
@@ -180,6 +181,7 @@ export default function AnalyzePage() {
         body: JSON.stringify({
           brandName,
           category,
+          targetCountry, // Add country for geo-specific responses
           competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           tier, // Pass tier to control real data vs strategic questions
           // Persona context for question generation (simplified)
@@ -329,6 +331,7 @@ export default function AnalyzePage() {
           brandName,
           domain,
           category,
+          targetCountry, // Add country for geo-specific analysis
           competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           selectedQuestions: allQuestions.map(q => ({
             question: q.question,
@@ -697,6 +700,38 @@ export default function AnalyzePage() {
                     </p>
                   </div>
                 )}
+
+                {/* Country / Target Market */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Target Country / Market *</label>
+                  <select
+                    value={targetCountry}
+                    onChange={(e) => setTargetCountry(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                  >
+                    <option value="US">🇺🇸 United States</option>
+                    <option value="GB">🇬🇧 United Kingdom</option>
+                    <option value="CA">🇨🇦 Canada</option>
+                    <option value="AU">🇦🇺 Australia</option>
+                    <option value="DE">🇩🇪 Germany</option>
+                    <option value="FR">🇫🇷 France</option>
+                    <option value="ES">🇪🇸 Spain</option>
+                    <option value="IT">🇮🇹 Italy</option>
+                    <option value="NL">🇳🇱 Netherlands</option>
+                    <option value="SE">🇸🇪 Sweden</option>
+                    <option value="JP">🇯🇵 Japan</option>
+                    <option value="KR">🇰🇷 South Korea</option>
+                    <option value="SG">🇸🇬 Singapore</option>
+                    <option value="IN">🇮🇳 India</option>
+                    <option value="BR">🇧🇷 Brazil</option>
+                    <option value="MX">🇲🇽 Mexico</option>
+                    <option value="AE">🇦🇪 United Arab Emirates</option>
+                    <option value="SA">🇸🇦 Saudi Arabia</option>
+                  </select>
+                  <p className="text-xs text-gray-400 mt-2">
+                    LLM responses vary by region. Select your target market for accurate results.
+                  </p>
+                </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Domain (optional)</label>
