@@ -221,6 +221,7 @@ export async function POST(request: Request) {
         domain,
         finalCompetitors,
         category,
+        targetCountry,
         finalQuestions,
         finalPlatforms,
         finalTestsPerPlatform,
@@ -276,6 +277,7 @@ async function executeSelectedAnalysis(
   domain: string | undefined,
   competitors: string[],
   category: string,
+  targetCountry: string,
   selectedQuestions: SelectedQuestion[],
   selectedPlatforms: AIPlatform[],
   testsPerPlatform: number,
@@ -284,6 +286,7 @@ async function executeSelectedAnalysis(
   const startTime = Date.now();
   console.log(`🔄 [EXEC-SELECTED] Starting execution for ${analysisId}`);
   console.log(`   Brand: ${brandName}`);
+  console.log(`   Target Country: ${targetCountry}`);
   console.log(`   Questions: ${selectedQuestions.length}`);
   console.log(`   Platforms: ${selectedPlatforms.join(", ")}`);
   console.log(`   Tests/platform: ${testsPerPlatform}`);
@@ -368,7 +371,8 @@ async function executeSelectedAnalysis(
           brandName,
           competitors,
           selectedPlatforms,
-          testsPerPlatform
+          testsPerPlatform,
+          targetCountry
         );
 
         allResults.push({
