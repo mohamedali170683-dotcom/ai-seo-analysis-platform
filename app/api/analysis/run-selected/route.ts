@@ -73,6 +73,7 @@ export async function POST(request: Request) {
     const domain = body.domain;
     const competitors = body.competitors || [];
     const category = body.category || "general";
+    const targetCountry = body.targetCountry || "US"; // Default to US if not specified
     const testsPerPlatform = body.testsPerPlatform || 3;
     const tier = body.tier || "free";
     
@@ -194,6 +195,7 @@ export async function POST(request: Request) {
         brandOrKeyword: brandName,
         domain: domain || null,
         competitors: finalCompetitors,
+        targetCountry: targetCountry,
         status: "running",
         progress: 0,
         currentStep: "Starting analysis...",

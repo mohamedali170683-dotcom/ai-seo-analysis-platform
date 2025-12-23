@@ -23,6 +23,8 @@ model Analysis {
   brandOrKeyword       String
   domain               String?
   competitors          String[]
+  targetCountry        String?               // ISO country code (US, UK, DE, etc.)
+  targetRegion         String?               // Optional region specification
   status               String                @default("pending")
   progress             Int                   @default(0)
   currentStep          String?
@@ -35,6 +37,7 @@ model Analysis {
 
   @@index([userId])
   @@index([status])
+  @@index([targetCountry])
   @@map("analyses")
 }
 
