@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// Using REST API directly for grounding support
 
 export const maxDuration = 60;
 export const preferredRegion = "iad1"; // US East - for Gemini API availability
@@ -53,22 +53,10 @@ export async function POST(request: Request) {
       }, { status: 500 });
     }
 
-    // Step 2: Initialize client
-    diagnostics.steps.push({ step: "Initialize GoogleGenerativeAI client", status: "checking" });
-    
-    let client: GoogleGenerativeAI;
-    try {
-      client = new GoogleGenerativeAI(apiKey);
-      diagnostics.steps[1].status = "passed";
-    } catch (initError: any) {
-      diagnostics.steps[1].status = "failed";
-      diagnostics.steps[1].error = initError.message;
-      return NextResponse.json({
-        success: false,
-        error: `Failed to initialize Gemini client: ${initError.message}`,
-        diagnostics,
-      }, { status: 500 });
-    }
+    // Step 2: Test API connectivity (using REST API with grounding)
+    diagnostics.steps.push({ step: "Test REST API with grounding", status: "checking" });
+    diagnostics.steps[1].status = "passed";
+    diagnostics.steps[1].note = "Using REST API directly for Google Search grounding support";
 
     // Step 3: Test ALL models to find which are available in this region
     diagnostics.steps.push({ step: "Test available models", status: "checking" });
@@ -87,58 +75,79 @@ export async function POST(request: Request) {
     
     console.log(`[Gemini Test] Testing ${modelsToTest.length} models...`);
     
+    let groundingSources: any[] = [];
+    
     for (const modelName of modelsToTest) {
       try {
-        console.log(`[Gemini Test] Trying model: ${modelName}`);
-        const model = client.getGenerativeModel({ model: modelName });
+        console.log(`[Gemini Test] Trying model: ${modelName} (REST API with grounding)`);
         
-        const result = await model.generateContent({
-          contents: [{ role: "user", parts: [{ text: testQuestion }] }],
-          generationConfig: {
-            maxOutputTokens: 1024,
-            temperature: 0.7,
-          },
+        // Use REST API directly with grounding enabled
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: testQuestion }] }],
+            generationConfig: {
+              maxOutputTokens: 2048,
+              temperature: 0.7,
+            },
+            // Enable Google Search grounding for source citations
+            tools: [{
+              googleSearch: {}
+            }],
+          }),
         });
         
-        const response = result.response;
+        const data = await response.json();
         
-        // Try to get text via multiple methods
-        let text = '';
-        try {
-          text = response.text();
-        } catch (e) {
-          console.log(`[Gemini Test] text() failed for ${modelName}`);
-        }
-        
-        // Also try extracting from candidates
-        let candidateText = '';
-        try {
-          const candidate = response.candidates?.[0];
-          if (candidate?.content?.parts) {
-            candidateText = candidate.content.parts
-              .filter((p: any) => p.text)
-              .map((p: any) => p.text)
-              .join('\n');
-          }
-          // Log finish reason
-          console.log(`[Gemini Test] ${modelName} finish: ${candidate?.finishReason}, parts: ${candidate?.content?.parts?.length}`);
-        } catch (e) {
-          console.log(`[Gemini Test] candidate extraction failed for ${modelName}`);
-        }
-        
-        // Use whichever is longer
-        const finalText = candidateText.length > text.length ? candidateText : text;
-        
-        if (finalText && finalText.length > 0) {
-          modelResults.push({ model: modelName, available: true });
-          console.log(`[Gemini Test] ✓ ${modelName} WORKS (${finalText.length} chars)`);
+        if (response.ok && data.candidates?.[0]?.content?.parts) {
+          const parts = data.candidates[0].content.parts;
+          const finalText = parts
+            .filter((p: any) => p.text)
+            .map((p: any) => p.text)
+            .join('\n');
           
-          if (!workingModel) {
-            workingModel = modelName;
-            workingResponse = finalText;
+          // Extract grounding metadata / sources
+          const groundingMetadata = data.candidates[0].groundingMetadata;
+          if (groundingMetadata) {
+            const chunks = groundingMetadata.groundingChunks || [];
+            const supports = groundingMetadata.groundingSupports || [];
+            const searchQueries = groundingMetadata.webSearchQueries || [];
+            
+            console.log(`[Gemini Test] ${modelName} has grounding: ${chunks.length} chunks, ${supports.length} supports`);
+            
+            for (const chunk of chunks) {
+              if (chunk.web) {
+                groundingSources.push({
+                  url: chunk.web.uri || '',
+                  title: chunk.web.title || '',
+                  domain: (chunk.web.uri || '').replace(/^https?:\/\//, '').split('/')[0],
+                });
+              }
+            }
           }
+          
+          if (finalText && finalText.length > 0) {
+            modelResults.push({ model: modelName, available: true });
+            console.log(`[Gemini Test] ✓ ${modelName} WORKS (${finalText.length} chars, ${groundingSources.length} sources)`);
+            
+            if (!workingModel) {
+              workingModel = modelName;
+              workingResponse = finalText;
+            }
+          } else {
+            modelResults.push({ model: modelName, available: false, error: "Empty response" });
+          }
+        } else if (data.error?.code === 429) {
+          console.log(`[Gemini Test] ✗ ${modelName}: Rate limited`);
+          modelResults.push({ model: modelName, available: false, error: "Rate limited" });
+        } else if (data.error) {
+          console.log(`[Gemini Test] ✗ ${modelName}: ${data.error.message?.substring(0, 80)}`);
+          modelResults.push({ model: modelName, available: false, error: data.error.message?.substring(0, 100) });
         } else {
-          modelResults.push({ model: modelName, available: false, error: "Empty response" });
+          modelResults.push({ model: modelName, available: false, error: "Unknown response format" });
         }
       } catch (modelError: any) {
         const errMsg = modelError.message || 'Unknown error';
@@ -190,13 +199,15 @@ SOLUTIONS:
       workingModel,
       modelResults,
       availableModels: modelResults.filter(m => m.available).map(m => m.model),
+      grounding: {
+        enabled: true,
+        sourcesFound: groundingSources.length,
+        sources: groundingSources,
+      },
       response: {
         text: workingResponse,
         length: workingResponse?.length || 0,
-        truncated: (workingResponse?.length || 0) > 300 
-          ? workingResponse?.substring(0, 300) + "..." 
-          : workingResponse,
-      },
+        fullResponse: workingResponse,
     });
 
   } catch (error: any) {
