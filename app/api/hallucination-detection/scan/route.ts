@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import HallucinationDetectionEngine from '@/lib/services/hallucination-detection-engine';
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
 /**
  * POST /api/hallucination-detection/scan
@@ -314,9 +312,33 @@ async function queryLLM(
         });
         response = completion.choices[0]?.message?.content || '';
       } else if (llm === 'gemini') {
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-        const result = await model.generateContent(query);
-        response = result.response.text();
+        // Use REST API for Gemini (SDK has regional issues)
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (apiKey) {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+          const geminiResponse = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: query }] }],
+              generationConfig: {
+                maxOutputTokens: 2048,
+                temperature: 0.1,
+              },
+            }),
+          });
+
+          const data = await geminiResponse.json();
+
+          if (geminiResponse.ok && data.candidates?.[0]?.content?.parts) {
+            const parts = data.candidates[0].content.parts;
+            response = parts
+              .filter((p: any) => p.text)
+              .map((p: any) => p.text)
+              .join('\n');
+          }
+        }
       }
 
       results.push({ query, response });

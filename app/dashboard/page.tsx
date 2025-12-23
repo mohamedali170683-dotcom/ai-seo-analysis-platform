@@ -311,7 +311,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions - Apple Style */}
-        <div className="mb-8">
+        <div className="mb-8 grid md:grid-cols-2 gap-6">
           <Link
             href="/analyze"
             className="block bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-md transition-all hover:border-blue-200"
@@ -330,6 +330,28 @@ export default function DashboardPage() {
             </p>
             <div className="flex items-center text-sm font-semibold text-blue-500">
               Start My Analysis
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+
+          <Link
+            href="/hallucination-detector"
+            className="block bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl shadow-sm border border-red-200 p-8 hover:shadow-md transition-all hover:border-red-300"
+          >
+            <div className="flex items-center mb-4">
+              <div className="bg-red-100 p-4 rounded-2xl mr-4">
+                <XCircle className="w-8 h-8 text-red-600" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Misinformation Detector</h2>
+                <p className="text-red-600 font-medium">NEW FEATURE</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 mb-4">
+              Detect factual errors, outdated information, and competitor confusion in LLM responses about your brand.
+            </p>
+            <div className="flex items-center text-sm font-semibold text-red-600">
+              Check Brand Accuracy
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
           </Link>
