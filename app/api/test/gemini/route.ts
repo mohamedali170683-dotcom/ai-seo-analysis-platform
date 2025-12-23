@@ -208,6 +208,7 @@ SOLUTIONS:
         text: workingResponse,
         length: workingResponse?.length || 0,
         fullResponse: workingResponse,
+      },
     });
 
   } catch (error: any) {
