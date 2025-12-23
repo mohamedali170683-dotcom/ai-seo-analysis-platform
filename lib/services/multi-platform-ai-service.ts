@@ -587,6 +587,10 @@ export class MultiPlatformAIService {
                 maxOutputTokens: 4096,  // Increased for full comprehensive responses
                 temperature: 0.7,
               },
+              // Enable Google Search grounding to get source citations
+              tools: [{
+                googleSearch: {}
+              }],
             }),
           });
           
