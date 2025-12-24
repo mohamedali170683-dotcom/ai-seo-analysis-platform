@@ -112,7 +112,7 @@ export function verifyGroundTruth(groundTruth: GroundTruth): GroundTruth {
     facts: groundTruth.facts.map(fact => ({
       ...fact,
       verifiedAt: now,
-      confidence: "verified"
+      confidence: "verified" as const
     })),
     lastVerified: now,
     updatedAt: now
@@ -158,29 +158,37 @@ export function importGroundTruthFromJSON(
 
   // Company Info
   if (json.company) {
-    groundTruths.push(createGroundTruth(brandId, "company_info", "Company Information", [
+    const companyFacts: Omit<GroundTruthFact, "id">[] = [
       {
         statement: "Company name",
         value: json.company.name,
         source: json.company.source || "Website",
         verifiedAt: new Date().toISOString(),
-        confidence: "verified"
-      },
-      ...(json.company.founded ? [{
+        confidence: "verified" as const
+      }
+    ];
+
+    if (json.company.founded) {
+      companyFacts.push({
         statement: "Founded year",
         value: json.company.founded,
         source: json.company.source || "Website",
         verifiedAt: new Date().toISOString(),
-        confidence: "verified"
-      }] : []),
-      ...(json.company.headquarters ? [{
+        confidence: "verified" as const
+      });
+    }
+
+    if (json.company.headquarters) {
+      companyFacts.push({
         statement: "Headquarters location",
         value: json.company.headquarters,
         source: json.company.source || "Website",
         verifiedAt: new Date().toISOString(),
-        confidence: "verified"
-      }] : [])
-    ]));
+        confidence: "verified" as const
+      });
+    }
+
+    groundTruths.push(createGroundTruth(brandId, "company_info", "Company Information", companyFacts));
   }
 
   // Products
@@ -190,7 +198,7 @@ export function importGroundTruthFromJSON(
       value: product.name,
       source: product.source || "Product catalog",
       verifiedAt: new Date().toISOString(),
-      confidence: "verified"
+      confidence: "verified" as const
     }));
 
     if (productFacts.length > 0) {
@@ -205,7 +213,7 @@ export function importGroundTruthFromJSON(
       value: price.value,
       source: price.source || "Pricing page",
       verifiedAt: new Date().toISOString(),
-      confidence: "verified",
+      confidence: "verified" as const,
       expiresAt: price.expiresAt
     }));
 
@@ -221,7 +229,7 @@ export function importGroundTruthFromJSON(
       value: feature.name,
       source: feature.source || "Feature list",
       verifiedAt: new Date().toISOString(),
-      confidence: "verified"
+      confidence: "verified" as const
     }));
 
     if (featureFacts.length > 0) {
