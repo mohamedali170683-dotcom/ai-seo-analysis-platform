@@ -197,8 +197,8 @@ function extractThinking(apiResponse: any): string | undefined {
 /**
  * Extract citations from content
  */
-function extractCitationsFromContent(content: string): Array<{ url: string; title: string }> {
-  const citations: Array<{ url: string; title: string }> = [];
+function extractCitationsFromContent(content: string): Array<{ url: string; title: string; platform: string }> {
+  const citations: Array<{ url: string; title: string; platform: string }> = [];
 
   // Extract URLs from content
   const urlRegex = /https?:\/\/[^\s)]+/g;
@@ -207,7 +207,8 @@ function extractCitationsFromContent(content: string): Array<{ url: string; titl
   for (const url of urls) {
     citations.push({
       url,
-      title: extractTitleFromURL(url)
+      title: extractTitleFromURL(url),
+      platform: "claude"
     });
   }
 
