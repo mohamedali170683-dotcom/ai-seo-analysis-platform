@@ -117,7 +117,8 @@ function parseGoogleAIResponse(
   // Extract citations
   const citations = overview.sources.map(source => ({
     url: source.url,
-    title: source.title
+    title: source.title,
+    platform: "google_ai_overviews"
   }));
 
   // Determine sentiment
