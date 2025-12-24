@@ -340,7 +340,7 @@ function detectNonexistentProducts(
           brandDamage: "severe",
           userConfusion: "high",
           legalRisk: "medium",
-          competitiveHarm: "moderate"
+          competitiveHarm: "medium"
         },
         recommendations: [
           "Submit correction to AI platform",
