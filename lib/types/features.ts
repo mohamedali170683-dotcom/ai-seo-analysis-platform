@@ -334,7 +334,7 @@ export interface Cause {
 // ==================== LLM Responses ====================
 
 export interface LLMResponse {
-  llm: "chatgpt" | "gemini" | "copilot" | "perplexity";
+  llm: "chatgpt" | "gemini" | "copilot" | "perplexity" | "claude" | "google_ai_overviews";
   query: string;
   content: string;
   fullResponse?: string;
