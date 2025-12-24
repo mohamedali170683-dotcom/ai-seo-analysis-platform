@@ -207,7 +207,7 @@ function buildHowToSchema(contentData: any): SchemaType {
  * Build Product schema
  */
 function buildProductSchema(contentData: any): SchemaType {
-  const example = {
+  const example: any = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": contentData.name || "",
