@@ -321,7 +321,7 @@ export function getAllModifiers(): QueryModifier[] {
 
   for (const [category, modifierGroups] of Object.entries(queryParameters)) {
     for (const [type, modifiers] of Object.entries(modifierGroups as any)) {
-      for (const modifier of modifiers) {
+      for (const modifier of modifiers as string[]) {
         allModifiers.push({
           category,
           type,
