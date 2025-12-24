@@ -161,48 +161,104 @@ export interface PageInventory {
 
 // ==================== Competitive Triggers ====================
 
-export interface TriggerTestConfig {
+export interface TriggerTest {
   brand: string;
   subcategory: string;
   competitors: string[];
-  llms: string[];
+  llmsTested: string[];
+  totalTests: number;
+  results: TriggerResult[];
+  analysis: TriggerAnalysis;
+  timestamp: string;
+  durationSeconds: number;
 }
 
-export interface TestQuery {
-  id: string;
+export interface TriggerResult {
+  testId: string;
+  llm: string;
+  query: string;
   modifier: string;
   modifierCategory: string;
-  fullQuery: string;
-}
-
-export interface TestResult extends TestQuery {
+  modifierType: string;
   brandMentioned: boolean;
-  brandPosition?: number;
+  brandPosition: number | null;
   competitorsMentioned: string[];
-  winner?: string;
+  competitorPositions: Record<string, number>;
+  outcome: "win" | "loss" | "partial" | "absent" | "error";
+  sentiment: string;
+  recommendationStrength: number;
+  timestamp: string;
+  error?: string;
 }
 
-export interface TriggerResults {
+export interface TriggerAnalysis {
+  summary: {
+    totalTests: number;
+    wins: number;
+    losses: number;
+    partials: number;
+    absent: number;
+    winRate: number;
+    lossRate: number;
+  };
   lossTriggers: LossTrigger[];
   winTriggers: WinTrigger[];
+  byCategory: Record<string, {
+    category: string;
+    totalTests: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    lossRate: number;
+  }>;
+  byLLM: Record<string, {
+    llm: string;
+    totalTests: number;
+    wins: number;
+    losses: number;
+    winRate: number;
+    lossRate: number;
+  }>;
+  competitorDominance: Array<{
+    competitor: string;
+    appearances: number;
+    wins: number;
+    winRate: number;
+    averagePosition: number;
+    strongestCategories: string[];
+  }>;
+  recommendations: string[];
 }
 
 export interface LossTrigger {
+  modifier: string;
   category: string;
-  severity: number;
-  specificTriggers: string[];
-  competitorBenefiting: string[];
-  examples: Array<{
-    query: string;
-    winner?: string;
+  type: string;
+  lossRate: number;
+  lossCount: number;
+  totalTests: number;
+  severity: "critical" | "high" | "medium" | "low";
+  dominantCompetitors: Array<{
+    name: string;
+    winCount: number;
+    winRate: number;
   }>;
+  affectedLLMs: string[];
+  exampleQueries: string[];
 }
 
 export interface WinTrigger {
+  modifier: string;
   category: string;
-  strength: number;
-  specificTriggers: string[];
-  examples: string[];
+  type: string;
+  winRate: number;
+  winCount: number;
+  totalTests: number;
+  strength: "dominant" | "strong" | "moderate" | "weak";
+  averagePosition: number | null;
+  averageRecommendationStrength: number;
+  affectedLLMs: string[];
+  exampleQueries: string[];
 }
 
 // ==================== Temporal Tracking ====================
@@ -281,8 +337,11 @@ export interface LLMResponse {
   llm: "chatgpt" | "gemini" | "copilot" | "perplexity";
   query: string;
   content: string;
+  fullResponse?: string;
   citations?: Citation[];
   sources?: any[];
+  groundingMetadata?: any;
+  webResults?: any[];
   timestamp: string;
   metadata?: any;
 }
