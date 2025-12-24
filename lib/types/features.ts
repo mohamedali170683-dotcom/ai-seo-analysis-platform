@@ -334,7 +334,7 @@ export interface Cause {
 // ==================== LLM Responses ====================
 
 export interface LLMResponse {
-  llm: "chatgpt" | "gemini" | "copilot" | "perplexity";
+  llm: "chatgpt" | "gemini" | "copilot" | "perplexity" | "claude" | "google_ai_overviews";
   query: string;
   content: string;
   fullResponse?: string;
@@ -344,6 +344,8 @@ export interface LLMResponse {
   webResults?: any[];
   timestamp: string;
   metadata?: any;
+  sentiment?: "positive" | "neutral" | "negative";
+  brandMentioned?: boolean;
 }
 
 // ==================== Brand Config ====================
