@@ -379,6 +379,9 @@ export default function ResultsPage() {
     visibilityScore: stage?.portrayal?.visibilityScore || 0,
   }));
 
+  console.log('[Debug] allRecommendations:', allRecommendations);
+  console.log('[Debug] journeyStages count:', journeyStages.length);
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Analysis Complete Banner */}
@@ -626,6 +629,10 @@ export default function ResultsPage() {
               // Get recommendation for this stage
               const stageRec = allRecommendations.find((r: any) => r.stage === stage?.stageLabel);
 
+              console.log(`[Recommendations Debug] Stage: ${stage?.stage}, Label: ${stage?.stageLabel}`);
+              console.log(`[Recommendations Debug] stageRec found:`, stageRec ? 'YES' : 'NO');
+              console.log(`[Recommendations Debug] Has recommendation:`, stageRec?.recommendation ? 'YES' : 'NO');
+
               return (
                 <div key={stage?.stage || index} className={`border-2 rounded-xl p-8 ${
                   stage?.stage === "awareness" ? "border-blue-200 bg-blue-50/30" :
@@ -743,6 +750,8 @@ export default function ResultsPage() {
                       return questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage;
                     }) || [];
 
+                    console.log(`[Citations Debug] Stage: ${stage?.stage}, Answers: ${stageAnswers.length}`);
+
                     // Extract all citations with their platforms
                     const allCitations: { url: string; domain: string; title?: string; platform: string }[] = [];
                     stageAnswers.forEach((answer: any) => {
@@ -769,6 +778,8 @@ export default function ResultsPage() {
                         }
                       });
                     });
+
+                    console.log(`[Citations Debug] Total citations found: ${allCitations.length}`);
 
                     // Check if brand domain is cited
                     const brandDomain = reportData.domain?.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0] || '';
@@ -845,9 +856,17 @@ export default function ResultsPage() {
                           )}
 
                           {allCitations.length === 0 && (
-                            <div className="text-center py-4">
-                              <p className="text-sm text-gray-600">
-                                No source citations detected in AI responses for this stage.
+                            <div className="text-center py-6">
+                              <div className="text-3xl mb-3">📭</div>
+                              <p className="text-sm font-medium text-gray-700 mb-2">
+                                No source citations detected for this stage
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                AI platforms that typically cite sources: Perplexity, Gemini with grounding.<br/>
+                                ChatGPT and standard Gemini typically don't provide citations.
+                              </p>
+                              <p className="text-xs text-gray-400 mt-2">
+                                Debug: {stageAnswers.length} answers analyzed for {stage?.stage} stage
                               </p>
                             </div>
                           )}
@@ -857,7 +876,7 @@ export default function ResultsPage() {
                   })()}
 
                   {/* ═══ RECOMMENDATIONS FOR THIS STAGE ═══ */}
-                  {stageRec && stageRec.recommendation && limits.showDetailedRecommendations && (
+                  {stageRec && stageRec.recommendation && (
                     <div className="mt-4">
                       <button
                         onClick={() => setExpandedSchemas(prev =>
