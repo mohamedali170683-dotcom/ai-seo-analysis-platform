@@ -391,7 +391,7 @@ export function getPlatformCoverageReport(
       platformStats.totalQueries++;
 
       if (result.response.brandMentioned) platformStats.mentions++;
-      if (result.response.citations?.length > 0) platformStats.citations++;
+      if (result.response.citations && result.response.citations.length > 0) platformStats.citations++;
 
       if (result.response.sentiment) {
         const sentimentValue = {
