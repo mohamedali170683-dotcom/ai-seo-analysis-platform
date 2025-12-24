@@ -152,10 +152,10 @@ function createAlertEvent(
 ): AlertEvent {
   const condition = alert.conditions[0]; // Use first condition for event data
   const currentValue = extractMetricValue(condition.metric, current) || 0;
-  const previousValue = previous ? extractMetricValue(condition.metric, previous) : undefined;
+  const previousValue = previous ? extractMetricValue(condition.metric, previous) ?? undefined : undefined;
 
-  const change = previousValue !== undefined ? currentValue - previousValue : undefined;
-  const changePercent = previousValue && previousValue !== 0
+  const change = typeof previousValue === 'number' ? currentValue - previousValue : undefined;
+  const changePercent = typeof previousValue === 'number' && previousValue !== 0
     ? ((currentValue - previousValue) / previousValue) * 100
     : undefined;
 
