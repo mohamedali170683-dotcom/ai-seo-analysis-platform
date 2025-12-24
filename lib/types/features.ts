@@ -344,6 +344,8 @@ export interface LLMResponse {
   webResults?: any[];
   timestamp: string;
   metadata?: any;
+  sentiment?: "positive" | "neutral" | "negative";
+  brandMentioned?: boolean;
 }
 
 // ==================== Brand Config ====================
