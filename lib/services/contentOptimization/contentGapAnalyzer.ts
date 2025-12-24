@@ -123,7 +123,7 @@ function detectInsufficientDepth(
         description: `Content exists but is less comprehensive than competitors (${(coverage.yourCoverage * 100).toFixed(0)}% vs ${(coverage.competitorCoverage * 100).toFixed(0)}%)`,
         impact: {
           visibilityLoss: (coverage.competitorCoverage - coverage.yourCoverage) * 100,
-          opportunityQueries: coverage.queries.filter((_, i) => i % 2 === 0), // Half the queries
+          opportunityQueries: coverage.queries.filter((_: string, i: number) => i % 2 === 0), // Half the queries
           competitorAdvantage: coverage.competitors.slice(0, 2),
           estimatedTraffic: estimateTrafficOpportunity(coverage.queries.length / 2, coverage.competitorCoverage - coverage.yourCoverage)
         },
