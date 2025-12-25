@@ -14,7 +14,7 @@ export async function GET(request: Request) {
       const analysis = await prisma.analysis.findUnique({
         where: { id },
         include: {
-          aITestResults: {
+          aiTestResults: {
             select: {
               id: true,
               platform: true,
@@ -51,9 +51,9 @@ export async function GET(request: Request) {
           createdAt: analysis.createdAt,
           completedAt: analysis.completedAt,
           updatedAt: analysis.updatedAt,
-          testResultsCount: analysis.aITestResults.length,
+          testResultsCount: analysis.aiTestResults.length,
           questionsCount: analysis.discoveredQuestions.length,
-          recentTestResults: analysis.aITestResults,
+          recentTestResults: analysis.aiTestResults,
           recentQuestions: analysis.discoveredQuestions,
         },
       });
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
       include: {
         _count: {
           select: {
-            aITestResults: true,
+            aiTestResults: true,
             discoveredQuestions: true,
           },
         },
@@ -85,7 +85,7 @@ export async function GET(request: Request) {
         createdAt: a.createdAt,
         completedAt: a.completedAt,
         updatedAt: a.updatedAt,
-        testResultsCount: a._count.aITestResults,
+        testResultsCount: a._count.aiTestResults,
         questionsCount: a._count.discoveredQuestions,
         timeSinceCreation: `${Math.round((Date.now() - a.createdAt.getTime()) / 1000)}s ago`,
         timeSinceUpdate: `${Math.round((Date.now() - a.updatedAt.getTime()) / 1000)}s ago`,
