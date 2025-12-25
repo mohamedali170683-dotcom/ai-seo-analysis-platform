@@ -13,24 +13,6 @@ export async function GET(request: Request) {
       // Get specific analysis with all related data
       const analysis = await prisma.analysis.findUnique({
         where: { id },
-        include: {
-          aiTestResults: {
-            select: {
-              id: true,
-              platform: true,
-              brandMentioned: true,
-              createdAt: true,
-            },
-            take: 5,
-          },
-          discoveredQuestions: {
-            select: {
-              id: true,
-              question: true,
-            },
-            take: 5,
-          },
-        },
       });
 
       if (!analysis) {
@@ -39,6 +21,36 @@ export async function GET(request: Request) {
           error: "Analysis not found",
         }, { status: 404 });
       }
+
+      // Get counts for related data
+      const testResultsCount = await prisma.aiTestResult.count({
+        where: { analysisId: id },
+      });
+      const questionsCount = await prisma.discoveredQuestion.count({
+        where: { analysisId: id },
+      });
+
+      // Get sample data
+      const recentTestResults = await prisma.aiTestResult.findMany({
+        where: { analysisId: id },
+        select: {
+          id: true,
+          platform: true,
+          brandMentioned: true,
+          createdAt: true,
+        },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const recentQuestions = await prisma.discoveredQuestion.findMany({
+        where: { analysisId: id },
+        select: {
+          id: true,
+          question: true,
+        },
+        take: 5,
+      });
 
       return NextResponse.json({
         success: true,
@@ -51,10 +63,10 @@ export async function GET(request: Request) {
           createdAt: analysis.createdAt,
           completedAt: analysis.completedAt,
           updatedAt: analysis.updatedAt,
-          testResultsCount: analysis.aiTestResults.length,
-          questionsCount: analysis.discoveredQuestions.length,
-          recentTestResults: analysis.aiTestResults,
-          recentQuestions: analysis.discoveredQuestions,
+          testResultsCount,
+          questionsCount,
+          recentTestResults,
+          recentQuestions,
         },
       });
     }
