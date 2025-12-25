@@ -248,7 +248,7 @@ export function analyzeCompetitorTakeovers(session: ConversationSession): Takeov
 function calculateAverageSentimentForTurns(turns: any[]): number {
   if (turns.length === 0) return 0;
 
-  const sentimentScores = turns.map(turn => {
+  const sentimentScores: number[] = turns.map(turn => {
     switch (turn.analysis.sentiment) {
       case "positive": return 100;
       case "neutral": return 50;

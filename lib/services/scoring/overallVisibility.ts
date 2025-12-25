@@ -42,7 +42,12 @@ export function calculateOverallVisibility(
  */
 export function calculateVisibilityScore(
   stageScores: StageScores,
-  llmBreakdown?: Record<string, number>
+  llmBreakdown?: {
+    chatgpt: number;
+    gemini: number;
+    copilot: number;
+    perplexity: number;
+  }
 ): VisibilityScore {
   const overallCalc = calculateOverallVisibility(stageScores);
 
