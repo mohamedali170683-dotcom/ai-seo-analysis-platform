@@ -648,19 +648,68 @@ export default function ResultsPage() {
                         <p className="text-sm text-gray-500">{stage?.stageDescription || ""}</p>
                       </div>
                     </div>
-                    <div className={`text-center px-4 py-2 rounded-xl ${
-                      (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
-                      (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
-                    }`}>
-                      <div className={`text-3xl font-bold ${
-                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
-                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
+                    <div className="flex flex-col items-end gap-2">
+                      <div className={`text-center px-4 py-2 rounded-xl ${
+                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
+                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
                       }`}>
-                        {Math.round(stage?.portrayal?.visibilityScore || 0)}%
+                        <div className={`text-3xl font-bold ${
+                          (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
+                          (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
+                        }`}>
+                          {Math.round(stage?.portrayal?.visibilityScore || 0)}%
+                        </div>
+                        <div className="text-xs text-gray-600">Visibility</div>
                       </div>
-                      <div className="text-xs text-gray-600">Visibility</div>
+
+                      {/* How is it calculated button - RIGHT NEXT TO SCORE */}
+                      <button
+                        onClick={() => setExpandedSchemas(prev =>
+                          prev.includes(`scoring-${stage?.stage}`)
+                            ? prev.filter(s => s !== `scoring-${stage?.stage}`)
+                            : [...prev, `scoring-${stage?.stage}`]
+                        )}
+                        className="text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors flex items-center gap-1 whitespace-nowrap"
+                      >
+                        📊 How calculated?
+                      </button>
                     </div>
                   </div>
+
+                  {/* Visibility Score Breakdown - SHOWS WHEN BUTTON CLICKED */}
+                  {expandedSchemas.includes(`scoring-${stage?.stage}`) && (
+                    <div className="mb-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+                      <div className="space-y-3 text-sm">
+                        <div className="bg-white rounded-lg p-3">
+                          <p className="font-medium text-gray-900 mb-2">Visibility Score Formula:</p>
+                          <div className="bg-purple-50 rounded p-2 font-mono text-xs mb-2">
+                            Visibility = (Mention Rate × 50%) + (Position Score × 30%) + (Sentiment Score × 20%)
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Mention Rate (50% weight):</span>
+                              <span className="font-bold">{Math.round(stage?.portrayal?.mentionRate || 0)}% × 0.5 = {Math.round((stage?.portrayal?.mentionRate || 0) * 0.5)}pts</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Position Score (30% weight):</span>
+                              <span className="font-bold">{Math.round(stage?.portrayal?.positionScore || 50)}% × 0.3 = {Math.round((stage?.portrayal?.positionScore || 50) * 0.3)}pts</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-600">Sentiment Score (20% weight):</span>
+                              <span className="font-bold">{Math.round(stage?.portrayal?.sentimentScore || 50)}% × 0.2 = {Math.round((stage?.portrayal?.sentimentScore || 50) * 0.2)}pts</span>
+                            </div>
+                            <div className="border-t pt-2 flex justify-between font-bold text-lg">
+                              <span className="text-purple-900">Total Visibility:</span>
+                              <span className="text-purple-600">{Math.round(stage?.portrayal?.visibilityScore || 0)}%</span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 italic">
+                          💡 This formula weights brand mentions most heavily (50%), followed by position in responses (30%), and sentiment (20%).
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Stage Metrics - TRANSPARENT & PROOF-BASED */}
                   <div className="space-y-4 mb-6">
@@ -744,7 +793,9 @@ export default function ResultsPage() {
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-xs font-medium text-gray-500 mb-1">Q: {response.question}</p>
+                                <div className="bg-blue-50 border-l-4 border-blue-400 p-2 mb-2">
+                                  <p className="text-sm font-semibold text-blue-900">Q: {response.question}</p>
+                                </div>
                                 <div className="text-sm text-gray-700 bg-gray-50 rounded p-2">
                                   {response.context || response.fullResponse?.substring(0, 300) || 'No context available'}
                                   {(response.fullResponse?.length || 0) > 300 && '...'}
@@ -798,59 +849,125 @@ export default function ResultsPage() {
                           <span className="text-xs w-12 text-right font-bold">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Visibility Score Breakdown - TRANSPARENT FORMULA */}
-                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
-                      <button
-                        onClick={() => setExpandedSchemas(prev =>
-                          prev.includes(`scoring-${stage?.stage}`)
-                            ? prev.filter(s => s !== `scoring-${stage?.stage}`)
-                            : [...prev, `scoring-${stage?.stage}`]
-                        )}
-                        className="w-full flex items-center justify-between"
-                      >
-                        <h4 className="font-semibold text-purple-900 flex items-center gap-2">
-                          <span>📊</span> How is the {Math.round(stage?.portrayal?.visibilityScore || 0)}% Visibility Score Calculated?
-                        </h4>
-                        {expandedSchemas.includes(`scoring-${stage?.stage}`) ? (
-                          <ChevronUp className="w-5 h-5 text-purple-600" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-purple-600" />
-                        )}
-                      </button>
+                      {/* Sentiment Transparency - Show What Each Rating Means */}
+                      <div className="mt-3 text-xs text-gray-600 bg-gray-50 rounded p-3">
+                        <p className="font-semibold mb-2">💡 What do these ratings mean?</p>
+                        <ul className="space-y-1 ml-4 list-disc">
+                          <li><strong>Positive:</strong> AI response mentions your brand with favorable language, recommendations, or endorsements</li>
+                          <li><strong>Neutral:</strong> Brand mentioned factually without strong positive or negative language</li>
+                          <li><strong>Negative:</strong> Brand mentioned with criticism, warnings, or unfavorable comparisons</li>
+                        </ul>
+                      </div>
 
-                      {expandedSchemas.includes(`scoring-${stage?.stage}`) && (
-                        <div className="mt-3 space-y-3 text-sm">
-                          <div className="bg-white rounded-lg p-3">
-                            <p className="font-medium text-gray-900 mb-2">Visibility Score Formula:</p>
-                            <div className="bg-purple-50 rounded p-2 font-mono text-xs mb-2">
-                              Visibility = (Mention Rate × 50%) + (Position Score × 30%) + (Sentiment Score × 20%)
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Mention Rate (50% weight):</span>
-                                <span className="font-bold">{Math.round(stage?.portrayal?.mentionRate || 0)}% × 0.5 = {Math.round((stage?.portrayal?.mentionRate || 0) * 0.5)}pts</span>
+                      {/* Show Sentiment Examples Button */}
+                      {(() => {
+                        const stageResponses = reportData.aiTestResults?.filter((r: any) => {
+                          const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                          return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned;
+                        }) || [];
+
+                        if (stageResponses.length === 0) return null;
+
+                        // Group by sentiment
+                        const bySentiment = {
+                          positive: stageResponses.filter((r: any) => r.sentiment === 'positive'),
+                          neutral: stageResponses.filter((r: any) => r.sentiment === 'neutral'),
+                          negative: stageResponses.filter((r: any) => r.sentiment === 'negative'),
+                        };
+
+                        return (
+                          <div className="mt-3">
+                            <button
+                              onClick={() => setExpandedSchemas(prev =>
+                                prev.includes(`sentiment-${stage?.stage}`)
+                                  ? prev.filter(s => s !== `sentiment-${stage?.stage}`)
+                                  : [...prev, `sentiment-${stage?.stage}`]
+                              )}
+                              className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
+                            >
+                              <span className="text-sm font-medium text-gray-900">
+                                👁️ View Actual Quotes by Sentiment
+                              </span>
+                              {expandedSchemas.includes(`sentiment-${stage?.stage}`) ? (
+                                <ChevronUp className="w-5 h-5 text-gray-600" />
+                              ) : (
+                                <ChevronDown className="w-5 h-5 text-gray-600" />
+                              )}
+                            </button>
+
+                            {expandedSchemas.includes(`sentiment-${stage?.stage}`) && (
+                              <div className="mt-3 space-y-4 max-h-96 overflow-y-auto">
+                                {/* Positive Quotes */}
+                                {bySentiment.positive.length > 0 && (
+                                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <h5 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
+                                      <span>😊 Positive ({bySentiment.positive.length})</span>
+                                    </h5>
+                                    <div className="space-y-2">
+                                      {bySentiment.positive.slice(0, 3).map((r: any, idx: number) => (
+                                        <div key={idx} className="bg-white rounded p-2 text-xs">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">{r.platform.toUpperCase()}</span>
+                                          </div>
+                                          <p className="text-gray-700 italic">"{r.context || r.fullResponse?.substring(0, 200) || 'No context'}"</p>
+                                        </div>
+                                      ))}
+                                      {bySentiment.positive.length > 3 && (
+                                        <p className="text-xs text-green-700">+{bySentiment.positive.length - 3} more positive mentions</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Neutral Quotes */}
+                                {bySentiment.neutral.length > 0 && (
+                                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                    <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                      <span>😐 Neutral ({bySentiment.neutral.length})</span>
+                                    </h5>
+                                    <div className="space-y-2">
+                                      {bySentiment.neutral.slice(0, 3).map((r: any, idx: number) => (
+                                        <div key={idx} className="bg-white rounded p-2 text-xs">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">{r.platform.toUpperCase()}</span>
+                                          </div>
+                                          <p className="text-gray-700 italic">"{r.context || r.fullResponse?.substring(0, 200) || 'No context'}"</p>
+                                        </div>
+                                      ))}
+                                      {bySentiment.neutral.length > 3 && (
+                                        <p className="text-xs text-gray-700">+{bySentiment.neutral.length - 3} more neutral mentions</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Negative Quotes */}
+                                {bySentiment.negative.length > 0 && (
+                                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                                    <h5 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
+                                      <span>😞 Negative ({bySentiment.negative.length})</span>
+                                    </h5>
+                                    <div className="space-y-2">
+                                      {bySentiment.negative.slice(0, 3).map((r: any, idx: number) => (
+                                        <div key={idx} className="bg-white rounded p-2 text-xs">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">{r.platform.toUpperCase()}</span>
+                                          </div>
+                                          <p className="text-gray-700 italic">"{r.context || r.fullResponse?.substring(0, 200) || 'No context'}"</p>
+                                        </div>
+                                      ))}
+                                      {bySentiment.negative.length > 3 && (
+                                        <p className="text-xs text-red-700">+{bySentiment.negative.length - 3} more negative mentions</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Position Score (30% weight):</span>
-                                <span className="font-bold">{Math.round(stage?.portrayal?.positionScore || 50)}% × 0.3 = {Math.round((stage?.portrayal?.positionScore || 50) * 0.3)}pts</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-gray-600">Sentiment Score (20% weight):</span>
-                                <span className="font-bold">{Math.round(stage?.portrayal?.sentimentScore || 50)}% × 0.2 = {Math.round((stage?.portrayal?.sentimentScore || 50) * 0.2)}pts</span>
-                              </div>
-                              <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                                <span className="text-purple-900">Total Visibility:</span>
-                                <span className="text-purple-600">{Math.round(stage?.portrayal?.visibilityScore || 0)}%</span>
-                              </div>
-                            </div>
+                            )}
                           </div>
-                          <p className="text-xs text-gray-600 italic">
-                            💡 This formula weights brand mentions most heavily (50%), followed by position in responses (30%), and sentiment (20%).
-                          </p>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -988,7 +1105,7 @@ export default function ResultsPage() {
                   })()}
 
                   {/* ═══ RECOMMENDATIONS FOR THIS STAGE ═══ */}
-                  {stageRec && stageRec.recommendation && (
+                  {stage?.recommendation && (
                     <div className="mt-4">
                       <button
                         onClick={() => setExpandedSchemas(prev =>
@@ -1016,23 +1133,67 @@ export default function ResultsPage() {
                       {expandedSchemas.includes(`rec-${stage?.stage}`) && (
                         <div className="mt-4 bg-white rounded-xl p-6 border-2 border-amber-200">
                           <div className="space-y-4">
-                            {stageRec.recommendation.insights?.map((insight: any, idx: number) => (
-                              <div key={idx} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
-                                <h5 className="font-semibold text-gray-900 mb-2">{insight.insight || insight.title || `Insight ${idx + 1}`}</h5>
-                                <p className="text-sm text-gray-700 mb-3">{insight.explanation || insight.description || ''}</p>
-                                {insight.actions && insight.actions.length > 0 && (
-                                  <div className="space-y-2">
-                                    <p className="text-xs font-semibold text-gray-600 uppercase">Action Items:</p>
-                                    {insight.actions.map((action: string, aIdx: number) => (
-                                      <div key={aIdx} className="flex items-start gap-2 text-sm text-gray-700">
-                                        <span className="text-green-600 mt-0.5">✓</span>
-                                        <span>{action}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                            {/* Pattern Insight */}
+                            {stage.recommendation.commonPattern && (
+                              <div className="border-b border-gray-200 pb-4">
+                                <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                  <span>🔍</span> Key Pattern Detected
+                                </h5>
+                                <p className="text-sm text-gray-700 mb-3">{stage.recommendation.commonPattern}</p>
                               </div>
-                            ))}
+                            )}
+
+                            {/* Content Type Recommendation */}
+                            {stage.recommendation.contentType && (
+                              <div className="border-b border-gray-200 pb-4">
+                                <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                  <span>📝</span> Recommended Content Type
+                                </h5>
+                                <p className="text-sm text-gray-700 mb-3">{stage.recommendation.contentType}</p>
+                              </div>
+                            )}
+
+                            {/* Focused Action */}
+                            {stage.recommendation.focusedAction && (
+                              <div>
+                                <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                  <span>🎯</span> Priority Action
+                                </h5>
+                                <div className="bg-amber-50 border-l-4 border-amber-400 p-3 rounded">
+                                  <p className="text-sm text-gray-900 font-medium">{stage.recommendation.focusedAction}</p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* If insights array exists (for future compatibility) */}
+                            {stage.recommendation.insights && stage.recommendation.insights.length > 0 && (
+                              <div className="space-y-4 mt-4">
+                                {stage.recommendation.insights.map((insight: any, idx: number) => (
+                                  <div key={idx} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
+                                    <h5 className="font-semibold text-gray-900 mb-2">{insight.insight || insight.title || `Insight ${idx + 1}`}</h5>
+                                    <p className="text-sm text-gray-700 mb-3">{insight.explanation || insight.description || ''}</p>
+                                    {insight.actions && insight.actions.length > 0 && (
+                                      <div className="space-y-2">
+                                        <p className="text-xs font-semibold text-gray-600 uppercase">Action Items:</p>
+                                        {insight.actions.map((action: string, aIdx: number) => (
+                                          <div key={aIdx} className="flex items-start gap-2 text-sm text-gray-700">
+                                            <span className="text-green-600 mt-0.5">✓</span>
+                                            <span>{action}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Fallback if no recommendation data */}
+                            {!stage.recommendation.commonPattern && !stage.recommendation.contentType && !stage.recommendation.focusedAction && (
+                              <div className="text-center py-4">
+                                <p className="text-sm text-gray-500">No recommendations available for this stage yet.</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
