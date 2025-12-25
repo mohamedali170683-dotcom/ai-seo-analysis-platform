@@ -350,8 +350,8 @@ export default function AnalyzePage() {
 
       const data = await response.json();
       if (data.success) {
-        setAnalysisId(data.analysisId);
-        pollAnalysisStatus(data.analysisId);
+        // Redirect immediately to results page instead of polling here
+        window.location.href = `/results/${data.analysisId}`;
       } else {
         alert(data.error || "Failed to start analysis");
         setPhase(2);
