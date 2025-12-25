@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       }
 
       // Get counts for related data
-      const testResultsCount = await prisma.aiTestResult.count({
+      const testResultsCount = await prisma.aITestResult.count({
         where: { analysisId: id },
       });
       const questionsCount = await prisma.discoveredQuestion.count({
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
       });
 
       // Get sample data
-      const recentTestResults = await prisma.aiTestResult.findMany({
+      const recentTestResults = await prisma.aITestResult.findMany({
         where: { analysisId: id },
         select: {
           id: true,
