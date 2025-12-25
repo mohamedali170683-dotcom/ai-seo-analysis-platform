@@ -116,7 +116,17 @@ export async function POST(request: Request) {
     
     // Execute analysis in background using Vercel's waitUntil
     console.log(`🔄 [API] Starting background execution with waitUntil`);
-    
+
+    // Immediately update progress to show analysis has started
+    await prisma.analysis.update({
+      where: { id: analysis.id },
+      data: {
+        progress: 5,
+        currentStep: "Background job starting...",
+      },
+    });
+    console.log(`✅ [API] Updated analysis ${analysis.id} to show job starting`);
+
     waitUntil(
       executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, subcategory, buyerPersona, envVars)
         .then(() => {
@@ -124,7 +134,7 @@ export async function POST(request: Request) {
         })
         .catch((err) => {
           console.error(`❌ [API] Background analysis ${analysis.id} FAILED:`, err.message);
-          console.error(err.stack);
+          console.error(`❌ [API] Error stack:`, err.stack);
           // Update the analysis status to failed
           return prisma.analysis.update({
             where: { id: analysis.id },
@@ -138,11 +148,20 @@ export async function POST(request: Request) {
         })
     );
 
+    console.log(`🎯 [API] Returning response immediately for analysis ${analysis.id}`);
+
     // Return immediately so frontend can start polling
     return NextResponse.json({
       success: true,
       analysisId: analysis.id,
       message: "Analysis started",
+      debug: {
+        envVarsSet: {
+          openai: !!envVars.openaiApiKey,
+          gemini: !!envVars.geminiApiKey,
+          perplexity: !!envVars.perplexityApiKey,
+        }
+      }
     });
   } catch (error: any) {
     console.error("❌ [API] Error:", error.message);
@@ -167,8 +186,25 @@ async function executeAnalysis(
   }
 ) {
   const startTime = Date.now();
-  console.log(`🔄 [EXEC] Starting execution for ${analysisId}`);
+  console.log(`🔄 [EXEC] ===== EXECUTE ANALYSIS FUNCTION CALLED =====`);
+  console.log(`🔄 [EXEC] Analysis ID: ${analysisId}`);
+  console.log(`🔄 [EXEC] Brand: ${brandOrKeyword}`);
+  console.log(`🔄 [EXEC] Timestamp: ${new Date().toISOString()}`);
   console.log(`🔧 [EXEC] envVars passed: DATAFORSEO_LOGIN=${envVars?.dataForSEOLogin ? 'SET' : 'NOT SET'}`);
+
+  // Immediately update progress to confirm function started
+  try {
+    await prisma.analysis.update({
+      where: { id: analysisId },
+      data: {
+        progress: 10,
+        currentStep: "Execution function started successfully",
+      },
+    });
+    console.log(`✅ [EXEC] Progress updated to 10% - execution confirmed`);
+  } catch (updateErr) {
+    console.error(`❌ [EXEC] Failed to update initial progress:`, updateErr);
+  }
 
   try {
     // Progress callback
