@@ -62,7 +62,6 @@ export async function GET(request: Request) {
           currentStep: analysis.currentStep,
           createdAt: analysis.createdAt,
           completedAt: analysis.completedAt,
-          updatedAt: analysis.updatedAt,
           testResultsCount,
           questionsCount,
           recentTestResults,
@@ -96,11 +95,9 @@ export async function GET(request: Request) {
         currentStep: a.currentStep,
         createdAt: a.createdAt,
         completedAt: a.completedAt,
-        updatedAt: a.updatedAt,
         testResultsCount: a._count.aiTestResults,
         questionsCount: a._count.discoveredQuestions,
         timeSinceCreation: `${Math.round((Date.now() - a.createdAt.getTime()) / 1000)}s ago`,
-        timeSinceUpdate: `${Math.round((Date.now() - a.updatedAt.getTime()) / 1000)}s ago`,
       })),
     });
   } catch (error: any) {
