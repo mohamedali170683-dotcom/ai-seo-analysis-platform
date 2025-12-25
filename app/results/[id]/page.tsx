@@ -662,83 +662,195 @@ export default function ResultsPage() {
                     </div>
                   </div>
 
-                  {/* Stage Metrics */}
-                  <div className="grid md:grid-cols-2 gap-4 mb-6">
-                    {/* For Awareness Stage: Citation-focused metrics */}
-                    {stage?.stage === 'awareness' ? (
-                      <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-blue-900">📚 Content Citation Analysis</h4>
-                          <span className={`text-2xl font-bold ${
-                            (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 ? "text-green-600" :
-                            (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 25 ? "text-yellow-600" : "text-red-600"
-                          }`}>{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
-                        </div>
-                        <div className="bg-blue-100 rounded-lg p-3 mb-3">
-                          <p className="text-sm font-medium text-blue-900 mb-1">Is your brand/content used as a source?</p>
-                          <p className="text-xs text-blue-700">
-                            When users ask AI for awareness-level information, does the AI cite your content, website, or brand as an authoritative source?
-                          </p>
-                        </div>
-                        <div className="space-y-2 mb-3">
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-blue-700">Citation Rate (60% weight)</span>
-                            <span className="font-bold text-blue-800">{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
-                          </div>
-                          <div className="w-full bg-blue-200 rounded-full h-2">
-                            <div
-                              className={`h-2 rounded-full ${
-                                (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 ? "bg-green-500" :
-                                (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 25 ? "bg-yellow-500" : "bg-red-500"
-                              }`}
-                              style={{ width: `${stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0}%` }}
-                            />
-                          </div>
-                        </div>
+                  {/* Stage Metrics - TRANSPARENT & PROOF-BASED */}
+                  <div className="space-y-4 mb-6">
+                    {/* Brand Mention Analysis */}
+                    <div className="bg-white rounded-lg p-4 border-2 border-blue-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-semibold text-gray-900">📢 Brand Mention Analysis</h4>
+                        <span className={`text-2xl font-bold ${
+                          (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
+                          (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
+                        }`}>{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
                       </div>
-                    ) : (
-                      /* For Consideration/Decision: Standard Mention Rate */
-                      <div className="bg-white rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900">📢 Mention Rate</h4>
-                          <span className={`text-2xl font-bold ${
-                            (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
-                            (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
-                          }`}>{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Out of {stage?.portrayal?.totalTests || 0} tests across all AI platforms, your brand was mentioned in {Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)} responses.
-                        </p>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${
-                              (stage?.portrayal?.mentionRate || 0) >= 70 ? "bg-green-500" :
-                              (stage?.portrayal?.mentionRate || 0) >= 40 ? "bg-yellow-500" : "bg-red-500"
-                            }`}
-                            style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
+                      <p className="text-sm text-gray-600 mb-3">
+                        Out of <strong>{stage?.portrayal?.totalTests || 0} tests</strong> across all AI platforms,
+                        your brand was mentioned in <strong>{Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)}</strong> responses.
+                      </p>
 
-                    {/* Audience Sentiment */}
-                    <div className="bg-white rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
+                      {/* Show Proof Button */}
+                      {(() => {
+                        const stageResponses = reportData.aiTestResults?.filter((r: any) => {
+                          const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                          return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned;
+                        }) || [];
+
+                        if (stageResponses.length === 0) {
+                          return (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                              <p className="text-sm font-medium text-red-900">❌ No brand mentions found</p>
+                              <p className="text-xs text-red-700 mt-1">AI platforms did not mention your brand in any responses for this stage.</p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <button
+                            onClick={() => setExpandedSchemas(prev =>
+                              prev.includes(`mentions-${stage?.stage}`)
+                                ? prev.filter(s => s !== `mentions-${stage?.stage}`)
+                                : [...prev, `mentions-${stage?.stage}`]
+                            )}
+                            className="w-full flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left"
+                          >
+                            <span className="text-sm font-medium text-blue-900">
+                              👁️ View {stageResponses.length} AI Response{stageResponses.length !== 1 ? 's' : ''} with Brand Mentions
+                            </span>
+                            {expandedSchemas.includes(`mentions-${stage?.stage}`) ? (
+                              <ChevronUp className="w-5 h-5 text-blue-600" />
+                            ) : (
+                              <ChevronDown className="w-5 h-5 text-blue-600" />
+                            )}
+                          </button>
+                        );
+                      })()}
+
+                      {/* Collapsible AI Responses */}
+                      {expandedSchemas.includes(`mentions-${stage?.stage}`) && (() => {
+                        const stageResponses = reportData.aiTestResults?.filter((r: any) => {
+                          const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                          return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned;
+                        }) || [];
+
+                        return (
+                          <div className="mt-3 space-y-3 max-h-96 overflow-y-auto">
+                            {stageResponses.map((response: any, idx: number) => (
+                              <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                    response.platform === 'chatgpt' ? 'bg-green-100 text-green-700' :
+                                    response.platform === 'gemini' ? 'bg-blue-100 text-blue-700' :
+                                    response.platform === 'perplexity' ? 'bg-purple-100 text-purple-700' :
+                                    'bg-cyan-100 text-cyan-700'
+                                  }`}>{response.platform.toUpperCase()}</span>
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                    response.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                    response.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>{response.sentiment || 'neutral'}</span>
+                                  {response.position && (
+                                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+                                      Position #{response.position}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs font-medium text-gray-500 mb-1">Q: {response.question}</p>
+                                <div className="text-sm text-gray-700 bg-gray-50 rounded p-2">
+                                  {response.context || response.fullResponse?.substring(0, 300) || 'No context available'}
+                                  {(response.fullResponse?.length || 0) > 300 && '...'}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+
+                      <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
+                        <div
+                          className={`h-2 rounded-full ${
+                            (stage?.portrayal?.mentionRate || 0) >= 70 ? "bg-green-500" :
+                            (stage?.portrayal?.mentionRate || 0) >= 40 ? "bg-yellow-500" : "bg-red-500"
+                          }`}
+                          style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Sentiment Analysis */}
+                    <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
                         <h4 className="font-semibold text-gray-900">💭 Audience Sentiment</h4>
-                        <span className={`text-sm font-bold px-2 py-1 rounded ${
+                        <span className={`text-sm font-bold px-3 py-1 rounded-lg ${
                           stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
                           stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
-                        }`}>{stage?.portrayal?.sentiment?.dominant || "Neutral"}</span>
+                        }`}>{stage?.portrayal?.sentiment?.dominant || "neutral"}</span>
                       </div>
-                      <div className="space-y-2 mb-2">
+                      <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs w-16">Positive</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div className="h-2 rounded-full bg-green-500" style={{ width: `${stage?.portrayal?.sentiment?.positive || 0}%` }} />
+                          <span className="text-xs w-20 font-medium">Positive</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2.5">
+                            <div className="h-2.5 rounded-full bg-green-500" style={{ width: `${stage?.portrayal?.sentiment?.positive || 0}%` }} />
                           </div>
-                          <span className="text-xs w-10 text-right">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
+                          <span className="text-xs w-12 text-right font-bold">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs w-20 font-medium">Neutral</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2.5">
+                            <div className="h-2.5 rounded-full bg-gray-400" style={{ width: `${stage?.portrayal?.sentiment?.neutral || 0}%` }} />
+                          </div>
+                          <span className="text-xs w-12 text-right font-bold">{Math.round(stage?.portrayal?.sentiment?.neutral || 0)}%</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs w-20 font-medium">Negative</span>
+                          <div className="flex-1 bg-gray-200 rounded-full h-2.5">
+                            <div className="h-2.5 rounded-full bg-red-500" style={{ width: `${stage?.portrayal?.sentiment?.negative || 0}%` }} />
+                          </div>
+                          <span className="text-xs w-12 text-right font-bold">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Visibility Score Breakdown - TRANSPARENT FORMULA */}
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+                      <button
+                        onClick={() => setExpandedSchemas(prev =>
+                          prev.includes(`scoring-${stage?.stage}`)
+                            ? prev.filter(s => s !== `scoring-${stage?.stage}`)
+                            : [...prev, `scoring-${stage?.stage}`]
+                        )}
+                        className="w-full flex items-center justify-between"
+                      >
+                        <h4 className="font-semibold text-purple-900 flex items-center gap-2">
+                          <span>📊</span> How is the {Math.round(stage?.portrayal?.visibilityScore || 0)}% Visibility Score Calculated?
+                        </h4>
+                        {expandedSchemas.includes(`scoring-${stage?.stage}`) ? (
+                          <ChevronUp className="w-5 h-5 text-purple-600" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-purple-600" />
+                        )}
+                      </button>
+
+                      {expandedSchemas.includes(`scoring-${stage?.stage}`) && (
+                        <div className="mt-3 space-y-3 text-sm">
+                          <div className="bg-white rounded-lg p-3">
+                            <p className="font-medium text-gray-900 mb-2">Visibility Score Formula:</p>
+                            <div className="bg-purple-50 rounded p-2 font-mono text-xs mb-2">
+                              Visibility = (Mention Rate × 50%) + (Position Score × 30%) + (Sentiment Score × 20%)
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Mention Rate (50% weight):</span>
+                                <span className="font-bold">{Math.round(stage?.portrayal?.mentionRate || 0)}% × 0.5 = {Math.round((stage?.portrayal?.mentionRate || 0) * 0.5)}pts</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Position Score (30% weight):</span>
+                                <span className="font-bold">{Math.round(stage?.portrayal?.positionScore || 50)}% × 0.3 = {Math.round((stage?.portrayal?.positionScore || 50) * 0.3)}pts</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Sentiment Score (20% weight):</span>
+                                <span className="font-bold">{Math.round(stage?.portrayal?.sentimentScore || 50)}% × 0.2 = {Math.round((stage?.portrayal?.sentimentScore || 50) * 0.2)}pts</span>
+                              </div>
+                              <div className="border-t pt-2 flex justify-between font-bold text-lg">
+                                <span className="text-purple-900">Total Visibility:</span>
+                                <span className="text-purple-600">{Math.round(stage?.portrayal?.visibilityScore || 0)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 italic">
+                            💡 This formula weights brand mentions most heavily (50%), followed by position in responses (30%), and sentiment (20%).
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
