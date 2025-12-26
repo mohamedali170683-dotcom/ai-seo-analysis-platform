@@ -1079,6 +1079,70 @@ export default function ResultsPage() {
                                       </div>
                                     </div>
 
+                                    {/* Narrative Summary */}
+                                    {brandMentions.length > 0 && (
+                                      <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                                        <p className="text-sm text-gray-800 leading-relaxed">
+                                          {(() => {
+                                            // Generate narrative summary
+                                            const platformName = platform.toUpperCase();
+                                            const mentionPhrase = brandMentions.length === 1
+                                              ? "1 answer"
+                                              : `${brandMentions.length} answers`;
+
+                                            // Position context
+                                            let positionPhrase = "";
+                                            if (avgPosition > 0) {
+                                              const positionInt = Math.round(avgPosition);
+                                              if (positionInt === 1) {
+                                                positionPhrase = " recommending the brand in <strong>1st position</strong>";
+                                              } else if (positionInt === 2) {
+                                                positionPhrase = " recommending the brand in <strong>2nd position</strong>";
+                                              } else if (positionInt === 3) {
+                                                positionPhrase = " recommending the brand in <strong>3rd position</strong>";
+                                              } else {
+                                                positionPhrase = ` mentioning the brand in position <strong>#${positionInt}</strong>`;
+                                              }
+
+                                              // Check if we have competitor data to mention
+                                              const stageCompetitors = stage?.portrayal?.competitorComparison || [];
+                                              if (stageCompetitors.length > 0 && positionInt > 1) {
+                                                // Get competitors ranked higher
+                                                const rankedHigher = stageCompetitors
+                                                  .filter((c: any) => c.avgPosition < avgPosition && c.avgPosition > 0)
+                                                  .sort((a: any, b: any) => a.avgPosition - b.avgPosition)
+                                                  .slice(0, 2)
+                                                  .map((c: any) => c.competitorName || c.competitor || c.name);
+
+                                                if (rankedHigher.length > 0) {
+                                                  positionPhrase += ` behind ${rankedHigher.join(' and ')}`;
+                                                }
+                                              }
+                                            }
+
+                                            // Sentiment phrase
+                                            const sentimentPhrase = dominantSentiment === 'positive'
+                                              ? "with a <strong>positive tone</strong>"
+                                              : dominantSentiment === 'negative'
+                                              ? "with a <strong>negative tone</strong>"
+                                              : "with a <strong>neutral tone</strong>";
+
+                                            // Example snippet reference
+                                            const exampleSnippet = snippets[0]?.text.substring(0, 80) || "";
+                                            const snippetPhrase = exampleSnippet
+                                              ? ` as shown in this snippet: <em>"${exampleSnippet}..."</em>`
+                                              : "";
+
+                                            return (
+                                              <span dangerouslySetInnerHTML={{
+                                                __html: `On <strong>${platformName}</strong>, ${mentionPhrase} mentioned your brand${positionPhrase} ${sentimentPhrase}${snippetPhrase}`
+                                              }} />
+                                            );
+                                          })()}
+                                        </p>
+                                      </div>
+                                    )}
+
                                     {/* Answer Snippets */}
                                     {snippets.length > 0 && (
                                       <div>
