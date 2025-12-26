@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Webhook,
   Plus,
@@ -26,101 +26,23 @@ interface WebhookConfig {
   secret: string;
   enabled: boolean;
   events: string[];
-  createdAt: Date;
-  lastTriggered?: Date;
+  createdAt?: string;
+  lastTriggered?: string;
   deliveryCount: number;
   failureCount: number;
+  deliveries?: WebhookDelivery[];
 }
 
 interface WebhookDelivery {
   id: string;
-  webhookId: string;
+  webhookConfigId: string;
   event: string;
-  status: 'success' | 'failed' | 'pending';
+  status: string;
   attempts: number;
-  timestamp: Date;
+  timestamp: string;
   responseCode?: number;
   errorMessage?: string;
 }
-
-// Mock data
-const mockWebhooks: WebhookConfig[] = [
-  {
-    id: '1',
-    name: 'Analysis Complete Hook',
-    url: 'https://api.example.com/webhooks/analysis',
-    secret: 'whsec_jKl8mN0pQrStUvWxYz1234567890ABc',
-    enabled: true,
-    events: ['analysis.completed', 'analysis.failed'],
-    createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    lastTriggered: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    deliveryCount: 245,
-    failureCount: 3
-  },
-  {
-    id: '2',
-    name: 'Alert Notification Hook',
-    url: 'https://hooks.zapier.com/hooks/catch/12345/abcde/',
-    secret: 'whsec_dEf6gHi2jKlMnOpQrStUvWxYz7890123',
-    enabled: true,
-    events: ['alert.triggered', 'hallucination.detected'],
-    createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-    lastTriggered: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    deliveryCount: 89,
-    failureCount: 0
-  },
-  {
-    id: '3',
-    name: 'Internal Monitoring',
-    url: 'https://internal.company.com/monitoring/webhook',
-    secret: 'whsec_XyZ9aBc4dEfGhIjKlMnOpQrStUvW12345',
-    enabled: false,
-    events: ['*'],
-    createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-    deliveryCount: 0,
-    failureCount: 0
-  }
-];
-
-const mockDeliveries: WebhookDelivery[] = [
-  {
-    id: 'd1',
-    webhookId: '1',
-    event: 'analysis.completed',
-    status: 'success',
-    attempts: 1,
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    responseCode: 200
-  },
-  {
-    id: 'd2',
-    webhookId: '1',
-    event: 'analysis.completed',
-    status: 'success',
-    attempts: 1,
-    timestamp: new Date(Date.now() - 26 * 60 * 60 * 1000),
-    responseCode: 200
-  },
-  {
-    id: 'd3',
-    webhookId: '2',
-    event: 'alert.triggered',
-    status: 'success',
-    attempts: 1,
-    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    responseCode: 200
-  },
-  {
-    id: 'd4',
-    webhookId: '1',
-    event: 'analysis.failed',
-    status: 'failed',
-    attempts: 3,
-    timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000),
-    responseCode: 500,
-    errorMessage: 'Connection timeout'
-  }
-];
 
 const availableEvents = [
   { value: 'analysis.started', label: 'Analysis Started', description: 'When a new analysis begins' },
@@ -133,17 +55,52 @@ const availableEvents = [
 ];
 
 export default function WebhooksPage() {
-  const [webhooks, setWebhooks] = useState<WebhookConfig[]>(mockWebhooks);
-  const [deliveries, setDeliveries] = useState<WebhookDelivery[]>(mockDeliveries);
+  const [webhooks, setWebhooks] = useState<WebhookConfig[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showNewWebhookModal, setShowNewWebhookModal] = useState(false);
   const [selectedWebhook, setSelectedWebhook] = useState<string | null>(null);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const [copiedSecret, setCopiedSecret] = useState<string | null>(null);
 
-  const toggleWebhook = (id: string) => {
-    setWebhooks(webhooks.map(wh =>
-      wh.id === id ? { ...wh, enabled: !wh.enabled } : wh
-    ));
+  // Fetch webhooks from API
+  useEffect(() => {
+    fetchWebhooks();
+  }, []);
+
+  const fetchWebhooks = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/webhooks?userId=demo-user');
+      const data = await response.json();
+      if (data.success) {
+        setWebhooks(data.webhooks);
+      }
+    } catch (error) {
+      console.error('Error fetching webhooks:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleWebhook = async (id: string) => {
+    const webhook = webhooks.find(w => w.id === id);
+    if (!webhook) return;
+
+    try {
+      const response = await fetch(`/api/webhooks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !webhook.enabled })
+      });
+
+      if (response.ok) {
+        setWebhooks(webhooks.map(w =>
+          w.id === id ? { ...w, enabled: !w.enabled } : w
+        ));
+      }
+    } catch (error) {
+      console.error('Error toggling webhook:', error);
+    }
   };
 
   const toggleSecretVisibility = (id: string) => {
@@ -156,14 +113,25 @@ export default function WebhooksPage() {
     setTimeout(() => setCopiedSecret(null), 2000);
   };
 
-  const getWebhookDeliveries = (webhookId: string) => {
-    return deliveries.filter(d => d.webhookId === webhookId).slice(0, 10);
+  const getWebhookDeliveries = (webhook: WebhookConfig) => {
+    return webhook.deliveries?.slice(0, 10) || [];
   };
 
   const maskSecret = (secret: string) => {
     if (secret.length <= 8) return '••••••••';
     return secret.slice(0, 12) + '•'.repeat(secret.length - 12);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading webhooks...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -386,7 +354,10 @@ export default function WebhooksPage() {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <h4 className="font-semibold text-gray-900 mb-3">Recent Deliveries</h4>
                     <div className="space-y-2">
-                      {getWebhookDeliveries(webhook.id).map(delivery => (
+                      {getWebhookDeliveries(webhook).length === 0 ? (
+                        <p className="text-sm text-gray-500 text-center py-4">No deliveries yet</p>
+                      ) : (
+                        getWebhookDeliveries(webhook).map(delivery => (
                         <div
                           key={delivery.id}
                           className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
@@ -404,7 +375,7 @@ export default function WebhooksPage() {
                             <div>
                               <p className="text-sm font-medium text-gray-900">{delivery.event}</p>
                               <p className="text-xs text-gray-600">
-                                {delivery.timestamp.toLocaleString()}
+                                {new Date(delivery.timestamp).toLocaleString()}
                                 {delivery.errorMessage && (
                                   <span className="text-red-600 ml-2">• {delivery.errorMessage}</span>
                                 )}
@@ -426,7 +397,8 @@ export default function WebhooksPage() {
                             <span className="text-xs text-gray-500">{delivery.attempts} attempt(s)</span>
                           </div>
                         </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

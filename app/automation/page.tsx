@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Zap,
   Play,
@@ -24,125 +24,79 @@ interface ScheduledScan {
   name: string;
   brandOrKeyword: string;
   enabled: boolean;
-  schedule: {
-    frequency: ScanFrequency;
-    hour?: number;
-    dayOfWeek?: number;
-    dayOfMonth?: number;
-    cronExpression?: string;
-  };
-  lastRun?: Date;
-  nextRun: Date;
-  lastStatus?: 'success' | 'failed' | 'running';
+  frequency: ScanFrequency;
+  hour?: number;
+  dayOfWeek?: number;
+  dayOfMonth?: number;
+  cronExpression?: string;
+  lastRun?: string;
+  nextRun: string;
+  lastStatus?: string;
   totalRuns: number;
   successfulRuns: number;
   failedRuns: number;
+  executions?: ScanExecution[];
 }
 
 interface ScanExecution {
   id: string;
-  scanId: string;
-  status: 'running' | 'completed' | 'failed';
-  startTime: Date;
-  endTime?: Date;
+  scheduledScanId: string;
+  status: string;
+  startTime: string;
+  endTime?: string;
   error?: string;
   analysisId?: string;
 }
 
-// Mock data
-const mockScans: ScheduledScan[] = [
-  {
-    id: '1',
-    name: 'Nike Weekly Brand Check',
-    brandOrKeyword: 'Nike',
-    enabled: true,
-    schedule: {
-      frequency: 'weekly',
-      dayOfWeek: 1,
-      hour: 9
-    },
-    lastRun: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    nextRun: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-    lastStatus: 'success',
-    totalRuns: 24,
-    successfulRuns: 23,
-    failedRuns: 1
-  },
-  {
-    id: '2',
-    name: 'Daily Competitor Watch',
-    brandOrKeyword: 'Adidas',
-    enabled: true,
-    schedule: {
-      frequency: 'daily',
-      hour: 6
-    },
-    lastRun: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    nextRun: new Date(Date.now() + 12 * 60 * 60 * 1000),
-    lastStatus: 'success',
-    totalRuns: 90,
-    successfulRuns: 88,
-    failedRuns: 2
-  },
-  {
-    id: '3',
-    name: 'Monthly Market Analysis',
-    brandOrKeyword: 'Running Shoes',
-    enabled: false,
-    schedule: {
-      frequency: 'monthly',
-      dayOfMonth: 1,
-      hour: 0
-    },
-    lastRun: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    nextRun: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-    lastStatus: 'failed',
-    totalRuns: 3,
-    successfulRuns: 2,
-    failedRuns: 1
-  }
-];
-
-const mockExecutions: ScanExecution[] = [
-  {
-    id: 'e1',
-    scanId: '1',
-    status: 'completed',
-    startTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    endTime: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 5 * 60 * 1000),
-    analysisId: 'a123'
-  },
-  {
-    id: 'e2',
-    scanId: '2',
-    status: 'completed',
-    startTime: new Date(Date.now() - 12 * 60 * 60 * 1000),
-    endTime: new Date(Date.now() - 12 * 60 * 60 * 1000 + 4 * 60 * 1000),
-    analysisId: 'a124'
-  },
-  {
-    id: 'e3',
-    scanId: '3',
-    status: 'failed',
-    startTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    endTime: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000 + 1 * 60 * 1000),
-    error: 'API rate limit exceeded'
-  }
-];
-
 export default function AutomationPage() {
-  const [scans, setScans] = useState<ScheduledScan[]>(mockScans);
-  const [executions, setExecutions] = useState<ScanExecution[]>(mockExecutions);
+  const [scans, setScans] = useState<ScheduledScan[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showNewScanModal, setShowNewScanModal] = useState(false);
   const [expandedScan, setExpandedScan] = useState<string | null>(null);
 
-  const toggleScan = (id: string) => {
-    setScans(scans.map(scan =>
-      scan.id === id ? { ...scan, enabled: !scan.enabled } : scan
-    ));
+  // Fetch scans from API
+  useEffect(() => {
+    fetchScans();
+  }, []);
+
+  const fetchScans = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/automation/scans?userId=demo-user');
+      const data = await response.json();
+      if (data.success) {
+        setScans(data.scans);
+      }
+    } catch (error) {
+      console.error('Error fetching scans:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const formatNextRun = (date: Date) => {
+  const toggleScan = async (id: string) => {
+    const scan = scans.find(s => s.id === id);
+    if (!scan) return;
+
+    try {
+      const response = await fetch(`/api/automation/scans/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !scan.enabled })
+      });
+
+      if (response.ok) {
+        setScans(scans.map(s =>
+          s.id === id ? { ...s, enabled: !s.enabled } : s
+        ));
+      }
+    } catch (error) {
+      console.error('Error toggling scan:', error);
+    }
+  };
+
+  const formatNextRun = (dateStr: string) => {
+    const date = new Date(dateStr);
     const now = new Date();
     const diff = date.getTime() - now.getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -164,9 +118,20 @@ export default function AutomationPage() {
     return map[frequency];
   };
 
-  const getScanExecutions = (scanId: string) => {
-    return executions.filter(e => e.scanId === scanId).slice(0, 5);
+  const getScanExecutions = (scan: ScheduledScan) => {
+    return scan.executions?.slice(0, 5) || [];
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading automation scans...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -293,7 +258,7 @@ export default function AutomationPage() {
                     <div className="text-right">
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="w-4 h-4" />
-                        {getFrequencyDisplay(scan.schedule.frequency)}
+                        {getFrequencyDisplay(scan.frequency)}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
                         <Clock className="w-4 h-4" />
@@ -343,40 +308,44 @@ export default function AutomationPage() {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <h4 className="font-semibold text-gray-900 mb-3">Recent Executions</h4>
                     <div className="space-y-2">
-                      {getScanExecutions(scan.id).map(exec => (
-                        <div
-                          key={exec.id}
-                          className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
-                        >
-                          <div className="flex items-center gap-3">
-                            {exec.status === 'completed' && (
-                              <CheckCircle2 className="w-5 h-5 text-green-600" />
-                            )}
-                            {exec.status === 'failed' && (
-                              <XCircle className="w-5 h-5 text-red-600" />
-                            )}
-                            {exec.status === 'running' && (
-                              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                            )}
-                            <div>
-                              <p className="text-sm font-medium text-gray-900">
-                                {exec.startTime.toLocaleString()}
-                              </p>
-                              {exec.error && (
-                                <p className="text-xs text-red-600">{exec.error}</p>
+                      {getScanExecutions(scan).length === 0 ? (
+                        <p className="text-sm text-gray-500 text-center py-4">No executions yet</p>
+                      ) : (
+                        getScanExecutions(scan).map(exec => (
+                          <div
+                            key={exec.id}
+                            className="flex items-center justify-between bg-gray-50 rounded-lg p-3"
+                          >
+                            <div className="flex items-center gap-3">
+                              {exec.status === 'completed' && (
+                                <CheckCircle2 className="w-5 h-5 text-green-600" />
                               )}
+                              {exec.status === 'failed' && (
+                                <XCircle className="w-5 h-5 text-red-600" />
+                              )}
+                              {exec.status === 'running' && (
+                                <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                              )}
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {new Date(exec.startTime).toLocaleString()}
+                                </p>
+                                {exec.error && (
+                                  <p className="text-xs text-red-600">{exec.error}</p>
+                                )}
+                              </div>
                             </div>
+                            {exec.analysisId && (
+                              <a
+                                href={`/results/${exec.analysisId}`}
+                                className="text-sm text-blue-600 hover:text-blue-700"
+                              >
+                                View Results →
+                              </a>
+                            )}
                           </div>
-                          {exec.analysisId && (
-                            <a
-                              href={`/results/${exec.analysisId}`}
-                              className="text-sm text-blue-600 hover:text-blue-700"
-                            >
-                              View Results →
-                            </a>
-                          )}
-                        </div>
-                      ))}
+                        ))
+                      )}
                     </div>
                   </div>
                 )}

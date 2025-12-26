@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Blocks,
   Check,
@@ -28,29 +28,29 @@ interface Integration {
   status: 'connected' | 'available' | 'coming_soon';
   features: string[];
   setupComplexity: 'easy' | 'medium' | 'advanced';
-  connectedAt?: Date;
-  lastSync?: Date;
+  connectedAt?: string;
+  lastSync?: string;
   syncCount?: number;
+  type?: string;
+  enabled?: boolean;
+  config?: any;
 }
 
-const integrations: Integration[] = [
+const availableIntegrations: Integration[] = [
   {
     id: 'zapier',
     name: 'Zapier',
     description: 'Connect to 5,000+ apps with automated workflows',
     icon: Zap,
     category: 'Automation',
-    status: 'connected',
+    status: 'available',
     features: [
       'Trigger workflows on analysis completion',
       'Send alerts to any app',
       'Sync data to your tools',
       'Multi-step automations'
     ],
-    setupComplexity: 'easy',
-    connectedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-    lastSync: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    syncCount: 156
+    setupComplexity: 'easy'
   },
   {
     id: 'slack',
@@ -58,17 +58,14 @@ const integrations: Integration[] = [
     description: 'Receive real-time notifications in your Slack channels',
     icon: MessageSquare,
     category: 'Communication',
-    status: 'connected',
+    status: 'available',
     features: [
       'Real-time alerts',
       'Analysis summaries',
       'Custom channel routing',
       'Interactive notifications'
     ],
-    setupComplexity: 'easy',
-    connectedAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-    lastSync: new Date(Date.now() - 1 * 60 * 60 * 1000),
-    syncCount: 423
+    setupComplexity: 'easy'
   },
   {
     id: 'google-sheets',
@@ -76,17 +73,14 @@ const integrations: Integration[] = [
     description: 'Export and sync analysis data to Google Sheets',
     icon: FileSpreadsheet,
     category: 'Data Export',
-    status: 'connected',
+    status: 'available',
     features: [
       'Auto-sync analysis results',
       'Custom data mapping',
       'Real-time updates',
       'Historical data tracking'
     ],
-    setupComplexity: 'medium',
-    connectedAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-    lastSync: new Date(Date.now() - 30 * 60 * 1000),
-    syncCount: 89
+    setupComplexity: 'medium'
   },
   {
     id: 'discord',
@@ -124,16 +118,14 @@ const integrations: Integration[] = [
     description: 'Configure custom email alerts and reports',
     icon: Mail,
     category: 'Communication',
-    status: 'connected',
+    status: 'available',
     features: [
       'HTML email reports',
       'Custom recipients',
       'Scheduled digests',
       'Priority alerts'
     ],
-    setupComplexity: 'easy',
-    connectedAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
-    syncCount: 678
+    setupComplexity: 'easy'
   },
   {
     id: 'airtable',
@@ -156,16 +148,14 @@ const integrations: Integration[] = [
     description: 'Full programmatic access via REST API',
     icon: Code,
     category: 'Developer',
-    status: 'connected',
+    status: 'available',
     features: [
       'Complete data access',
       'Webhook events',
       'Rate limiting',
       'API documentation'
     ],
-    setupComplexity: 'advanced',
-    connectedAt: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000),
-    syncCount: 2341
+    setupComplexity: 'advanced'
   },
   {
     id: 'notion',
@@ -240,8 +230,52 @@ const categories = [
 ];
 
 export default function IntegrationsPage() {
+  const [integrations, setIntegrations] = useState<Integration[]>(availableIntegrations);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch connected integrations from API and merge with available integrations
+  useEffect(() => {
+    fetchIntegrations();
+  }, []);
+
+  const fetchIntegrations = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/integrations?userId=demo-user');
+      const data = await response.json();
+
+      if (data.success && data.integrations) {
+        // Merge API integrations with available integrations
+        const mergedIntegrations = availableIntegrations.map(integration => {
+          const connected = data.integrations.find((i: any) =>
+            i.type === integration.id || i.name.toLowerCase().includes(integration.id)
+          );
+
+          if (connected) {
+            return {
+              ...integration,
+              status: 'connected' as const,
+              connectedAt: connected.createdAt,
+              lastSync: connected.lastSync,
+              syncCount: connected.syncCount,
+              enabled: connected.enabled
+            };
+          }
+          return integration;
+        });
+        setIntegrations(mergedIntegrations);
+      } else {
+        setIntegrations(availableIntegrations);
+      }
+    } catch (error) {
+      console.error('Error fetching integrations:', error);
+      setIntegrations(availableIntegrations);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredIntegrations = integrations.filter(integration => {
     const matchesCategory = selectedCategory === 'All' || integration.category === selectedCategory;
@@ -289,6 +323,17 @@ export default function IntegrationsPage() {
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading integrations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -441,7 +486,7 @@ export default function IntegrationsPage() {
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-green-700">
-                        Connected: {integration.connectedAt?.toLocaleDateString()}
+                        Connected: {integration.connectedAt ? new Date(integration.connectedAt).toLocaleDateString() : 'Recently'}
                       </span>
                       {integration.syncCount && (
                         <span className="font-medium text-green-800">
@@ -451,7 +496,7 @@ export default function IntegrationsPage() {
                     </div>
                     {integration.lastSync && (
                       <p className="text-xs text-green-600 mt-1">
-                        Last sync: {integration.lastSync.toLocaleString()}
+                        Last sync: {new Date(integration.lastSync).toLocaleString()}
                       </p>
                     )}
                   </div>

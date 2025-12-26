@@ -397,3 +397,189 @@ model Recommendation {
   @@index([status])
   @@map("recommendations")
 }
+
+// Automation & Scheduling Models
+model ScheduledScan {
+  id                  String              @id @default(cuid())
+  userId              String
+  brandOrKeyword      String
+  domain              String?
+  competitors         String[]
+
+  name                String
+  description         String?
+  enabled             Boolean             @default(true)
+
+  // Schedule configuration
+  frequency           String              // hourly, daily, weekly, monthly, custom
+  hour                Int?                // 0-23 for daily/weekly/monthly
+  dayOfWeek           Int?                // 0-6 for weekly (0=Sunday)
+  dayOfMonth          Int?                // 1-31 for monthly
+  cronExpression      String?             // For custom schedules
+  timezone            String              @default("UTC")
+
+  // Execution tracking
+  lastRun             DateTime?
+  nextRun             DateTime
+  lastStatus          String?             // success, failed, running
+  totalRuns           Int                 @default(0)
+  successfulRuns      Int                 @default(0)
+  failedRuns          Int                 @default(0)
+
+  // Relations
+  executions          ScanExecution[]
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([enabled])
+  @@index([nextRun])
+  @@map("scheduled_scans")
+}
+
+model ScanExecution {
+  id                  String              @id @default(cuid())
+  scheduledScanId     String
+  scheduledScan       ScheduledScan       @relation(fields: [scheduledScanId], references: [id], onDelete: Cascade)
+
+  status              String              @default("pending") // pending, running, completed, failed
+  startTime           DateTime            @default(now())
+  endTime             DateTime?
+  error               String?
+  analysisId          String?
+
+  createdAt           DateTime            @default(now())
+
+  @@index([scheduledScanId])
+  @@index([status])
+  @@index([startTime])
+  @@map("scan_executions")
+}
+
+// Alert Configuration Models
+model AlertConfig {
+  id                  String              @id @default(cuid())
+  userId              String
+
+  name                String
+  type                String              // visibility_drop, competitor_takeover, hallucination_detected, etc.
+  enabled             Boolean             @default(true)
+
+  // Conditions (stored as JSON array)
+  conditions          Json                // [{metric, operator, threshold}]
+
+  // Channels (stored as JSON array)
+  channels            Json                // [{type, config, enabled}]
+
+  // Throttling
+  throttleEnabled     Boolean             @default(false)
+  throttleWindow      Int?                // Minutes
+  maxAlertsPerWindow  Int?
+
+  // Tracking
+  lastTriggered       DateTime?
+  triggerCount        Int                 @default(0)
+
+  // Relations
+  events              AlertEvent[]
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([enabled])
+  @@index([type])
+  @@map("alert_configs")
+}
+
+model AlertEvent {
+  id                  String              @id @default(cuid())
+  alertConfigId       String
+  alertConfig         AlertConfig         @relation(fields: [alertConfigId], references: [id], onDelete: Cascade)
+
+  triggeredAt         DateTime            @default(now())
+  data                Json                // Alert-specific data
+  delivered           Boolean             @default(false)
+  deliveryAttempts    Int                 @default(0)
+
+  createdAt           DateTime            @default(now())
+
+  @@index([alertConfigId])
+  @@index([triggeredAt])
+  @@map("alert_events")
+}
+
+// Webhook Configuration Models
+model WebhookConfig {
+  id                  String              @id @default(cuid())
+  userId              String
+
+  name                String
+  url                 String
+  secret              String              // For HMAC signature
+  enabled             Boolean             @default(true)
+
+  // Event filtering
+  events              String[]            // analysis.completed, alert.triggered, etc.
+
+  // Stats
+  deliveryCount       Int                 @default(0)
+  failureCount        Int                 @default(0)
+  lastTriggered       DateTime?
+
+  // Relations
+  deliveries          WebhookDelivery[]
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([enabled])
+  @@map("webhook_configs")
+}
+
+model WebhookDelivery {
+  id                  String              @id @default(cuid())
+  webhookConfigId     String
+  webhookConfig       WebhookConfig       @relation(fields: [webhookConfigId], references: [id], onDelete: Cascade)
+
+  event               String              // Event type that triggered
+  status              String              @default("pending") // pending, success, failed
+  attempts            Int                 @default(0)
+  responseCode        Int?
+  errorMessage        String?
+  payload             Json?               // Event payload sent
+
+  timestamp           DateTime            @default(now())
+
+  @@index([webhookConfigId])
+  @@index([status])
+  @@index([timestamp])
+  @@map("webhook_deliveries")
+}
+
+// Integration Models
+model Integration {
+  id                  String              @id @default(cuid())
+  userId              String
+
+  type                String              // zapier, slack, google_sheets, discord, teams, airtable, etc.
+  name                String
+  enabled             Boolean             @default(true)
+
+  // OAuth/Config data (encrypted)
+  config              Json                // Integration-specific configuration
+
+  // Stats
+  syncCount           Int                 @default(0)
+  lastSync            DateTime?
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([enabled])
+  @@map("integrations")
+}

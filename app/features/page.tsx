@@ -20,48 +20,37 @@ import {
 
 const features = [
   {
-    category: 'AI Analysis & Detection',
-    description: 'Advanced AI platform analysis and brand safety',
+    category: 'Core AI Visibility Analysis',
+    description: 'Comprehensive brand monitoring across all major AI platforms',
     features: [
       {
-        name: 'Multi-Platform AI Testing',
+        name: 'AI Visibility Analysis',
         icon: Brain,
-        description: 'Test your brand across 6 AI platforms: ChatGPT, Gemini, Claude, Perplexity, Meta AI, and Google AI Overviews',
+        description: 'Complete brand visibility analysis across 6 AI platforms with transparent scoring, sentiment tracking, and journey stage breakdown',
         status: 'live',
         link: '/analyze',
         highlights: [
-          'Support for 6 major AI platforms',
-          'Claude AI (all 4 models)',
-          'Google AI Overviews tracking',
-          'Cross-platform comparison analytics'
+          'Test across 6 platforms (ChatGPT, Gemini, Claude, Perplexity, Meta AI, Google AI Overviews)',
+          'Transparent visibility scoring (mention rate 50%, position 30%, sentiment 20%)',
+          'Journey stage analysis (Awareness, Consideration, Decision)',
+          'Sentiment tracking with actual AI response quotes as proof',
+          'Competitor comparison and positioning insights',
+          'Real-time cross-platform analytics'
         ]
       },
       {
-        name: 'Hallucination Detection',
+        name: 'Hallucination Detection & Brand Safety',
         icon: Shield,
-        description: 'Detect 8 types of hallucinations and brand safety issues in AI responses',
+        description: 'Detect and track false information, pricing errors, and brand safety issues across AI platforms',
         status: 'live',
         link: '/hallucination-detector',
         highlights: [
-          '8 hallucination types detected',
-          'Pricing errors & fake products',
-          'Outdated information detection',
+          '8 hallucination types: pricing errors, fake products, outdated info, false claims, etc.',
           'Brand safety scoring (0-100)',
-          'Ground truth management system'
-        ]
-      },
-      {
-        name: 'Visibility Scoring',
-        icon: TrendingUp,
-        description: 'Comprehensive visibility analysis with transparent scoring formulas',
-        status: 'live',
-        link: '/analyze',
-        highlights: [
-          'Mention rate tracking (50% weight)',
-          'Position scoring (30% weight)',
-          'Sentiment analysis (20% weight)',
-          'Journey stage breakdown',
-          'Proof-based metrics with actual quotes'
+          'Ground truth management system with JSON import/export',
+          'Automated fact-checking against verified data',
+          'Historical tracking of hallucinations over time',
+          'Actionable recommendations to fix detected issues'
         ]
       }
     ]
