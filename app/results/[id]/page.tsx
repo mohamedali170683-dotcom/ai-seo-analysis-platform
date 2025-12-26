@@ -749,25 +749,192 @@ export default function ResultsPage() {
                         your brand was mentioned in <strong>{Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)}</strong> responses.
                       </p>
 
-                      {/* Position Rate Analysis */}
+                      {/* Position & Competitive Ranking Analysis */}
                       <div className="mt-4 pt-4 border-t border-gray-200">
-                        <BulletGraph
-                          actual={Math.round(stage?.portrayal?.positionScore || 0)}
-                          target={70}
-                          ranges={[
-                            { max: 40, label: 'Low' },
-                            { max: 70, label: 'Medium' },
-                            { max: 100, label: 'High' }
-                          ]}
-                          label="Position Score"
-                          unit="%"
-                        />
-                        <p className="text-sm text-gray-600 mt-3">
-                          When mentioned, your brand appears at an average position score of <strong>{Math.round(stage?.portrayal?.positionScore || 0)}%</strong> in AI responses.
-                          {(stage?.portrayal?.positionScore || 0) >= 70 && " 🎯 Great positioning!"}
-                          {(stage?.portrayal?.positionScore || 0) < 70 && (stage?.portrayal?.positionScore || 0) >= 40 && " Consider creating more authoritative content."}
-                          {(stage?.portrayal?.positionScore || 0) < 40 && " ⚠️ Low position - competitors are mentioned first."}
-                        </p>
+                        <h5 className="font-semibold text-gray-900 mb-3">📊 Position & Competitive Ranking</h5>
+
+                        {(() => {
+                          // Get all responses with positions for this stage
+                          const stageResponses = reportData.aiTestResults?.filter((r: any) => {
+                            const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                            return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned && r.position;
+                          }) || [];
+
+                          if (stageResponses.length === 0) {
+                            return (
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                                <p className="text-sm text-gray-600">No position data available for this stage.</p>
+                              </div>
+                            );
+                          }
+
+                          // Calculate position distribution
+                          const positionCounts: { [key: number]: number } = {};
+                          stageResponses.forEach((r: any) => {
+                            if (r.position) {
+                              positionCounts[r.position] = (positionCounts[r.position] || 0) + 1;
+                            }
+                          });
+
+                          const totalWithPositions = stageResponses.length;
+                          const positionDistribution = Object.entries(positionCounts)
+                            .map(([pos, count]) => ({
+                              position: parseInt(pos),
+                              count,
+                              percentage: (count / totalWithPositions) * 100
+                            }))
+                            .sort((a, b) => a.position - b.position);
+
+                          // Build competitive leaderboard from competitor comparison data
+                          const competitors = stage?.portrayal?.competitorComparison || [];
+                          const leaderboard = [
+                            {
+                              name: reportData.brandOrKeyword || 'Your Brand',
+                              isBrand: true,
+                              mentionRate: stage?.portrayal?.mentionRate || 0,
+                              avgPosition: stage?.portrayal?.averagePosition || 0,
+                              sentiment: stage?.portrayal?.sentiment?.dominant || 'neutral'
+                            },
+                            ...competitors.map((comp: any) => ({
+                              name: comp.competitorName || comp.competitor || comp.name,
+                              isBrand: false,
+                              mentionRate: comp.mentionRate || 0,
+                              avgPosition: comp.avgPosition || 0,
+                              sentiment: comp.sentiment || 'neutral'
+                            }))
+                          ].sort((a, b) => {
+                            // Sort by mention rate descending
+                            if (b.mentionRate !== a.mentionRate) {
+                              return b.mentionRate - a.mentionRate;
+                            }
+                            // If tied, sort by better (lower) average position
+                            return a.avgPosition - b.avgPosition;
+                          });
+
+                          return (
+                            <div className="space-y-4">
+                              {/* Position Distribution */}
+                              <div>
+                                <h6 className="text-sm font-medium text-gray-700 mb-2">Position Distribution (When Mentioned)</h6>
+                                <div className="space-y-2">
+                                  {positionDistribution.slice(0, 5).map((item) => (
+                                    <div key={item.position} className="flex items-center gap-3">
+                                      <span className={`text-sm font-bold w-16 flex-shrink-0 ${
+                                        item.position === 1 ? 'text-green-700' :
+                                        item.position === 2 ? 'text-blue-700' :
+                                        item.position === 3 ? 'text-amber-700' :
+                                        'text-gray-600'
+                                      }`}>
+                                        {item.position === 1 ? '🥇 1st' :
+                                         item.position === 2 ? '🥈 2nd' :
+                                         item.position === 3 ? '🥉 3rd' :
+                                         `#${item.position}`}
+                                      </span>
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
+                                            <div
+                                              className={`h-6 rounded-full flex items-center justify-end pr-2 ${
+                                                item.position === 1 ? 'bg-green-500' :
+                                                item.position === 2 ? 'bg-blue-500' :
+                                                item.position === 3 ? 'bg-amber-500' :
+                                                'bg-gray-400'
+                                              }`}
+                                              style={{ width: `${item.percentage}%` }}
+                                            >
+                                              {item.percentage >= 15 && (
+                                                <span className="text-xs font-bold text-white">
+                                                  {Math.round(item.percentage)}%
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                          {item.percentage < 15 && (
+                                            <span className="text-xs font-bold text-gray-600 w-12">
+                                              {Math.round(item.percentage)}%
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <span className="text-xs text-gray-500 w-20 text-right">
+                                        {item.count} {item.count === 1 ? 'time' : 'times'}
+                                      </span>
+                                    </div>
+                                  ))}
+                                  {positionDistribution.length > 5 && (
+                                    <p className="text-xs text-gray-500 mt-2 ml-20">
+                                      +{positionDistribution.length - 5} more positions
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Competitive Leaderboard */}
+                              {leaderboard.length > 1 && (
+                                <div className="pt-4 border-t border-gray-200">
+                                  <h6 className="text-sm font-medium text-gray-700 mb-3">🏆 Competitive Ranking</h6>
+                                  <div className="space-y-2">
+                                    {leaderboard.map((brand, idx) => (
+                                      <div
+                                        key={brand.name}
+                                        className={`flex items-center gap-3 p-2 rounded-lg ${
+                                          brand.isBrand ? 'bg-blue-50 border-2 border-blue-300' : 'bg-gray-50 border border-gray-200'
+                                        }`}
+                                      >
+                                        <span className={`text-lg font-bold w-8 flex-shrink-0 ${
+                                          idx === 0 ? 'text-yellow-600' :
+                                          idx === 1 ? 'text-gray-500' :
+                                          idx === 2 ? 'text-amber-700' :
+                                          'text-gray-400'
+                                        }`}>
+                                          {idx + 1}
+                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className={`text-sm font-semibold truncate ${
+                                              brand.isBrand ? 'text-blue-900' : 'text-gray-900'
+                                            }`}>
+                                              {brand.name}
+                                            </span>
+                                            {brand.isBrand && (
+                                              <span className="px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded font-medium">
+                                                YOU
+                                              </span>
+                                            )}
+                                          </div>
+                                          <div className="flex items-center gap-3 text-xs text-gray-600">
+                                            <span>
+                                              Mentioned: <strong className={brand.isBrand ? 'text-blue-700' : 'text-gray-700'}>
+                                                {Math.round(brand.mentionRate)}%
+                                              </strong>
+                                            </span>
+                                            {brand.avgPosition > 0 && (
+                                              <span>
+                                                Avg Position: <strong className={brand.isBrand ? 'text-blue-700' : 'text-gray-700'}>
+                                                  #{brand.avgPosition.toFixed(1)}
+                                                </strong>
+                                              </span>
+                                            )}
+                                            <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                                              brand.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                              brand.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                              'bg-gray-100 text-gray-600'
+                                            }`}>
+                                              {brand.sentiment}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <p className="text-xs text-gray-500 italic mt-3">
+                                    💡 Ranked by mention rate, then average position. Lower position numbers are better.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Show Proof Button */}
