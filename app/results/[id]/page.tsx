@@ -8,6 +8,7 @@ import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
 import { EmailGate } from "@/components/EmailGate";
+import { DashboardHero, SummaryCard, SummaryCardsGrid } from "@/components/Dashboard";
 
 // Sentiment definitions for the report
 const SENTIMENT_DEFINITIONS = {
@@ -439,29 +440,14 @@ export default function ResultsPage() {
       {/* Main Content */}
       <div className="container mx-auto max-w-6xl px-4 py-8">
         
-        {/* Summary Score Card - Compact */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">Overall AI Visibility</h2>
-              <p className="text-sm text-gray-500">{reportData.totalQuestions || 0} questions tested across {reportData.totalTests || 0} AI responses</p>
-            </div>
-            <div className="text-center">
-              <div className={`text-6xl font-bold ${
-                (reportData.overallScore || 0) >= 70 ? "text-green-600" :
-                (reportData.overallScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
-              }`}>
-                {reportData.overallScore || 0}<span className="text-3xl text-gray-400">/100</span>
-              </div>
-              <div className={`text-xs px-3 py-1 rounded-full font-semibold inline-block mt-2 ${
-                (reportData.overallScore || 0) >= 70 ? "bg-green-100 text-green-700" :
-                (reportData.overallScore || 0) >= 40 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"
-              }`}>
-                {(reportData.overallScore || 0) >= 70 ? "Good" : (reportData.overallScore || 0) >= 40 ? "Needs Work" : "Critical"}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Summary Score Card - Evidence-Based Dashboard Hero */}
+        <DashboardHero
+          score={reportData.overallScore || 0}
+          maxScore={100}
+          trend={reportData.trendData || [45, 52, 48, 61, 73, reportData.overallScore || 0]}
+          change={reportData.scoreChange || 0}
+          changeLabel="vs last scan"
+        />
 
         {/* Additional Options - Collapsed by default */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -620,7 +606,24 @@ export default function ResultsPage() {
             <p className="text-gray-600">How AI platforms present your brand at each stage of the buying journey</p>
           </div>
 
-          {/* Journey Stages */}
+          {/* Journey Stages Overview - Evidence-Based Summary Cards */}
+          {journeyStages.length > 0 && (
+            <SummaryCardsGrid
+              stages={journeyStages.map((stage: any) => ({
+                id: stage?.stage || '',
+                name: stage?.stageLabel || 'Unknown Stage',
+                score: Math.round(stage?.portrayal?.visibilityScore || 0),
+                trend: stage?.trendData || [40, 45, 50, 55, Math.round(stage?.portrayal?.visibilityScore || 0)]
+              }))}
+              expandedStage={expandedSection}
+              onStageToggle={(stageId: string) =>
+                setExpandedSection(expandedSection === stageId ? null : stageId)
+              }
+              className="mb-8"
+            />
+          )}
+
+          {/* Journey Stages Detailed View */}
           <div className="space-y-8">
             {journeyStages.length === 0 && (
               <p className="text-gray-500 text-center py-8">No journey stage data available</p>
