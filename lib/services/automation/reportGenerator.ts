@@ -243,11 +243,6 @@ function generateLLMPerformanceSection(executions: ScanExecution[]): ReportSecti
       change: latest.byLLM.gemini - earliest.byLLM.gemini
     },
     {
-      platform: "Copilot",
-      current: latest.byLLM.copilot,
-      change: latest.byLLM.copilot - earliest.byLLM.copilot
-    },
-    {
       platform: "Perplexity",
       current: latest.byLLM.perplexity,
       change: latest.byLLM.perplexity - earliest.byLLM.perplexity

@@ -30,7 +30,7 @@ const QUESTIONS = [
   { question: "Ist Proteinpulver gesund?", searchVolume: 300, stage: "decision", persona: "Beginner/General" },
 ];
 
-type Platform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
+type Platform = "ChatGPT" | "Gemini" | "Perplexity";
 type Sentiment = "positive" | "neutral" | "negative";
 
 interface BrandMention {
@@ -173,10 +173,9 @@ async function queryPlatform(
         fullResponse = response.text() || "";
       }
     } else {
-      // Use OpenAI for ChatGPT, Copilot (sim), Perplexity (sim)
+      // Use OpenAI for ChatGPT, Perplexity (sim)
       const systemPrompts: Record<string, string> = {
         "ChatGPT": "",
-        "Copilot": "You are Microsoft Copilot. Provide helpful, balanced answers. When discussing nutrition or supplements in Germany, be specific about available brands.",
         "Perplexity": "You are Perplexity AI. Provide comprehensive, well-researched answers about nutrition and supplements, especially for the German market.",
       };
       
@@ -226,7 +225,7 @@ async function analyzeQuestion(
   gemini: GoogleGenerativeAI | null,
   testsPerPlatform: number = 3
 ): Promise<QuestionResult> {
-  const platforms: Platform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+  const platforms: Platform[] = ["ChatGPT", "Gemini", "Perplexity"];
   const allResponses: PlatformResponse[] = [];
   
   // Run all platforms in parallel, each with multiple tests
@@ -310,7 +309,7 @@ export async function POST(request: Request) {
   const shareOfVoiceByPlatform: { [platform: string]: { [brand: string]: number } } = {};
   const platformMentionCounts: { [platform: string]: { [brand: string]: number } } = {};
   
-  ["ChatGPT", "Gemini", "Copilot", "Perplexity"].forEach(p => {
+  ["ChatGPT", "Gemini", "Perplexity"].forEach(p => {
     platformMentionCounts[p] = {};
     ALL_BRANDS.forEach(b => { platformMentionCounts[p][b] = 0; });
   });
@@ -459,7 +458,7 @@ export async function POST(request: Request) {
     client: "Quality Group",
     primaryBrand: "More Nutrition",
     brands: BRANDS,
-    platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
+    platforms: ["ChatGPT", "Gemini", "Perplexity"],
     questions: QUESTIONS,
     totalSearchVolume: QUESTIONS.reduce((a, q) => a + q.searchVolume, 0),
     totalResponses: results.reduce((a, r) => a + r.responses.length, 0),
