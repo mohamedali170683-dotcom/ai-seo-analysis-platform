@@ -937,6 +937,205 @@ export default function ResultsPage() {
                         })()}
                       </div>
 
+                      {/* Platform Summary Section */}
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="font-semibold text-gray-900">🤖 Platform-by-Platform Summary</h5>
+                          <button
+                            onClick={() => {
+                              const element = document.getElementById(`export-section-${stage?.stage}`);
+                              element?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors flex items-center gap-1"
+                          >
+                            📥 Download All Answers
+                          </button>
+                        </div>
+
+                        {(() => {
+                          // Get all responses for this stage
+                          const stageResponses = reportData.aiTestResults?.filter((r: any) => {
+                            const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                            return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage);
+                          }) || [];
+
+                          if (stageResponses.length === 0) {
+                            return (
+                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                                <p className="text-sm text-gray-600">No platform responses available for this stage.</p>
+                              </div>
+                            );
+                          }
+
+                          // Group by platform
+                          const platformGroups: { [platform: string]: any[] } = {};
+                          stageResponses.forEach((r: any) => {
+                            const platform = r.platform.toLowerCase();
+                            if (!platformGroups[platform]) {
+                              platformGroups[platform] = [];
+                            }
+                            platformGroups[platform].push(r);
+                          });
+
+                          // Platform order for consistency
+                          const platformOrder = ['chatgpt', 'gemini', 'perplexity', 'copilot'];
+                          const sortedPlatforms = Object.keys(platformGroups).sort((a, b) => {
+                            const indexA = platformOrder.indexOf(a);
+                            const indexB = platformOrder.indexOf(b);
+                            if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+                            if (indexA === -1) return 1;
+                            if (indexB === -1) return -1;
+                            return indexA - indexB;
+                          });
+
+                          return (
+                            <div className="space-y-4">
+                              {sortedPlatforms.map(platform => {
+                                const responses = platformGroups[platform];
+                                const brandMentions = responses.filter(r => r.brandMentioned);
+                                const mentionRate = responses.length > 0 ? (brandMentions.length / responses.length) * 100 : 0;
+
+                                // Calculate average position
+                                const positionsWithBrand = brandMentions.filter(r => r.position).map(r => r.position);
+                                const avgPosition = positionsWithBrand.length > 0
+                                  ? positionsWithBrand.reduce((a: number, b: number) => a + b, 0) / positionsWithBrand.length
+                                  : 0;
+
+                                // Dominant sentiment among brand mentions
+                                const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
+                                brandMentions.forEach((r: any) => {
+                                  const sentiment = r.sentiment || 'neutral';
+                                  sentimentCounts[sentiment as keyof typeof sentimentCounts]++;
+                                });
+                                const dominantSentiment = Object.entries(sentimentCounts).reduce((a, b) =>
+                                  a[1] > b[1] ? a : b
+                                )[0];
+
+                                // Get 2-3 snippet examples
+                                const snippets = brandMentions
+                                  .filter((r: any) => r.context || r.fullResponse)
+                                  .slice(0, 3)
+                                  .map((r: any) => ({
+                                    text: r.context || r.fullResponse?.substring(0, 150) || '',
+                                    position: r.position,
+                                    sentiment: r.sentiment || 'neutral'
+                                  }));
+
+                                return (
+                                  <div
+                                    key={platform}
+                                    className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-4"
+                                  >
+                                    {/* Platform Header */}
+                                    <div className="flex items-start justify-between mb-3">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
+                                          platform === 'chatgpt' ? 'bg-green-100 text-green-700' :
+                                          platform === 'gemini' ? 'bg-blue-100 text-blue-700' :
+                                          platform === 'perplexity' ? 'bg-purple-100 text-purple-700' :
+                                          'bg-cyan-100 text-cyan-700'
+                                        }`}>
+                                          {platform.toUpperCase()}
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                          {responses.length} {responses.length === 1 ? 'response' : 'responses'}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Summary Metrics */}
+                                    <div className="grid grid-cols-3 gap-3 mb-4">
+                                      <div className="bg-white rounded-lg p-2 border border-gray-200">
+                                        <div className="text-xs text-gray-500 mb-1">Brand Mentioned</div>
+                                        <div className={`text-lg font-bold ${
+                                          mentionRate >= 70 ? 'text-green-600' :
+                                          mentionRate >= 40 ? 'text-yellow-600' : 'text-red-600'
+                                        }`}>
+                                          {Math.round(mentionRate)}%
+                                        </div>
+                                        <div className="text-xs text-gray-500">{brandMentions.length}/{responses.length} times</div>
+                                      </div>
+
+                                      {avgPosition > 0 && (
+                                        <div className="bg-white rounded-lg p-2 border border-gray-200">
+                                          <div className="text-xs text-gray-500 mb-1">Avg Position</div>
+                                          <div className="text-lg font-bold text-blue-600">
+                                            #{avgPosition.toFixed(1)}
+                                          </div>
+                                          <div className="text-xs text-gray-500">when mentioned</div>
+                                        </div>
+                                      )}
+
+                                      <div className="bg-white rounded-lg p-2 border border-gray-200">
+                                        <div className="text-xs text-gray-500 mb-1">Tone</div>
+                                        <div className={`text-sm font-bold capitalize ${
+                                          dominantSentiment === 'positive' ? 'text-green-600' :
+                                          dominantSentiment === 'negative' ? 'text-red-600' :
+                                          'text-gray-600'
+                                        }`}>
+                                          {dominantSentiment}
+                                        </div>
+                                        <div className="text-xs text-gray-500">overall</div>
+                                      </div>
+                                    </div>
+
+                                    {/* Answer Snippets */}
+                                    {snippets.length > 0 && (
+                                      <div>
+                                        <h6 className="text-xs font-semibold text-gray-700 mb-2">
+                                          💬 Answer Snippets ({snippets.length})
+                                        </h6>
+                                        <div className="space-y-2">
+                                          {snippets.map((snippet, idx) => (
+                                            <div
+                                              key={idx}
+                                              className="bg-white border-l-4 border-indigo-300 rounded p-2 text-xs"
+                                            >
+                                              <div className="flex items-center gap-2 mb-1">
+                                                {snippet.position && (
+                                                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-bold">
+                                                    #{snippet.position}
+                                                  </span>
+                                                )}
+                                                <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                                                  snippet.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                                  snippet.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                                  'bg-gray-100 text-gray-600'
+                                                }`}>
+                                                  {snippet.sentiment}
+                                                </span>
+                                              </div>
+                                              <p className="text-gray-700 italic leading-relaxed">
+                                                "{snippet.text}{snippet.text.length >= 150 ? '...' : ''}"
+                                              </p>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {brandMentions.length === 0 && (
+                                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                                        <p className="text-sm text-red-700">
+                                          ⚠️ Your brand was not mentioned in any {platform.toUpperCase()} responses for this stage.
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
+
+                        {/* Export Section Anchor */}
+                        <div id={`export-section-${stage?.stage}`} className="mt-4">
+                          <p className="text-xs text-gray-500 italic text-center">
+                            💡 For full response details, use the download button or expand individual responses below.
+                          </p>
+                        </div>
+                      </div>
+
                       {/* Show Proof Button */}
                       {(() => {
                         const stageResponses = reportData.aiTestResults?.filter((r: any) => {
