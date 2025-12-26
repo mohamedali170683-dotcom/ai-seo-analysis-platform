@@ -9,6 +9,7 @@ import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyC
 import { UpgradeModalTrigger } from "@/lib/tier/types";
 import { EmailGate } from "@/components/EmailGate";
 import { DashboardHero, SummaryCard, SummaryCardsGrid } from "@/components/Dashboard";
+import { BulletGraph, SentimentBar } from "@/components/Charts";
 
 // Sentiment definitions for the report
 const SENTIMENT_DEFINITIONS = {
@@ -623,12 +624,15 @@ export default function ResultsPage() {
             />
           )}
 
-          {/* Journey Stages Detailed View */}
+          {/* Journey Stages Detailed View - PROGRESSIVE DISCLOSURE */}
           <div className="space-y-8">
             {journeyStages.length === 0 && (
               <p className="text-gray-500 text-center py-8">No journey stage data available</p>
             )}
             {journeyStages.map((stage: any, index: number) => {
+              // Only show detailed view if this stage is expanded
+              if (expandedSection !== stage?.stage) return null;
+
               // Get recommendation for this stage
               const stageRec = allRecommendations.find((r: any) => r.stage === stage?.stageLabel);
 
@@ -637,10 +641,7 @@ export default function ResultsPage() {
               console.log(`[Recommendations Debug] Has recommendation:`, stageRec?.recommendation ? 'YES' : 'NO');
 
               return (
-                <div key={stage?.stage || index} className={`border-2 rounded-xl p-8 ${
-                  stage?.stage === "awareness" ? "border-blue-200 bg-blue-50/30" :
-                  stage?.stage === "consideration" ? "border-cyan-200 bg-cyan-50/30" : "border-green-200 bg-green-50/30"
-                }`}>
+                <div key={stage?.stage || index} className="border border-gray-200 bg-white rounded-xl p-8 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">
@@ -716,16 +717,24 @@ export default function ResultsPage() {
 
                   {/* Stage Metrics - TRANSPARENT & PROOF-BASED */}
                   <div className="space-y-4 mb-6">
-                    {/* Brand Mention Analysis */}
-                    <div className="bg-white rounded-lg p-4 border-2 border-blue-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-gray-900">📢 Brand Mention Analysis</h4>
-                        <span className={`text-2xl font-bold ${
-                          (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
-                          (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
-                        }`}>{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3">
+                    {/* Brand Mention Analysis - BULLET GRAPH (Stephen Few) */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">📢 Brand Mention Analysis</h4>
+
+                      {/* Bullet Graph for Mention Rate */}
+                      <BulletGraph
+                        actual={Math.round(stage?.portrayal?.mentionRate || 0)}
+                        target={70}
+                        ranges={[
+                          { max: 40, label: 'Poor' },
+                          { max: 70, label: 'Fair' },
+                          { max: 100, label: 'Good' }
+                        ]}
+                        label="Mention Rate"
+                        unit="%"
+                      />
+
+                      <p className="text-sm text-gray-600 mt-3 mb-3">
                         Out of <strong>{stage?.portrayal?.totalTests || 0} tests</strong> across all AI platforms,
                         your brand was mentioned in <strong>{Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)}</strong> responses.
                       </p>
@@ -820,8 +829,8 @@ export default function ResultsPage() {
                       </div>
                     </div>
 
-                    {/* Sentiment Analysis */}
-                    <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+                    {/* Sentiment Analysis - DIVERGING BAR (Stephen Few/Research-Based) */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-semibold text-gray-900">💭 Audience Sentiment</h4>
                         <span className={`text-sm font-bold px-3 py-1 rounded-lg ${
@@ -829,29 +838,13 @@ export default function ResultsPage() {
                           stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
                         }`}>{stage?.portrayal?.sentiment?.dominant || "neutral"}</span>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs w-20 font-medium">Positive</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2.5">
-                            <div className="h-2.5 rounded-full bg-green-500" style={{ width: `${stage?.portrayal?.sentiment?.positive || 0}%` }} />
-                          </div>
-                          <span className="text-xs w-12 text-right font-bold">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs w-20 font-medium">Neutral</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2.5">
-                            <div className="h-2.5 rounded-full bg-gray-400" style={{ width: `${stage?.portrayal?.sentiment?.neutral || 0}%` }} />
-                          </div>
-                          <span className="text-xs w-12 text-right font-bold">{Math.round(stage?.portrayal?.sentiment?.neutral || 0)}%</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs w-20 font-medium">Negative</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2.5">
-                            <div className="h-2.5 rounded-full bg-red-500" style={{ width: `${stage?.portrayal?.sentiment?.negative || 0}%` }} />
-                          </div>
-                          <span className="text-xs w-12 text-right font-bold">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
-                        </div>
-                      </div>
+
+                      {/* Diverging Sentiment Bar - Evidence-Based Visualization */}
+                      <SentimentBar
+                        positive={Math.round(stage?.portrayal?.sentiment?.positive || 0)}
+                        neutral={Math.round(stage?.portrayal?.sentiment?.neutral || 0)}
+                        negative={Math.round(stage?.portrayal?.sentiment?.negative || 0)}
+                      />
 
                       {/* Sentiment Transparency - Show What Each Rating Means */}
                       <div className="mt-3 text-xs text-gray-600 bg-gray-50 rounded p-3">
