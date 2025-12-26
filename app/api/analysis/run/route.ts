@@ -332,6 +332,92 @@ async function executeAnalysis(
       });
     }
 
+    // Analyze citations for brand presence (scrape cited pages)
+    console.log('[Citation Analysis] Starting citation page analysis...');
+    try {
+      const { analyzeCitations } = await import('@/lib/services/citations/citationPageAnalyzer');
+
+      // Collect all unique citations from the analysis
+      const allCitations: any[] = [];
+      for (const a of result.rawData.analyses) {
+        for (const response of a.responses) {
+          if (response.sources && Array.isArray(response.sources)) {
+            response.sources.forEach((source: any) => {
+              const url = source.url || source;
+              if (url && typeof url === 'string' && !allCitations.find(c => c.url === url)) {
+                allCitations.push({
+                  url,
+                  domain: source.domain || url.replace(/^https?:\/\//, '').split('/')[0],
+                  platform: response.platform,
+                  title: source.title
+                });
+              }
+            });
+          }
+        }
+      }
+
+      if (allCitations.length > 0) {
+        console.log(`[Citation Analysis] Analyzing ${allCitations.length} citations...`);
+
+        // Analyze citations in batches
+        const citationAnalysisResults = await analyzeCitations(
+          allCitations,
+          brandOrKeyword,
+          domain || '',
+          {
+            maxConcurrent: 3, // Conservative to avoid rate limiting
+            skipBrandDomain: true // Skip brand's own domain
+          }
+        );
+
+        console.log(`[Citation Analysis] Completed analysis of ${citationAnalysisResults.length} citations`);
+        console.log(`[Citation Analysis] Found ${citationAnalysisResults.filter(r => r.brandMentioned || r.hasBacklink).length} citations with brand presence`);
+
+        // Update AITestResult records with citation analysis data
+        const testResults = await prisma.aITestResult.findMany({
+          where: { analysisId },
+          select: { id: true, sources: true }
+        });
+
+        for (const testResult of testResults) {
+          if (!testResult.sources || !Array.isArray(testResult.sources)) continue;
+
+          // Enhance sources with citation analysis data
+          const enhancedSources = (testResult.sources as any[]).map((source: any) => {
+            const url = source.url || source;
+            const analysis = citationAnalysisResults.find(r => r.url === url);
+
+            if (analysis) {
+              return {
+                ...source,
+                brandMentioned: analysis.brandMentioned,
+                brandMentionCount: analysis.brandMentionCount,
+                hasBacklink: analysis.hasBacklink,
+                backlinkUrls: analysis.backlinkUrls,
+                scrapedAt: analysis.scrapedAt
+              };
+            }
+
+            return source;
+          });
+
+          // Update the test result with enhanced sources
+          await prisma.aITestResult.update({
+            where: { id: testResult.id },
+            data: { sources: enhancedSources as any }
+          });
+        }
+
+        console.log('[Citation Analysis] Successfully updated test results with citation analysis');
+      } else {
+        console.log('[Citation Analysis] No citations to analyze');
+      }
+    } catch (error: any) {
+      console.error('[Citation Analysis] Error analyzing citations:', error.message);
+      // Don't fail the entire analysis if citation scraping fails
+    }
+
     // Mark completed
     await prisma.analysis.update({
       where: { id: analysisId },
