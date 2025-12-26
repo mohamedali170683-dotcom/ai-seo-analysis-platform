@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       hour,
       dayOfWeek,
       dayOfMonth,
-      cronExpression: null,
+      cronExpression: undefined,
       timezone
     });
 
