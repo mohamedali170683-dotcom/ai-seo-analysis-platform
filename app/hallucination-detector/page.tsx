@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 interface GroundTruth {
   id: string;
@@ -364,29 +366,79 @@ export default function HallucinationDetectorPage() {
                 <>
                   {/* Overall Score */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className={`p-4 rounded-lg border ${getRiskColor(latestDetection.riskLevel)}`}>
-                      <div className="text-2xl font-bold">
-                        {latestDetection.adjustedAccuracy}%
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Overall Accuracy</span>
+                        <div className="flex items-baseline gap-2">
+                          <span
+                            className="text-3xl font-bold"
+                            style={{
+                              color: (() => {
+                                const accuracy = latestDetection.adjustedAccuracy || 0;
+                                return accuracy >= 90 ? SEMANTIC_COLORS.positive :
+                                       accuracy >= 70 ? SEMANTIC_COLORS.warning :
+                                       SEMANTIC_COLORS.critical;
+                              })()
+                            }}
+                          >
+                            {latestDetection.adjustedAccuracy}%
+                          </span>
+                          {(() => {
+                            const accuracy = latestDetection.adjustedAccuracy || 0;
+                            return accuracy >= 90 ? <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} /> :
+                                   accuracy >= 70 ? <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.warning}} /> :
+                                   <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />;
+                          })()}
+                        </div>
+                        <span className="text-xs font-medium text-gray-500">{latestDetection.riskLevel} Risk</span>
                       </div>
-                      <div className="text-sm">Overall Accuracy</div>
-                      <div className="text-xs mt-1">{latestDetection.riskLevel} Risk</div>
                     </div>
-                    <div className="p-4 rounded-lg border border-gray-200">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {latestDetection.hallucinations?.length || 0}
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hallucinations Found</span>
+                        <div className="flex items-baseline gap-2">
+                          <span
+                            className="text-3xl font-bold"
+                            style={{
+                              color: (latestDetection.hallucinations?.length || 0) > 0
+                                ? SEMANTIC_COLORS.critical
+                                : SEMANTIC_COLORS.muted
+                            }}
+                          >
+                            {latestDetection.hallucinations?.length || 0}
+                          </span>
+                          {(latestDetection.hallucinations?.length || 0) > 0 && (
+                            <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />
+                          )}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">Hallucinations Found</div>
                     </div>
-                    <div className="p-4 rounded-lg border border-gray-200">
-                      <div className="text-2xl font-bold text-green-600">
-                        {latestDetection.recommendations?.length || 0}
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Recommendations</span>
+                        <div className="flex items-baseline gap-2">
+                          <span
+                            className="text-3xl font-bold"
+                            style={{
+                              color: (latestDetection.recommendations?.length || 0) > 0
+                                ? SEMANTIC_COLORS.warning
+                                : SEMANTIC_COLORS.muted
+                            }}
+                          >
+                            {latestDetection.recommendations?.length || 0}
+                          </span>
+                          {(latestDetection.recommendations?.length || 0) > 0 && (
+                            <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.warning}} />
+                          )}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">Recommendations</div>
                     </div>
-                    <div className="p-4 rounded-lg border border-gray-200">
-                      <div className="text-2xl font-bold text-purple-600">2</div>
-                      <div className="text-sm text-gray-600">LLMs Tested</div>
-                      <div className="text-xs text-gray-500 mt-1">ChatGPT, Gemini</div>
+                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">LLMs Tested</span>
+                        <span className="text-3xl font-bold text-gray-900">2</span>
+                        <span className="text-xs text-gray-500">ChatGPT, Gemini</span>
+                      </div>
                     </div>
                   </div>
 
@@ -399,7 +451,29 @@ export default function HallucinationDetectorPage() {
                           <div key={h.id} className="p-4 border border-gray-200 rounded-md">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(h.severity)}`}>
+                                <span
+                                  className="px-2 py-1 rounded text-xs font-medium"
+                                  style={{
+                                    backgroundColor: (() => {
+                                      switch (h.severity) {
+                                        case 'CRITICAL': return SEMANTIC_COLORS.criticalBg;
+                                        case 'HIGH': return '#fed7aa'; // orange-200
+                                        case 'MEDIUM': return SEMANTIC_COLORS.warningBg;
+                                        case 'LOW': return '#dbeafe'; // blue-100
+                                        default: return '#f3f4f6'; // gray-100
+                                      }
+                                    })(),
+                                    color: (() => {
+                                      switch (h.severity) {
+                                        case 'CRITICAL': return SEMANTIC_COLORS.critical;
+                                        case 'HIGH': return '#ea580c'; // orange-600
+                                        case 'MEDIUM': return SEMANTIC_COLORS.warning;
+                                        case 'LOW': return '#2563eb'; // blue-600
+                                        default: return '#4b5563'; // gray-600
+                                      }
+                                    })()
+                                  }}
+                                >
                                   {h.severity}
                                 </span>
                                 <span className="text-sm text-gray-600">
@@ -442,12 +516,27 @@ export default function HallucinationDetectorPage() {
                           <div key={r.id} className="p-4 border border-gray-200 rounded-md">
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-medium">{r.title}</h4>
-                              <span className={`px-2 py-1 rounded text-xs ${
-                                r.priority === 'critical' ? 'bg-red-100 text-red-800' :
-                                r.priority === 'high' ? 'bg-orange-100 text-orange-800' :
-                                r.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-blue-100 text-blue-800'
-                              }`}>
+                              <span
+                                className="px-2 py-1 rounded text-xs font-medium"
+                                style={{
+                                  backgroundColor: (() => {
+                                    switch (r.priority) {
+                                      case 'critical': return SEMANTIC_COLORS.criticalBg;
+                                      case 'high': return '#fed7aa'; // orange-200
+                                      case 'medium': return SEMANTIC_COLORS.warningBg;
+                                      default: return '#dbeafe'; // blue-100
+                                    }
+                                  })(),
+                                  color: (() => {
+                                    switch (r.priority) {
+                                      case 'critical': return SEMANTIC_COLORS.critical;
+                                      case 'high': return '#ea580c'; // orange-600
+                                      case 'medium': return SEMANTIC_COLORS.warning;
+                                      default: return '#2563eb'; // blue-600
+                                    }
+                                  })()
+                                }}
+                              >
                                 {r.priority.toUpperCase()}
                               </span>
                             </div>
