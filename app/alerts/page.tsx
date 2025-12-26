@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Bell,
   Plus,
@@ -38,87 +38,15 @@ interface AlertConfig {
   name: string;
   type: AlertType;
   enabled: boolean;
-  conditions: Array<{
-    metric: string;
-    operator: string;
-    threshold: number;
-  }>;
-  channels: Array<{
-    id: string;
-    type: ChannelType;
-    enabled: boolean;
-  }>;
-  throttle: {
-    enabled: boolean;
-    windowMinutes: number;
-    maxAlertsPerWindow: number;
-  };
-  lastTriggered?: Date;
+  conditions: any;
+  channels: any;
+  throttleEnabled?: boolean;
+  throttleWindow?: number;
+  maxAlertsPerWindow?: number;
+  lastTriggered?: string;
   triggerCount: number;
+  events?: any[];
 }
-
-// Mock data
-const mockAlerts: AlertConfig[] = [
-  {
-    id: '1',
-    name: 'Visibility Drop Alert',
-    type: 'visibility_drop',
-    enabled: true,
-    conditions: [
-      { metric: 'overall_visibility', operator: '<', threshold: 50 }
-    ],
-    channels: [
-      { id: 'c1', type: 'email', enabled: true },
-      { id: 'c2', type: 'slack', enabled: true }
-    ],
-    throttle: {
-      enabled: true,
-      windowMinutes: 60,
-      maxAlertsPerWindow: 3
-    },
-    lastTriggered: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    triggerCount: 5
-  },
-  {
-    id: '2',
-    name: 'Competitor Overtake Warning',
-    type: 'competitor_takeover',
-    enabled: true,
-    conditions: [
-      { metric: 'competitor_mentions', operator: '>', threshold: 80 }
-    ],
-    channels: [
-      { id: 'c3', type: 'email', enabled: true },
-      { id: 'c4', type: 'discord', enabled: false }
-    ],
-    throttle: {
-      enabled: true,
-      windowMinutes: 120,
-      maxAlertsPerWindow: 2
-    },
-    lastTriggered: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    triggerCount: 12
-  },
-  {
-    id: '3',
-    name: 'Hallucination Detection',
-    type: 'hallucination_detected',
-    enabled: false,
-    conditions: [
-      { metric: 'hallucination_count', operator: '>', threshold: 0 }
-    ],
-    channels: [
-      { id: 'c5', type: 'email', enabled: true },
-      { id: 'c6', type: 'webhook', enabled: true }
-    ],
-    throttle: {
-      enabled: false,
-      windowMinutes: 30,
-      maxAlertsPerWindow: 1
-    },
-    triggerCount: 0
-  }
-];
 
 const alertTypeInfo = {
   visibility_drop: {
@@ -177,19 +105,66 @@ const channelIcons = {
 };
 
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState<AlertConfig[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<AlertConfig[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
   const [showNewAlertModal, setShowNewAlertModal] = useState(false);
 
-  const toggleAlert = (id: string) => {
-    setAlerts(alerts.map(alert =>
-      alert.id === id ? { ...alert, enabled: !alert.enabled } : alert
-    ));
+  // Fetch alerts from API
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
+  const fetchAlerts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/alerts?userId=demo-user');
+      const data = await response.json();
+      if (data.success) {
+        setAlerts(data.alerts);
+      }
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleAlert = async (id: string) => {
+    const alert = alerts.find(a => a.id === id);
+    if (!alert) return;
+
+    try {
+      const response = await fetch(`/api/alerts/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !alert.enabled })
+      });
+
+      if (response.ok) {
+        setAlerts(alerts.map(a =>
+          a.id === id ? { ...a, enabled: !a.enabled } : a
+        ));
+      }
+    } catch (error) {
+      console.error('Error toggling alert:', error);
+    }
   };
 
   const getAlertInfo = (type: AlertType) => {
     return alertTypeInfo[type];
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading alerts...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -335,7 +310,7 @@ export default function AlertsPage() {
                         </p>
                         {alert.lastTriggered && (
                           <p className="text-xs text-gray-500">
-                            Last: {alert.lastTriggered.toLocaleDateString()}
+                            Last: {new Date(alert.lastTriggered).toLocaleDateString()}
                           </p>
                         )}
                       </div>
@@ -425,11 +400,11 @@ export default function AlertsPage() {
                       </div>
 
                       {/* Throttle */}
-                      {alert.throttle.enabled && (
+                      {alert.throttleEnabled && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                           <p className="text-sm text-yellow-800">
-                            <strong>Throttling:</strong> Max {alert.throttle.maxAlertsPerWindow}{' '}
-                            alerts per {alert.throttle.windowMinutes} minutes
+                            <strong>Throttling:</strong> Max {alert.maxAlertsPerWindow}{' '}
+                            alerts per {alert.throttleWindow} minutes
                           </p>
                         </div>
                       )}
