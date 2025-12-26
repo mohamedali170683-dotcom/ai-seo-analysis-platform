@@ -16,6 +16,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { NewScanForm, type NewScanData } from '@/components/Forms';
 
 type ScanFrequency = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom';
 
@@ -120,6 +121,26 @@ export default function AutomationPage() {
 
   const getScanExecutions = (scan: ScheduledScan) => {
     return scan.executions?.slice(0, 5) || [];
+  };
+
+  const handleCreateScan = async (scanData: NewScanData) => {
+    try {
+      const response = await fetch('/api/automation/scans?userId=demo-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(scanData)
+      });
+
+      if (response.ok) {
+        await fetchScans(); // Refresh the scan list
+        setShowNewScanModal(false);
+      } else {
+        throw new Error('Failed to create scan');
+      }
+    } catch (error) {
+      console.error('Error creating scan:', error);
+      throw error;
+    }
   };
 
   if (loading) {
@@ -388,6 +409,13 @@ export default function AutomationPage() {
           </div>
         </div>
       </div>
+
+      {/* New Scan Modal */}
+      <NewScanForm
+        isOpen={showNewScanModal}
+        onClose={() => setShowNewScanModal(false)}
+        onSubmit={handleCreateScan}
+      />
     </div>
   );
 }

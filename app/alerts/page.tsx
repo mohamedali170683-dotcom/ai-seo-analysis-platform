@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
+import { NewAlertForm, type NewAlertData } from '@/components/Forms';
 
 type AlertType =
   | 'visibility_drop'
@@ -153,6 +154,26 @@ export default function AlertsPage() {
 
   const getAlertInfo = (type: AlertType) => {
     return alertTypeInfo[type];
+  };
+
+  const handleCreateAlert = async (alertData: NewAlertData) => {
+    try {
+      const response = await fetch('/api/alerts?userId=demo-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(alertData)
+      });
+
+      if (response.ok) {
+        await fetchAlerts(); // Refresh the alert list
+        setShowNewAlertModal(false);
+      } else {
+        throw new Error('Failed to create alert');
+      }
+    } catch (error) {
+      console.error('Error creating alert:', error);
+      throw error;
+    }
   };
 
   if (loading) {
@@ -434,6 +455,13 @@ export default function AlertsPage() {
           </div>
         </div>
       </div>
+
+      {/* New Alert Modal */}
+      <NewAlertForm
+        isOpen={showNewAlertModal}
+        onClose={() => setShowNewAlertModal(false)}
+        onSubmit={handleCreateAlert}
+      />
     </div>
   );
 }
