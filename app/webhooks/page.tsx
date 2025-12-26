@@ -18,6 +18,7 @@ import {
   XCircle,
   Send
 } from 'lucide-react';
+import { NewWebhookForm, type NewWebhookData } from '@/components/Forms';
 
 interface WebhookConfig {
   id: string;
@@ -120,6 +121,26 @@ export default function WebhooksPage() {
   const maskSecret = (secret: string) => {
     if (secret.length <= 8) return '••••••••';
     return secret.slice(0, 12) + '•'.repeat(secret.length - 12);
+  };
+
+  const handleCreateWebhook = async (webhookData: NewWebhookData) => {
+    try {
+      const response = await fetch('/api/webhooks?userId=demo-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(webhookData)
+      });
+
+      if (response.ok) {
+        await fetchWebhooks(); // Refresh the webhook list
+        setShowNewWebhookModal(false);
+      } else {
+        throw new Error('Failed to create webhook');
+      }
+    } catch (error) {
+      console.error('Error creating webhook:', error);
+      throw error;
+    }
   };
 
   if (loading) {
@@ -444,6 +465,13 @@ export default function WebhooksPage() {
           </div>
         </div>
       </div>
+
+      {/* New Webhook Modal */}
+      <NewWebhookForm
+        isOpen={showNewWebhookModal}
+        onClose={() => setShowNewWebhookModal(false)}
+        onSubmit={handleCreateWebhook}
+      />
     </div>
   );
 }
