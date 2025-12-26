@@ -749,6 +749,27 @@ export default function ResultsPage() {
                         your brand was mentioned in <strong>{Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)}</strong> responses.
                       </p>
 
+                      {/* Position Rate Analysis */}
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <BulletGraph
+                          actual={Math.round(stage?.portrayal?.positionScore || 0)}
+                          target={70}
+                          ranges={[
+                            { max: 40, label: 'Low' },
+                            { max: 70, label: 'Medium' },
+                            { max: 100, label: 'High' }
+                          ]}
+                          label="Position Score"
+                          unit="%"
+                        />
+                        <p className="text-sm text-gray-600 mt-3">
+                          When mentioned, your brand appears at an average position score of <strong>{Math.round(stage?.portrayal?.positionScore || 0)}%</strong> in AI responses.
+                          {(stage?.portrayal?.positionScore || 0) >= 70 && " 🎯 Great positioning!"}
+                          {(stage?.portrayal?.positionScore || 0) < 70 && (stage?.portrayal?.positionScore || 0) >= 40 && " Consider creating more authoritative content."}
+                          {(stage?.portrayal?.positionScore || 0) < 40 && " ⚠️ Low position - competitors are mentioned first."}
+                        </p>
+                      </div>
+
                       {/* Show Proof Button */}
                       {(() => {
                         const stageResponses = reportData.aiTestResults?.filter((r: any) => {
@@ -1068,27 +1089,126 @@ export default function ResultsPage() {
                           {/* Other Sources */}
                           {otherCitations.length > 0 && (
                             <div>
-                              <div className="flex items-center gap-2 mb-2">
+                              <button
+                                onClick={() => setExpandedSchemas(prev =>
+                                  prev.includes(`citations-${stage?.stage}`)
+                                    ? prev.filter(s => s !== `citations-${stage?.stage}`)
+                                    : [...prev, `citations-${stage?.stage}`]
+                                )}
+                                className="flex items-center gap-2 mb-2 hover:bg-blue-50 rounded p-1 -ml-1 transition-colors"
+                              >
                                 <span className="text-lg">📚</span>
                                 <span className="font-medium text-gray-700">
                                   Other Sources Cited ({otherCitations.length})
                                 </span>
-                              </div>
-                              <div className="space-y-1 ml-7 max-h-32 overflow-y-auto">
-                                {otherCitations.slice(0, 10).map((citation, idx) => (
-                                  <div key={idx} className="flex items-center gap-2 text-sm">
-                                    <a href={citation.url} target="_blank" rel="noopener noreferrer"
-                                       className="text-blue-600 hover:underline truncate">
-                                      {citation.domain}
-                                    </a>
-                                  </div>
-                                ))}
-                                {otherCitations.length > 10 && (
-                                  <p className="text-xs text-gray-500">+{otherCitations.length - 10} more sources</p>
+                                {expandedSchemas.includes(`citations-${stage?.stage}`) ? (
+                                  <ChevronUp className="w-4 h-4 text-gray-600" />
+                                ) : (
+                                  <ChevronDown className="w-4 h-4 text-gray-600" />
                                 )}
-                              </div>
+                              </button>
+                              {expandedSchemas.includes(`citations-${stage?.stage}`) ? (
+                                <div className="space-y-2 ml-7 max-h-96 overflow-y-auto">
+                                  {otherCitations.map((citation, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 text-sm">
+                                      <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
+                                        citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
+                                        citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
+                                        citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
+                                        'bg-cyan-100 text-cyan-700'
+                                      }`}>{citation.platform}</span>
+                                      <a href={citation.url} target="_blank" rel="noopener noreferrer"
+                                         className="text-blue-600 hover:underline truncate">
+                                        {citation.title || citation.domain}
+                                      </a>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="ml-7">
+                                  <p className="text-xs text-gray-500">Click to view all {otherCitations.length} sources</p>
+                                </div>
+                              )}
                             </div>
                           )}
+
+                          {/* Hidden Brand Mentions in Cited Pages */}
+                          {(() => {
+                            // This section shows brand mentions found within cited pages
+                            // even when the brand's domain wasn't directly cited as a source
+                            // Data structure expected from backend:
+                            // citationAnalysis: [{
+                            //   url, domain, platform,
+                            //   brandMentioned: boolean, brandMentionCount: number,
+                            //   hasBacklink: boolean, backlinkUrls: string[]
+                            // }]
+
+                            const citationAnalysis = otherCitations.map((citation: any) => {
+                              // Placeholder for backend data - will be populated by scraper
+                              return {
+                                ...citation,
+                                brandMentioned: citation.brandMentioned || false,
+                                brandMentionCount: citation.brandMentionCount || 0,
+                                hasBacklink: citation.hasBacklink || false,
+                                backlinkUrls: citation.backlinkUrls || []
+                              };
+                            });
+
+                            const citationsWithBrand = citationAnalysis.filter((c: any) => c.brandMentioned || c.hasBacklink);
+
+                            if (citationsWithBrand.length === 0) {
+                              return null; // Only show this section if we have data
+                            }
+
+                            return (
+                              <div className="mt-4 pt-4 border-t border-blue-200">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <span className="text-lg">🔍</span>
+                                  <h5 className="font-semibold text-gray-900">
+                                    Hidden Brand Presence ({citationsWithBrand.length})
+                                  </h5>
+                                </div>
+                                <p className="text-xs text-gray-600 mb-3 ml-7">
+                                  These cited sources mention your brand or link to your website, even though they weren't directly cited as your content.
+                                </p>
+                                <div className="space-y-2 ml-7">
+                                  {citationsWithBrand.map((citation: any, idx: number) => (
+                                    <div key={idx} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                                      <div className="flex items-start gap-2 mb-2">
+                                        <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
+                                          citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
+                                          citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
+                                          citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
+                                          'bg-cyan-100 text-cyan-700'
+                                        }`}>{citation.platform}</span>
+                                        <a href={citation.url} target="_blank" rel="noopener noreferrer"
+                                           className="text-blue-600 hover:underline text-sm font-medium flex-1">
+                                          {citation.title || citation.domain}
+                                        </a>
+                                      </div>
+                                      <div className="space-y-1 text-xs">
+                                        {citation.brandMentioned && (
+                                          <div className="flex items-center gap-2 text-amber-800">
+                                            <span>💬</span>
+                                            <span>Brand mentioned <strong>{citation.brandMentionCount}</strong> time(s) in content</span>
+                                          </div>
+                                        )}
+                                        {citation.hasBacklink && (
+                                          <div className="flex items-center gap-2 text-amber-800">
+                                            <span>🔗</span>
+                                            <span>Contains <strong>{citation.backlinkUrls.length}</strong> backlink(s) to your domain</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="text-xs text-gray-500 italic mt-3 ml-7">
+                                  💡 This shows secondary brand visibility - you're referenced within authoritative sources that AI platforms trust.
+                                </p>
+                              </div>
+                            );
+                          })()}
 
                           {allCitations.length === 0 && (
                             <div className="text-center py-6">
