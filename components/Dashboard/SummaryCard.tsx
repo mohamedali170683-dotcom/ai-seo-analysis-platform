@@ -53,7 +53,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
       </div>
 
       <div className="card-expand-indicator">
-        {isExpanded ? '▼' : '▶'} {isExpanded ? 'Hide details' : 'Show details'}
+        <span className="expand-icon">{isExpanded ? '▼' : '▶'}</span>
+        <span className="expand-text">{isExpanded ? 'Hide Details' : 'Click to View Details'}</span>
       </div>
 
       <style jsx>{`
@@ -76,6 +77,11 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           transform: translateY(-1px);
         }
 
+        .summary-card:hover .card-expand-indicator {
+          background: ${DASHBOARD_COLORS.brand};
+          color: white;
+        }
+
         .summary-card:focus-visible {
           outline: 2px solid ${DASHBOARD_COLORS.brand};
           outline-offset: 2px;
@@ -84,6 +90,11 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
         .summary-card.expanded {
           border-color: ${DASHBOARD_COLORS.brand};
           background: ${DASHBOARD_COLORS.brandLight};
+        }
+
+        .summary-card.expanded .card-expand-indicator {
+          background: ${DASHBOARD_COLORS.brand};
+          color: white;
         }
 
         .card-header {
@@ -118,12 +129,27 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
         }
 
         .card-expand-indicator {
-          margin-top: 8px;
-          font-size: 10px;
-          color: ${DASHBOARD_COLORS.textMuted};
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          margin-top: 12px;
+          padding: 8px 12px;
+          font-size: 13px;
+          font-weight: 600;
+          color: ${DASHBOARD_COLORS.brand};
+          background: rgba(99, 102, 241, 0.1);
+          border-radius: 6px;
           text-align: center;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
+          transition: all 0.15s ease;
+        }
+
+        .expand-icon {
+          font-size: 10px;
+        }
+
+        .expand-text {
+          letter-spacing: 0.02em;
         }
 
         @media (max-width: 640px) {
