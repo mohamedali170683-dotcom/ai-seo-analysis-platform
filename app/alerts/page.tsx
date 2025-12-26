@@ -357,7 +357,7 @@ export default function AlertsPage() {
                           Conditions
                         </h4>
                         <div className="space-y-2">
-                          {alert.conditions.map((condition, idx) => (
+                          {alert.conditions.map((condition: any, idx: number) => (
                             <div
                               key={idx}
                               className="flex items-center gap-2 text-sm bg-blue-50 rounded-lg p-3"
@@ -380,8 +380,8 @@ export default function AlertsPage() {
                           Notification Channels
                         </h4>
                         <div className="flex gap-2">
-                          {alert.channels.map(channel => {
-                            const ChannelIcon = channelIcons[channel.type];
+                          {alert.channels.map((channel: any) => {
+                            const ChannelIcon = channelIcons[channel.type as keyof typeof channelIcons];
                             return (
                               <div
                                 key={channel.id}
