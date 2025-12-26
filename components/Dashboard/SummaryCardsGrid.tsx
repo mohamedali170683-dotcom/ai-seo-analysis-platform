@@ -6,7 +6,6 @@ interface StageData {
   id: string;
   name: string;
   score: number;
-  trend: number[];
 }
 
 interface SummaryCardsGridProps {
@@ -29,7 +28,6 @@ export const SummaryCardsGrid: React.FC<SummaryCardsGridProps> = ({
           key={stage.id}
           title={stage.name}
           score={stage.score}
-          trend={stage.trend}
           status={getStatusLabel(stage.score)}
           onClick={() => onStageToggle(stage.id)}
           isExpanded={expandedStage === stage.id}
