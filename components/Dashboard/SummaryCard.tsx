@@ -1,5 +1,4 @@
 import React from 'react';
-import { Sparkline } from '../Charts';
 import { DASHBOARD_COLORS, getStatusColor, getStatusLabel } from '@/lib/theme/colors';
 
 type StatusType = 'good' | 'warning' | 'critical';
@@ -8,7 +7,6 @@ interface SummaryCardProps {
   title: string;
   score: number;
   maxScore?: number;
-  trend: number[];
   status: StatusType;
   onClick: () => void;
   isExpanded: boolean;
@@ -25,7 +23,6 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   title,
   score,
   maxScore = 100,
-  trend,
   status,
   onClick,
   isExpanded,
@@ -53,13 +50,6 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
 
       <div className="card-score">
         <span className="score-value">{score}%</span>
-        <Sparkline
-          data={trend}
-          height={20}
-          width={60}
-          color={getStatusColor(score)}
-          showDot={true}
-        />
       </div>
 
       <div className="card-expand-indicator">

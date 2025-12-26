@@ -442,13 +442,21 @@ export default function ResultsPage() {
       <div className="container mx-auto max-w-6xl px-4 py-8">
         
         {/* Summary Score Card - Evidence-Based Dashboard Hero */}
-        <DashboardHero
-          score={reportData.overallScore || 0}
-          maxScore={100}
-          trend={reportData.trendData || [45, 52, 48, 61, 73, reportData.overallScore || 0]}
-          change={reportData.scoreChange || 0}
-          changeLabel="vs last scan"
-        />
+        {/* Overall Visibility Score - Clean Display */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border-2 border-indigo-200">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-gray-600 mb-2">Overall AI Visibility Score</h2>
+            <div className={`text-7xl font-bold mb-4 ${
+              (reportData.overallScore || 0) >= 70 ? 'text-green-600' :
+              (reportData.overallScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
+            }`}>
+              {reportData.overallScore || 0}%
+            </div>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              How visible and well-represented your brand is across AI platforms throughout the customer journey
+            </p>
+          </div>
+        </div>
 
         {/* Additional Options - Collapsed by default */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
@@ -529,7 +537,7 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Executive Summary Section */}
+        {/* Executive Summary Section - ENHANCED WITH PLATFORM & COMPETITIVE DATA */}
         {reportData.executiveSummary && (
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-8 mb-8 text-white">
             <div className="flex items-center justify-between mb-6">
@@ -542,7 +550,7 @@ export default function ResultsPage() {
               </div>
               <div className="text-right">
                 <div className="text-5xl font-bold">{reportData.executiveSummary.overallScore}%</div>
-                <div className="text-indigo-200 text-sm">Overall Score</div>
+                <div className="text-indigo-200 text-sm">Overall Visibility Score</div>
               </div>
             </div>
 
@@ -552,25 +560,35 @@ export default function ResultsPage() {
               <p className="text-white">{reportData.executiveSummary.keyFinding}</p>
             </div>
 
-            {/* Stage Breakdown with Weights */}
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              {[
-                { stage: 'awareness', icon: '🔍', weight: '20%', label: 'Awareness' },
-                { stage: 'consideration', icon: '⚖️', weight: '35%', label: 'Consideration' },
-                { stage: 'decision', icon: '✅', weight: '45%', label: 'Decision' },
-              ].map((s) => {
-                const stageData = reportData.executiveSummary?.stageBreakdown?.[s.stage];
-                return (
-                  <div key={s.stage} className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-lg">{s.icon} {s.label}</span>
-                      <span className="text-xs bg-white/20 px-2 py-1 rounded">{s.weight} weight</span>
-                    </div>
-                    <div className="text-3xl font-bold mb-1">{stageData?.score || 0}%</div>
-                    <p className="text-xs text-indigo-200">{stageData?.insight || 'No data'}</p>
-                  </div>
-                );
-              })}
+            {/* Platform Performance & Competitive Position */}
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              {/* Mention Rate */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <h3 className="font-semibold text-indigo-100 mb-3">📊 Brand Mention Rate</h3>
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-4xl font-bold">{Math.round(reportData.scoringMethodology?.mentionRate?.yourScore || 0)}%</span>
+                  <span className="text-sm text-indigo-200">across all platforms</span>
+                </div>
+                <p className="text-xs text-indigo-200">Your brand mentioned in {Math.round(reportData.scoringMethodology?.mentionRate?.yourScore || 0)}% of AI responses</p>
+              </div>
+
+              {/* Visibility Share by Platform */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                <h3 className="font-semibold text-indigo-100 mb-3">🤖 Visibility by AI Platform</h3>
+                <div className="space-y-2">
+                  {reportData.platformBreakdown && Object.entries(reportData.platformBreakdown).map(([platform, data]: [string, any]) => (
+                    data.totalTests > 0 && (
+                      <div key={platform} className="flex items-center justify-between text-sm">
+                        <span className="text-indigo-100">{platform}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-semibold">{Math.round(data.mentionRate)}%</span>
+                          <span className="text-xs text-indigo-200">({Math.round(data.visibilityShare)}% share)</span>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* Top Actions */}
@@ -581,7 +599,7 @@ export default function ResultsPage() {
                   {reportData.executiveSummary.topActions.slice(0, 3).map((action: any, i: number) => (
                     <div key={i} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 flex items-start gap-3">
                       <span className={`text-xs font-bold px-2 py-1 rounded ${
-                        action.priority === 'high' ? 'bg-red-500' : 
+                        action.priority === 'high' ? 'bg-red-500' :
                         action.priority === 'medium' ? 'bg-yellow-500 text-yellow-900' : 'bg-green-500'
                       }`}>
                         {action.priority?.toUpperCase()}
@@ -613,8 +631,7 @@ export default function ResultsPage() {
               stages={journeyStages.map((stage: any) => ({
                 id: stage?.stage || '',
                 name: stage?.stageLabel || 'Unknown Stage',
-                score: Math.round(stage?.portrayal?.visibilityScore || 0),
-                trend: stage?.trendData || [40, 45, 50, 55, Math.round(stage?.portrayal?.visibilityScore || 0)]
+                score: Math.round(stage?.portrayal?.visibilityScore || 0)
               }))}
               expandedStage={expandedSection}
               onStageToggle={(stageId: string) =>
@@ -712,6 +729,24 @@ export default function ResultsPage() {
                           💡 This formula weights brand mentions most heavily (50%), followed by position in responses (30%), and sentiment (20%).
                         </p>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Questions Analyzed for this Stage */}
+                  {stage?.questions && stage.questions.length > 0 && (
+                    <div className="mb-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">❓ Questions Analyzed ({stage.questions.length})</h4>
+                      <div className="space-y-2">
+                        {stage.questions.map((q: any, idx: number) => (
+                          <div key={idx} className="flex items-start gap-2 text-sm">
+                            <span className="text-blue-600 font-bold flex-shrink-0">{idx + 1}.</span>
+                            <span className="text-gray-700">{q.question || q}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-600 mt-3 italic">
+                        💡 These questions represent typical {stage?.stageLabel || 'customer'} queries that AI platforms answer.
+                      </p>
                     </div>
                   )}
 
