@@ -17,6 +17,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { NewScanForm, type NewScanData } from '@/components/Forms';
+import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 type ScanFrequency = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom';
 
@@ -177,64 +178,86 @@ export default function AutomationPage() {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Scans</p>
-                <p className="text-2xl font-bold text-gray-900">
+        {/* Stats Overview - Evidence-Based Design */}
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          {/* Active Scans - Primary Metric */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Scans</span>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-gray-900">
                   {scans.filter(s => s.enabled).length}
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Play className="w-6 h-6 text-green-600" />
+                </span>
+                <span className="text-sm text-gray-500">/ {scans.length}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Runs</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {scans.reduce((sum, s) => sum + s.totalRuns, 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Clock className="w-6 h-6 text-blue-600" />
-              </div>
+          {/* Total Runs - Gray (Secondary Data) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Runs</span>
+              <span className="text-3xl font-bold text-gray-900">
+                {scans.reduce((sum, s) => sum + s.totalRuns, 0)}
+              </span>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Success Rate</p>
-                <p className="text-2xl font-bold text-gray-900">
+          {/* Success Rate - Semantic Color (Green if good) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Success Rate</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-3xl font-bold"
+                  style={{
+                    color: (() => {
+                      const rate = Math.round(
+                        (scans.reduce((sum, s) => sum + s.successfulRuns, 0) /
+                          Math.max(scans.reduce((sum, s) => sum + s.totalRuns, 0), 1)) * 100
+                      );
+                      return rate >= 90 ? SEMANTIC_COLORS.positive :
+                             rate >= 70 ? SEMANTIC_COLORS.warning :
+                             SEMANTIC_COLORS.critical;
+                    })()
+                  }}
+                >
                   {Math.round(
                     (scans.reduce((sum, s) => sum + s.successfulRuns, 0) /
-                      scans.reduce((sum, s) => sum + s.totalRuns, 0)) *
-                      100
-                  )}%
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
+                      Math.max(scans.reduce((sum, s) => sum + s.totalRuns, 0), 1)) * 100
+                  ) || 0}%
+                </span>
+                {(() => {
+                  const rate = Math.round(
+                    (scans.reduce((sum, s) => sum + s.successfulRuns, 0) /
+                      Math.max(scans.reduce((sum, s) => sum + s.totalRuns, 0), 1)) * 100
+                  );
+                  return rate >= 90 ? <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} /> :
+                         rate >= 70 ? <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.warning}} /> :
+                         <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />;
+                })()}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Failed Runs</p>
-                <p className="text-2xl font-bold text-gray-900">
+          {/* Failed Runs - Only red if > 0 (Actionable Data) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Failed Runs</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-3xl font-bold"
+                  style={{
+                    color: scans.reduce((sum, s) => sum + s.failedRuns, 0) > 0
+                      ? SEMANTIC_COLORS.critical
+                      : SEMANTIC_COLORS.muted
+                  }}
+                >
                   {scans.reduce((sum, s) => sum + s.failedRuns, 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-red-100 rounded-lg">
-                <XCircle className="w-6 h-6 text-red-600" />
+                </span>
+                {scans.reduce((sum, s) => sum + s.failedRuns, 0) > 0 && (
+                  <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />
+                )}
               </div>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { ProjectModal } from "@/components/project-modal";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
+import { SEMANTIC_COLORS } from "@/lib/theme/colors";
 
 // FAQ Data
 const FAQ_DATA = [
@@ -274,61 +275,55 @@ export default function DashboardPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Stats Cards - Apple Style */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-500">AI Visibility Analyses</span>
-              <div className="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
-                <Brain className="w-5 h-5 text-blue-500" />
+        {/* Stats Overview - Evidence-Based Design */}
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          {/* Primary Metric - Total Analyses */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Visibility Analyses</span>
+              <span className="text-3xl font-bold text-gray-900">{stats.totalAnalyses}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">{stats.completedAnalyses} completed</span>
+                {stats.completedAnalyses > 0 && (
+                  <CheckCircle2 className="w-4 h-4" style={{color: SEMANTIC_COLORS.positive}} />
+                )}
               </div>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalAnalyses}</div>
-            <div className="text-sm text-gray-500 mt-1">{stats.completedAnalyses} completed</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-500">Questions Tested</span>
-              <div className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-                <HelpCircle className="w-5 h-5 text-purple-500" />
-              </div>
+          {/* Secondary - Questions (Informational) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions Tested</span>
+              <span className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 9}</span>
+              <span className="text-sm text-gray-500">Across all analyses</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 9}</div>
-            <div className="text-sm text-gray-500 mt-1">Across all analyses</div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-500">AI Responses</span>
-              <div className="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
-                <Bot className="w-5 h-5 text-green-500" />
-              </div>
+          {/* Secondary - AI Responses (Informational) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Responses</span>
+              <span className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 81}</span>
+              <span className="text-sm text-gray-500">3 tests × 4 platforms</span>
             </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 81}</div>
-            <div className="text-sm text-gray-500 mt-1">3 tests × 4 platforms</div>
           </div>
         </div>
 
-        {/* Quick Actions - Apple Style */}
-        <div className="mb-8 grid md:grid-cols-2 gap-6">
+        {/* Quick Actions - Clean Design */}
+        <div className="mb-8 grid md:grid-cols-2 gap-4">
           <Link
             href="/analyze"
-            className="block bg-white rounded-2xl shadow-sm border border-gray-200 p-8 hover:shadow-md transition-all hover:border-blue-200"
+            className="block bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors"
           >
-            <div className="flex items-center mb-4">
-              <div className="bg-blue-50 p-4 rounded-2xl mr-4">
-                <Brain className="w-8 h-8 text-blue-500" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Run My Next Audit</h2>
-                <p className="text-gray-500">You choose the questions & platforms</p>
-              </div>
+            <div className="flex items-center gap-3 mb-3">
+              <Brain className="w-6 h-6 text-blue-600" />
+              <h2 className="text-lg font-bold text-gray-900">Run My Next Audit</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-sm text-gray-600 mb-3">
               Test your brand on ChatGPT, Gemini, Copilot, and Perplexity. Get visibility scores and recommendations.
             </p>
-            <div className="flex items-center text-sm font-semibold text-blue-500">
+            <div className="flex items-center text-sm font-semibold text-blue-600">
               Start My Analysis
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
@@ -336,21 +331,19 @@ export default function DashboardPage() {
 
           <Link
             href="/hallucination-detector"
-            className="block bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl shadow-sm border border-red-200 p-8 hover:shadow-md transition-all hover:border-red-300"
+            className="block bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors"
           >
-            <div className="flex items-center mb-4">
-              <div className="bg-red-100 p-4 rounded-2xl mr-4">
-                <XCircle className="w-8 h-8 text-red-600" />
-              </div>
+            <div className="flex items-center gap-3 mb-3">
+              <XCircle className="w-6 h-6" style={{color: SEMANTIC_COLORS.critical}} />
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Misinformation Detector</h2>
-                <p className="text-red-600 font-medium">NEW FEATURE</p>
+                <h2 className="text-lg font-bold text-gray-900">Misinformation Detector</h2>
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New Feature</span>
               </div>
             </div>
-            <p className="text-sm text-gray-700 mb-4">
+            <p className="text-sm text-gray-600 mb-3">
               Detect factual errors, outdated information, and competitor confusion in LLM responses about your brand.
             </p>
-            <div className="flex items-center text-sm font-semibold text-red-600">
+            <div className="flex items-center text-sm font-semibold" style={{color: SEMANTIC_COLORS.critical}}>
               Check Brand Accuracy
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>

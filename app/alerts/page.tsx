@@ -20,6 +20,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { NewAlertForm, type NewAlertData } from '@/components/Forms';
+import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 type AlertType =
   | 'visibility_drop'
@@ -210,59 +211,61 @@ export default function AlertsPage() {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Alerts</p>
-                <p className="text-2xl font-bold text-gray-900">
+        {/* Stats Overview - Evidence-Based Design */}
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          {/* Active Alerts - Primary Metric with Status */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Alerts</span>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-bold text-gray-900">
                   {alerts.filter(a => a.enabled).length}
-                </p>
+                </span>
+                {alerts.filter(a => a.enabled).length > 0 && (
+                  <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} />
+                )}
               </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
-              </div>
+              <span className="text-sm text-gray-500">of {alerts.length} total</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Alerts</p>
-                <p className="text-2xl font-bold text-gray-900">{alerts.length}</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Bell className="w-6 h-6 text-blue-600" />
-              </div>
+          {/* Total Alerts - Gray (Informational) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Alerts</span>
+              <span className="text-3xl font-bold text-gray-900">{alerts.length}</span>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Triggered (30d)</p>
-                <p className="text-2xl font-bold text-gray-900">
+          {/* Triggered Count - Only colored if > 0 (Actionable) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Triggered (30d)</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-3xl font-bold"
+                  style={{
+                    color: alerts.reduce((sum, a) => sum + a.triggerCount, 0) > 0
+                      ? SEMANTIC_COLORS.warning
+                      : SEMANTIC_COLORS.muted
+                  }}
+                >
                   {alerts.reduce((sum, a) => sum + a.triggerCount, 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                </span>
+                {alerts.reduce((sum, a) => sum + a.triggerCount, 0) > 0 && (
+                  <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.warning}} />
+                )}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Channels</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {new Set(alerts.flatMap(a => a.channels.map((c: any) => c.type))).size}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <MessageSquare className="w-6 h-6 text-purple-600" />
-              </div>
+          {/* Channels - Gray (Informational) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Channels</span>
+              <span className="text-3xl font-bold text-gray-900">
+                {new Set(alerts.flatMap(a => a.channels.map((c: any) => c.type))).size}
+              </span>
             </div>
           </div>
         </div>

@@ -14,6 +14,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useState } from 'react';
+import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 export function Navigation() {
   const pathname = usePathname();
