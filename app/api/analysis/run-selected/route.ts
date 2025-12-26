@@ -14,7 +14,7 @@ interface SelectedQuestion {
   type: "brand" | "category";
 }
 
-type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
+type AIPlatform = "ChatGPT" | "Gemini" | "Perplexity";
 type UserTier = "free" | "professional" | "partner";
 
 interface AnalysisRequest {
@@ -41,21 +41,21 @@ const TIER_LIMITS: Record<UserTier, {
   free: {
     maxQuestions: 9,  // 3 per stage (awareness, consideration, decision)
     allowedStages: ["awareness", "consideration", "decision"],  // FULL FUNNEL
-    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],  // ALL platforms
+    allowedPlatforms: ["ChatGPT", "Gemini", "Perplexity"],  // Real APIs only
     testsPerQuestion: 1,
     maxCompetitors: 1,
   },
   professional: {
     maxQuestions: Infinity,  // UNLIMITED
     allowedStages: ["awareness", "consideration", "decision"],
-    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
+    allowedPlatforms: ["ChatGPT", "Gemini", "Perplexity"],
     testsPerQuestion: 3,
     maxCompetitors: 10,  // Up to 10 competitors
   },
   partner: {
     maxQuestions: Infinity,
     allowedStages: ["awareness", "consideration", "decision"],
-    allowedPlatforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
+    allowedPlatforms: ["ChatGPT", "Gemini", "Perplexity"],
     testsPerQuestion: 3,
     maxCompetitors: Infinity,
   },
@@ -97,9 +97,9 @@ export async function POST(request: Request) {
     }
     
     // Handle platforms - default to all if not specified
-    const selectedPlatforms: AIPlatform[] = Array.isArray(body.selectedPlatforms) 
-      ? body.selectedPlatforms 
-      : ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+    const selectedPlatforms: AIPlatform[] = Array.isArray(body.selectedPlatforms)
+      ? body.selectedPlatforms
+      : ["ChatGPT", "Gemini", "Perplexity"];
 
     // Get tier limits (default to free if invalid tier)
     const validTier: UserTier = tier === "professional" || tier === "partner" ? tier : "free";
@@ -149,7 +149,7 @@ export async function POST(request: Request) {
     }
 
     // Validate platforms
-    const validPlatforms: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+    const validPlatforms: AIPlatform[] = ["ChatGPT", "Gemini", "Perplexity"];
     for (const platform of enforcedPlatforms) {
       if (!validPlatforms.includes(platform)) {
         return NextResponse.json(
@@ -618,7 +618,7 @@ async function executeSelectedAnalysis(
 
       // Select diverse examples: one per platform, varied sentiment
       const aiAnswerExamples: any[] = [];
-      const platforms: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+      const platforms: AIPlatform[] = ["ChatGPT", "Gemini", "Perplexity"];
       const targetSentiments = ["positive", "neutral", "negative"];
       
       for (const platform of platforms) {
