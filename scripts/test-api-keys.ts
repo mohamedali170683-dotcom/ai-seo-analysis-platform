@@ -75,16 +75,12 @@ async function testAPIKeys() {
     }
   }
 
-  // Test Copilot (always simulated)
-  console.log('\n4️⃣ Microsoft Copilot');
-  console.log('ℹ️  Copilot has no public API - always simulated via OpenAI');
-
   console.log('\n' + '='.repeat(60));
   console.log('\n✨ Summary:');
   console.log('   • OpenAI: Required (for ChatGPT + simulations)');
   console.log('   • Gemini: Optional (real API preferred)');
   console.log('   • Perplexity: Optional (real API preferred)');
-  console.log('   • Copilot: Always simulated (no public API)\n');
+  console.log('\n📝 Note: Microsoft Copilot removed - no public API available\n');
 }
 
 testAPIKeys().catch(console.error);

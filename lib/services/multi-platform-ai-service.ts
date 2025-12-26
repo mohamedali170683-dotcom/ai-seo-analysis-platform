@@ -2,7 +2,7 @@ import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CitationAnalysis } from "./citation-detector";
 
-export type AIPlatform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
+export type AIPlatform = "ChatGPT" | "Gemini" | "Perplexity";
 
 export interface SourceCitation {
   url: string;
@@ -80,11 +80,10 @@ export class MultiPlatformAIService {
       maxRetries: 1,
     });
     
-    // Initialize platform status
+    // Initialize platform status - Real APIs only
     this.platformStatus = {
       ChatGPT: { isReal: true, reason: "OpenAI API (gpt-4o-mini)" },
       Gemini: { isReal: false, reason: "No API key - simulated via OpenAI" },
-      Copilot: { isReal: false, reason: "No public API - simulated via OpenAI" },
       Perplexity: { isReal: false, reason: "No API key - simulated via OpenAI" },
     };
     
@@ -121,11 +120,7 @@ export class MultiPlatformAIService {
     } else {
       console.log("⚠️ [AI] Perplexity API key not provided - will use simulation");
     }
-    
-    // Note: Microsoft Copilot does not have a public consumer API
-    // Enterprise Copilot requires Azure setup - keeping simulated for now
-    console.log("ℹ️ [AI] Copilot: No public API available - using simulation");
-    
+
     this.testsPerPlatform = Math.min(testsPerPlatform, 10);
     
     // Log overall status
@@ -146,21 +141,20 @@ export class MultiPlatformAIService {
     targetCountry: string = "US"
   ): Promise<QuestionAnalysis> {
     const numTests = testsPerPlatform || this.testsPerPlatform;
-    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × 4 platforms) [${targetCountry}]`);
+    console.log(`🤖 [AI] Testing: "${question.substring(0, 50)}..." (${numTests} tests × 3 platforms) [${targetCountry}]`);
     const startTime = Date.now();
 
-    // Run all 4 platforms in PARALLEL using Promise.allSettled
+    // Run all 3 platforms in PARALLEL using Promise.allSettled
     // Each platform will run numTests times for statistical significance
     const results = await Promise.allSettled([
       this.testSinglePlatform("ChatGPT", question, brandName, competitors, numTests, targetCountry),
       this.testSinglePlatform("Gemini", question, brandName, competitors, numTests, targetCountry),
-      this.testSinglePlatform("Copilot", question, brandName, competitors, numTests, targetCountry),
       this.testSinglePlatform("Perplexity", question, brandName, competitors, numTests, targetCountry),
     ]);
 
     // Collect successful responses
     const allResponses: AIResponse[] = [];
-    const platformNames: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+    const platformNames: AIPlatform[] = ["ChatGPT", "Gemini", "Perplexity"];
     results.forEach((result, index) => {
       const platform = platformNames[index];
       if (result.status === "fulfilled") {
@@ -324,10 +318,9 @@ export class MultiPlatformAIService {
     const countryName = countryNames[targetCountry] || targetCountry;
     const geoContext = `You are answering for a user in ${countryName}. Provide information relevant to this market, including local brands, availability, and cultural context where appropriate.`;
 
-    // Use OpenAI for ChatGPT, Copilot (simulated), and Perplexity (simulated if no API key)
+    // Use OpenAI for ChatGPT and simulated platforms if no API key
     const systemPrompts: Record<string, string> = {
       "ChatGPT": geoContext,
-      "Copilot": `You are Microsoft Copilot. ${geoContext} Provide helpful, balanced answers with references when possible.`,
       "Perplexity": `You are Perplexity AI, an AI-powered answer engine. ${geoContext} Provide comprehensive, well-researched answers with citations and sources when available. Focus on accuracy and include relevant context.`,
       "Gemini": `You are Google Gemini. ${geoContext} Provide helpful, accurate, and comprehensive answers.`,
     };
@@ -364,7 +357,6 @@ export class MultiPlatformAIService {
           const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
           const modelVersionMap: Record<AIPlatform, string> = {
             "ChatGPT": "gpt-4o-mini",
-            "Copilot": "gpt-4o-mini (simulated)",
             "Perplexity": "gpt-4o-mini (simulated)",
             "Gemini": "gpt-4o-mini (simulated)",
           };

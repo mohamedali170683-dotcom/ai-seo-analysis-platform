@@ -8,9 +8,9 @@ export type BillingCycle = "monthly" | "annual";
 export type PurchaseType = "subscription" | "one_time";
 
 export interface TierLimits {
-  // Platform access - ALL tiers get all platforms now
-  platforms: ("ChatGPT" | "Gemini" | "Copilot" | "Perplexity")[];
-  
+  // Platform access - Real APIs only (no Copilot - no public API)
+  platforms: ("ChatGPT" | "Gemini" | "Perplexity")[];
+
   // Analysis limits
   maxQuestions: number;
   allowedStages: ("awareness" | "consideration" | "decision")[];
@@ -81,7 +81,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   free: {
     // "HIGH VALUE ACQUISITION" - Free tier sees the FULL PROBLEM
     // ALL platforms + ALL funnel stages + REAL data = maximum pain point visibility
-    platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],  // ALL 4 platforms
+    platforms: ["ChatGPT", "Gemini", "Perplexity"],  // Real APIs only
     maxQuestions: 9,  // 3 per stage (awareness, consideration, decision)
     allowedStages: ["awareness", "consideration", "decision"],  // FULL FUNNEL
     testsPerQuestion: 1,
@@ -107,7 +107,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
   },
   professional: {
     // "ILLUSION OF FULL AUDIT" - Remove all caps
-    platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
+    platforms: ["ChatGPT", "Gemini", "Perplexity"],
     maxQuestions: Infinity,  // UNLIMITED
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,
@@ -131,7 +131,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     includesDedicatedManager: false,
   },
   partner: {
-    platforms: ["ChatGPT", "Gemini", "Copilot", "Perplexity"],
+    platforms: ["ChatGPT", "Gemini", "Perplexity"],
     maxQuestions: Infinity,
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,

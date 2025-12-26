@@ -943,12 +943,19 @@ export default function ResultsPage() {
                           <h5 className="font-semibold text-gray-900">🤖 Platform-by-Platform Summary</h5>
                           <button
                             onClick={() => {
-                              const element = document.getElementById(`export-section-${stage?.stage}`);
-                              element?.scrollIntoView({ behavior: 'smooth' });
+                              // Expand the All AI Responses section if not already expanded
+                              if (!expandedSchemas.includes(`mentions-${stage?.stage}`)) {
+                                setExpandedSchemas(prev => [...prev, `mentions-${stage?.stage}`]);
+                              }
+                              // Scroll to it after a brief delay to allow expansion
+                              setTimeout(() => {
+                                const element = document.querySelector(`[data-section="mentions-${stage?.stage}"]`);
+                                element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }, 100);
                             }}
                             className="text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors flex items-center gap-1"
                           >
-                            📥 Download All Answers
+                            👁️ View All AI Responses
                           </button>
                         </div>
 
@@ -977,8 +984,8 @@ export default function ResultsPage() {
                             platformGroups[platform].push(r);
                           });
 
-                          // Platform order for consistency
-                          const platformOrder = ['chatgpt', 'gemini', 'perplexity', 'copilot'];
+                          // Platform order for consistency (Real APIs only)
+                          const platformOrder = ['chatgpt', 'gemini', 'perplexity'];
                           const sortedPlatforms = Object.keys(platformGroups).sort((a, b) => {
                             const indexA = platformOrder.indexOf(a);
                             const indexB = platformOrder.indexOf(b);
@@ -1011,15 +1018,10 @@ export default function ResultsPage() {
                                   a[1] > b[1] ? a : b
                                 )[0];
 
-                                // Get 2-3 snippet examples
-                                const snippets = brandMentions
+                                // Get first snippet for narrative summary
+                                const firstSnippet = brandMentions
                                   .filter((r: any) => r.context || r.fullResponse)
-                                  .slice(0, 3)
-                                  .map((r: any) => ({
-                                    text: r.context || r.fullResponse?.substring(0, 150) || '',
-                                    position: r.position,
-                                    sentiment: r.sentiment || 'neutral'
-                                  }));
+                                  .map((r: any) => r.context || r.fullResponse?.substring(0, 150) || '')[0] || '';
 
                                 return (
                                   <div
@@ -1128,7 +1130,7 @@ export default function ResultsPage() {
                                               : "with a <strong>neutral tone</strong>";
 
                                             // Example snippet reference
-                                            const exampleSnippet = snippets[0]?.text.substring(0, 80) || "";
+                                            const exampleSnippet = firstSnippet.substring(0, 80);
                                             const snippetPhrase = exampleSnippet
                                               ? ` as shown in this snippet: <em>"${exampleSnippet}..."</em>`
                                               : "";
@@ -1140,41 +1142,6 @@ export default function ResultsPage() {
                                             );
                                           })()}
                                         </p>
-                                      </div>
-                                    )}
-
-                                    {/* Answer Snippets */}
-                                    {snippets.length > 0 && (
-                                      <div>
-                                        <h6 className="text-xs font-semibold text-gray-700 mb-2">
-                                          💬 Answer Snippets ({snippets.length})
-                                        </h6>
-                                        <div className="space-y-2">
-                                          {snippets.map((snippet, idx) => (
-                                            <div
-                                              key={idx}
-                                              className="bg-white border-l-4 border-indigo-300 rounded p-2 text-xs"
-                                            >
-                                              <div className="flex items-center gap-2 mb-1">
-                                                {snippet.position && (
-                                                  <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-bold">
-                                                    #{snippet.position}
-                                                  </span>
-                                                )}
-                                                <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                                  snippet.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
-                                                  snippet.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
-                                                  'bg-gray-100 text-gray-600'
-                                                }`}>
-                                                  {snippet.sentiment}
-                                                </span>
-                                              </div>
-                                              <p className="text-gray-700 italic leading-relaxed">
-                                                "{snippet.text}{snippet.text.length >= 150 ? '...' : ''}"
-                                              </p>
-                                            </div>
-                                          ))}
-                                        </div>
                                       </div>
                                     )}
 
@@ -1245,7 +1212,7 @@ export default function ResultsPage() {
                         }) || [];
 
                         return (
-                          <div className="mt-3 space-y-3 max-h-96 overflow-y-auto">
+                          <div data-section={`mentions-${stage?.stage}`} className="mt-3 space-y-3 max-h-96 overflow-y-auto">
                             {stageResponses.map((response: any, idx: number) => (
                               <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
                                 <div className="flex items-center gap-2 mb-2">
