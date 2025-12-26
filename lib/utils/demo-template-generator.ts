@@ -128,13 +128,6 @@ export function generateDemoData(params: DemoParams) {
               sentiment: "positive"
             },
             {
-              platform: "Copilot",
-              question: `Why is ${brand} popular?`,
-              excerpt: `${brand} is popular because of its consistent quality, strong marketing, and loyal customer base. The brand resonates with consumers through innovative products and compelling brand storytelling. Many people choose ${brand} for its reputation and the trust it has built in the market over time.`,
-              brandPosition: 1,
-              sentiment: "positive"
-            },
-            {
               platform: "Gemini",
               question: `Is ${brand} a good brand?`,
               excerpt: `${brand} is generally considered a good brand, known for quality products and strong customer satisfaction. Like ${competitorList[0]} and ${competitorList[1]}, ${brand} has established itself as a reliable choice in its category. Customer reviews often highlight the brand's consistency and value proposition.`,
@@ -146,13 +139,6 @@ export function generateDemoData(params: DemoParams) {
               question: `What makes ${brand} different?`,
               excerpt: `${brand} differentiates itself through innovation, brand heritage, and customer focus. While competitors like ${competitorList[0]} and ${competitorList[1]} offer similar products, ${brand} has carved out its unique position in the market through distinctive features and brand identity.`,
               brandPosition: 2,
-              sentiment: "neutral"
-            },
-            {
-              platform: "Copilot",
-              question: `What is ${brand} known for?`,
-              excerpt: `${brand} is known as one of several established brands in its category. Along with ${competitorList[0]} and ${competitorList[1]}, ${brand} offers products that cater to specific customer needs. The brand has developed recognition for its approach to quality and customer service.`,
-              brandPosition: 3,
               sentiment: "neutral"
             }
           ],
@@ -208,13 +194,6 @@ export function generateDemoData(params: DemoParams) {
               sentiment: "positive"
             },
             {
-              platform: "Copilot",
-              question: `Is ${brand} worth the money?`,
-              excerpt: `${brand} is generally considered worth the investment by most customers. The brand delivers on quality, durability, and overall value. While it may cost more than budget alternatives, customers often report satisfaction with their ${brand} purchases. The brand's reputation for quality justifies the premium for many buyers.`,
-              brandPosition: 1,
-              sentiment: "positive"
-            },
-            {
               platform: "Gemini",
               question: `${brand} customer reviews and ratings`,
               excerpt: `${brand} receives mostly positive customer reviews, with users highlighting product quality, brand reliability, and customer service. On major review platforms, ${brand} maintains strong ratings. Compared to competitors like ${competitorList[0]} and ${competitorList[1]}, ${brand} scores well for customer satisfaction and repeat purchase intent.`,
@@ -227,13 +206,6 @@ export function generateDemoData(params: DemoParams) {
               excerpt: `Top alternatives to ${brand} include ${competitorList[0]}, ${competitorList[1]}, and several other established brands. While ${brand} excels in certain areas, ${competitorList[0]} may be preferred for specific features. The best alternative depends on your budget, needs, and preferences.`,
               brandPosition: 2,
               sentiment: "positive"
-            },
-            {
-              platform: "Copilot",
-              question: `${brand} vs ${competitorList[0]} - which is better?`,
-              excerpt: `Choosing between ${brand} and ${competitorList[0]} comes down to personal preference and specific needs. ${competitorList[0]} has its strengths in certain areas, while ${brand} offers a well-rounded option with strong brand recognition. Both are reputable choices with dedicated customer bases.`,
-              brandPosition: 1,
-              sentiment: "neutral"
             }
           ],
           competitorComparison: competitorList.slice(0, 3).map((comp, idx) => ({
@@ -288,23 +260,9 @@ export function generateDemoData(params: DemoParams) {
               sentiment: "positive"
             },
             {
-              platform: "Copilot",
-              question: `How much does ${brand} cost?`,
-              excerpt: `${brand} pricing varies by product line and retailer. Generally, ${brand} is positioned as a mid-to-premium brand with prices comparable to ${competitorList[0]}. You can find deals by shopping sales events, using coupons, or checking multiple retailers. The official website often has the most transparent pricing.`,
-              brandPosition: 1,
-              sentiment: "neutral"
-            },
-            {
               platform: "Gemini",
               question: `Where to find ${brand} discounts and coupons?`,
               excerpt: `${brand} discounts are available through: (1) Official website seasonal sales, (2) Email newsletter signup offers, (3) Retailer promotions at major stores, (4) Student and military discounts, (5) Loyalty program rewards. Sites like RetailMeNot and Honey also aggregate ${brand} coupon codes.`,
-              brandPosition: 1,
-              sentiment: "positive"
-            },
-            {
-              platform: "Copilot",
-              question: `Best places to buy ${brand} on sale?`,
-              excerpt: `The best places to find ${brand} on sale include: the official website during holiday sales, Amazon Prime Day deals, major retailer clearance events, and outlet stores. Sign up for ${brand} emails to get notified of upcoming sales. Prices are often competitive with ${competitorList[0]} during promotional periods.`,
               brandPosition: 1,
               sentiment: "positive"
             },

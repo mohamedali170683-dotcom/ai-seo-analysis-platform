@@ -1835,7 +1835,7 @@ export default function ResultsPage() {
                             <h4 className="font-medium text-gray-900 mb-3">{question}</h4>
                             <div className="space-y-3">
                               {/* Show one answer per platform in UI */}
-                              {['ChatGPT', 'Gemini', 'Copilot', 'Perplexity'].map(platform => {
+                              {['ChatGPT', 'Gemini', 'Perplexity'].map(platform => {
                                 const platformAnswer = answers.find((a: any) => a.platform === platform);
                                 if (!platformAnswer) return null;
                                 
@@ -2002,7 +2002,6 @@ export default function ResultsPage() {
                   {[
                     { name: "ChatGPT", icon: "🤖", color: "green" },
                     { name: "Gemini", icon: "✨", color: "blue" },
-                    { name: "Copilot", icon: "🔷", color: "cyan" },
                     { name: "Perplexity", icon: "🔮", color: "purple" },
                   ].map((platform) => {
                     const data = reportData.platformBreakdown?.[platform.name] || {
@@ -2520,7 +2519,7 @@ export default function ResultsPage() {
                                 <div key={question} className="bg-white rounded-xl p-4 shadow-sm">
                                   <h5 className="font-medium text-gray-900 mb-3">{question}</h5>
                                   <div className="space-y-3">
-                                    {['ChatGPT', 'Gemini', 'Copilot', 'Perplexity'].map(platform => {
+                                    {['ChatGPT', 'Gemini', 'Perplexity'].map(platform => {
                                       const platformAnswer = answers.find((a: any) => a.platform === platform);
                                       if (!platformAnswer) return null;
                                       
@@ -3652,7 +3651,7 @@ function transformAnalysisData(data: any) {
   }> = {};
 
   // Initialize platforms
-  const platforms = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+  const platforms = ["ChatGPT", "Gemini", "Perplexity"];
   platforms.forEach(p => {
     platformBreakdown[p] = {
       mentionRate: 0,

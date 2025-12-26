@@ -20,7 +20,7 @@ const analysisData = {
     "client": ["More Nutrition", "ESN"],
     "competitors": ["Myprotein", "Foodspring", "Rocka Nutrition"]
   },
-  "platforms": ["ChatGPT", "Gemini", "Perplexity", "Copilot"],
+  "platforms": ["ChatGPT", "Gemini", "Perplexity"],
   "questions": [
     // AWARENESS - Safety & Dosage education
     { "question": "Sind Proteinriegel gesund?", "searchVolume": 900, "stage": "awareness", "persona": "Beginner/General" },

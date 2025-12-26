@@ -851,7 +851,7 @@ export class MultiPlatformAIService {
     const competitorMentions: { [c: string]: number } = {};
     competitors.forEach(c => { competitorMentions[c] = responses.filter(r => r.competitorsMentioned.includes(c)).length; });
 
-    const platforms: AIPlatform[] = ["ChatGPT", "Gemini", "Copilot", "Perplexity"];
+    const platforms: AIPlatform[] = ["ChatGPT", "Gemini", "Perplexity"];
     const platformBreakdown = platforms.map(platform => {
       const pr = responses.filter(r => r.platform === platform);
       const pm = pr.filter(r => r.brandMentioned).length;

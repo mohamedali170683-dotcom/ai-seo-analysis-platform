@@ -33,7 +33,7 @@ interface QuestionGroup {
   requiredSelections: number;
 }
 
-type Platform = "ChatGPT" | "Gemini" | "Copilot" | "Perplexity";
+type Platform = "ChatGPT" | "Gemini" | "Perplexity";
 
 export default function AnalyzePage() {
   // Tier management
@@ -113,7 +113,7 @@ export default function AnalyzePage() {
   });
 
   // Platform selection
-  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["ChatGPT", "Gemini", "Copilot", "Perplexity"]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["ChatGPT", "Gemini", "Perplexity"]);
 
   // Confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -1035,8 +1035,8 @@ export default function AnalyzePage() {
             <div className="bg-white rounded-2xl p-6 mt-6 border border-gray-200 shadow-sm">
               <h3 className="text-lg font-semibold mb-4 text-gray-900">AI Platforms to Test</h3>
               
-              <div className="grid grid-cols-4 gap-4">
-                {(["ChatGPT", "Gemini", "Copilot", "Perplexity"] as Platform[]).map((platform) => {
+              <div className="grid grid-cols-3 gap-4">
+                {(["ChatGPT", "Gemini", "Perplexity"] as Platform[]).map((platform) => {
                   const isSelected = selectedPlatforms.includes(platform);
                   
                   return (
@@ -1052,7 +1052,6 @@ export default function AnalyzePage() {
                       <div className="text-3xl mb-2">
                         {platform === "ChatGPT" && "🤖"}
                         {platform === "Gemini" && "✨"}
-                        {platform === "Copilot" && "🔷"}
                         {platform === "Perplexity" && "🔮"}
                       </div>
                       <div className="font-medium text-gray-700">{platform}</div>
@@ -1337,7 +1336,6 @@ export default function AnalyzePage() {
                     }`}>
                       {platform === "ChatGPT" && "🤖"}
                       {platform === "Gemini" && "✨"}
-                      {platform === "Copilot" && "🔷"}
                       {platform === "Perplexity" && "🔮"}
                     </div>
                     <span className="text-sm text-gray-600">{platform}</span>

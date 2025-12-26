@@ -27,7 +27,7 @@ interface TierContextType {
   // Checks
   isFeatureAllowed: (feature: keyof TierLimits) => boolean;
   isStageAllowed: (stage: "awareness" | "consideration" | "decision") => boolean;
-  isPlatformAllowed: (platform: "ChatGPT" | "Gemini" | "Copilot" | "Perplexity") => boolean;
+  isPlatformAllowed: (platform: "ChatGPT" | "Gemini" | "Perplexity") => boolean;
   canRunAnalysis: () => boolean;
   getRemainingAnalyses: () => number;
   
@@ -132,7 +132,7 @@ export function TierProvider({ children }: { children: ReactNode }) {
     return limits.allowedStages.includes(stage);
   };
 
-  const isPlatformAllowed = (platform: "ChatGPT" | "Gemini" | "Copilot" | "Perplexity"): boolean => {
+  const isPlatformAllowed = (platform: "ChatGPT" | "Gemini" | "Perplexity"): boolean => {
     return limits.platforms.includes(platform);
   };
 
