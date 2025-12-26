@@ -105,3 +105,9 @@ export const BULLET_RANGE_COLORS = {
   ok: '#fef3c7',          // Light yellow
   good: '#d1fae5',        // Light green
 } as const;
+
+/**
+ * Alias for backwards compatibility with design-system.ts
+ * SEMANTIC_COLORS is the same as DASHBOARD_COLORS
+ */
+export const SEMANTIC_COLORS = DASHBOARD_COLORS;

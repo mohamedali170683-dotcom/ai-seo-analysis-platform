@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkline } from '../Charts';
-import { DASHBOARD_COLORS } from '@/lib/theme/colors';
+import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 interface DashboardHeroProps {
   score: number;
@@ -50,7 +50,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
             data={trend}
             height={32}
             width={120}
-            color={DASHBOARD_COLORS.neutral}
+            color={SEMANTIC_COLORS.neutral}
           />
           <span className={`score-change ${changeDirection}`}>
             {change >= 0 ? '+' : ''}{change} {changeLabel}
@@ -83,7 +83,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
           align-items: center;
           justify-content: space-between;
           padding: 32px;
-          background: ${DASHBOARD_COLORS.bgPrimary};
+          background: ${SEMANTIC_COLORS.bgPrimary};
           border-radius: 12px;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           margin-bottom: 24px;
@@ -106,13 +106,13 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
           font-size: 64px;
           font-weight: 700;
           line-height: 1;
-          color: ${DASHBOARD_COLORS.textPrimary};
+          color: ${SEMANTIC_COLORS.textPrimary};
         }
 
         .score-max {
           font-size: 24px;
           font-weight: 400;
-          color: ${DASHBOARD_COLORS.muted};
+          color: ${SEMANTIC_COLORS.muted};
           margin-left: 4px;
         }
 
@@ -128,16 +128,16 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
         }
 
         .score-change.positive {
-          color: ${DASHBOARD_COLORS.positive};
+          color: ${SEMANTIC_COLORS.positive};
         }
 
         .score-change.negative {
-          color: ${DASHBOARD_COLORS.critical};
+          color: ${SEMANTIC_COLORS.critical};
         }
 
         .score-label {
           font-size: 14px;
-          color: ${DASHBOARD_COLORS.textSecondary};
+          color: ${SEMANTIC_COLORS.textSecondary};
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
@@ -158,7 +158,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
           min-width: 28px;
           height: 28px;
           padding: 0 8px;
-          background: ${DASHBOARD_COLORS.warning};
+          background: ${SEMANTIC_COLORS.warning};
           color: white;
           font-weight: 700;
           font-size: 14px;
@@ -173,7 +173,7 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
 
         .hero-meta {
           font-size: 12px;
-          color: ${DASHBOARD_COLORS.textMuted};
+          color: ${SEMANTIC_COLORS.textMuted};
           margin-left: auto;
         }
 
