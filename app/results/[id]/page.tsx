@@ -903,14 +903,6 @@ export default function ResultsPage() {
                         return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage);
                       }) || [];
 
-                      if (stageResponses.length === 0) {
-                        return (
-                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                            <p className="text-sm text-gray-600">No platform responses available for this stage.</p>
-                          </div>
-                        );
-                      }
-
                       const platformGroups: { [platform: string]: any[] } = {};
                       stageResponses.forEach((r: any) => {
                         const platform = r.platform.toLowerCase();
@@ -920,20 +912,13 @@ export default function ResultsPage() {
                         platformGroups[platform].push(r);
                       });
 
+                      // Always show all 3 platforms, even if they have no data
                       const platformOrder = ['chatgpt', 'gemini', 'perplexity'];
-                      const sortedPlatforms = Object.keys(platformGroups).sort((a, b) => {
-                        const indexA = platformOrder.indexOf(a);
-                        const indexB = platformOrder.indexOf(b);
-                        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-                        if (indexA === -1) return 1;
-                        if (indexB === -1) return -1;
-                        return indexA - indexB;
-                      });
 
                       return (
                         <div className="space-y-4">
-                          {sortedPlatforms.map(platform => {
-                            const responses = platformGroups[platform];
+                          {platformOrder.map(platform => {
+                            const responses = platformGroups[platform] || [];
                             const brandMentions = responses.filter(r => r.brandMentioned);
                             const mentionRate = responses.length > 0 ? (brandMentions.length / responses.length) * 100 : 0;
 
@@ -973,7 +958,13 @@ export default function ResultsPage() {
                                   </div>
                                 </div>
 
-                                {brandMentions.length > 0 ? (
+                                {responses.length === 0 ? (
+                                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                                    <p className="text-sm text-gray-600">
+                                      ℹ️ No {platform.toUpperCase()} responses available for this stage.
+                                    </p>
+                                  </div>
+                                ) : brandMentions.length > 0 ? (
                                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                                     <p className="text-sm text-gray-800 leading-relaxed">
                                       {(() => {
@@ -1029,7 +1020,7 @@ export default function ResultsPage() {
                                 ) : (
                                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
                                     <p className="text-sm text-red-700">
-                                      ⚠️ Your brand was not mentioned in any {platform.toUpperCase()} responses for this stage.
+                                      ⚠️ {platform.toUpperCase()} provided {responses.length} {responses.length === 1 ? 'response' : 'responses'} for this stage, but your brand was not mentioned in any of them.
                                     </p>
                                   </div>
                                 )}
