@@ -456,9 +456,9 @@ export default function HallucinationDetectorPage() {
                                   style={{
                                     backgroundColor: (() => {
                                       switch (h.severity) {
-                                        case 'CRITICAL': return SEMANTIC_COLORS.criticalBg;
+                                        case 'CRITICAL': return '#fee2e2'; // red-100
                                         case 'HIGH': return '#fed7aa'; // orange-200
-                                        case 'MEDIUM': return SEMANTIC_COLORS.warningBg;
+                                        case 'MEDIUM': return '#fef3c7'; // yellow-100
                                         case 'LOW': return '#dbeafe'; // blue-100
                                         default: return '#f3f4f6'; // gray-100
                                       }
@@ -521,9 +521,9 @@ export default function HallucinationDetectorPage() {
                                 style={{
                                   backgroundColor: (() => {
                                     switch (r.priority) {
-                                      case 'critical': return SEMANTIC_COLORS.criticalBg;
+                                      case 'critical': return '#fee2e2'; // red-100
                                       case 'high': return '#fed7aa'; // orange-200
-                                      case 'medium': return SEMANTIC_COLORS.warningBg;
+                                      case 'medium': return '#fef3c7'; // yellow-100
                                       default: return '#dbeafe'; // blue-100
                                     }
                                   })(),
