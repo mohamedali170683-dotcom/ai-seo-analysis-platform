@@ -301,7 +301,7 @@ export default function FeaturesPage() {
                           <ArrowRight className="w-4 h-4 ml-1" />
                         </Link>
                       )}
-                      {feature.apiEndpoint && (
+                      {'apiEndpoint' in feature && feature.apiEndpoint && (
                         <div className="text-xs text-gray-500 font-mono bg-gray-50 rounded px-2 py-1">
                           API: {feature.apiEndpoint}
                         </div>
