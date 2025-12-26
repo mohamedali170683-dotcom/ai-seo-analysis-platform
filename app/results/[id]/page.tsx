@@ -725,907 +725,321 @@ export default function ResultsPage() {
                     </div>
                   )}
 
-                  {/* Stage Metrics - TRANSPARENT & PROOF-BASED */}
-                  <div className="space-y-4 mb-6">
-                    {/* Brand Mention Analysis - BULLET GRAPH (Stephen Few) */}
+                  {/* Stage Metrics - 3 Main Cards */}
+                  <div className="grid md:grid-cols-3 gap-4 mb-6">
+                    {/* Card 1: Mention Rate */}
                     <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <h4 className="font-semibold text-gray-900 mb-3">📢 Brand Mention Analysis</h4>
-
-                      {/* Bullet Graph for Mention Rate */}
-                      <BulletGraph
-                        actual={Math.round(stage?.portrayal?.mentionRate || 0)}
-                        target={70}
-                        ranges={[
-                          { max: 40, label: 'Poor' },
-                          { max: 70, label: 'Fair' },
-                          { max: 100, label: 'Good' }
-                        ]}
-                        label="Mention Rate"
-                        unit="%"
-                      />
-
-                      <p className="text-sm text-gray-600 mt-3 mb-3">
-                        Out of <strong>{stage?.portrayal?.totalTests || 0} tests</strong> across all AI platforms,
-                        your brand was mentioned in <strong>{Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)}</strong> responses.
-                      </p>
-
-                      {/* Position & Competitive Ranking Analysis */}
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <h5 className="font-semibold text-gray-900 mb-3">📊 Position & Competitive Ranking</h5>
-
-                        {(() => {
-                          // Get all responses with positions for this stage
-                          const stageResponses = reportData.aiTestResults?.filter((r: any) => {
-                            const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
-                            return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned && r.position;
-                          }) || [];
-
-                          if (stageResponses.length === 0) {
-                            return (
-                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                <p className="text-sm text-gray-600">No position data available for this stage.</p>
-                              </div>
-                            );
-                          }
-
-                          // Calculate position distribution
-                          const positionCounts: { [key: number]: number } = {};
-                          stageResponses.forEach((r: any) => {
-                            if (r.position) {
-                              positionCounts[r.position] = (positionCounts[r.position] || 0) + 1;
-                            }
-                          });
-
-                          const totalWithPositions = stageResponses.length;
-                          const positionDistribution = Object.entries(positionCounts)
-                            .map(([pos, count]) => ({
-                              position: parseInt(pos),
-                              count,
-                              percentage: (count / totalWithPositions) * 100
-                            }))
-                            .sort((a, b) => a.position - b.position);
-
-                          // Build competitive leaderboard from competitor comparison data
-                          const competitors = stage?.portrayal?.competitorComparison || [];
-                          const leaderboard = [
-                            {
-                              name: reportData.brandOrKeyword || 'Your Brand',
-                              isBrand: true,
-                              mentionRate: stage?.portrayal?.mentionRate || 0,
-                              avgPosition: stage?.portrayal?.averagePosition || 0,
-                              sentiment: stage?.portrayal?.sentiment?.dominant || 'neutral'
-                            },
-                            ...competitors.map((comp: any) => ({
-                              name: comp.competitorName || comp.competitor || comp.name,
-                              isBrand: false,
-                              mentionRate: comp.mentionRate || 0,
-                              avgPosition: comp.avgPosition || 0,
-                              sentiment: comp.sentiment || 'neutral'
-                            }))
-                          ].sort((a, b) => {
-                            // Sort by mention rate descending
-                            if (b.mentionRate !== a.mentionRate) {
-                              return b.mentionRate - a.mentionRate;
-                            }
-                            // If tied, sort by better (lower) average position
-                            return a.avgPosition - b.avgPosition;
-                          });
-
-                          return (
-                            <div className="space-y-4">
-                              {/* Position Distribution */}
-                              <div>
-                                <h6 className="text-sm font-medium text-gray-700 mb-2">Position Distribution (When Mentioned)</h6>
-                                <div className="space-y-2">
-                                  {positionDistribution.slice(0, 5).map((item) => (
-                                    <div key={item.position} className="flex items-center gap-3">
-                                      <span className={`text-sm font-bold w-16 flex-shrink-0 ${
-                                        item.position === 1 ? 'text-green-700' :
-                                        item.position === 2 ? 'text-blue-700' :
-                                        item.position === 3 ? 'text-amber-700' :
-                                        'text-gray-600'
-                                      }`}>
-                                        {item.position === 1 ? '🥇 1st' :
-                                         item.position === 2 ? '🥈 2nd' :
-                                         item.position === 3 ? '🥉 3rd' :
-                                         `#${item.position}`}
-                                      </span>
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                          <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
-                                            <div
-                                              className={`h-6 rounded-full flex items-center justify-end pr-2 ${
-                                                item.position === 1 ? 'bg-green-500' :
-                                                item.position === 2 ? 'bg-blue-500' :
-                                                item.position === 3 ? 'bg-amber-500' :
-                                                'bg-gray-400'
-                                              }`}
-                                              style={{ width: `${item.percentage}%` }}
-                                            >
-                                              {item.percentage >= 15 && (
-                                                <span className="text-xs font-bold text-white">
-                                                  {Math.round(item.percentage)}%
-                                                </span>
-                                              )}
-                                            </div>
-                                          </div>
-                                          {item.percentage < 15 && (
-                                            <span className="text-xs font-bold text-gray-600 w-12">
-                                              {Math.round(item.percentage)}%
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <span className="text-xs text-gray-500 w-20 text-right">
-                                        {item.count} {item.count === 1 ? 'time' : 'times'}
-                                      </span>
-                                    </div>
-                                  ))}
-                                  {positionDistribution.length > 5 && (
-                                    <p className="text-xs text-gray-500 mt-2 ml-20">
-                                      +{positionDistribution.length - 5} more positions
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Competitive Leaderboard */}
-                              {leaderboard.length > 1 && (
-                                <div className="pt-4 border-t border-gray-200">
-                                  <h6 className="text-sm font-medium text-gray-700 mb-3">🏆 Competitive Ranking</h6>
-                                  <div className="space-y-2">
-                                    {leaderboard.map((brand, idx) => (
-                                      <div
-                                        key={brand.name}
-                                        className={`flex items-center gap-3 p-2 rounded-lg ${
-                                          brand.isBrand ? 'bg-blue-50 border-2 border-blue-300' : 'bg-gray-50 border border-gray-200'
-                                        }`}
-                                      >
-                                        <span className={`text-lg font-bold w-8 flex-shrink-0 ${
-                                          idx === 0 ? 'text-yellow-600' :
-                                          idx === 1 ? 'text-gray-500' :
-                                          idx === 2 ? 'text-amber-700' :
-                                          'text-gray-400'
-                                        }`}>
-                                          {idx + 1}
-                                        </span>
-                                        <div className="flex-1 min-w-0">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-sm font-semibold truncate ${
-                                              brand.isBrand ? 'text-blue-900' : 'text-gray-900'
-                                            }`}>
-                                              {brand.name}
-                                            </span>
-                                            {brand.isBrand && (
-                                              <span className="px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded font-medium">
-                                                YOU
-                                              </span>
-                                            )}
-                                          </div>
-                                          <div className="flex items-center gap-3 text-xs text-gray-600">
-                                            <span>
-                                              Mentioned: <strong className={brand.isBrand ? 'text-blue-700' : 'text-gray-700'}>
-                                                {Math.round(brand.mentionRate)}%
-                                              </strong>
-                                            </span>
-                                            {brand.avgPosition > 0 && (
-                                              <span>
-                                                Avg Position: <strong className={brand.isBrand ? 'text-blue-700' : 'text-gray-700'}>
-                                                  #{brand.avgPosition.toFixed(1)}
-                                                </strong>
-                                              </span>
-                                            )}
-                                            <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                              brand.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
-                                              brand.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
-                                              'bg-gray-100 text-gray-600'
-                                            }`}>
-                                              {brand.sentiment}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <p className="text-xs text-gray-500 italic mt-3">
-                                    💡 Ranked by mention rate, then average position. Lower position numbers are better.
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Platform Summary Section */}
-                      <div className="mt-6 pt-6 border-t border-gray-200">
-                        <div className="flex items-center justify-between mb-4">
-                          <h5 className="font-semibold text-gray-900">🤖 Platform-by-Platform Summary</h5>
-                          <button
-                            onClick={() => {
-                              // Expand the All AI Responses section if not already expanded
-                              if (!expandedSchemas.includes(`mentions-${stage?.stage}`)) {
-                                setExpandedSchemas(prev => [...prev, `mentions-${stage?.stage}`]);
-                              }
-                              // Scroll to it after a brief delay to allow expansion
-                              setTimeout(() => {
-                                const element = document.querySelector(`[data-section="mentions-${stage?.stage}"]`);
-                                element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }, 100);
-                            }}
-                            className="text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors flex items-center gap-1"
-                          >
-                            👁️ View All AI Responses
-                          </button>
+                      <h4 className="font-semibold text-gray-900 mb-3">📢 Mention Rate</h4>
+                      <div className="text-center">
+                        <div className={`text-5xl font-bold mb-2 ${
+                          (stage?.portrayal?.mentionRate || 0) >= 70 ? 'text-green-600' :
+                          (stage?.portrayal?.mentionRate || 0) >= 40 ? 'text-yellow-600' :
+                          'text-red-600'
+                        }`}>
+                          {Math.round(stage?.portrayal?.mentionRate || 0)}%
                         </div>
-
-                        {(() => {
-                          // Get all responses for this stage
-                          const stageResponses = reportData.aiTestResults?.filter((r: any) => {
-                            const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
-                            return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage);
-                          }) || [];
-
-                          if (stageResponses.length === 0) {
-                            return (
-                              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-                                <p className="text-sm text-gray-600">No platform responses available for this stage.</p>
-                              </div>
-                            );
-                          }
-
-                          // Group by platform
-                          const platformGroups: { [platform: string]: any[] } = {};
-                          stageResponses.forEach((r: any) => {
-                            const platform = r.platform.toLowerCase();
-                            if (!platformGroups[platform]) {
-                              platformGroups[platform] = [];
-                            }
-                            platformGroups[platform].push(r);
-                          });
-
-                          // Platform order for consistency (Real APIs only)
-                          const platformOrder = ['chatgpt', 'gemini', 'perplexity'];
-                          const sortedPlatforms = Object.keys(platformGroups).sort((a, b) => {
-                            const indexA = platformOrder.indexOf(a);
-                            const indexB = platformOrder.indexOf(b);
-                            if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-                            if (indexA === -1) return 1;
-                            if (indexB === -1) return -1;
-                            return indexA - indexB;
-                          });
-
-                          return (
-                            <div className="space-y-4">
-                              {sortedPlatforms.map(platform => {
-                                const responses = platformGroups[platform];
-                                const brandMentions = responses.filter(r => r.brandMentioned);
-                                const mentionRate = responses.length > 0 ? (brandMentions.length / responses.length) * 100 : 0;
-
-                                // Calculate average position
-                                const positionsWithBrand = brandMentions.filter(r => r.position).map(r => r.position);
-                                const avgPosition = positionsWithBrand.length > 0
-                                  ? positionsWithBrand.reduce((a: number, b: number) => a + b, 0) / positionsWithBrand.length
-                                  : 0;
-
-                                // Dominant sentiment among brand mentions
-                                const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
-                                brandMentions.forEach((r: any) => {
-                                  const sentiment = r.sentiment || 'neutral';
-                                  sentimentCounts[sentiment as keyof typeof sentimentCounts]++;
-                                });
-                                const dominantSentiment = Object.entries(sentimentCounts).reduce((a, b) =>
-                                  a[1] > b[1] ? a : b
-                                )[0];
-
-                                // Get first snippet for narrative summary
-                                const firstSnippet = brandMentions
-                                  .filter((r: any) => r.context || r.fullResponse)
-                                  .map((r: any) => r.context || r.fullResponse?.substring(0, 150) || '')[0] || '';
-
-                                return (
-                                  <div
-                                    key={platform}
-                                    className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-4"
-                                  >
-                                    {/* Platform Header */}
-                                    <div className="flex items-start justify-between mb-3">
-                                      <div className="flex items-center gap-2">
-                                        <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
-                                          platform === 'chatgpt' ? 'bg-green-100 text-green-700' :
-                                          platform === 'gemini' ? 'bg-blue-100 text-blue-700' :
-                                          platform === 'perplexity' ? 'bg-purple-100 text-purple-700' :
-                                          'bg-cyan-100 text-cyan-700'
-                                        }`}>
-                                          {platform.toUpperCase()}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                          {responses.length} {responses.length === 1 ? 'response' : 'responses'}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    {/* Summary Metrics */}
-                                    <div className="grid grid-cols-3 gap-3 mb-4">
-                                      <div className="bg-white rounded-lg p-2 border border-gray-200">
-                                        <div className="text-xs text-gray-500 mb-1">Brand Mentioned</div>
-                                        <div className={`text-lg font-bold ${
-                                          mentionRate >= 70 ? 'text-green-600' :
-                                          mentionRate >= 40 ? 'text-yellow-600' : 'text-red-600'
-                                        }`}>
-                                          {Math.round(mentionRate)}%
-                                        </div>
-                                        <div className="text-xs text-gray-500">{brandMentions.length}/{responses.length} times</div>
-                                      </div>
-
-                                      {avgPosition > 0 && (
-                                        <div className="bg-white rounded-lg p-2 border border-gray-200">
-                                          <div className="text-xs text-gray-500 mb-1">Avg Position</div>
-                                          <div className="text-lg font-bold text-blue-600">
-                                            #{avgPosition.toFixed(1)}
-                                          </div>
-                                          <div className="text-xs text-gray-500">when mentioned</div>
-                                        </div>
-                                      )}
-
-                                      <div className="bg-white rounded-lg p-2 border border-gray-200">
-                                        <div className="text-xs text-gray-500 mb-1">Tone</div>
-                                        <div className={`text-sm font-bold capitalize ${
-                                          dominantSentiment === 'positive' ? 'text-green-600' :
-                                          dominantSentiment === 'negative' ? 'text-red-600' :
-                                          'text-gray-600'
-                                        }`}>
-                                          {dominantSentiment}
-                                        </div>
-                                        <div className="text-xs text-gray-500">overall</div>
-                                      </div>
-                                    </div>
-
-                                    {/* Narrative Summary */}
-                                    {brandMentions.length > 0 && (
-                                      <div className="mb-4 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
-                                        <p className="text-sm text-gray-800 leading-relaxed">
-                                          {(() => {
-                                            // Generate narrative summary
-                                            const platformName = platform.toUpperCase();
-                                            const mentionPhrase = brandMentions.length === 1
-                                              ? "1 answer"
-                                              : `${brandMentions.length} answers`;
-
-                                            // Position context
-                                            let positionPhrase = "";
-                                            if (avgPosition > 0) {
-                                              const positionInt = Math.round(avgPosition);
-                                              if (positionInt === 1) {
-                                                positionPhrase = " recommending the brand in <strong>1st position</strong>";
-                                              } else if (positionInt === 2) {
-                                                positionPhrase = " recommending the brand in <strong>2nd position</strong>";
-                                              } else if (positionInt === 3) {
-                                                positionPhrase = " recommending the brand in <strong>3rd position</strong>";
-                                              } else {
-                                                positionPhrase = ` mentioning the brand in position <strong>#${positionInt}</strong>`;
-                                              }
-
-                                              // Check if we have competitor data to mention
-                                              const stageCompetitors = stage?.portrayal?.competitorComparison || [];
-                                              if (stageCompetitors.length > 0 && positionInt > 1) {
-                                                // Get competitors ranked higher
-                                                const rankedHigher = stageCompetitors
-                                                  .filter((c: any) => c.avgPosition < avgPosition && c.avgPosition > 0)
-                                                  .sort((a: any, b: any) => a.avgPosition - b.avgPosition)
-                                                  .slice(0, 2)
-                                                  .map((c: any) => c.competitorName || c.competitor || c.name);
-
-                                                if (rankedHigher.length > 0) {
-                                                  positionPhrase += ` behind ${rankedHigher.join(' and ')}`;
-                                                }
-                                              }
-                                            }
-
-                                            // Sentiment phrase
-                                            const sentimentPhrase = dominantSentiment === 'positive'
-                                              ? "with a <strong>positive tone</strong>"
-                                              : dominantSentiment === 'negative'
-                                              ? "with a <strong>negative tone</strong>"
-                                              : "with a <strong>neutral tone</strong>";
-
-                                            // Example snippet reference
-                                            const exampleSnippet = firstSnippet.substring(0, 80);
-                                            const snippetPhrase = exampleSnippet
-                                              ? ` as shown in this snippet: <em>"${exampleSnippet}..."</em>`
-                                              : "";
-
-                                            return (
-                                              <span dangerouslySetInnerHTML={{
-                                                __html: `On <strong>${platformName}</strong>, ${mentionPhrase} mentioned your brand${positionPhrase} ${sentimentPhrase}${snippetPhrase}`
-                                              }} />
-                                            );
-                                          })()}
-                                        </p>
-                                      </div>
-                                    )}
-
-                                    {brandMentions.length === 0 && (
-                                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-                                        <p className="text-sm text-red-700">
-                                          ⚠️ Your brand was not mentioned in any {platform.toUpperCase()} responses for this stage.
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })()}
-
-                        {/* Export Section Anchor */}
-                        <div id={`export-section-${stage?.stage}`} className="mt-4">
-                          <p className="text-xs text-gray-500 italic text-center">
-                            💡 For full response details, use the download button or expand individual responses below.
-                          </p>
-                        </div>
+                        <p className="text-sm text-gray-600">
+                          {Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)} of {stage?.portrayal?.totalTests || 0} responses
+                        </p>
                       </div>
+                      <div className="mt-3">
+                        <BulletGraph
+                          actual={Math.round(stage?.portrayal?.mentionRate || 0)}
+                          target={70}
+                          ranges={[
+                            { max: 40, label: 'Poor' },
+                            { max: 70, label: 'Fair' },
+                            { max: 100, label: 'Good' }
+                          ]}
+                          label=""
+                          unit="%"
+                        />
+                      </div>
+                    </div>
 
-                      {/* Show Proof Button */}
+                    {/* Card 2: Position */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">📊 Position</h4>
                       {(() => {
                         const stageResponses = reportData.aiTestResults?.filter((r: any) => {
                           const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
-                          return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned;
+                          return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned && r.position;
                         }) || [];
 
                         if (stageResponses.length === 0) {
                           return (
-                            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                              <p className="text-sm font-medium text-red-900">❌ No brand mentions found</p>
-                              <p className="text-xs text-red-700 mt-1">AI platforms did not mention your brand in any responses for this stage.</p>
+                            <div className="text-center py-6 text-gray-500">
+                              <p className="text-sm">No position data</p>
                             </div>
                           );
                         }
 
-                        return (
-                          <button
-                            onClick={() => setExpandedSchemas(prev =>
-                              prev.includes(`mentions-${stage?.stage}`)
-                                ? prev.filter(s => s !== `mentions-${stage?.stage}`)
-                                : [...prev, `mentions-${stage?.stage}`]
-                            )}
-                            className="w-full flex items-center justify-between p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-left"
-                          >
-                            <span className="text-sm font-medium text-blue-900">
-                              👁️ View {stageResponses.length} AI Response{stageResponses.length !== 1 ? 's' : ''} with Brand Mentions
-                            </span>
-                            {expandedSchemas.includes(`mentions-${stage?.stage}`) ? (
-                              <ChevronUp className="w-5 h-5 text-blue-600" />
-                            ) : (
-                              <ChevronDown className="w-5 h-5 text-blue-600" />
-                            )}
-                          </button>
-                        );
-                      })()}
+                        const positionCounts: { [key: number]: number } = {};
+                        stageResponses.forEach((r: any) => {
+                          if (r.position) {
+                            positionCounts[r.position] = (positionCounts[r.position] || 0) + 1;
+                          }
+                        });
 
-                      {/* Collapsible AI Responses */}
-                      {expandedSchemas.includes(`mentions-${stage?.stage}`) && (() => {
-                        const stageResponses = reportData.aiTestResults?.filter((r: any) => {
-                          const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
-                          return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned;
-                        }) || [];
+                        const totalWithPositions = stageResponses.length;
+                        const positionDistribution = Object.entries(positionCounts)
+                          .map(([pos, count]) => ({
+                            position: parseInt(pos),
+                            count,
+                            percentage: (count / totalWithPositions) * 100
+                          }))
+                          .sort((a, b) => a.position - b.position);
 
                         return (
-                          <div data-section={`mentions-${stage?.stage}`} className="mt-3 space-y-3 max-h-96 overflow-y-auto">
-                            {stageResponses.map((response: any, idx: number) => (
-                              <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                    response.platform === 'chatgpt' ? 'bg-green-100 text-green-700' :
-                                    response.platform === 'gemini' ? 'bg-blue-100 text-blue-700' :
-                                    response.platform === 'perplexity' ? 'bg-purple-100 text-purple-700' :
-                                    'bg-cyan-100 text-cyan-700'
-                                  }`}>{response.platform.toUpperCase()}</span>
-                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                    response.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
-                                    response.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
-                                    'bg-gray-100 text-gray-700'
-                                  }`}>{response.sentiment || 'neutral'}</span>
-                                  {response.position && (
-                                    <span className="px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
-                                      Position #{response.position}
-                                    </span>
-                                  )}
+                          <div className="space-y-2">
+                            {positionDistribution.slice(0, 3).map((item) => (
+                              <div key={item.position} className="flex items-center gap-2">
+                                <span className={`text-sm font-bold w-12 flex-shrink-0 ${
+                                  item.position === 1 ? 'text-green-700' :
+                                  item.position === 2 ? 'text-blue-700' :
+                                  item.position === 3 ? 'text-amber-700' :
+                                  'text-gray-600'
+                                }`}>
+                                  {item.position === 1 ? '🥇 1st' :
+                                   item.position === 2 ? '🥈 2nd' :
+                                   item.position === 3 ? '🥉 3rd' :
+                                   `#${item.position}`}
+                                </span>
+                                <div className="flex-1">
+                                  <div className="bg-gray-200 rounded-full h-5 overflow-hidden">
+                                    <div
+                                      className={`h-5 rounded-full flex items-center justify-end pr-2 ${
+                                        item.position === 1 ? 'bg-green-500' :
+                                        item.position === 2 ? 'bg-blue-500' :
+                                        item.position === 3 ? 'bg-amber-500' :
+                                        'bg-gray-400'
+                                      }`}
+                                      style={{ width: `${item.percentage}%` }}
+                                    >
+                                      {item.percentage >= 20 && (
+                                        <span className="text-xs font-bold text-white">
+                                          {Math.round(item.percentage)}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="bg-blue-50 border-l-4 border-blue-400 p-2 mb-2">
-                                  <p className="text-sm font-semibold text-blue-900">Q: {response.question}</p>
-                                </div>
-                                <div className="text-sm text-gray-700 bg-gray-50 rounded p-2">
-                                  {response.context || response.fullResponse?.substring(0, 300) || 'No context available'}
-                                  {(response.fullResponse?.length || 0) > 300 && '...'}
-                                </div>
+                                {item.percentage < 20 && (
+                                  <span className="text-xs font-bold text-gray-600 w-10 text-right">
+                                    {Math.round(item.percentage)}%
+                                  </span>
+                                )}
                               </div>
                             ))}
                           </div>
                         );
                       })()}
+                    </div>
 
-                      <div className="w-full bg-gray-200 rounded-full h-2 mt-3">
-                        <div
-                          className={`h-2 rounded-full ${
-                            (stage?.portrayal?.mentionRate || 0) >= 70 ? "bg-green-500" :
-                            (stage?.portrayal?.mentionRate || 0) >= 40 ? "bg-yellow-500" : "bg-red-500"
-                          }`}
-                          style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
+                    {/* Card 3: Tone/Sentiment */}
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="font-semibold text-gray-900 mb-3">💭 Tone</h4>
+                      <div className="text-center mb-3">
+                        <span className={`inline-block text-lg font-bold px-4 py-2 rounded-lg ${
+                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
+                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" :
+                          "bg-gray-100 text-gray-700"
+                        }`}>
+                          {stage?.portrayal?.sentiment?.dominant || "neutral"}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">😊 Positive</span>
+                          <span className="font-bold text-green-700">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">😐 Neutral</span>
+                          <span className="font-bold text-gray-700">{Math.round(stage?.portrayal?.sentiment?.neutral || 0)}%</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-gray-600">😞 Negative</span>
+                          <span className="font-bold text-red-700">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <SentimentBar
+                          positive={Math.round(stage?.portrayal?.sentiment?.positive || 0)}
+                          neutral={Math.round(stage?.portrayal?.sentiment?.neutral || 0)}
+                          negative={Math.round(stage?.portrayal?.sentiment?.negative || 0)}
                         />
                       </div>
                     </div>
-
-                    {/* Sentiment Analysis - DIVERGING BAR (Stephen Few/Research-Based) */}
-                    <div className="bg-white rounded-lg p-4 border border-gray-200">
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="font-semibold text-gray-900">💭 Audience Sentiment</h4>
-                        <span className={`text-sm font-bold px-3 py-1 rounded-lg ${
-                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
-                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
-                        }`}>{stage?.portrayal?.sentiment?.dominant || "neutral"}</span>
-                      </div>
-
-                      {/* Diverging Sentiment Bar - Evidence-Based Visualization */}
-                      <SentimentBar
-                        positive={Math.round(stage?.portrayal?.sentiment?.positive || 0)}
-                        neutral={Math.round(stage?.portrayal?.sentiment?.neutral || 0)}
-                        negative={Math.round(stage?.portrayal?.sentiment?.negative || 0)}
-                      />
-
-                      {/* Sentiment Transparency - Show What Each Rating Means */}
-                      <div className="mt-3 text-xs text-gray-600 bg-gray-50 rounded p-3">
-                        <p className="font-semibold mb-2">💡 What do these ratings mean?</p>
-                        <ul className="space-y-1 ml-4 list-disc">
-                          <li><strong>Positive:</strong> AI response mentions your brand with favorable language, recommendations, or endorsements</li>
-                          <li><strong>Neutral:</strong> Brand mentioned factually without strong positive or negative language</li>
-                          <li><strong>Negative:</strong> Brand mentioned with criticism, warnings, or unfavorable comparisons</li>
-                        </ul>
-                      </div>
-
-                      {/* Show Sentiment Examples Button */}
-                      {(() => {
-                        const stageResponses = reportData.aiTestResults?.filter((r: any) => {
-                          const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
-                          return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage) && r.brandMentioned;
-                        }) || [];
-
-                        if (stageResponses.length === 0) return null;
-
-                        // Group by sentiment
-                        const bySentiment = {
-                          positive: stageResponses.filter((r: any) => r.sentiment === 'positive'),
-                          neutral: stageResponses.filter((r: any) => r.sentiment === 'neutral'),
-                          negative: stageResponses.filter((r: any) => r.sentiment === 'negative'),
-                        };
-
-                        return (
-                          <div className="mt-3">
-                            <button
-                              onClick={() => setExpandedSchemas(prev =>
-                                prev.includes(`sentiment-${stage?.stage}`)
-                                  ? prev.filter(s => s !== `sentiment-${stage?.stage}`)
-                                  : [...prev, `sentiment-${stage?.stage}`]
-                              )}
-                              className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left"
-                            >
-                              <span className="text-sm font-medium text-gray-900">
-                                👁️ View Actual Quotes by Sentiment
-                              </span>
-                              {expandedSchemas.includes(`sentiment-${stage?.stage}`) ? (
-                                <ChevronUp className="w-5 h-5 text-gray-600" />
-                              ) : (
-                                <ChevronDown className="w-5 h-5 text-gray-600" />
-                              )}
-                            </button>
-
-                            {expandedSchemas.includes(`sentiment-${stage?.stage}`) && (
-                              <div className="mt-3 space-y-4 max-h-96 overflow-y-auto">
-                                {/* Positive Quotes */}
-                                {bySentiment.positive.length > 0 && (
-                                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                                    <h5 className="font-semibold text-green-900 mb-2 flex items-center gap-2">
-                                      <span>😊 Positive ({bySentiment.positive.length})</span>
-                                    </h5>
-                                    <div className="space-y-2">
-                                      {bySentiment.positive.slice(0, 3).map((r: any, idx: number) => (
-                                        <div key={idx} className="bg-white rounded p-2 text-xs">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">{r.platform.toUpperCase()}</span>
-                                          </div>
-                                          <p className="text-gray-700 italic">"{r.context || r.fullResponse?.substring(0, 200) || 'No context'}"</p>
-                                        </div>
-                                      ))}
-                                      {bySentiment.positive.length > 3 && (
-                                        <p className="text-xs text-green-700">+{bySentiment.positive.length - 3} more positive mentions</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Neutral Quotes */}
-                                {bySentiment.neutral.length > 0 && (
-                                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                                    <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                                      <span>😐 Neutral ({bySentiment.neutral.length})</span>
-                                    </h5>
-                                    <div className="space-y-2">
-                                      {bySentiment.neutral.slice(0, 3).map((r: any, idx: number) => (
-                                        <div key={idx} className="bg-white rounded p-2 text-xs">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">{r.platform.toUpperCase()}</span>
-                                          </div>
-                                          <p className="text-gray-700 italic">"{r.context || r.fullResponse?.substring(0, 200) || 'No context'}"</p>
-                                        </div>
-                                      ))}
-                                      {bySentiment.neutral.length > 3 && (
-                                        <p className="text-xs text-gray-700">+{bySentiment.neutral.length - 3} more neutral mentions</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* Negative Quotes */}
-                                {bySentiment.negative.length > 0 && (
-                                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                                    <h5 className="font-semibold text-red-900 mb-2 flex items-center gap-2">
-                                      <span>😞 Negative ({bySentiment.negative.length})</span>
-                                    </h5>
-                                    <div className="space-y-2">
-                                      {bySentiment.negative.slice(0, 3).map((r: any, idx: number) => (
-                                        <div key={idx} className="bg-white rounded p-2 text-xs">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">{r.platform.toUpperCase()}</span>
-                                          </div>
-                                          <p className="text-gray-700 italic">"{r.context || r.fullResponse?.substring(0, 200) || 'No context'}"</p>
-                                        </div>
-                                      ))}
-                                      {bySentiment.negative.length > 3 && (
-                                        <p className="text-xs text-red-700">+{bySentiment.negative.length - 3} more negative mentions</p>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </div>
                   </div>
 
-                  {/* ═══ PROMINENT CITATIONS SECTION ═══ */}
-                  {(() => {
-                    // Collect all citations from AI test results for this stage
-                    const stageAnswers = reportData.aiTestResults?.filter((r: any) => {
-                      const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
-                      return questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage;
-                    }) || [];
-
-                    console.log(`[Citations Debug] Stage: ${stage?.stage}, Answers: ${stageAnswers.length}`);
-
-                    // Extract all citations with their platforms
-                    const allCitations: { url: string; domain: string; title?: string; platform: string }[] = [];
-                    stageAnswers.forEach((answer: any) => {
-                      // From citations array
-                      (answer.citations || []).forEach((url: string) => {
-                        if (url && !allCitations.find(c => c.url === url)) {
-                          allCitations.push({
-                            url,
-                            domain: url.replace(/^https?:\/\//, '').split('/')[0],
-                            platform: answer.platform
-                          });
-                        }
-                      });
-                      // From sources JSON
-                      (answer.sources || []).forEach((source: any) => {
-                        const url = source.url || source;
-                        if (url && typeof url === 'string' && !allCitations.find(c => c.url === url)) {
-                          allCitations.push({
-                            url,
-                            domain: source.domain || url.replace(/^https?:\/\//, '').split('/')[0],
-                            title: source.title,
-                            platform: answer.platform
-                          });
-                        }
-                      });
-                    });
-
-                    console.log(`[Citations Debug] Total citations found: ${allCitations.length}`);
-
-                    // Check if brand domain is cited
-                    const brandDomain = reportData.domain?.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0] || '';
-                    const brandCitations = allCitations.filter(c =>
-                      brandDomain && c.domain.toLowerCase().includes(brandDomain.toLowerCase())
-                    );
-                    const otherCitations = allCitations.filter(c =>
-                      !brandDomain || !c.domain.toLowerCase().includes(brandDomain.toLowerCase())
-                    );
-
-                    return (
-                      <div className="mb-6">
-                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                          <span>🔗</span> Sources Cited by AI Platforms
-                        </h4>
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
-                          {/* Brand Citations */}
-                          <div className="mb-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className={`text-lg ${brandCitations.length > 0 ? '✅' : '⚠️'}`}>
-                                {brandCitations.length > 0 ? '✅' : '⚠️'}
-                              </span>
-                              <span className="font-medium text-blue-900">
-                                Your Content as Source: {brandCitations.length > 0 ? `Cited ${brandCitations.length} time(s)` : 'Not cited'}
-                              </span>
-                            </div>
-                            {brandCitations.length > 0 ? (
-                              <div className="space-y-2 ml-7">
-                                {brandCitations.map((citation, idx) => (
-                                  <div key={idx} className="flex items-center gap-2 text-sm">
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                      citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
-                                      citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
-                                      citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
-                                      'bg-cyan-100 text-cyan-700'
-                                    }`}>{citation.platform}</span>
-                                    <a href={citation.url} target="_blank" rel="noopener noreferrer"
-                                       className="text-blue-600 hover:underline truncate max-w-md font-medium">
-                                      {citation.title || citation.domain}
-                                    </a>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <p className="text-sm text-blue-700 ml-7">
-                                AI platforms did not cite your website as a source. Consider creating more authoritative, citable content.
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Other Sources */}
-                          {otherCitations.length > 0 && (
-                            <div>
-                              <button
-                                onClick={() => setExpandedSchemas(prev =>
-                                  prev.includes(`citations-${stage?.stage}`)
-                                    ? prev.filter(s => s !== `citations-${stage?.stage}`)
-                                    : [...prev, `citations-${stage?.stage}`]
-                                )}
-                                className="flex items-center gap-2 mb-2 hover:bg-blue-50 rounded p-1 -ml-1 transition-colors"
-                              >
-                                <span className="text-lg">📚</span>
-                                <span className="font-medium text-gray-700">
-                                  Other Sources Cited ({otherCitations.length})
-                                </span>
-                                {expandedSchemas.includes(`citations-${stage?.stage}`) ? (
-                                  <ChevronUp className="w-4 h-4 text-gray-600" />
-                                ) : (
-                                  <ChevronDown className="w-4 h-4 text-gray-600" />
-                                )}
-                              </button>
-                              {expandedSchemas.includes(`citations-${stage?.stage}`) ? (
-                                <div className="space-y-2 ml-7 max-h-96 overflow-y-auto">
-                                  {otherCitations.map((citation, idx) => (
-                                    <div key={idx} className="flex items-center gap-2 text-sm">
-                                      <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
-                                        citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
-                                        citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
-                                        citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
-                                        'bg-cyan-100 text-cyan-700'
-                                      }`}>{citation.platform}</span>
-                                      <a href={citation.url} target="_blank" rel="noopener noreferrer"
-                                         className="text-blue-600 hover:underline truncate">
-                                        {citation.title || citation.domain}
-                                      </a>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <div className="ml-7">
-                                  <p className="text-xs text-gray-500">Click to view all {otherCitations.length} sources</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Hidden Brand Mentions in Cited Pages */}
-                          {(() => {
-                            // This section shows brand mentions found within cited pages
-                            // even when the brand's domain wasn't directly cited as a source
-                            // Data structure expected from backend:
-                            // citationAnalysis: [{
-                            //   url, domain, platform,
-                            //   brandMentioned: boolean, brandMentionCount: number,
-                            //   hasBacklink: boolean, backlinkUrls: string[]
-                            // }]
-
-                            const citationAnalysis = otherCitations.map((citation: any) => {
-                              // Placeholder for backend data - will be populated by scraper
-                              return {
-                                ...citation,
-                                brandMentioned: citation.brandMentioned || false,
-                                brandMentionCount: citation.brandMentionCount || 0,
-                                hasBacklink: citation.hasBacklink || false,
-                                backlinkUrls: citation.backlinkUrls || []
-                              };
-                            });
-
-                            const citationsWithBrand = citationAnalysis.filter((c: any) => c.brandMentioned || c.hasBacklink);
-
-                            if (citationsWithBrand.length === 0) {
-                              return null; // Only show this section if we have data
+                  {/* Platform-by-Platform Summary */}
+                  <div className="bg-white rounded-lg p-5 border border-gray-200 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="font-semibold text-gray-900">🤖 Platform-by-Platform Summary</h4>
+                      <button
+                        onClick={() => {
+                          // Expand the All AI Responses section for this stage
+                          const stageName = stage?.stage;
+                          if (stageName && !expandedSchemas.includes(`answers-${stageName}`)) {
+                            setExpandedSchemas(prev => [...prev, `answers-${stageName}`]);
+                          }
+                          // Scroll to it after a brief delay to allow expansion
+                          setTimeout(() => {
+                            const element = document.querySelector(`#all-ai-responses-${stageName}`);
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }
+                          }, 100);
+                        }}
+                        className="text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors flex items-center gap-1"
+                      >
+                        👁️ View All AI Responses
+                      </button>
+                    </div>
+
+                    {(() => {
+                      const stageResponses = reportData.aiTestResults?.filter((r: any) => {
+                        const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
+                        return (questionObj?.category === stage?.stage || questionObj?.stage === stage?.stage);
+                      }) || [];
+
+                      if (stageResponses.length === 0) {
+                        return (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
+                            <p className="text-sm text-gray-600">No platform responses available for this stage.</p>
+                          </div>
+                        );
+                      }
+
+                      const platformGroups: { [platform: string]: any[] } = {};
+                      stageResponses.forEach((r: any) => {
+                        const platform = r.platform.toLowerCase();
+                        if (!platformGroups[platform]) {
+                          platformGroups[platform] = [];
+                        }
+                        platformGroups[platform].push(r);
+                      });
+
+                      const platformOrder = ['chatgpt', 'gemini', 'perplexity'];
+                      const sortedPlatforms = Object.keys(platformGroups).sort((a, b) => {
+                        const indexA = platformOrder.indexOf(a);
+                        const indexB = platformOrder.indexOf(b);
+                        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+                        if (indexA === -1) return 1;
+                        if (indexB === -1) return -1;
+                        return indexA - indexB;
+                      });
+
+                      return (
+                        <div className="space-y-4">
+                          {sortedPlatforms.map(platform => {
+                            const responses = platformGroups[platform];
+                            const brandMentions = responses.filter(r => r.brandMentioned);
+                            const mentionRate = responses.length > 0 ? (brandMentions.length / responses.length) * 100 : 0;
+
+                            const positionsWithBrand = brandMentions.filter(r => r.position).map(r => r.position);
+                            const avgPosition = positionsWithBrand.length > 0
+                              ? positionsWithBrand.reduce((a: number, b: number) => a + b, 0) / positionsWithBrand.length
+                              : 0;
+
+                            const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
+                            brandMentions.forEach((r: any) => {
+                              const sentiment = r.sentiment || 'neutral';
+                              sentimentCounts[sentiment as keyof typeof sentimentCounts]++;
+                            });
+                            const dominantSentiment = Object.entries(sentimentCounts).reduce((a, b) =>
+                              a[1] > b[1] ? a : b
+                            )[0];
+
+                            const firstSnippet = brandMentions
+                              .filter((r: any) => r.context || r.fullResponse)
+                              .map((r: any) => r.context || r.fullResponse?.substring(0, 150) || '')[0] || '';
 
                             return (
-                              <div className="mt-4 pt-4 border-t border-blue-200">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <span className="text-lg">🔍</span>
-                                  <h5 className="font-semibold text-gray-900">
-                                    Hidden Brand Presence ({citationsWithBrand.length})
-                                  </h5>
+                              <div
+                                key={platform}
+                                className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-4"
+                              >
+                                <div className="flex items-start justify-between mb-3">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
+                                      platform === 'chatgpt' ? 'bg-green-100 text-green-700' :
+                                      platform === 'gemini' ? 'bg-blue-100 text-blue-700' :
+                                      platform === 'perplexity' ? 'bg-purple-100 text-purple-700' :
+                                      'bg-cyan-100 text-cyan-700'
+                                    }`}>
+                                      {platform.toUpperCase()}
+                                    </span>
+                                  </div>
                                 </div>
-                                <p className="text-xs text-gray-600 mb-3 ml-7">
-                                  These cited sources mention your brand or link to your website, even though they weren't directly cited as your content.
-                                </p>
-                                <div className="space-y-2 ml-7">
-                                  {citationsWithBrand.map((citation: any, idx: number) => (
-                                    <div key={idx} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                      <div className="flex items-start gap-2 mb-2">
-                                        <span className={`px-2 py-0.5 rounded text-xs font-medium flex-shrink-0 ${
-                                          citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
-                                          citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
-                                          citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
-                                          'bg-cyan-100 text-cyan-700'
-                                        }`}>{citation.platform}</span>
-                                        <a href={citation.url} target="_blank" rel="noopener noreferrer"
-                                           className="text-blue-600 hover:underline text-sm font-medium flex-1">
-                                          {citation.title || citation.domain}
-                                        </a>
-                                      </div>
-                                      <div className="space-y-1 text-xs">
-                                        {citation.brandMentioned && (
-                                          <div className="flex items-center gap-2 text-amber-800">
-                                            <span>💬</span>
-                                            <span>Brand mentioned <strong>{citation.brandMentionCount}</strong> time(s) in content</span>
-                                          </div>
-                                        )}
-                                        {citation.hasBacklink && (
-                                          <div className="flex items-center gap-2 text-amber-800">
-                                            <span>🔗</span>
-                                            <span>Contains <strong>{citation.backlinkUrls.length}</strong> backlink(s) to your domain</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                                <p className="text-xs text-gray-500 italic mt-3 ml-7">
-                                  💡 This shows secondary brand visibility - you're referenced within authoritative sources that AI platforms trust.
-                                </p>
+
+                                {brandMentions.length > 0 ? (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                    <p className="text-sm text-gray-800 leading-relaxed">
+                                      {(() => {
+                                        const platformName = platform.toUpperCase();
+                                        const mentionPhrase = brandMentions.length === 1 ? "1 answer" : `${brandMentions.length} answers`;
+
+                                        let positionPhrase = "";
+                                        if (avgPosition > 0) {
+                                          const positionInt = Math.round(avgPosition);
+                                          if (positionInt === 1) {
+                                            positionPhrase = " recommending the brand in <strong>1st position</strong>";
+                                          } else if (positionInt === 2) {
+                                            positionPhrase = " recommending the brand in <strong>2nd position</strong>";
+                                          } else if (positionInt === 3) {
+                                            positionPhrase = " recommending the brand in <strong>3rd position</strong>";
+                                          } else {
+                                            positionPhrase = ` mentioning the brand in position <strong>#${positionInt}</strong>`;
+                                          }
+
+                                          const stageCompetitors = stage?.portrayal?.competitorComparison || [];
+                                          if (stageCompetitors.length > 0 && positionInt > 1) {
+                                            const rankedHigher = stageCompetitors
+                                              .filter((c: any) => c.avgPosition < avgPosition && c.avgPosition > 0)
+                                              .sort((a: any, b: any) => a.avgPosition - b.avgPosition)
+                                              .slice(0, 2)
+                                              .map((c: any) => c.competitorName || c.competitor || c.name);
+
+                                            if (rankedHigher.length > 0) {
+                                              positionPhrase += ` behind ${rankedHigher.join(' and ')}`;
+                                            }
+                                          }
+                                        }
+
+                                        const sentimentPhrase = dominantSentiment === 'positive'
+                                          ? "with a <strong>positive tone</strong>"
+                                          : dominantSentiment === 'negative'
+                                          ? "with a <strong>negative tone</strong>"
+                                          : "with a <strong>neutral tone</strong>";
+
+                                        const exampleSnippet = firstSnippet.substring(0, 80);
+                                        const snippetPhrase = exampleSnippet
+                                          ? ` as shown in this snippet: <em>"${exampleSnippet}..."</em>`
+                                          : "";
+
+                                        return (
+                                          <span dangerouslySetInnerHTML={{
+                                            __html: `On <strong>${platformName}</strong>, ${mentionPhrase} mentioned your brand${positionPhrase} ${sentimentPhrase}${snippetPhrase}`
+                                          }} />
+                                        );
+                                      })()}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                                    <p className="text-sm text-red-700">
+                                      ⚠️ Your brand was not mentioned in any {platform.toUpperCase()} responses for this stage.
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             );
-                          })()}
-
-                          {allCitations.length === 0 && (
-                            <div className="text-center py-6">
-                              <div className="text-3xl mb-3">📭</div>
-                              <p className="text-sm font-medium text-gray-700 mb-2">
-                                No source citations detected for this stage
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                AI platforms that typically cite sources: Perplexity, Gemini with grounding.<br/>
-                                ChatGPT and standard Gemini typically don't provide citations.
-                              </p>
-                              <p className="text-xs text-gray-400 mt-2">
-                                Debug: {stageAnswers.length} answers analyzed for {stage?.stage} stage
-                              </p>
-                            </div>
-                          )}
+                          })}
                         </div>
-                      </div>
-                    );
-                  })()}
+                      );
+                    })()}
+                  </div>
 
                   {/* ═══ RECOMMENDATIONS FOR THIS STAGE ═══ */}
                   {stage?.recommendation && (
@@ -1797,7 +1211,7 @@ export default function ResultsPage() {
                 const questionCount = Object.keys(answersByQuestion).length;
 
                 return (
-                  <div key={stageName} className="mb-6">
+                  <div key={stageName} id={`all-ai-responses-${stageName}`} className="mb-6 scroll-mt-20">
                     <button
                       onClick={() => setExpandedSchemas(prev => 
                         prev.includes(`answers-${stageName}`) 
