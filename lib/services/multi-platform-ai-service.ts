@@ -155,14 +155,29 @@ export class MultiPlatformAIService {
     // Collect successful responses
     const allResponses: AIResponse[] = [];
     const platformNames: AIPlatform[] = ["ChatGPT", "Gemini", "Perplexity"];
+    const platformErrors: { platform: string; error: string }[] = [];
+
     results.forEach((result, index) => {
       const platform = platformNames[index];
       if (result.status === "fulfilled") {
-        allResponses.push(...result.value);
+        const responses = result.value;
+        allResponses.push(...responses);
+        console.log(`  ✅ ${platform}: ${responses.length} responses generated`);
       } else {
-        console.error(`  ⚠️ ${platform} failed: ${result.reason?.message || result.reason}`);
+        const errorMsg = result.reason?.message || result.reason || "Unknown error";
+        platformErrors.push({ platform, error: errorMsg });
+        console.error(`  ❌ ${platform} FAILED: ${errorMsg}`);
+        if (result.reason?.stack) {
+          console.error(`     Stack: ${result.reason.stack.substring(0, 200)}`);
+        }
       }
     });
+
+    // Log summary
+    if (platformErrors.length > 0) {
+      console.warn(`  ⚠️ ${platformErrors.length}/${platformNames.length} platforms failed for this question`);
+      platformErrors.forEach(e => console.warn(`     - ${e.platform}: ${e.error}`));
+    }
 
     const aggregated = this.calculateAggregatedStats(allResponses, competitors);
     console.log(`✅ [AI] Done in ${Date.now() - startTime}ms - ${allResponses.length} responses`);
@@ -383,7 +398,25 @@ export class MultiPlatformAIService {
         console.warn(`  ⚠️ [${platform}] Test ${i} returned empty response`);
         return null;
       } catch (error: any) {
-        console.error(`  ❌ [${platform}] Test ${i} error: ${error.message}`);
+        const errorDetails = {
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          type: error.type,
+        };
+        console.error(`  ❌ [${platform}] Test ${i} FAILED:`, JSON.stringify(errorDetails, null, 2));
+
+        // Log specific error types
+        if (error.message?.includes('timeout') || error.message?.includes('aborted')) {
+          console.error(`     → Timeout error - API took too long to respond`);
+        } else if (error.message?.includes('401') || error.message?.includes('authentication')) {
+          console.error(`     → Authentication error - Check API key for ${platform}`);
+        } else if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+          console.error(`     → Rate limit error - Too many requests`);
+        } else if (error.message?.includes('500') || error.message?.includes('502') || error.message?.includes('503')) {
+          console.error(`     → Server error - ${platform} API is experiencing issues`);
+        }
+
         return null;
       }
     });
