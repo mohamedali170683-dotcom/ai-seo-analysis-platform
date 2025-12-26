@@ -19,6 +19,7 @@ import {
   Send
 } from 'lucide-react';
 import { NewWebhookForm, type NewWebhookData } from '@/components/Forms';
+import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 interface WebhookConfig {
   id: string;
@@ -177,65 +178,91 @@ export default function WebhooksPage() {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Active Webhooks</p>
-                <p className="text-2xl font-bold text-gray-900">
+        {/* Stats Overview - Evidence-Based Design */}
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          {/* Active Webhooks - Primary Metric */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Webhooks</span>
+              <div className="flex items-center gap-2">
+                <span className="text-3xl font-bold text-gray-900">
                   {webhooks.filter(w => w.enabled).length}
-                </p>
+                </span>
+                {webhooks.filter(w => w.enabled).length > 0 && (
+                  <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} />
+                )}
               </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
+              <span className="text-sm text-gray-500">of {webhooks.length} total</span>
+            </div>
+          </div>
+
+          {/* Total Deliveries - Gray (Informational) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Deliveries</span>
+              <span className="text-3xl font-bold text-gray-900">
+                {webhooks.reduce((sum, w) => sum + w.deliveryCount, 0)}
+              </span>
+            </div>
+          </div>
+
+          {/* Success Rate - Semantic Color Based on Performance */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Success Rate</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-3xl font-bold"
+                  style={{
+                    color: (() => {
+                      const totalDeliveries = webhooks.reduce((sum, w) => sum + w.deliveryCount, 0);
+                      const rate = totalDeliveries > 0 ? Math.round(
+                        ((totalDeliveries - webhooks.reduce((sum, w) => sum + w.failureCount, 0)) / totalDeliveries) * 100
+                      ) : 100;
+                      return rate >= 95 ? SEMANTIC_COLORS.positive :
+                             rate >= 80 ? SEMANTIC_COLORS.warning :
+                             SEMANTIC_COLORS.critical;
+                    })()
+                  }}
+                >
+                  {(() => {
+                    const totalDeliveries = webhooks.reduce((sum, w) => sum + w.deliveryCount, 0);
+                    return totalDeliveries > 0 ? Math.round(
+                      ((totalDeliveries - webhooks.reduce((sum, w) => sum + w.failureCount, 0)) / totalDeliveries) * 100
+                    ) : 100;
+                  })()}%
+                </span>
+                {(() => {
+                  const totalDeliveries = webhooks.reduce((sum, w) => sum + w.deliveryCount, 0);
+                  const rate = totalDeliveries > 0 ? Math.round(
+                    ((totalDeliveries - webhooks.reduce((sum, w) => sum + w.failureCount, 0)) / totalDeliveries) * 100
+                  ) : 100;
+                  return rate >= 95 ? <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} /> :
+                         rate >= 80 ? <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.warning}} /> :
+                         <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />;
+                })()}
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Deliveries</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {webhooks.reduce((sum, w) => sum + w.deliveryCount, 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Send className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Success Rate</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {Math.round(
-                    ((webhooks.reduce((sum, w) => sum + w.deliveryCount, 0) -
-                      webhooks.reduce((sum, w) => sum + w.failureCount, 0)) /
-                      webhooks.reduce((sum, w) => sum + w.deliveryCount, 0)) *
-                      100
-                  )}%
-                </p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <CheckCircle2 className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Failed Deliveries</p>
-                <p className="text-2xl font-bold text-gray-900">
+          {/* Failed Deliveries - Only red if > 0 (Actionable) */}
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Failed Deliveries</span>
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-3xl font-bold"
+                  style={{
+                    color: webhooks.reduce((sum, w) => sum + w.failureCount, 0) > 0
+                      ? SEMANTIC_COLORS.critical
+                      : SEMANTIC_COLORS.muted
+                  }}
+                >
                   {webhooks.reduce((sum, w) => sum + w.failureCount, 0)}
-                </p>
-              </div>
-              <div className="p-3 bg-red-100 rounded-lg">
-                <XCircle className="w-6 h-6 text-red-600" />
+                </span>
+                {webhooks.reduce((sum, w) => sum + w.failureCount, 0) > 0 && (
+                  <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />
+                )}
               </div>
             </div>
           </div>
