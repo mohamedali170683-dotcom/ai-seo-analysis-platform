@@ -236,7 +236,7 @@ export default function AlertsPage() {
               <div>
                 <p className="text-sm text-gray-600">Channels</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {new Set(alerts.flatMap(a => a.channels.map(c => c.type))).size}
+                  {new Set(alerts.flatMap(a => a.channels.map((c: any) => c.type))).size}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
