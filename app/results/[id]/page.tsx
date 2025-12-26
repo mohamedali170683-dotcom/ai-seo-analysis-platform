@@ -440,102 +440,6 @@ export default function ResultsPage() {
 
       {/* Main Content */}
       <div className="container mx-auto max-w-6xl px-4 py-8">
-        
-        {/* Summary Score Card - Evidence-Based Dashboard Hero */}
-        {/* Overall Visibility Score - Clean Display */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border-2 border-indigo-200">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-gray-600 mb-2">Overall AI Visibility Score</h2>
-            <div className={`text-7xl font-bold mb-4 ${
-              (reportData.overallScore || 0) >= 70 ? 'text-green-600' :
-              (reportData.overallScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
-            }`}>
-              {reportData.overallScore || 0}%
-            </div>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              How visible and well-represented your brand is across AI platforms throughout the customer journey
-            </p>
-          </div>
-        </div>
-
-        {/* Additional Options - Collapsed by default */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-
-          {/* Technical Audit - Collapsible */}
-          <div
-            onClick={() => toggleSection("technical")}
-            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
-              expandedSection === "technical" ? "ring-2 ring-cyan-500" : ""
-            }`}
-          >
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-2xl">🔧</div>
-                <h3 className="text-sm font-bold text-gray-900">Technical Audit</h3>
-              </div>
-              <p className="text-xs text-gray-500 mb-2">Website optimization for AI crawlers</p>
-              <div className="flex items-center justify-between">
-                <div className={`text-2xl font-bold ${
-                  (reportData.websiteAudit?.technicalScore || 0) >= 70 ? "text-green-600" :
-                  (reportData.websiteAudit?.technicalScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
-                }`}>
-                  {reportData.websiteAudit?.technicalScore || "N/A"}<span className="text-sm text-gray-400">{reportData.websiteAudit ? "/100" : ""}</span>
-                </div>
-                <span className="flex items-center gap-1 text-cyan-600 font-medium text-xs">
-                  {expandedSection === "technical" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Methodology - Collapsible */}
-          <div
-            onClick={() => toggleSection("methodology")}
-            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
-              expandedSection === "methodology" ? "ring-2 ring-teal-500" : ""
-            }`}
-          >
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-2xl">❓</div>
-                <h3 className="text-sm font-bold text-gray-900">Methodology</h3>
-              </div>
-              <p className="text-xs text-gray-500 mb-2">How we calculate scores</p>
-              <div className="flex items-center justify-end">
-                <span className="flex items-center gap-1 text-teal-600 font-medium text-xs">
-                  {expandedSection === "methodology" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Competitive Landscape - Collapsible */}
-          <div
-            onClick={() => tier !== "free" ? toggleSection("competitive") : openUpgradeModal("competitors")}
-            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl relative ${
-              expandedSection === "competitive" ? "ring-2 ring-pink-500" : ""
-            } ${tier === "free" ? "opacity-80" : ""}`}
-          >
-            {tier === "free" && (
-              <div className="absolute inset-0 bg-gray-100/60 backdrop-blur-[1px] rounded-2xl z-10 flex flex-col items-center justify-center">
-                <Lock className="w-4 h-4 text-gray-400 mb-1" />
-                <span className="text-xs font-medium text-gray-600">Upgrade to unlock</span>
-              </div>
-            )}
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-2xl">🏆</div>
-                <h3 className="text-sm font-bold text-gray-900">Competitors</h3>
-              </div>
-              <p className="text-xs text-gray-500 mb-2">vs {reportData.competitors?.length || 0} competitors</p>
-              <div className="flex items-center justify-end">
-                <span className="flex items-center gap-1 text-pink-600 font-medium text-xs">
-                  {expandedSection === "competitive" ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Executive Summary Section - ENHANCED WITH PLATFORM & COMPETITIVE DATA */}
         {reportData.executiveSummary && (
@@ -617,30 +521,101 @@ export default function ResultsPage() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* HERO SECTION: FUNNEL STAGES - The core product feature */}
+        {/* MAIN LAYOUT: Overall Score + Funnel Stage Cards */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="mb-8">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">🎯 AI Visibility Across Customer Journey</h2>
-            <p className="text-gray-600">How AI platforms present your brand at each stage of the buying journey</p>
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
+          {/* Overall Visibility Score - LEFT SIDE (1 column) */}
+          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-indigo-200 flex flex-col justify-center">
+            <h2 className="text-sm font-semibold text-gray-600 mb-3 text-center">Overall AI Visibility</h2>
+            <div className={`text-6xl font-bold text-center mb-2 ${
+              (reportData.overallScore || 0) >= 70 ? 'text-green-600' :
+              (reportData.overallScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
+            }`}>
+              {reportData.overallScore || 0}%
+            </div>
+            <p className="text-xs text-gray-500 text-center">
+              Your visibility across all AI platforms
+            </p>
           </div>
 
-          {/* Journey Stages Overview - Evidence-Based Summary Cards */}
+          {/* Funnel Stage Cards - RIGHT SIDE (3 columns) */}
           {journeyStages.length > 0 && (
-            <SummaryCardsGrid
-              stages={journeyStages.map((stage: any) => ({
-                id: stage?.stage || '',
-                name: stage?.stageLabel || 'Unknown Stage',
-                score: Math.round(stage?.portrayal?.visibilityScore || 0)
-              }))}
-              expandedStage={expandedSection}
-              onStageToggle={(stageId: string) =>
-                setExpandedSection(expandedSection === stageId ? null : stageId)
-              }
-              className="mb-8"
-            />
+            <div className="md:col-span-3">
+              <SummaryCardsGrid
+                stages={journeyStages.map((stage: any) => ({
+                  id: stage?.stage || '',
+                  name: stage?.stageLabel || 'Unknown Stage',
+                  score: Math.round(stage?.portrayal?.visibilityScore || 0)
+                }))}
+                expandedStage={expandedSection}
+                onStageToggle={(stageId: string) =>
+                  setExpandedSection(expandedSection === stageId ? null : stageId)
+                }
+              />
+            </div>
           )}
+        </div>
 
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* METHODOLOGY & TECHNICAL AUDIT */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
+          {/* Technical Audit - Collapsible */}
+          <div
+            onClick={() => toggleSection("technical")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+              expandedSection === "technical" ? "ring-2 ring-cyan-500" : ""
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-2xl">🔧</div>
+                <h3 className="text-lg font-bold text-gray-900">Technical Audit</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">Website optimization for AI crawlers</p>
+              <div className="flex items-center justify-between">
+                <div className={`text-3xl font-bold ${
+                  (reportData.websiteAudit?.technicalScore || 0) >= 70 ? "text-green-600" :
+                  (reportData.websiteAudit?.technicalScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
+                }`}>
+                  {reportData.websiteAudit?.technicalScore || "N/A"}<span className="text-base text-gray-400">{reportData.websiteAudit ? "/100" : ""}</span>
+                </div>
+                <span className="flex items-center gap-1 text-cyan-600 font-medium text-sm">
+                  {expandedSection === "technical" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="ml-1">{expandedSection === "technical" ? "Hide" : "View"}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Methodology - Collapsible */}
+          <div
+            onClick={() => toggleSection("methodology")}
+            className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+              expandedSection === "methodology" ? "ring-2 ring-teal-500" : ""
+            }`}
+          >
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="text-2xl">❓</div>
+                <h3 className="text-lg font-bold text-gray-900">Methodology</h3>
+              </div>
+              <p className="text-sm text-gray-500 mb-3">How we calculate your scores</p>
+              <div className="flex items-center justify-end">
+                <span className="flex items-center gap-1 text-teal-600 font-medium text-sm">
+                  {expandedSection === "methodology" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="ml-1">{expandedSection === "methodology" ? "Hide" : "View"}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* JOURNEY STAGES DETAILED VIEW - PROGRESSIVE DISCLOSURE */}
+        {/* Only shows when a stage card is clicked */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="mb-8">
           {/* Journey Stages Detailed View - PROGRESSIVE DISCLOSURE */}
           <div className="space-y-8">
             {journeyStages.length === 0 && (
