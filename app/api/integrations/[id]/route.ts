@@ -5,14 +5,15 @@ import {
   apiError,
   parseJsonBody,
   isValidId,
+  RouteContext,
 } from '@/lib/api/utils';
 import { HTTP_STATUS } from '@/lib/constants';
 
-type RouteContext = { params: Promise<{ id: string }> };
+type IdParams = { id: string };
 
 // PATCH /api/integrations/[id] - Update integration
-export const PATCH = apiHandler(async (request: Request, context?: { params?: Record<string, string> }) => {
-  const { id } = await (context as RouteContext).params;
+export const PATCH = apiHandler<IdParams>(async (request, context) => {
+  const { id } = await context.params;
 
   if (!isValidId(id)) {
     return apiError('Invalid integration ID', HTTP_STATUS.BAD_REQUEST);
@@ -35,8 +36,8 @@ export const PATCH = apiHandler(async (request: Request, context?: { params?: Re
 });
 
 // DELETE /api/integrations/[id] - Disconnect/Delete integration
-export const DELETE = apiHandler(async (_request: Request, context?: { params?: Record<string, string> }) => {
-  const { id } = await (context as RouteContext).params;
+export const DELETE = apiHandler<IdParams>(async (_request, context) => {
+  const { id } = await context.params;
 
   if (!isValidId(id)) {
     return apiError('Invalid integration ID', HTTP_STATUS.BAD_REQUEST);

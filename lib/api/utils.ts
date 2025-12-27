@@ -108,7 +108,20 @@ export function getUserId(searchParams: URLSearchParams): string {
 // ERROR HANDLER WRAPPER
 // =============================================================================
 
-type ApiHandler = (request: Request, context?: { params?: Record<string, string> }) => Promise<NextResponse>;
+/**
+ * Route context type for Next.js 16+ (params is now a Promise)
+ */
+export type RouteContext<T extends Record<string, string> = Record<string, string>> = {
+  params: Promise<T>;
+};
+
+/**
+ * API handler type compatible with Next.js 16+ route handlers
+ */
+export type ApiHandler<T extends Record<string, string> = Record<string, string>> = (
+  request: Request,
+  context: RouteContext<T>
+) => Promise<NextResponse>;
 
 /**
  * Wrap an API handler with automatic error handling.
@@ -119,8 +132,10 @@ type ApiHandler = (request: Request, context?: { params?: Record<string, string>
  *   return apiSuccess({ users: data });
  * });
  */
-export function apiHandler(handler: ApiHandler): ApiHandler {
-  return async (request: Request, context?: { params?: Record<string, string> }) => {
+export function apiHandler<T extends Record<string, string> = Record<string, string>>(
+  handler: ApiHandler<T>
+): ApiHandler<T> {
+  return async (request: Request, context: RouteContext<T>) => {
     const routeLogger = logger.forRoute(new URL(request.url).pathname);
 
     try {
