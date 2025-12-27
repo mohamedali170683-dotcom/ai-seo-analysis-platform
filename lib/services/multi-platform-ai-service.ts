@@ -74,9 +74,9 @@ export class MultiPlatformAIService {
     testsPerPlatform: number = 3,
     perplexityApiKey?: string
   ) {
-    this.openaiClient = new OpenAI({ 
+    this.openaiClient = new OpenAI({
       apiKey: openaiApiKey,
-      timeout: 15000,
+      timeout: 60000, // 60s to allow 3 tests × 20s each
       maxRetries: 1,
     });
     
@@ -211,10 +211,10 @@ export class MultiPlatformAIService {
     // Run ALL platforms in PARALLEL with individual timeouts
     const platformPromises = platforms.map(async (platform) => {
       try {
-        // Strict 15-second timeout per platform
+        // 60-second timeout per platform to allow 3 tests × 20s each
         const result = await this.withTimeout(
           this.testSinglePlatform(platform, question, brandName, competitors, numTests, targetCountry),
-          15000,
+          60000,
           `${platform} timeout`
         );
         console.log(`  ✓ ${platform}: ${result.length}/${numTests}`);
