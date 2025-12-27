@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db/prisma';
+import { Prisma } from '@prisma/client';
 import {
   apiHandler,
   apiSuccess,
@@ -36,7 +37,7 @@ export const POST = apiHandler(async (request: Request) => {
     userId?: string;
     type?: string;
     name?: string;
-    config?: Record<string, unknown>;
+    config?: Prisma.InputJsonValue;
     enabled?: boolean;
   }>(request);
 
@@ -46,7 +47,7 @@ export const POST = apiHandler(async (request: Request) => {
     userId = 'demo-user',
     type,
     name,
-    config = {},
+    config = {} as Prisma.InputJsonValue,
     enabled = true,
   } = body!;
 
