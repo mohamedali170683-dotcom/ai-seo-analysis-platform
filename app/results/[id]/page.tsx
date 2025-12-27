@@ -10,6 +10,7 @@ import { UpgradeModalTrigger } from "@/lib/tier/types";
 import { EmailGate } from "@/components/EmailGate";
 import { DashboardHero, SummaryCard, SummaryCardsGrid } from "@/components/Dashboard";
 import { BulletGraph, SentimentBar } from "@/components/Charts";
+import ReactMarkdown from "react-markdown";
 
 // Sentiment definitions for the report
 const SENTIMENT_DEFINITIONS = {
@@ -74,6 +75,23 @@ const SENTIMENT_DEFINITIONS = {
     ],
   },
 };
+
+// Simple markdown to HTML converter for PDF export
+function markdownToHtml(text: string): string {
+  if (!text) return text;
+
+  return text
+    // Convert bullet lists (lines starting with *)
+    .replace(/^\* (.+)$/gm, '<li>$1</li>')
+    // Wrap consecutive list items in ul tags
+    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
+    // Convert **bold**
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    // Convert *italic*
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Convert line breaks
+    .replace(/\n/g, '<br>');
+}
 
 export default function ResultsPage() {
   const params = useParams();
@@ -302,6 +320,10 @@ export default function ResultsPage() {
           .badge-neutral { background: #e5e7eb; color: #374151; }
           .badge-mentioned { background: #dbeafe; color: #1e40af; }
           .response-text { white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+          .response-text ul { margin: 10px 0; padding-left: 20px; }
+          .response-text li { margin: 5px 0; }
+          .response-text strong { font-weight: 600; color: #1f2937; }
+          .response-text em { font-style: italic; }
           @media print { body { padding: 20px; } }
         </style>
       </head>
@@ -357,7 +379,7 @@ export default function ResultsPage() {
                   <span class="badge ${sentimentClass}">${answer.sentiment}</span>
                 </span>
               </div>
-              <div class="response-text">${answer.fullResponse || answer.context || 'No response recorded'}</div>
+              <div class="response-text">${markdownToHtml(answer.fullResponse || answer.context || 'No response recorded')}</div>
             </div>
           `;
         });
@@ -1261,10 +1283,10 @@ export default function ResultsPage() {
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="text-sm text-gray-600">
-                                      <p className="whitespace-pre-wrap">
+                                    <div className="text-sm text-gray-600 prose prose-sm max-w-none">
+                                      <ReactMarkdown>
                                         {platformAnswer.fullResponse || platformAnswer.context || 'No response recorded'}
-                                      </p>
+                                      </ReactMarkdown>
                                     </div>
                                     {/* Show citations if available */}
                                     {((platformAnswer.citations && platformAnswer.citations.length > 0) || 
@@ -1948,10 +1970,10 @@ export default function ResultsPage() {
                                               }`}>{platformAnswer.sentiment}</span>
                                             </div>
                                           </div>
-                                          <div className="text-sm text-gray-700">
-                                            <p className="whitespace-pre-wrap">
+                                          <div className="text-sm text-gray-700 prose prose-sm max-w-none">
+                                            <ReactMarkdown>
                                               {platformAnswer.fullResponse || platformAnswer.context || 'No response'}
-                                            </p>
+                                            </ReactMarkdown>
                                           </div>
                                           {/* Show citations if available */}
                                           {((platformAnswer.citations && platformAnswer.citations.length > 0) || 
