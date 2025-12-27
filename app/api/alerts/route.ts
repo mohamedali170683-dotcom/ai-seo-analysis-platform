@@ -1,31 +1,50 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
+import { validateBody, alertCreateSchema } from '@/lib/validations/schemas';
+import { PAGINATION } from '@/lib/constants';
 
 // GET /api/alerts - List all alerts
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId') || 'demo-user';
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(
+      PAGINATION.MAX_PAGE_SIZE,
+      Math.max(1, parseInt(searchParams.get('limit') || String(PAGINATION.DEFAULT_PAGE_SIZE), 10))
+    );
 
-    const alerts = await prisma.alertConfig.findMany({
-      where: { userId },
-      include: {
-        events: {
-          orderBy: { triggeredAt: 'desc' },
-          take: 5
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+    const [alerts, total] = await Promise.all([
+      prisma.alertConfig.findMany({
+        where: { userId },
+        include: {
+          events: {
+            orderBy: { triggeredAt: 'desc' },
+            take: 5
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      prisma.alertConfig.count({ where: { userId } })
+    ]);
 
     return NextResponse.json({
       success: true,
-      alerts
+      alerts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
     });
-  } catch (error: any) {
-    console.error('Error fetching alerts:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error fetching alerts:', message);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -34,25 +53,23 @@ export async function GET(request: Request) {
 // POST /api/alerts - Create new alert
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const [validatedBody, validationError] = await validateBody(request, alertCreateSchema);
+
+    if (validationError) {
+      return NextResponse.json(validationError, { status: 400 });
+    }
+
     const {
-      userId = 'demo-user',
+      userId,
       name,
       type,
-      conditions = [],
-      channels = [],
-      throttleEnabled = false,
+      conditions,
+      channels,
+      throttleEnabled,
       throttleWindow,
       maxAlertsPerWindow,
-      enabled = true
-    } = body;
-
-    if (!name || !type) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+      enabled
+    } = validatedBody;
 
     const alert = await prisma.alertConfig.create({
       data: {
@@ -72,10 +89,11 @@ export async function POST(request: Request) {
       success: true,
       alert
     });
-  } catch (error: any) {
-    console.error('Error creating alert:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error creating alert:', message);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: message },
       { status: 500 }
     );
   }

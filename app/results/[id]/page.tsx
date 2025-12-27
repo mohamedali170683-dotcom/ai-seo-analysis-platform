@@ -1037,50 +1037,47 @@ export default function ResultsPage() {
                                     <p className="text-sm text-gray-800 leading-relaxed">
                                       {(() => {
                                         const platformName = platform.toUpperCase();
-                                        const mentionPhrase = brandMentions.length === 1 ? "1 answer" : `${brandMentions.length} answers`;
+                                        const mentionCount = brandMentions.length;
 
-                                        let positionPhrase = "";
-                                        if (avgPosition > 0) {
-                                          const positionInt = Math.round(avgPosition);
-                                          if (positionInt === 1) {
-                                            positionPhrase = " recommending the brand in <strong>1st position</strong>";
-                                          } else if (positionInt === 2) {
-                                            positionPhrase = " recommending the brand in <strong>2nd position</strong>";
-                                          } else if (positionInt === 3) {
-                                            positionPhrase = " recommending the brand in <strong>3rd position</strong>";
-                                          } else {
-                                            positionPhrase = ` mentioning the brand in position <strong>#${positionInt}</strong>`;
-                                          }
+                                        // Calculate position info
+                                        const positionInt = avgPosition > 0 ? Math.round(avgPosition) : 0;
+                                        const getPositionText = (pos: number) => {
+                                          if (pos === 1) return "1st position";
+                                          if (pos === 2) return "2nd position";
+                                          if (pos === 3) return "3rd position";
+                                          return `position #${pos}`;
+                                        };
 
-                                          const stageCompetitors = stage?.portrayal?.competitorComparison || [];
-                                          if (stageCompetitors.length > 0 && positionInt > 1) {
-                                            const rankedHigher = stageCompetitors
+                                        // Get competitors ranked higher
+                                        const stageCompetitors = stage?.portrayal?.competitorComparison || [];
+                                        const rankedHigher = positionInt > 1 && stageCompetitors.length > 0
+                                          ? stageCompetitors
                                               .filter((c: any) => c.avgPosition < avgPosition && c.avgPosition > 0)
                                               .sort((a: any, b: any) => a.avgPosition - b.avgPosition)
                                               .slice(0, 2)
-                                              .map((c: any) => c.competitorName || c.competitor || c.name);
+                                              .map((c: any) => c.competitorName || c.competitor || c.name)
+                                          : [];
 
-                                            if (rankedHigher.length > 0) {
-                                              positionPhrase += ` behind ${rankedHigher.join(' and ')}`;
-                                            }
-                                          }
-                                        }
-
-                                        const sentimentPhrase = dominantSentiment === 'positive'
-                                          ? "with a <strong>positive tone</strong>"
-                                          : dominantSentiment === 'negative'
-                                          ? "with a <strong>negative tone</strong>"
-                                          : "with a <strong>neutral tone</strong>";
+                                        const sentimentText = dominantSentiment === 'positive' ? 'positive tone'
+                                          : dominantSentiment === 'negative' ? 'negative tone' : 'neutral tone';
 
                                         const exampleSnippet = extractSmartSnippet(firstSnippet, 300, reportData.brandOrKeyword);
-                                        const snippetPhrase = exampleSnippet
-                                          ? ` as shown in this snippet: <em>"${exampleSnippet}"</em>`
-                                          : "";
 
                                         return (
-                                          <span dangerouslySetInnerHTML={{
-                                            __html: `On <strong>${platformName}</strong>, ${mentionPhrase} mentioned your brand${positionPhrase} ${sentimentPhrase}${snippetPhrase}`
-                                          }} />
+                                          <span>
+                                            On <strong>{platformName}</strong>, {mentionCount === 1 ? "1 answer" : `${mentionCount} answers`} mentioned your brand
+                                            {positionInt > 0 && (
+                                              <>
+                                                {positionInt <= 3 ? " recommending the brand in " : " mentioning the brand in "}
+                                                <strong>{getPositionText(positionInt)}</strong>
+                                                {rankedHigher.length > 0 && ` behind ${rankedHigher.join(' and ')}`}
+                                              </>
+                                            )}
+                                            {" "}with a <strong>{sentimentText}</strong>
+                                            {exampleSnippet && (
+                                              <> as shown in this snippet: <em>&quot;{exampleSnippet}&quot;</em></>
+                                            )}
+                                          </span>
                                         );
                                       })()}
                                     </p>

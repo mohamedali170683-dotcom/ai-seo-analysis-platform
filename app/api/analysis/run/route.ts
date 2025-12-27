@@ -2,59 +2,46 @@ import { NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { prisma } from "@/lib/db/prisma";
 import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analysis-service";
+import { validateBody, analysisRunSchema } from "@/lib/validations/schemas";
 
 // Allow up to 5 minutes for analysis
 export const maxDuration = 300;
 
 export async function POST(request: Request) {
-  console.log(`🚀 [API] POST /api/analysis/run called at ${new Date().toISOString()}`);
-  
+  console.log(`[API] POST /api/analysis/run called at ${new Date().toISOString()}`);
+
   try {
-    // Step 1: Parse request body
-    console.log(`📝 [API] Step 1: Parsing request body...`);
-    let body;
-    try {
-      body = await request.json();
-    } catch (parseError: any) {
-      console.error(`❌ [API] Failed to parse request body:`, parseError.message);
-      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+    // Step 1: Validate request body
+    console.log(`[API] Step 1: Validating request body...`);
+    const [validatedBody, validationError] = await validateBody(request, analysisRunSchema);
+
+    if (validationError) {
+      console.error(`[API] Validation failed:`, validationError);
+      return NextResponse.json(validationError, { status: 400 });
     }
-    
-    const { 
-      brandOrKeyword, 
-      domain, 
-      competitors, 
+
+    const {
+      brandOrKeyword,
+      domain,
+      competitors,
       category,
-      // New fields for persona-informed analysis
       subcategory,
       buyerPersona,
-      industryCategory,
-    } = body;
-    console.log(`📝 [API] Received: brand="${brandOrKeyword}", domain="${domain}", subcategory="${subcategory}", persona="${buyerPersona}"`);
-
-    if (!brandOrKeyword) {
-      return NextResponse.json({ success: false, error: "Brand is required" }, { status: 400 });
-    }
+    } = validatedBody;
+    console.log(`[API] Validated: brand="${brandOrKeyword}", domain="${domain}", subcategory="${subcategory}", persona="${buyerPersona}"`);
 
     // Step 2: Check environment
-    console.log(`🔧 [API] Step 2: Checking environment...`);
+    console.log(`[API] Step 2: Checking environment...`);
     if (!process.env.OPENAI_API_KEY) {
-      console.error(`❌ [API] OPENAI_API_KEY not configured`);
+      console.error(`[API] OPENAI_API_KEY not configured`);
       return NextResponse.json({ success: false, error: "OPENAI_API_KEY not configured" }, { status: 500 });
     }
-    console.log(`✅ [API] OPENAI_API_KEY is set`);
+    console.log(`[API] OPENAI_API_KEY is set`);
 
-    // Parse competitors
-    let competitorsArray: string[] = [];
-    if (competitors) {
-      if (typeof competitors === "string") {
-        competitorsArray = competitors.split(",").map((c: string) => c.trim()).filter((c: string) => c.length > 0);
-      } else if (Array.isArray(competitors)) {
-        competitorsArray = competitors;
-      }
-    }
+    // Competitors are already parsed by the validation schema
+    const competitorsArray = competitors;
 
-    console.log(`🚀 [API] Starting analysis for: ${brandOrKeyword}${category ? ` (category: ${category})` : ''}`);
+    console.log(`[API] Starting analysis for: ${brandOrKeyword}${category ? ` (category: ${category})` : ''}`);
 
     // Step 3: Database operations
     console.log(`💾 [API] Step 3: Creating database records...`);
