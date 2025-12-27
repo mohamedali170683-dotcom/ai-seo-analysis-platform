@@ -787,18 +787,22 @@ export class MultiPlatformAIService {
 
     if (brandMentioned) {
       const allBrands = [brandName, ...competitors];
-      const brandMentions: { brand: string; index: number }[] = [];
+      const firstBrandMentions: { brand: string; index: number }[] = [];
 
+      // For each brand, find only its FIRST occurrence
       allBrands.forEach((brand) => {
-        const regex = new RegExp(`\\b${this.escapeRegex(brand)}\\b`, "gi");
-        let match;
-        while ((match = regex.exec(response)) !== null) {
-          brandMentions.push({ brand: brand.toLowerCase(), index: match.index });
+        const regex = new RegExp(`\\b${this.escapeRegex(brand)}\\b`, "i");  // Case-insensitive
+        const match = regex.exec(response);  // Only get first match
+        if (match) {
+          firstBrandMentions.push({ brand: brand.toLowerCase(), index: match.index });
         }
       });
 
-      brandMentions.sort((a, b) => a.index - b.index);
-      const brandFirstMention = brandMentions.findIndex(m => m.brand === lowerBrand);
+      // Sort by position in text (earliest first)
+      firstBrandMentions.sort((a, b) => a.index - b.index);
+
+      // Find where our brand ranks among all brands
+      const brandFirstMention = firstBrandMentions.findIndex(m => m.brand === lowerBrand);
       brandPosition = brandFirstMention >= 0 ? brandFirstMention + 1 : null;
 
       const brandIndex = lowerResponse.indexOf(lowerBrand);

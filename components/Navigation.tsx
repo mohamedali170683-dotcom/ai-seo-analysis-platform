@@ -11,14 +11,21 @@ import {
   Webhook,
   Blocks,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Moon,
+  Sun,
+  Languages
 } from 'lucide-react';
 import { useState } from 'react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
+import { useTheme } from '@/lib/theme-context';
+import { useI18n, UILanguage } from '@/lib/i18n-context';
 
 export function Navigation() {
   const pathname = usePathname();
   const [showFeatures, setShowFeatures] = useState(false);
+  const { theme, toggleTheme } = useTheme();
+  const { language, setLanguage } = useI18n();
 
   const isActive = (path: string) => pathname === path;
 
@@ -33,13 +40,13 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
+    <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center gap-8">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/home" className="text-xl font-bold text-blue-600">
+              <Link href="/home" className="text-xl font-bold text-blue-600 dark:text-blue-400">
                 Velaris
               </Link>
             </div>
@@ -91,6 +98,32 @@ export function Navigation() {
                 Start New Analysis
               </Link>
             </div>
+          </div>
+
+          {/* Right side controls */}
+          <div className="flex items-center gap-2">
+            {/* Language Switcher */}
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'de' : 'en')}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title="Switch Language"
+            >
+              <Languages className="w-4 h-4" />
+              <span className="hidden sm:inline">{language === 'en' ? 'EN' : 'DE'}</span>
+            </button>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? (
+                <Moon className="w-5 h-5" />
+              ) : (
+                <Sun className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
       </div>
