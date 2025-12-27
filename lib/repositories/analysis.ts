@@ -29,7 +29,7 @@ export interface AnalysisWithResults extends Analysis {
     brandMentioned: boolean;
     sentiment: string | null;
   }[];
-  insights?: {
+  aiInsights?: {
     id: string;
     category: string;
     title: string;
@@ -106,7 +106,7 @@ class AnalysisRepository extends BaseRepository<
             sources: true,
           },
         },
-        insights: {
+        aiInsights: {
           select: {
             id: true,
             category: true,
