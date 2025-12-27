@@ -3,6 +3,7 @@ import { waitUntil } from "@vercel/functions";
 import { prisma } from "@/lib/db/prisma";
 import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analysis-service";
 import { validateBody, analysisRunSchema } from "@/lib/validations/schemas";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 // Allow up to 5 minutes for analysis
 export const maxDuration = 300;
@@ -54,11 +55,12 @@ export async function POST(request: Request) {
         create: { email: "demo@example.com" },
       });
       console.log(`✅ [API] User ready: ${user.id}`);
-    } catch (userError: any) {
-      console.error(`❌ [API] Failed to create/find user:`, userError.message);
-      return NextResponse.json({ 
-        success: false, 
-        error: `Database error (user): ${userError.message}`,
+    } catch (userError) {
+      const errMsg = getErrorMessage(userError);
+      console.error(`❌ [API] Failed to create/find user:`, errMsg);
+      return NextResponse.json({
+        success: false,
+        error: `Database error (user): ${errMsg}`,
         hint: "Check POSTGRES_PRISMA_URL and run prisma db push"
       }, { status: 500 });
     }
@@ -77,11 +79,12 @@ export async function POST(request: Request) {
         },
       });
       console.log(`✅ [API] Created analysis ${analysis.id}`);
-    } catch (analysisError: any) {
-      console.error(`❌ [API] Failed to create analysis:`, analysisError.message);
-      return NextResponse.json({ 
-        success: false, 
-        error: `Database error (analysis): ${analysisError.message}`,
+    } catch (analysisError) {
+      const errMsg = getErrorMessage(analysisError);
+      console.error(`❌ [API] Failed to create analysis:`, errMsg);
+      return NextResponse.json({
+        success: false,
+        error: `Database error (analysis): ${errMsg}`,
         hint: "Check database connection and schema"
       }, { status: 500 });
     }
@@ -115,7 +118,7 @@ export async function POST(request: Request) {
     console.log(`✅ [API] Updated analysis ${analysis.id} to show job starting`);
 
     waitUntil(
-      executeAnalysis(analysis.id, brandOrKeyword, domain, competitorsArray, category, subcategory, buyerPersona, envVars)
+      executeAnalysis(analysis.id, brandOrKeyword, domain ?? undefined, competitorsArray, category ?? undefined, subcategory ?? undefined, buyerPersona ?? undefined, envVars)
         .then(() => {
           console.log(`✅ [API] Background analysis ${analysis.id} completed successfully`);
         })
@@ -150,9 +153,10 @@ export async function POST(request: Request) {
         }
       }
     });
-  } catch (error: any) {
-    console.error("❌ [API] Error:", error.message);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  } catch (error) {
+    const errMsg = getErrorMessage(error);
+    console.error("❌ [API] Error:", errMsg);
+    return NextResponse.json({ success: false, error: errMsg }, { status: 500 });
   }
 }
 
@@ -400,8 +404,8 @@ async function executeAnalysis(
       } else {
         console.log('[Citation Analysis] No citations to analyze');
       }
-    } catch (error: any) {
-      console.error('[Citation Analysis] Error analyzing citations:', error.message);
+    } catch (error) {
+      console.error('[Citation Analysis] Error analyzing citations:', getErrorMessage(error));
       // Don't fail the entire analysis if citation scraping fails
     }
 
@@ -417,16 +421,17 @@ async function executeAnalysis(
     });
 
     console.log(`🎉 [EXEC] Completed ${analysisId} in ${(Date.now() - startTime) / 1000}s`);
-  } catch (error: any) {
-    console.error(`❌ [EXEC] Failed ${analysisId}:`, error.message);
+  } catch (error) {
+    const errMsg = getErrorMessage(error);
+    console.error(`❌ [EXEC] Failed ${analysisId}:`, errMsg);
 
     await prisma.analysis.update({
       where: { id: analysisId },
       data: {
         status: "failed",
         progress: 0,
-        currentStep: `Failed: ${error.message?.substring(0, 200) || "Unknown error"}`,
+        currentStep: `Failed: ${errMsg.substring(0, 200)}`,
       },
-    }).catch(e => console.error(`❌ [EXEC] Failed to update failure status: ${e}`));
+    }).catch(e => console.error(`❌ [EXEC] Failed to update failure status: ${getErrorMessage(e)}`));
   }
 }
