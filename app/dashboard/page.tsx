@@ -225,8 +225,8 @@ export default function DashboardPage() {
                 tier === "free" 
                   ? "bg-gray-100 text-gray-700 border border-gray-200 dark:border-gray-700" 
                   : tier === "professional"
-                    ? "bg-gradient-to-r from-cyan-100 to-cyan-50 text-cyan-700 border border-blue-200"
-                    : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200"
+                    ? "bg-gradient-to-r from-cyan-100 to-cyan-50 text-cyan-700 border border-blue-200 dark:border-blue-800"
+                    : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200 dark:border-amber-800"
               }`}>
                 {tier === "free" ? (
                   <>

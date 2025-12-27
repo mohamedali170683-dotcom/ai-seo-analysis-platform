@@ -382,7 +382,7 @@ export default function AutomationPage() {
                             {exec.analysisId && (
                               <a
                                 href={`/results/${exec.analysisId}`}
-                                className="text-sm text-blue-600 hover:text-blue-700"
+                                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-300"
                               >
                                 View Results →
                               </a>
@@ -402,11 +402,11 @@ export default function AutomationPage() {
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
                     <p className="text-xs text-gray-600 dark:text-gray-400">Successful</p>
-                    <p className="text-lg font-bold text-green-700">{scan.successfulRuns}</p>
+                    <p className="text-lg font-bold text-green-700 dark:text-green-300">{scan.successfulRuns}</p>
                   </div>
                   <div className="text-center p-3 bg-red-50 rounded-lg">
                     <p className="text-xs text-gray-600 dark:text-gray-400">Failed</p>
-                    <p className="text-lg font-bold text-red-700">{scan.failedRuns}</p>
+                    <p className="text-lg font-bold text-red-700 dark:text-red-300">{scan.failedRuns}</p>
                   </div>
                 </div>
               </div>

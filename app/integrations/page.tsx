@@ -485,7 +485,7 @@ export default function IntegrationsPage() {
                 {integration.status === 'connected' && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-green-700">
+                      <span className="text-green-700 dark:text-green-300">
                         Connected: {integration.connectedAt ? new Date(integration.connectedAt).toLocaleDateString() : 'Recently'}
                       </span>
                       {integration.syncCount && (

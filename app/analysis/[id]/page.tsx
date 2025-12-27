@@ -72,7 +72,7 @@ export default function AnalysisResultsPage({ params }: PageProps) {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Analysis not found
           </h2>
-          <Link href="/" className="text-blue-600 hover:text-blue-700">
+          <Link href="/" className="text-blue-600 hover:text-blue-700 dark:text-blue-300">
             Start My New Analysis
           </Link>
         </div>

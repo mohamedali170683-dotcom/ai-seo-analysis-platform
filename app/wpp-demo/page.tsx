@@ -176,7 +176,7 @@ const STAGE_CONFIG = {
     color: "blue",
     bgGradient: "from-blue-500 to-blue-600",
     borderColor: "border-blue-500",
-    bgLight: "bg-blue-50",
+    bgLight: "bg-blue-50 dark:bg-blue-900/20",
     description: "Users are educating themselves on safety and dosage"
   },
   consideration: {
@@ -185,7 +185,7 @@ const STAGE_CONFIG = {
     color: "purple",
     bgGradient: "from-purple-500 to-purple-600",
     borderColor: "border-purple-500",
-    bgLight: "bg-purple-50",
+    bgLight: "bg-purple-50 dark:bg-purple-900/20",
     description: "Users are evaluating the market with test queries and comparisons"
   },
   decision: {
@@ -194,7 +194,7 @@ const STAGE_CONFIG = {
     color: "green",
     bgGradient: "from-green-500 to-green-600",
     borderColor: "border-green-500",
-    bgLight: "bg-green-50",
+    bgLight: "bg-green-50 dark:bg-green-900/20",
     description: "Users are deciding where to buy - retail and availability queries"
   }
 };
@@ -544,7 +544,7 @@ export default function WPPDemoPage() {
                     </div>
                     
                     <div className="grid grid-cols-3 gap-6">
-                      <div className="bg-green-50 rounded-xl p-6 text-center border-2 border-green-200">
+                      <div className="bg-green-50 rounded-xl p-6 text-center border-2 border-green-200 dark:border-green-800">
                         <div className="text-3xl mb-2">😊</div>
                         <div className="text-3xl font-bold text-green-600">{metrics.sentiment.positive}%</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Positive</div>
@@ -554,7 +554,7 @@ export default function WPPDemoPage() {
                         <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">{metrics.sentiment.neutral}%</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Neutral</div>
                       </div>
-                      <div className="bg-red-50 rounded-xl p-6 text-center border-2 border-red-200">
+                      <div className="bg-red-50 rounded-xl p-6 text-center border-2 border-red-200 dark:border-red-800">
                         <div className="text-3xl mb-2">😞</div>
                         <div className="text-3xl font-bold text-red-600">{metrics.sentiment.negative}%</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Negative</div>
@@ -600,10 +600,10 @@ export default function WPPDemoPage() {
                         } shadow-sm`}>
                           <div className="flex items-center gap-2 mb-3">
                             <span className={`text-xs px-2 py-1 rounded font-medium ${
-                              sample.platform === "ChatGPT" ? "bg-green-100 text-green-700" :
-                              sample.platform === "Gemini" ? "bg-blue-100 text-blue-700" :
+                              sample.platform === "ChatGPT" ? "bg-green-100 text-green-700 dark:text-green-300" :
+                              sample.platform === "Gemini" ? "bg-blue-100 text-blue-700 dark:text-blue-300" :
                               sample.platform === "Perplexity" ? "bg-amber-100 text-amber-700" :
-                              "bg-purple-100 text-purple-700"
+                              "bg-purple-100 text-purple-700 dark:text-purple-300"
                             }`}>{sample.platform}</span>
                             <span className={`text-xs px-2 py-1 rounded ${
                               sample.sentiment === "positive" ? "bg-green-50 text-green-600" :
@@ -672,7 +672,7 @@ export default function WPPDemoPage() {
                     </div>
 
                     {/* Gap Analysis */}
-                    <div className="mt-6 bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <div className="mt-6 bg-blue-50 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
                       <h5 className="font-bold text-blue-900 mb-2">📈 Gap Analysis</h5>
                       <ul className="text-sm text-blue-800 space-y-1">
                         <li>• {data.primaryBrand} leads with {competitive["More Nutrition"]}% Share of Voice</li>
@@ -683,7 +683,7 @@ export default function WPPDemoPage() {
                   </div>
 
                   {/* Recommendations */}
-                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 border-2 border-amber-200">
+                  <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 border-2 border-amber-200 dark:border-amber-800">
                     <h4 className="text-lg font-bold text-gray-900 mb-4">
                       💡 What can I do to be more visible in the {config.label.toLowerCase()} stage?
                     </h4>
@@ -911,9 +911,9 @@ export default function WPPDemoPage() {
                     <td className="py-3 px-4 text-center text-sm font-medium">{formatNumber(q.searchVolume)}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        q.stage === "awareness" ? "bg-blue-100 text-blue-700" :
-                        q.stage === "consideration" ? "bg-purple-100 text-purple-700" :
-                        "bg-green-100 text-green-700"
+                        q.stage === "awareness" ? "bg-blue-100 text-blue-700 dark:text-blue-300" :
+                        q.stage === "consideration" ? "bg-purple-100 text-purple-700 dark:text-purple-300" :
+                        "bg-green-100 text-green-700 dark:text-green-300"
                       }`}>
                         {q.stage}
                       </span>
@@ -985,7 +985,7 @@ export default function WPPDemoPage() {
           </div>
           
           {/* Key Findings Summary */}
-          <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
+          <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200 dark:border-blue-800">
             <h4 className="font-bold text-blue-900 mb-4">🔑 Key Findings from Real Data</h4>
             <div className="grid md:grid-cols-3 gap-4 text-sm text-blue-800">
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
