@@ -210,7 +210,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -218,12 +218,12 @@ export default function DashboardPage() {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Velaris
                 </h1>
-                <p className="text-sm text-gray-600">AI Visibility Analysis Platform</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">AI Visibility Analysis Platform</p>
               </div>
               {/* Tier Badge */}
               <div className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
                 tier === "free" 
-                  ? "bg-gray-100 text-gray-700 border border-gray-200" 
+                  ? "bg-gray-100 text-gray-700 border border-gray-200 dark:border-gray-700" 
                   : tier === "professional"
                     ? "bg-gradient-to-r from-cyan-100 to-cyan-50 text-cyan-700 border border-blue-200"
                     : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200"
@@ -278,12 +278,12 @@ export default function DashboardPage() {
         {/* Stats Overview - Evidence-Based Design */}
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           {/* Primary Metric - Total Analyses */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Visibility Analyses</span>
               <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses}</span>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500">{stats.completedAnalyses} completed</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">{stats.completedAnalyses} completed</span>
                 {stats.completedAnalyses > 0 && (
                   <CheckCircle2 className="w-4 h-4" style={{color: SEMANTIC_COLORS.positive}} />
                 )}
@@ -292,20 +292,20 @@ export default function DashboardPage() {
           </div>
 
           {/* Secondary - Questions (Informational) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions Tested</span>
               <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses * 9}</span>
-              <span className="text-sm text-gray-500">Across all analyses</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Across all analyses</span>
             </div>
           </div>
 
           {/* Secondary - AI Responses (Informational) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Responses</span>
               <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses * 81}</span>
-              <span className="text-sm text-gray-500">3 tests × 4 platforms</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">3 tests × 4 platforms</span>
             </div>
           </div>
         </div>
@@ -314,7 +314,7 @@ export default function DashboardPage() {
         <div className="mb-8 grid md:grid-cols-2 gap-4">
           <Link
             href="/analyze"
-            className="block bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors"
+            className="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:border-gray-300 transition-colors"
           >
             <div className="flex items-center gap-3 mb-3">
               <Brain className="w-6 h-6 text-blue-600" />
@@ -331,7 +331,7 @@ export default function DashboardPage() {
 
           <Link
             href="/hallucination-detector"
-            className="block bg-white rounded-lg border border-gray-200 p-6 hover:border-gray-300 transition-colors"
+            className="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:border-gray-300 transition-colors"
           >
             <div className="flex items-center gap-3 mb-3">
               <XCircle className="w-6 h-6" style={{color: SEMANTIC_COLORS.critical}} />
@@ -351,7 +351,7 @@ export default function DashboardPage() {
         </div>
 
         {/* AI Visibility Analyses */}
-        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-2">
@@ -383,7 +383,7 @@ export default function DashboardPage() {
           {/* Clear Confirmation Modal */}
           {showClearConfirm && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">Clear All Analyses?</h3>
                 <p className="text-gray-600 mb-6">
                   This will permanently delete all {analyses.length} analyses and their data. This action cannot be undone.
@@ -419,7 +419,7 @@ export default function DashboardPage() {
           )}
 
           {loading ? (
-            <div className="text-center py-12 text-gray-500">Loading analyses...</div>
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading analyses...</div>
           ) : analyses.length === 0 ? (
             <div className="text-center py-12">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
@@ -439,7 +439,7 @@ export default function DashboardPage() {
               {analyses.map((analysis) => (
                 <div
                   key={analysis.id}
-                  className="border border-gray-200 rounded-xl p-6 hover:border-blue-300 transition-colors"
+                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:border-blue-300 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
@@ -460,7 +460,7 @@ export default function DashboardPage() {
                                 style={{ width: `${analysis.progress || 0}%` }}
                               ></div>
                             </div>
-                            <span className="text-xs text-gray-600">{analysis.progress || 0}%</span>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{analysis.progress || 0}%</span>
                           </div>
                           {analysis.currentStep && (
                             <p className="text-xs text-gray-500 mt-1">{analysis.currentStep}</p>
@@ -538,17 +538,17 @@ export default function DashboardPage() {
         </section>
 
         {/* FAQ Section */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Frequently Asked Questions</h2>
-            <p className="text-gray-600">Learn how Velaris helps you understand your brand's presence in AI conversations</p>
+            <p className="text-gray-600 dark:text-gray-400">Learn how Velaris helps you understand your brand's presence in AI conversations</p>
           </div>
           
           <div className="space-y-4 max-w-4xl mx-auto">
             {FAQ_DATA.map((faq, index) => (
               <div 
                 key={index}
-                className="border border-gray-200 rounded-xl overflow-hidden"
+                className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden"
               >
                 <button
                   onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}

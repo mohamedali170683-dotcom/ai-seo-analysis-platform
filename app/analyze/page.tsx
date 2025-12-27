@@ -7,6 +7,7 @@ import { Lock, Sparkles, ChevronDown, Loader2, User, Wand2 } from "lucide-react"
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
+import { useI18n } from "@/lib/i18n-context";
 
 // Suggested persona interface
 interface SuggestedPersona {
@@ -40,6 +41,9 @@ export default function AnalyzePage() {
   const { tier, limits, isStageAllowed, isPlatformAllowed } = useTier();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<UpgradeModalTrigger>("funnel_stages");
+
+  // i18n
+  const { t } = useI18n();
 
   // Form state
   const [brandName, setBrandName] = useState("");
@@ -470,7 +474,7 @@ export default function AnalyzePage() {
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-gray-900 dark:text-gray-100">
       {/* Header - Apple Style */}
-      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
+      <header className="border-b border-gray-200 dark:border-gray-700 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-2 transition-colors">
             ← Back to Dashboard
@@ -529,7 +533,7 @@ export default function AnalyzePage() {
             </div>
 
             {/* Value Proposition - Apple Style */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100">
               <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">
                 {tier === "free" ? "Get Your AI Visibility Check" : "Take Control of Your AI Visibility"}
               </h2>
@@ -540,21 +544,21 @@ export default function AnalyzePage() {
                 <div className="bg-gray-50 rounded-xl p-5">
                   <div className="text-3xl mb-3">📊</div>
                   <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">Real Search Data</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Questions people actually search
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
                   <div className="text-3xl mb-3">🎯</div>
                   <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">4 AI Platforms</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     ChatGPT, Gemini, Copilot & Perplexity
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
                   <div className="text-3xl mb-3">🔬</div>
                   <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">You Choose</h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {tier === "free" 
                       ? "Up to 3 questions • Awareness stage" 
                       : "Unlimited questions across the journey"
@@ -578,21 +582,21 @@ export default function AnalyzePage() {
             </div>
 
             {/* Form - Apple Style */}
-            <div className="bg-white rounded-2xl p-8 space-y-6 max-w-xl mx-auto shadow-lg border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 space-y-6 max-w-xl mx-auto shadow-lg border border-gray-100">
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Enter Your Brand Details</h3>
-                <p className="text-sm text-gray-500">We'll find the questions that matter for your brand</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">We'll find the questions that matter for your brand</p>
               </div>
               
               <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Brand Name *</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('form.brandName')} *</label>
                   <input
                     type="text"
                     value={brandName}
                     onChange={(e) => setBrandName(e.target.value)}
-                    placeholder="e.g., Nike"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    placeholder={t('form.brandPlaceholder')}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                 </div>
 
@@ -604,7 +608,7 @@ export default function AnalyzePage() {
                     value={category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
                     placeholder="e.g., running shoes, SaaS productivity tools, skincare"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">
                     Enter your product category or vertical. We'll suggest relevant buyer personas.
@@ -637,7 +641,7 @@ export default function AnalyzePage() {
                             className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
                               selectedPersona === persona.name
                                 ? "border-blue-500 bg-blue-50"
-                                : "border-gray-200 bg-gray-50 hover:border-blue-300"
+                                : "border-gray-200 dark:border-gray-700 bg-gray-50 hover:border-blue-300"
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -662,7 +666,7 @@ export default function AnalyzePage() {
                             className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
                               !selectedPersona && !showCustomPersona
                                 ? "border-blue-500 bg-blue-50 text-blue-700"
-                                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                                : "border-gray-200 dark:border-gray-700 text-gray-600 hover:border-gray-300"
                             }`}
                           >
                             All personas
@@ -676,7 +680,7 @@ export default function AnalyzePage() {
                             className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
                               showCustomPersona
                                 ? "border-blue-500 bg-blue-50 text-blue-700"
-                                : "border-gray-200 text-gray-600 hover:border-gray-300"
+                                : "border-gray-200 dark:border-gray-700 text-gray-600 hover:border-gray-300"
                             }`}
                           >
                             Custom persona
@@ -696,7 +700,7 @@ export default function AnalyzePage() {
                       value={customPersona}
                       onChange={(e) => setCustomPersona(e.target.value)}
                       placeholder="e.g., Budget-conscious first-time buyer"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                      className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                     />
                     <p className="text-xs text-gray-400 mt-2">
                       Describe the buyer persona you want to focus on
@@ -710,7 +714,7 @@ export default function AnalyzePage() {
                   <select
                     value={targetCountry}
                     onChange={(e) => setTargetCountry(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   >
                     <option value="US">🇺🇸 United States</option>
                     <option value="GB">🇬🇧 United Kingdom</option>
@@ -742,7 +746,7 @@ export default function AnalyzePage() {
                   <select
                     value={questionLanguage}
                     onChange={(e) => setQuestionLanguage(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   >
                     <option value="en">🇬🇧 English</option>
                     <option value="de">🇩🇪 German (Deutsch)</option>
@@ -767,7 +771,7 @@ export default function AnalyzePage() {
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
                     placeholder="e.g., nike.com"
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">For technical audit of your website</p>
                 </div>
@@ -782,7 +786,7 @@ export default function AnalyzePage() {
                     value={competitors}
                     onChange={(e) => setCompetitors(e.target.value)}
                     placeholder={tier === "free" ? "e.g., Adidas" : "e.g., Adidas, Puma, New Balance"}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">
                     {tier === "free" 
@@ -818,7 +822,7 @@ export default function AnalyzePage() {
             {/* Discovery Loading Overlay - Apple Style */}
             {loading && (
               <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center">
-                <div className="bg-white rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center">
+                <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center">
                   <div className="text-5xl mb-4">{discoveryCountdown <= 0 ? "🤔" : "🔍"}</div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     {discoveryCountdown <= 0 ? "Still Working..." : "Finding Questions"}
@@ -846,24 +850,24 @@ export default function AnalyzePage() {
             )}
 
             {/* How it works - Apple Style */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100">
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">How It Works</h3>
               <div className="grid md:grid-cols-4 gap-4">
                 <div className="text-center p-4">
                   <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">1</div>
-                  <p className="text-sm text-gray-600">Discover real search questions</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Discover real search questions</p>
                 </div>
                 <div className="text-center p-4">
                   <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">2</div>
-                  <p className="text-sm text-gray-600">Select questions to test</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Select questions to test</p>
                 </div>
                 <div className="text-center p-4">
                   <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">3</div>
-                  <p className="text-sm text-gray-600">Test on 4 AI platforms</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Test on 4 AI platforms</p>
                 </div>
                 <div className="text-center p-4">
                   <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">4</div>
-                  <p className="text-sm text-gray-600">Get visibility scores</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Get visibility scores</p>
                 </div>
               </div>
             </div>
@@ -875,17 +879,17 @@ export default function AnalyzePage() {
           <div className="space-y-6">
             {/* Sticky Header */}
             <div className="sticky top-16 z-20 bg-[#F5F5F7]/95 backdrop-blur-xl pb-4 pt-2">
-              <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Select Questions to Test</h2>
-                    <p className="text-gray-500">Minimum 3 questions from any stage</p>
+                    <p className="text-gray-500 dark:text-gray-400">Minimum 3 questions from any stage</p>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className={`px-5 py-2.5 rounded-full font-bold text-lg transition-all ${
                       getTotalSelected() >= 3 
                         ? "bg-green-500 text-white" 
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-gray-100 text-gray-600 dark:text-gray-400"
                     }`}>
                       {getTotalSelected()} / 3 minimum {getTotalSelected() >= 3 && "✓"}
                     </div>
@@ -896,11 +900,11 @@ export default function AnalyzePage() {
                 <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-                    <span className="text-sm text-gray-600">Real Search Data (with volume)</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Real Search Data (with volume)</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full bg-orange-400"></div>
-                    <span className="text-sm text-gray-600">AI-Generated Questions</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">AI-Generated Questions</span>
                   </div>
                 </div>
               </div>
@@ -945,10 +949,10 @@ export default function AnalyzePage() {
                     key={group.stage} 
                     className={`rounded-2xl border transition-all relative bg-white shadow-sm ${
                       isLocked 
-                        ? "border-gray-200 opacity-60" 
+                        ? "border-gray-200 dark:border-gray-700 opacity-60" 
                         : hasSelection 
                           ? `${colors.border} shadow-md` 
-                          : "border-gray-200"
+                          : "border-gray-200 dark:border-gray-700"
                     }`}
                   >
                     {/* Locked Overlay for restricted stages */}
@@ -974,12 +978,12 @@ export default function AnalyzePage() {
                       <div className="flex items-center justify-between mb-1">
                         <h3 className={`text-base font-bold ${colors.accent}`}>{stageInfo[group.stage].label}</h3>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          hasSelection ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-500"
+                          hasSelection ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-500 dark:text-gray-400"
                         }`}>
                           {stageSelected}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-500">{stageInfo[group.stage].userMindset}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{stageInfo[group.stage].userMindset}</p>
                     </div>
                     
                     {/* Questions List */}
@@ -1000,11 +1004,11 @@ export default function AnalyzePage() {
                               className={`p-3 rounded-xl cursor-pointer transition-all mb-2 border ${
                                 isSelected
                                   ? `${colors.selected} border-2`
-                                  : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200"
+                                  : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200 dark:border-gray-700"
                               }`}
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <span className={`text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-700"}`}>
+                                <span className={`text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-700 dark:text-gray-300"}`}>
                                   {q.question}
                                 </span>
                                 {isSelected && (
@@ -1037,11 +1041,11 @@ export default function AnalyzePage() {
                               className={`p-3 rounded-xl cursor-pointer transition-all mb-2 border ${
                                 isSelected
                                   ? `${colors.selected} border-2`
-                                  : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200"
+                                  : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200 dark:border-gray-700"
                               }`}
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <span className={`text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-700"}`}>
+                                <span className={`text-sm ${isSelected ? "text-gray-900 font-medium" : "text-gray-700 dark:text-gray-300"}`}>
                                   {q.question}
                                 </span>
                                 {isSelected && (
@@ -1059,7 +1063,7 @@ export default function AnalyzePage() {
             </div>
 
             {/* Platform selection - Apple Style */}
-            <div className="bg-white rounded-2xl p-6 mt-6 border border-gray-200 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mt-6 border border-gray-200 dark:border-gray-700 shadow-sm">
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">AI Platforms to Test</h3>
               
               <div className="grid grid-cols-3 gap-4">
@@ -1073,7 +1077,7 @@ export default function AnalyzePage() {
                       className={`p-4 rounded-xl cursor-pointer text-center transition-all border ${
                         isSelected
                           ? "bg-green-50 border-2 border-green-400 shadow-sm"
-                          : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                          : "bg-gray-50 border-gray-200 dark:border-gray-700 hover:bg-gray-100"
                       }`}
                     >
                       <div className="text-3xl mb-2">
@@ -1081,7 +1085,7 @@ export default function AnalyzePage() {
                         {platform === "Gemini" && "✨"}
                         {platform === "Perplexity" && "🔮"}
                       </div>
-                      <div className="font-medium text-gray-700">{platform}</div>
+                      <div className="font-medium text-gray-700 dark:text-gray-300">{platform}</div>
                       {isSelected && (
                         <div className="text-xs text-green-600 mt-1 font-medium">✓ Selected</div>
                       )}
@@ -1096,7 +1100,7 @@ export default function AnalyzePage() {
             </div>
 
             {/* FAQ Section - Questions Selection */}
-            <div className="bg-white rounded-2xl p-6 mt-6 border border-gray-200 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mt-6 border border-gray-200 dark:border-gray-700 shadow-sm">
               <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Frequently Asked Questions</h3>
               <div className="space-y-4">
                 <details className="group">
@@ -1163,14 +1167,14 @@ export default function AnalyzePage() {
             {/* Confirmation Modal - Apple Style */}
             {showConfirmModal && (
               <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 shadow-2xl">
                   <h3 className="text-xl font-bold mb-4 text-center text-gray-900 dark:text-gray-100">Confirm Your Selection</h3>
                   
                   <div className="space-y-3 mb-6">
                     <div className={`flex justify-between items-center p-3 rounded-xl ${
                       getSelectionBreakdown().awareness > 0 ? "bg-purple-50 border border-purple-200" : "bg-gray-50"
                     }`}>
-                      <span className="font-medium text-gray-700">🔍 Awareness</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">🔍 Awareness</span>
                       <span className={`text-lg font-bold ${
                         getSelectionBreakdown().awareness > 0 ? "text-purple-600" : "text-gray-400"
                       }`}>
@@ -1181,7 +1185,7 @@ export default function AnalyzePage() {
                     <div className={`flex justify-between items-center p-3 rounded-xl ${
                       getSelectionBreakdown().consideration > 0 ? "bg-orange-50 border border-orange-200" : "bg-gray-50"
                     }`}>
-                      <span className="font-medium text-gray-700">⚖️ Consideration</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">⚖️ Consideration</span>
                       <span className={`text-lg font-bold ${
                         getSelectionBreakdown().consideration > 0 ? "text-orange-600" : "text-gray-400"
                       }`}>
@@ -1192,7 +1196,7 @@ export default function AnalyzePage() {
                     <div className={`flex justify-between items-center p-3 rounded-xl ${
                       getSelectionBreakdown().decision > 0 ? "bg-green-50 border border-green-200" : "bg-gray-50"
                     }`}>
-                      <span className="font-medium text-gray-700">✅ Decision</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">✅ Decision</span>
                       <span className={`text-lg font-bold ${
                         getSelectionBreakdown().decision > 0 ? "text-green-600" : "text-gray-400"
                       }`}>
@@ -1200,7 +1204,7 @@ export default function AnalyzePage() {
                       </span>
                     </div>
                     
-                    <div className="border-t border-gray-200 pt-3 mt-3">
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-3">
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">Total</span>
                         <span className="text-2xl font-bold text-blue-500">
@@ -1253,7 +1257,7 @@ export default function AnalyzePage() {
         {phase === 3 && (
           <div className="max-w-2xl mx-auto space-y-6">
             {/* Main Progress Card */}
-            <div className="bg-white rounded-3xl p-8 shadow-lg border border-gray-200 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-lg border border-gray-200 dark:border-gray-700 text-center">
               {/* Animated Icon */}
               <div className="relative inline-block mb-6">
                 <div className="text-6xl animate-pulse">🔬</div>
@@ -1274,7 +1278,7 @@ export default function AnalyzePage() {
               {/* Progress Bar */}
               <div className="mb-6">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-500">Progress</span>
+                  <span className="text-gray-500 dark:text-gray-400">Progress</span>
                   <span className="text-blue-500 font-bold">{analysisProgress}%</span>
                 </div>
                 <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
@@ -1289,7 +1293,7 @@ export default function AnalyzePage() {
               <div className="bg-gray-50 rounded-xl p-4 mb-6">
                 <div className="flex items-center justify-center gap-3">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-600">{currentStep || analysisStatus}</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">{currentStep || analysisStatus}</span>
                 </div>
               </div>
 
@@ -1297,21 +1301,21 @@ export default function AnalyzePage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{getTotalSelected()}</div>
-                  <div className="text-xs text-gray-500">Questions</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Questions</div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedPlatforms.length}</div>
-                  <div className="text-xs text-gray-500">Platforms</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Platforms</div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{getTotalSelected() * selectedPlatforms.length * limits.testsPerQuestion}</div>
-                  <div className="text-xs text-gray-500">Tests</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">Tests</div>
                 </div>
               </div>
             </div>
 
             {/* Step-by-Step Progress */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wide">Analysis Pipeline</h3>
               <div className="space-y-2">
                 {[
@@ -1338,7 +1342,7 @@ export default function AnalyzePage() {
                       }`}>
                         {isComplete ? "✓" : item.icon}
                       </div>
-                      <span className={`flex-1 text-sm ${isCurrent ? "text-gray-900 font-medium" : "text-gray-600"}`}>
+                      <span className={`flex-1 text-sm ${isCurrent ? "text-gray-900 font-medium" : "text-gray-600 dark:text-gray-400"}`}>
                         {item.step}
                       </span>
                       {isCurrent && (
@@ -1353,7 +1357,7 @@ export default function AnalyzePage() {
             </div>
 
             {/* Platforms Being Tested */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-500 mb-4 uppercase tracking-wide">Platforms Being Tested</h3>
               <div className="flex justify-center gap-6 flex-wrap">
                 {selectedPlatforms.map((platform) => (
@@ -1365,7 +1369,7 @@ export default function AnalyzePage() {
                       {platform === "Gemini" && "✨"}
                       {platform === "Perplexity" && "🔮"}
                     </div>
-                    <span className="text-sm text-gray-600">{platform}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{platform}</span>
                     <div className="flex gap-1">
                       {[1, 2, 3].map((dot) => (
                         <div 
@@ -1382,7 +1386,7 @@ export default function AnalyzePage() {
             </div>
 
             {/* Estimated Time */}
-            <div className="text-center text-sm text-gray-500">
+            <div className="text-center text-sm text-gray-500 dark:text-gray-400">
               <p>Estimated completion: 3-5 minutes</p>
               <p className="text-xs text-gray-600 mt-1">
                 Each question is tested 3 times per platform (81 total AI responses)

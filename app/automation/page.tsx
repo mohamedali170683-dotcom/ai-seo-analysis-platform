@@ -149,7 +149,7 @@ export default function AutomationPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading automation scans...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading automation scans...</p>
         </div>
       </div>
     );
@@ -181,20 +181,20 @@ export default function AutomationPage() {
         {/* Stats Overview - Evidence-Based Design */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           {/* Active Scans - Primary Metric */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Scans</span>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {scans.filter(s => s.enabled).length}
                 </span>
-                <span className="text-sm text-gray-500">/ {scans.length}</span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">/ {scans.length}</span>
               </div>
             </div>
           </div>
 
           {/* Total Runs - Gray (Secondary Data) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Runs</span>
               <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -204,7 +204,7 @@ export default function AutomationPage() {
           </div>
 
           {/* Success Rate - Semantic Color (Green if good) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Success Rate</span>
               <div className="flex items-center gap-2">
@@ -241,7 +241,7 @@ export default function AutomationPage() {
           </div>
 
           {/* Failed Runs - Only red if > 0 (Actionable Data) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Failed Runs</span>
               <div className="flex items-center gap-2">
@@ -264,8 +264,8 @@ export default function AutomationPage() {
         </div>
 
         {/* Scheduled Scans List */}
-        <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Scheduled Scans
             </h2>
@@ -292,7 +292,7 @@ export default function AutomationPage() {
                     </button>
                     <div>
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100">{scan.name}</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         Brand: <span className="font-medium">{scan.brandOrKeyword}</span>
                       </p>
                     </div>
@@ -300,7 +300,7 @@ export default function AutomationPage() {
 
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                         <Calendar className="w-4 h-4" />
                         {getFrequencyDisplay(scan.frequency)}
                       </div>
@@ -338,7 +338,7 @@ export default function AutomationPage() {
                     </button>
 
                     <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
-                      <Edit className="w-5 h-5 text-gray-600" />
+                      <Edit className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                     </button>
 
                     <button className="p-2 hover:bg-red-100 rounded-lg transition-colors">
@@ -349,7 +349,7 @@ export default function AutomationPage() {
 
                 {/* Execution History */}
                 {expandedScan === scan.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h4 className="font-semibold text-gray-900 mb-3">Recent Executions</h4>
                     <div className="space-y-2">
                       {getScanExecutions(scan).length === 0 ? (
@@ -397,15 +397,15 @@ export default function AutomationPage() {
                 {/* Stats */}
                 <div className="mt-4 grid grid-cols-3 gap-4">
                   <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Total Runs</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Total Runs</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{scan.totalRuns}</p>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Successful</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Successful</p>
                     <p className="text-lg font-bold text-green-700">{scan.successfulRuns}</p>
                   </div>
                   <div className="text-center p-3 bg-red-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Failed</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Failed</p>
                     <p className="text-lg font-bold text-red-700">{scan.failedRuns}</p>
                   </div>
                 </div>

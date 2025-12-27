@@ -48,7 +48,7 @@ export default function AIOverviewTestPage() {
           Back to Dashboard
         </Link>
 
-        <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 mb-8">
           <div className="flex items-center mb-6">
             <div className="bg-blue-100 p-3 rounded-lg mr-4">
               <TrendingUp className="w-8 h-8 text-blue-600" />
@@ -57,7 +57,7 @@ export default function AIOverviewTestPage() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 AI Overview Detection
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Check if a keyword triggers Google AI Overview (powered by DataForSEO)
               </p>
             </div>
@@ -105,7 +105,7 @@ export default function AIOverviewTestPage() {
                 <h2 className="text-xl font-bold mb-4">Analysis Results</h2>
 
                 {/* AI Overview Status */}
-                <div className="bg-white rounded-lg p-4 mb-4">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-sm text-gray-600 mb-1">AI Overview Status</div>
@@ -113,7 +113,7 @@ export default function AIOverviewTestPage() {
                         {result.hasAIOverview ? (
                           <span className="text-green-600">✓ AI Overview Present</span>
                         ) : (
-                          <span className="text-gray-600">○ No AI Overview</span>
+                          <span className="text-gray-600 dark:text-gray-400">○ No AI Overview</span>
                         )}
                       </div>
                     </div>
@@ -130,10 +130,10 @@ export default function AIOverviewTestPage() {
 
                 {/* Keyword Metrics */}
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-white rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                     <div className="flex items-center mb-2">
                       <Search className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                         Search Volume
                       </span>
                     </div>
@@ -143,10 +143,10 @@ export default function AIOverviewTestPage() {
                     <div className="text-xs text-gray-500 mt-1">monthly searches</div>
                   </div>
 
-                  <div className="bg-white rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                     <div className="flex items-center mb-2">
                       <Target className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm font-medium text-gray-600">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                         Competition
                       </span>
                     </div>
@@ -164,10 +164,10 @@ export default function AIOverviewTestPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-lg p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                     <div className="flex items-center mb-2">
                       <DollarSign className="w-4 h-4 text-gray-400 mr-2" />
-                      <span className="text-sm font-medium text-gray-600">CPC</span>
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">CPC</span>
                     </div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       ${result.cpc?.toFixed(2) || "0.00"}
@@ -177,7 +177,7 @@ export default function AIOverviewTestPage() {
                 </div>
 
                 {result.hasAIOverview && result.contentLength && (
-                  <div className="bg-white rounded-lg p-4 mt-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mt-4">
                     <div className="text-sm font-medium text-gray-600 mb-2">
                       AI Overview Content Length
                     </div>
@@ -243,7 +243,7 @@ export default function AIOverviewTestPage() {
           <p className="text-gray-700 mb-2">
             This tool uses DataForSEO API to check real-time SERP data and detect:
           </p>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
+          <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
             <li>Whether Google shows an AI Overview for your keyword</li>
             <li>Position of the AI Overview in search results</li>
             <li>Search volume and keyword difficulty</li>

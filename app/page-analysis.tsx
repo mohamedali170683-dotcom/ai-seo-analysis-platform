@@ -73,7 +73,7 @@ export default function AnalysisLandingPage() {
 
         {/* Main Form Card */}
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
               Start Your Analysis
             </h2>
@@ -90,7 +90,7 @@ export default function AnalysisLandingPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, brandOrKeyword: e.target.value })
                   }
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   placeholder="e.g., Nike, Salesforce, or 'project management tools'"
                   required
                 />
@@ -110,7 +110,7 @@ export default function AnalysisLandingPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, domain: e.target.value })
                   }
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   placeholder="e.g., nike.com"
                   required
                 />
@@ -130,7 +130,7 @@ export default function AnalysisLandingPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, competitors: e.target.value })
                   }
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+                  className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
                   placeholder="e.g., Adidas, Puma, Asics"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -166,7 +166,7 @@ export default function AnalysisLandingPage() {
             </form>
 
             {/* What You'll Get */}
-            <div className="mt-8 pt-8 border-t border-gray-200">
+            <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
               <h3 className="text-sm font-semibold text-gray-700 mb-4">
                 What you'll get:
               </h3>
@@ -179,7 +179,7 @@ export default function AnalysisLandingPage() {
                     <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       100+ AI Queries
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       ChatGPT & Gemini tested multiple times
                     </div>
                   </div>
@@ -193,7 +193,7 @@ export default function AnalysisLandingPage() {
                     <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       Competitive Analysis
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       See how you compare to rivals
                     </div>
                   </div>
@@ -207,7 +207,7 @@ export default function AnalysisLandingPage() {
                     <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       AI-Generated Insights
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       Actionable recommendations
                     </div>
                   </div>
@@ -221,7 +221,7 @@ export default function AnalysisLandingPage() {
                     <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       Visibility Score
                     </div>
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
                       Overall AI presence rating
                     </div>
                   </div>
@@ -249,7 +249,7 @@ export default function AnalysisLandingPage() {
 
         {/* Features Grid */}
         <div className="mt-20 grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Bot className="w-6 h-6 text-blue-600" />
             </div>
@@ -262,7 +262,7 @@ export default function AnalysisLandingPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <TrendingUp className="w-6 h-6 text-purple-600" />
             </div>
@@ -275,7 +275,7 @@ export default function AnalysisLandingPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-100">
             <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Sparkles className="w-6 h-6 text-green-600" />
             </div>

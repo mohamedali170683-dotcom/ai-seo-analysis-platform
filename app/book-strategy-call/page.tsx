@@ -15,7 +15,7 @@ export default function BookStrategyCallPage() {
           Back to Pricing
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-amber-500 to-yellow-500 p-8 text-white text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
               <Sparkles className="w-8 h-8" />
@@ -44,7 +44,7 @@ export default function BookStrategyCallPage() {
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{item}</span>
+                      <span className="text-gray-700 dark:text-gray-300">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -54,7 +54,7 @@ export default function BookStrategyCallPage() {
                     <Clock className="w-4 h-4" />
                     45 minutes
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     In-depth discussion about your AI visibility strategy and how the Partner tier can help you achieve your goals.
                   </p>
                 </div>
@@ -64,7 +64,7 @@ export default function BookStrategyCallPage() {
                     <Users className="w-4 h-4" />
                     Who This Is For
                   </div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
                     Marketing teams, agencies, and enterprise brands who need comprehensive AI visibility monitoring and strategic guidance.
                   </p>
                 </div>
@@ -78,7 +78,7 @@ export default function BookStrategyCallPage() {
                 </div>
                 
                 {/* Placeholder for Calendly embed */}
-                <div className="bg-white border-2 border-dashed border-amber-300 rounded-lg h-80 flex flex-col items-center justify-center text-gray-500">
+                <div className="bg-white border-2 border-dashed border-amber-300 rounded-lg h-80 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                   <Calendar className="w-12 h-12 mb-4 text-amber-400" />
                   <p className="font-medium">Calendly Integration</p>
                   <p className="text-sm">Strategy call booking will appear here</p>

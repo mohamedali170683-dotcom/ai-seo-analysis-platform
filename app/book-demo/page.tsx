@@ -15,7 +15,7 @@ export default function BookDemoPage() {
           Back to Pricing
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8 text-white text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
               <Video className="w-8 h-8" />
@@ -40,7 +40,7 @@ export default function BookDemoPage() {
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{item}</span>
+                      <span className="text-gray-700 dark:text-gray-300">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -50,7 +50,7 @@ export default function BookDemoPage() {
                     <Clock className="w-4 h-4" />
                     30 minutes
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Quick, focused demo tailored to your needs. No sales pressure.
                   </p>
                 </div>
@@ -64,7 +64,7 @@ export default function BookDemoPage() {
                 </div>
                 
                 {/* Placeholder for Calendly embed */}
-                <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg h-80 flex flex-col items-center justify-center text-gray-500">
+                <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg h-80 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                   <Calendar className="w-12 h-12 mb-4 text-gray-400" />
                   <p className="font-medium">Calendly Integration</p>
                   <p className="text-sm">Demo booking calendar will appear here</p>

@@ -329,7 +329,7 @@ export default function IntegrationsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading integrations...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading integrations...</p>
         </div>
       </div>
     );
@@ -351,10 +351,10 @@ export default function IntegrationsPage() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Connected</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Connected</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{connectedCount}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
@@ -363,10 +363,10 @@ export default function IntegrationsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Available</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Available</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {integrations.filter(i => i.status === 'available').length}
                 </p>
@@ -377,10 +377,10 @@ export default function IntegrationsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Syncs</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Total Syncs</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalSyncs.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
@@ -389,23 +389,23 @@ export default function IntegrationsPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border-2 border-gray-200 p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border-2 border-gray-200 dark:border-gray-700 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Coming Soon</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">Coming Soon</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {integrations.filter(i => i.status === 'coming_soon').length}
                 </p>
               </div>
               <div className="p-3 bg-gray-100 rounded-lg">
-                <AlertCircle className="w-6 h-6 text-gray-600" />
+                <AlertCircle className="w-6 h-6 text-gray-600 dark:text-gray-400" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 mb-8">
           <div className="flex items-center gap-4 mb-4">
             <input
               type="text"
@@ -439,10 +439,10 @@ export default function IntegrationsPage() {
             return (
               <div
                 key={integration.id}
-                className={`bg-white rounded-xl border-2 p-6 transition-all ${
+                className={`bg-white dark:bg-gray-800 rounded-xl border-2 p-6 transition-all ${
                   integration.status === 'connected'
                     ? 'border-green-200 hover:border-green-300 hover:shadow-lg'
-                    : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-blue-300 hover:shadow-lg'
                 }`}
               >
                 {/* Header */}
@@ -457,7 +457,7 @@ export default function IntegrationsPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100">{integration.name}</h3>
-                      <span className="text-xs text-gray-500">{integration.category}</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{integration.category}</span>
                     </div>
                   </div>
                   {getStatusBadge(integration.status)}
@@ -469,7 +469,7 @@ export default function IntegrationsPage() {
                 {/* Features */}
                 <ul className="space-y-1 mb-4">
                   {integration.features.slice(0, 3).map((feature, idx) => (
-                    <li key={idx} className="flex items-start text-xs text-gray-700">
+                    <li key={idx} className="flex items-start text-xs text-gray-700 dark:text-gray-300">
                       <Check className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                       <span>{feature}</span>
                     </li>

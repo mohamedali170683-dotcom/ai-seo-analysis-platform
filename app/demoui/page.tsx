@@ -79,7 +79,7 @@ export default function DemoUIPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700">
@@ -112,7 +112,7 @@ export default function DemoUIPage() {
         </div>
 
         {/* Analysis Mode Selector */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
           <h2 className="text-lg font-bold text-gray-900 mb-4 text-center">Choose Analysis Mode</h2>
           <div className="grid md:grid-cols-2 gap-4">
             {/* Demo Mode */}
@@ -121,7 +121,7 @@ export default function DemoUIPage() {
               className={`p-6 rounded-xl border-2 transition-all text-left ${
                 analysisMode === "demo"
                   ? "border-yellow-500 bg-yellow-50 ring-2 ring-yellow-200"
-                  : "border-gray-200 hover:border-yellow-300 hover:bg-yellow-50"
+                  : "border-gray-200 dark:border-gray-700 hover:border-yellow-300 hover:bg-yellow-50"
               }`}
             >
               <div className="flex items-center gap-3 mb-3">
@@ -133,7 +133,7 @@ export default function DemoUIPage() {
                   <span className="text-xs text-yellow-600 font-semibold">INSTANT</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Get instant results with template data. Perfect for seeing what the report looks like with your brand name.
               </p>
               <ul className="mt-3 text-xs text-gray-500 space-y-1">
@@ -157,7 +157,7 @@ export default function DemoUIPage() {
                   <span className="text-xs text-purple-600 font-semibold">YOU CHOOSE QUESTIONS</span>
                 </div>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 Select which questions to test based on real search volume data.
               </p>
               <ul className="mt-3 text-xs text-gray-500 space-y-1">
@@ -202,39 +202,39 @@ export default function DemoUIPage() {
 
         {/* Benefits Grid */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-blue-100">
             <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Brain className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="font-bold text-gray-900 mb-2">Multi-Platform Testing</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Test across ChatGPT, Gemini, and Copilot to understand visibility across AI ecosystems
             </p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-purple-100">
             <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <TrendingUp className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="font-bold text-gray-900 mb-2">Journey Stage Analysis</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Awareness, Consideration, and Decision stage insights with actionable recommendations
             </p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-pink-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-pink-100">
             <div className="bg-pink-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Sparkles className="w-6 h-6 text-pink-600" />
             </div>
             <h3 className="font-bold text-gray-900 mb-2">Competitive Intelligence</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               See how your brand compares to competitors in AI recommendations
             </p>
           </div>
         </div>
 
         {/* Input Form */}
-        <div className="bg-white rounded-3xl shadow-2xl p-12">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             Enter Your Brand Information
           </h2>
@@ -260,7 +260,7 @@ export default function DemoUIPage() {
                 value={formData.brand}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                 placeholder="e.g., Nike, Tesla, Coca-Cola, Purina"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">
@@ -280,7 +280,7 @@ export default function DemoUIPage() {
                 value={formData.domain}
                 onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                 placeholder="e.g., nike.com, tesla.com, shop.purina.de"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">
@@ -300,7 +300,7 @@ export default function DemoUIPage() {
                 value={formData.competitors}
                 onChange={(e) => setFormData({ ...formData, competitors: e.target.value })}
                 placeholder="e.g., Adidas, Puma, Under Armour"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">
@@ -320,7 +320,7 @@ export default function DemoUIPage() {
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="e.g., running shoes, electric cars, pet food, coffee machines"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">
@@ -358,7 +358,7 @@ export default function DemoUIPage() {
               )}
             </button>
 
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               {analysisMode === "demo" 
                 ? "⚡ Results appear instantly - this is a demo with template data"
                 : "🔬 Analysis takes 3-5 minutes - testing across 3 AI platforms"

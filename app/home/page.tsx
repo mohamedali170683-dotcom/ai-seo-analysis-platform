@@ -87,7 +87,7 @@ export default function HomePage() {
             </button>
             <button
               onClick={() => router.push('/features')}
-              className="inline-flex items-center px-8 py-4 bg-white text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors border-2 border-gray-200"
+              className="inline-flex items-center px-8 py-4 bg-white text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors border-2 border-gray-200 dark:border-gray-700"
             >
               View All Features
             </button>
@@ -96,21 +96,21 @@ export default function HomePage() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-20">
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 text-center">
             <div className="text-4xl font-bold text-blue-600 mb-2">6</div>
-            <div className="text-sm text-gray-600">AI Platforms Monitored</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">AI Platforms Monitored</div>
           </div>
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 text-center">
             <div className="text-4xl font-bold text-purple-600 mb-2">8</div>
-            <div className="text-sm text-gray-600">Hallucination Types Detected</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Hallucination Types Detected</div>
           </div>
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 text-center">
             <div className="text-4xl font-bold text-green-600 mb-2">9</div>
-            <div className="text-sm text-gray-600">Alert Types Available</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Alert Types Available</div>
           </div>
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-6 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 text-center">
             <div className="text-4xl font-bold text-yellow-600 mb-2">12+</div>
-            <div className="text-sm text-gray-600">Integrations</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Integrations</div>
           </div>
         </div>
 
@@ -133,7 +133,7 @@ export default function HomePage() {
                 <Link
                   key={index}
                   href={feature.link}
-                  className="bg-white rounded-xl border-2 border-gray-200 p-8 hover:border-blue-300 hover:shadow-xl transition-all group"
+                  className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-8 hover:border-blue-300 hover:shadow-xl transition-all group"
                 >
                   <div className={`inline-flex p-3 rounded-lg ${colorClasses[feature.color as keyof typeof colorClasses]} mb-4`}>
                     <Icon className="w-8 h-8" />
@@ -155,7 +155,7 @@ export default function HomePage() {
         </div>
 
         {/* Benefits */}
-        <div className="bg-white rounded-2xl border-2 border-gray-200 p-12 mb-20">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-200 dark:border-gray-700 p-12 mb-20">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
             Why Choose Velaris?
           </h2>
@@ -163,7 +163,7 @@ export default function HomePage() {
             {benefits.map((benefit, index) => (
               <div key={index} className="flex items-start gap-3">
                 <CheckCircle2 className="w-6 h-6 text-green-600 mt-0.5 flex-shrink-0" />
-                <p className="text-gray-700">{benefit}</p>
+                <p className="text-gray-700 dark:text-gray-300">{benefit}</p>
               </div>
             ))}
           </div>
@@ -187,7 +187,7 @@ export default function HomePage() {
             </button>
             <button
               onClick={() => router.push('/hallucination-detector')}
-              className="inline-flex items-center px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white/10 transition-colors"
+              className="inline-flex items-center px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white/10 dark:bg-gray-800/10 transition-colors"
             >
               Try Hallucination Detector
             </button>
