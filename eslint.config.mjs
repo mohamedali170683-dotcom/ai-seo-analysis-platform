@@ -14,9 +14,11 @@ export default [
       "@next/next": nextPlugin,
     },
     rules: {
-      // Disable some rules that are too strict for this project
-      "@typescript-eslint/no-explicit-any": "off",
+      // TypeScript rules - gradually moving towards stricter type safety
+      // Changed from "off" to "warn" to track any usage (goal: eventually set to "error")
+      "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
+      // React rules
       "react/react-in-jsx-scope": "off",
       "@next/next/no-html-link-for-pages": "off",
     },
