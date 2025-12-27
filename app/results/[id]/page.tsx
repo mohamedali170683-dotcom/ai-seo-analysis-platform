@@ -1040,10 +1040,52 @@ export default function ResultsPage() {
                                     </p>
                                   </div>
                                 ) : (
-                                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
-                                    <p className="text-sm text-red-700">
-                                      ⚠️ {platform.toUpperCase()} provided {responses.length} {responses.length === 1 ? 'response' : 'responses'} for this stage, but your brand was not mentioned in any of them.
+                                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                                    <p className="text-sm text-orange-900 mb-2">
+                                      <strong>⚠️ {platform.toUpperCase()}</strong> provided {responses.length} {responses.length === 1 ? 'response' : 'responses'} for this stage, but <strong>your brand was not mentioned</strong>.
                                     </p>
+                                    {(() => {
+                                      // Extract competitor mentions from responses
+                                      const competitors = reportData.competitors || [];
+                                      const competitorMentions: { [key: string]: number } = {};
+
+                                      responses.forEach((r: any) => {
+                                        const text = (r.fullResponse || r.context || '').toLowerCase();
+                                        competitors.forEach((comp: string) => {
+                                          if (text.includes(comp.toLowerCase())) {
+                                            competitorMentions[comp] = (competitorMentions[comp] || 0) + 1;
+                                          }
+                                        });
+                                      });
+
+                                      const mentionedCompetitors = Object.entries(competitorMentions)
+                                        .sort((a, b) => b[1] - a[1])
+                                        .map(([name]) => name);
+
+                                      // Get a snippet from the first response
+                                      const firstResponse = responses[0]?.fullResponse || responses[0]?.context || '';
+                                      const snippet = firstResponse.substring(0, 200).replace(/\*/g, '').trim();
+
+                                      return (
+                                        <div className="space-y-2 text-sm text-gray-700">
+                                          {mentionedCompetitors.length > 0 && (
+                                            <div className="bg-white rounded p-2 border border-orange-200">
+                                              <span className="font-semibold text-orange-800">🎯 Competitors mentioned instead:</span>{' '}
+                                              <span className="text-gray-800">{mentionedCompetitors.join(', ')}</span>
+                                            </div>
+                                          )}
+                                          {snippet && (
+                                            <div className="bg-white rounded p-2 border border-orange-200">
+                                              <span className="font-semibold text-orange-800">📝 What they said:</span>{' '}
+                                              <span className="text-gray-700 italic">"{snippet}..."</span>
+                                            </div>
+                                          )}
+                                          <div className="text-xs text-orange-700 mt-2">
+                                            💡 <strong>Insight:</strong> This indicates a visibility gap - {platform.toUpperCase()} is recommending alternatives without mentioning your brand.
+                                          </div>
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 )}
                               </div>
