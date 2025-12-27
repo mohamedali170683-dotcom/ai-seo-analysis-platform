@@ -209,13 +209,13 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   Velaris
                 </h1>
                 <p className="text-sm text-gray-600">AI Visibility Analysis Platform</p>
@@ -281,7 +281,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Visibility Analyses</span>
-              <span className="text-3xl font-bold text-gray-900">{stats.totalAnalyses}</span>
+              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses}</span>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-500">{stats.completedAnalyses} completed</span>
                 {stats.completedAnalyses > 0 && (
@@ -295,7 +295,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions Tested</span>
-              <span className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 9}</span>
+              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses * 9}</span>
               <span className="text-sm text-gray-500">Across all analyses</span>
             </div>
           </div>
@@ -304,7 +304,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Responses</span>
-              <span className="text-3xl font-bold text-gray-900">{stats.totalAnalyses * 81}</span>
+              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses * 81}</span>
               <span className="text-sm text-gray-500">3 tests × 4 platforms</span>
             </div>
           </div>
@@ -318,7 +318,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center gap-3 mb-3">
               <Brain className="w-6 h-6 text-blue-600" />
-              <h2 className="text-lg font-bold text-gray-900">Run My Next Audit</h2>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Run My Next Audit</h2>
             </div>
             <p className="text-sm text-gray-600 mb-3">
               Test your brand on ChatGPT, Gemini, Copilot, and Perplexity. Get visibility scores and recommendations.
@@ -336,7 +336,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3 mb-3">
               <XCircle className="w-6 h-6" style={{color: SEMANTIC_COLORS.critical}} />
               <div>
-                <h2 className="text-lg font-bold text-gray-900">Misinformation Detector</h2>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Misinformation Detector</h2>
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New Feature</span>
               </div>
             </div>
@@ -562,7 +562,7 @@ export default function DashboardPage() {
                   )}
                 </button>
                 {expandedFaq === index && (
-                  <div className="px-6 py-4 bg-white">
+                  <div className="px-6 py-4 bg-white dark:bg-gray-800">
                     <p className="text-gray-700 whitespace-pre-line leading-relaxed">{faq.answer}</p>
                   </div>
                 )}

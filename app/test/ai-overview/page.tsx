@@ -54,7 +54,7 @@ export default function AIOverviewTestPage() {
               <TrendingUp className="w-8 h-8 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 AI Overview Detection
               </h1>
               <p className="text-gray-600">
@@ -137,7 +137,7 @@ export default function AIOverviewTestPage() {
                         Search Volume
                       </span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       {result.searchVolume?.toLocaleString() || "N/A"}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">monthly searches</div>
@@ -150,7 +150,7 @@ export default function AIOverviewTestPage() {
                         Competition
                       </span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       {result.competition
                         ? `${(result.competition * 100).toFixed(0)}%`
                         : "N/A"}
@@ -169,7 +169,7 @@ export default function AIOverviewTestPage() {
                       <DollarSign className="w-4 h-4 text-gray-400 mr-2" />
                       <span className="text-sm font-medium text-gray-600">CPC</span>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                       ${result.cpc?.toFixed(2) || "0.00"}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">Google Ads CPC</div>
@@ -181,7 +181,7 @@ export default function AIOverviewTestPage() {
                     <div className="text-sm font-medium text-gray-600 mb-2">
                       AI Overview Content Length
                     </div>
-                    <div className="text-lg font-bold text-gray-900">
+                    <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
                       {result.contentLength} characters
                     </div>
                   </div>

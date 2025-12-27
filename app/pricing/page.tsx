@@ -56,7 +56,7 @@ export default function PricingPage() {
             <div className="w-8 h-8 bg-gradient-to-br from-cyan-600 to-cyan-500 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-gray-900">Velaris</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Velaris</span>
           </Link>
           <Link 
             href="/analyze"
@@ -84,7 +84,7 @@ export default function PricingPage() {
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
                 billingCycle === "monthly" 
                   ? "bg-blue-600 text-white" 
-                  : "text-gray-600 hover:text-gray-900"
+                  : "text-gray-600 hover:text-gray-900 dark:text-gray-100"
               }`}
             >
               Monthly
@@ -94,7 +94,7 @@ export default function PricingPage() {
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
                 billingCycle === "annual" 
                   ? "bg-blue-600 text-white" 
-                  : "text-gray-600 hover:text-gray-900"
+                  : "text-gray-600 hover:text-gray-900 dark:text-gray-100"
               }`}
             >
               Annual
@@ -126,13 +126,13 @@ export default function PricingPage() {
                 <Building className="w-3 h-3" />
                 For Teams & Agencies
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{TIER_NAMES.partner.name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{TIER_NAMES.partner.name}</h3>
               <p className="text-sm text-gray-500 mt-1">{TIER_NAMES.partner.tagline}</p>
             </div>
             
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-gray-900">€{partnerPrice.toLocaleString()}</span>
+                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€{partnerPrice.toLocaleString()}</span>
                 <span className="text-gray-500">/month</span>
               </div>
               {billingCycle === "annual" && (
@@ -189,13 +189,13 @@ export default function PricingPage() {
             </div>
             
             <div className="text-center mb-6 pt-4">
-              <h3 className="text-2xl font-bold text-gray-900">{TIER_NAMES.professional.name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{TIER_NAMES.professional.name}</h3>
               <p className="text-sm text-gray-500 mt-1">{TIER_NAMES.professional.tagline}</p>
             </div>
             
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-gray-900">€{professionalPrice}</span>
+                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€{professionalPrice}</span>
                 <span className="text-gray-500">/month</span>
               </div>
               {billingCycle === "annual" && (
@@ -257,19 +257,19 @@ export default function PricingPage() {
           </div>
 
           {/* FREE TIER */}
-          <div className="order-2 lg:order-3 border border-gray-200 rounded-2xl p-8 bg-white">
+          <div className="order-2 lg:order-3 border border-gray-200 rounded-2xl p-8 bg-white dark:bg-gray-800">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full mb-3">
                 <Zap className="w-3 h-3" />
                 Quick Check
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">{TIER_NAMES.free.name}</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{TIER_NAMES.free.name}</h3>
               <p className="text-sm text-gray-500 mt-1">{TIER_NAMES.free.tagline}</p>
             </div>
             
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-gray-900">€0</span>
+                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€0</span>
                 <span className="text-gray-500">/month</span>
               </div>
               <p className="text-sm text-gray-500 mt-1">Free forever</p>
@@ -329,7 +329,7 @@ export default function PricingPage() {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900">Feature</th>
+                  <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Feature</th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-gray-600">Free</th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-blue-600 bg-blue-50">Professional</th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-amber-600">Partner</th>
@@ -361,7 +361,7 @@ export default function PricingPage() {
                   { feature: "Support", free: "Email", pro: "Email + Chat", partner: "Priority + Dedicated" },
                 ].map((row, i) => (
                   <tr key={i} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{row.feature}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{row.feature}</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-600">
                       {typeof row.free === "boolean" ? (
                         row.free ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <span className="text-gray-300">—</span>
@@ -372,7 +372,7 @@ export default function PricingPage() {
                         row.pro ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <span className="text-gray-300">—</span>
                       ) : row.pro}
                     </td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-900">
+                    <td className="px-6 py-4 text-center text-sm text-gray-900 dark:text-gray-100">
                       {typeof row.partner === "boolean" ? (
                         row.partner ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <span className="text-gray-300">—</span>
                       ) : row.partner}

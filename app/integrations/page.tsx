@@ -336,7 +336,7 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-8">
@@ -355,7 +355,7 @@ export default function IntegrationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Connected</p>
-                <p className="text-2xl font-bold text-gray-900">{connectedCount}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{connectedCount}</p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <Check className="w-6 h-6 text-green-600" />
@@ -367,7 +367,7 @@ export default function IntegrationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {integrations.filter(i => i.status === 'available').length}
                 </p>
               </div>
@@ -381,7 +381,7 @@ export default function IntegrationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Syncs</p>
-                <p className="text-2xl font-bold text-gray-900">{totalSyncs.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{totalSyncs.toLocaleString()}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Link2 className="w-6 h-6 text-purple-600" />
@@ -393,7 +393,7 @@ export default function IntegrationsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Coming Soon</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                   {integrations.filter(i => i.status === 'coming_soon').length}
                 </p>
               </div>
@@ -456,7 +456,7 @@ export default function IntegrationsPage() {
                       }`} />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{integration.name}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{integration.name}</h3>
                       <span className="text-xs text-gray-500">{integration.category}</span>
                     </div>
                   </div>

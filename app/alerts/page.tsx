@@ -189,7 +189,7 @@ export default function AlertsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -218,7 +218,7 @@ export default function AlertsPage() {
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Alerts</span>
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {alerts.filter(a => a.enabled).length}
                 </span>
                 {alerts.filter(a => a.enabled).length > 0 && (
@@ -233,7 +233,7 @@ export default function AlertsPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Alerts</span>
-              <span className="text-3xl font-bold text-gray-900">{alerts.length}</span>
+              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{alerts.length}</span>
             </div>
           </div>
 
@@ -263,7 +263,7 @@ export default function AlertsPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Channels</span>
-              <span className="text-3xl font-bold text-gray-900">
+              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {new Set(alerts.flatMap(a => a.channels.map((c: any) => c.type))).size}
               </span>
             </div>
@@ -305,7 +305,7 @@ export default function AlertsPage() {
         {/* Alerts List */}
         <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Configured Alerts</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Configured Alerts</h2>
           </div>
 
           <div className="divide-y divide-gray-200">
@@ -321,7 +321,7 @@ export default function AlertsPage() {
                         <Icon className={`w-6 h-6 text-${info.color}-600`} />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{alert.name}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{alert.name}</h3>
                         <p className="text-sm text-gray-600">{info.description}</p>
                       </div>
                     </div>
@@ -329,7 +329,7 @@ export default function AlertsPage() {
                     <div className="flex items-center gap-4">
                       <div className="text-right">
                         <p className="text-xs text-gray-600">Triggered</p>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-gray-900 dark:text-gray-100">
                           {alert.triggerCount}x
                         </p>
                         {alert.lastTriggered && (

@@ -25,7 +25,7 @@ export function Navigation() {
   const pathname = usePathname();
   const [showFeatures, setShowFeatures] = useState(false);
   const { theme, toggleTheme } = useTheme();
-  const { language, setLanguage } = useI18n();
+  const { language, setLanguage, t } = useI18n();
 
   const isActive = (path: string) => pathname === path;
 
@@ -95,7 +95,7 @@ export function Navigation() {
                 className="inline-flex items-center px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
               >
                 <Search className="w-4 h-4 mr-2" />
-                Start New Analysis
+                {t('nav.newAnalysis')}
               </Link>
             </div>
           </div>

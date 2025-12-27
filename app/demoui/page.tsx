@@ -129,7 +129,7 @@ export default function DemoUIPage() {
                   <Zap className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Demo Mode</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100">Demo Mode</h3>
                   <span className="text-xs text-yellow-600 font-semibold">INSTANT</span>
                 </div>
               </div>
@@ -153,7 +153,7 @@ export default function DemoUIPage() {
                   <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">Advanced Analysis</h3>
+                  <h3 className="font-bold text-gray-900 dark:text-gray-100">Advanced Analysis</h3>
                   <span className="text-xs text-purple-600 font-semibold">YOU CHOOSE QUESTIONS</span>
                 </div>
               </div>
@@ -260,7 +260,7 @@ export default function DemoUIPage() {
                 value={formData.brand}
                 onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
                 placeholder="e.g., Nike, Tesla, Coca-Cola, Purina"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">
@@ -280,7 +280,7 @@ export default function DemoUIPage() {
                 value={formData.domain}
                 onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                 placeholder="e.g., nike.com, tesla.com, shop.purina.de"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">
@@ -300,7 +300,7 @@ export default function DemoUIPage() {
                 value={formData.competitors}
                 onChange={(e) => setFormData({ ...formData, competitors: e.target.value })}
                 placeholder="e.g., Adidas, Puma, Under Armour"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">
@@ -320,7 +320,7 @@ export default function DemoUIPage() {
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                 placeholder="e.g., running shoes, electric cars, pet food, coffee machines"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
                 disabled={isLoading}
               />
               <p className="text-sm text-gray-500 mt-2">

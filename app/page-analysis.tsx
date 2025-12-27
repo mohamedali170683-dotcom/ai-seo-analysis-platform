@@ -176,7 +176,7 @@ export default function AnalysisLandingPage() {
                     <Bot className="w-4 h-4 text-blue-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm text-gray-900">
+                    <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       100+ AI Queries
                     </div>
                     <div className="text-xs text-gray-600">
@@ -190,7 +190,7 @@ export default function AnalysisLandingPage() {
                     <TrendingUp className="w-4 h-4 text-purple-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm text-gray-900">
+                    <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       Competitive Analysis
                     </div>
                     <div className="text-xs text-gray-600">
@@ -204,7 +204,7 @@ export default function AnalysisLandingPage() {
                     <Sparkles className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm text-gray-900">
+                    <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       AI-Generated Insights
                     </div>
                     <div className="text-xs text-gray-600">
@@ -218,7 +218,7 @@ export default function AnalysisLandingPage() {
                     <ArrowRight className="w-4 h-4 text-orange-600" />
                   </div>
                   <div>
-                    <div className="font-semibold text-sm text-gray-900">
+                    <div className="font-semibold text-sm text-gray-900 dark:text-gray-100">
                       Visibility Score
                     </div>
                     <div className="text-xs text-gray-600">

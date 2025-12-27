@@ -152,7 +152,7 @@ export default function NewAnalysisPage() {
                 value={formData.brandOrKeyword}
                 onChange={(e) => setFormData({ ...formData, brandOrKeyword: e.target.value })}
                 placeholder="e.g., Nike, Shopify, project management software"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
               />
               <p className="text-sm text-gray-500 mt-2">
                 Enter the brand name or keyword you want to analyze
@@ -170,7 +170,7 @@ export default function NewAnalysisPage() {
                 value={formData.domain}
                 onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                 placeholder="e.g., nike.com, shopify.com"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
               />
               <p className="text-sm text-gray-500 mt-2">
                 Your brand's website URL (without https://)
@@ -188,7 +188,7 @@ export default function NewAnalysisPage() {
                 value={formData.competitors}
                 onChange={(e) => setFormData({ ...formData, competitors: e.target.value })}
                 placeholder="e.g., Adidas, Puma, Under Armour"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
               />
               <p className="text-sm text-gray-500 mt-2">
                 Comma-separated list of competitor brands for comparison

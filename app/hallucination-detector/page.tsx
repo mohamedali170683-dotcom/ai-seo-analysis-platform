@@ -196,11 +196,11 @@ export default function HallucinationDetectorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             Misinformation & Hallucination Detector
           </h1>
           <p className="mt-2 text-gray-600">
@@ -436,7 +436,7 @@ export default function HallucinationDetectorPage() {
                     <div className="bg-white rounded-lg border border-gray-200 p-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">LLMs Tested</span>
-                        <span className="text-3xl font-bold text-gray-900">2</span>
+                        <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">2</span>
                         <span className="text-xs text-gray-500">ChatGPT, Gemini</span>
                       </div>
                     </div>

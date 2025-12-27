@@ -156,7 +156,7 @@ export default function WebhooksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -185,7 +185,7 @@ export default function WebhooksPage() {
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Webhooks</span>
               <div className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                   {webhooks.filter(w => w.enabled).length}
                 </span>
                 {webhooks.filter(w => w.enabled).length > 0 && (
@@ -200,7 +200,7 @@ export default function WebhooksPage() {
           <div className="bg-white rounded-lg border border-gray-200 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Deliveries</span>
-              <span className="text-3xl font-bold text-gray-900">
+              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {webhooks.reduce((sum, w) => sum + w.deliveryCount, 0)}
               </span>
             </div>
@@ -271,7 +271,7 @@ export default function WebhooksPage() {
         {/* Webhooks List */}
         <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden mb-8">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Configured Webhooks
             </h2>
           </div>
@@ -282,7 +282,7 @@ export default function WebhooksPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900">{webhook.name}</h3>
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100">{webhook.name}</h3>
                       <div
                         className={`px-2 py-1 rounded text-xs font-medium ${
                           webhook.enabled
@@ -375,7 +375,7 @@ export default function WebhooksPage() {
                 <div className="grid grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-gray-50 rounded-lg">
                     <p className="text-xs text-gray-600">Deliveries</p>
-                    <p className="text-lg font-bold text-gray-900">{webhook.deliveryCount}</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{webhook.deliveryCount}</p>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
                     <p className="text-xs text-gray-600">Success</p>
@@ -421,7 +421,7 @@ export default function WebhooksPage() {
                               <Clock className="w-5 h-5 text-yellow-600" />
                             )}
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{delivery.event}</p>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{delivery.event}</p>
                               <p className="text-xs text-gray-600">
                                 {new Date(delivery.timestamp).toLocaleString()}
                                 {delivery.errorMessage && (

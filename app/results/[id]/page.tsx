@@ -453,7 +453,7 @@ export default function ResultsPage() {
   console.log('[Debug] journeyStages count:', journeyStages.length);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Analysis Complete Banner */}
       <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-4">
         <div className="container mx-auto max-w-6xl flex items-center justify-between">
@@ -638,7 +638,7 @@ export default function ResultsPage() {
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
                 <div className="text-2xl">🔧</div>
-                <h3 className="text-lg font-bold text-gray-900">Technical Audit</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Technical Audit</h3>
               </div>
               <p className="text-sm text-gray-500 mb-3">Website optimization for AI crawlers</p>
               <div className="flex items-center justify-between">
@@ -666,7 +666,7 @@ export default function ResultsPage() {
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
                 <div className="text-2xl">❓</div>
-                <h3 className="text-lg font-bold text-gray-900">Methodology</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Methodology</h3>
               </div>
               <p className="text-sm text-gray-500 mb-3">How we calculate your scores</p>
               <div className="flex items-center justify-end">
@@ -708,7 +708,7 @@ export default function ResultsPage() {
                         {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
                       </span>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">{stage?.stageLabel || "Unknown Stage"}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{stage?.stageLabel || "Unknown Stage"}</h3>
                         <p className="text-sm text-gray-500">{stage?.stageDescription || ""}</p>
                       </div>
                     </div>
@@ -943,7 +943,7 @@ export default function ResultsPage() {
                   {/* Platform-by-Platform Summary */}
                   <div className="bg-white rounded-lg p-5 border border-gray-200 mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold text-gray-900">🤖 Platform-by-Platform Summary</h4>
+                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">🤖 Platform-by-Platform Summary</h4>
                       <button
                         onClick={() => {
                           // Expand the All AI Responses section for this stage
@@ -1250,7 +1250,7 @@ export default function ResultsPage() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">💬</span>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">All AI Responses</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">All AI Responses</h2>
                   <p className="text-sm text-gray-500">Full answers from each AI platform per question</p>
                 </div>
               </div>
@@ -1448,7 +1448,7 @@ export default function ResultsPage() {
         {expandedSection === "visibility" && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">📊 AI Visibility by Funnel Stage</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">📊 AI Visibility by Funnel Stage</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
                 <ChevronUp className="w-6 h-6" />
               </button>
@@ -1544,7 +1544,7 @@ export default function ResultsPage() {
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-2xl">{platform.icon}</span>
                           <div>
-                            <span className="font-semibold text-gray-900">{platform.name}</span>
+                            <span className="font-semibold text-gray-900 dark:text-gray-100">{platform.name}</span>
                             <span className="text-xs text-gray-400 ml-1">({data.totalTests} tests)</span>
                           </div>
                         </div>
@@ -1597,7 +1597,7 @@ export default function ResultsPage() {
                 <div className="mt-4 bg-gray-50 rounded-xl p-4">
                   <div className="grid md:grid-cols-3 gap-6 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {Math.round(
                           Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.mentionRate || 0), 0) / 
                           Math.max(Object.keys(reportData.platformBreakdown || {}).length, 1)
@@ -1606,7 +1606,7 @@ export default function ResultsPage() {
                       <div className="text-sm text-gray-500">Avg Mention Rate</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         #{(
                           Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.avgPosition || 0), 0) / 
                           Math.max(Object.values(reportData.platformBreakdown || {}).filter((p: any) => p.avgPosition > 0).length, 1)
@@ -1615,7 +1615,7 @@ export default function ResultsPage() {
                       <div className="text-sm text-gray-500">Avg Position</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                         {Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.totalTests || 0), 0)}
                       </div>
                       <div className="text-sm text-gray-500">Total AI Responses</div>
@@ -1641,7 +1641,7 @@ export default function ResultsPage() {
                         {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
                       </span>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">{stage?.stageLabel || "Unknown Stage"}</h3>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{stage?.stageLabel || "Unknown Stage"}</h3>
                         <p className="text-sm text-gray-500">{stage?.stageDescription || ""}</p>
                       </div>
                     </div>
@@ -1748,7 +1748,7 @@ export default function ResultsPage() {
                       /* For Consideration/Decision: Standard Mention Rate */
                       <div className="bg-white rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900">📢 Mention Rate</h4>
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100">📢 Mention Rate</h4>
                           <span className={`text-2xl font-bold ${
                             (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
                             (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
@@ -1776,7 +1776,7 @@ export default function ResultsPage() {
                     {/* Audience Sentiment Explained */}
                     <div className="bg-white rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">💭 Audience Sentiment</h4>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">💭 Audience Sentiment</h4>
                         <span className={`text-sm font-bold px-2 py-1 rounded ${
                           stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
                           stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700"
@@ -2112,7 +2112,7 @@ export default function ResultsPage() {
         {expandedSection === "technical" && reportData.websiteAudit && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">🔧 Website Technical Audit</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🔧 Website Technical Audit</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
                 <ChevronUp className="w-6 h-6" />
               </button>
@@ -2124,7 +2124,7 @@ export default function ResultsPage() {
             <div className="mb-10">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">1</div>
-                <h3 className="text-xl font-bold text-gray-900">Status Quo: What We Analyzed</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Status Quo: What We Analyzed</h3>
               </div>
 
               {/* Crawl Overview Cards */}
@@ -2162,7 +2162,7 @@ export default function ResultsPage() {
                     {/* URLs Analyzed */}
                     <div className="bg-gray-50 rounded-xl p-5 border border-gray-200">
                       <div className="flex items-center justify-between mb-4">
-                        <span className="font-semibold text-gray-900">🕷️ URLs Analyzed</span>
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">🕷️ URLs Analyzed</span>
                         {reportData.websiteAudit.sitemapFound && (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
                             from sitemap
@@ -2210,7 +2210,7 @@ export default function ResultsPage() {
                       }`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl">{reportData.websiteAudit.sitemapFound ? '✅' : '⚠️'}</span>
-                          <span className="font-semibold text-gray-900">Sitemap</span>
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">Sitemap</span>
                         </div>
                         <p className="text-xs text-gray-600">
                           {reportData.websiteAudit.sitemapFound ? 'Found and accessible' : 'Not found or inaccessible'}
@@ -2221,7 +2221,7 @@ export default function ResultsPage() {
                       }`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl">{reportData.websiteAudit.robotsAllowsAI !== false ? '✅' : '❌'}</span>
-                          <span className="font-semibold text-gray-900">AI Bots</span>
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">AI Bots</span>
                         </div>
                         <p className="text-xs text-gray-600">
                           {reportData.websiteAudit.robotsAllowsAI !== false ? 'Allowed to crawl' : 'Blocked in robots.txt'}
@@ -2232,7 +2232,7 @@ export default function ResultsPage() {
                       }`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl">{reportData.websiteAudit.faqContent?.hasFAQSection ? '✅' : '⚠️'}</span>
-                          <span className="font-semibold text-gray-900">FAQ Content</span>
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">FAQ Content</span>
                         </div>
                         <p className="text-xs text-gray-600">
                           {reportData.websiteAudit.faqContent?.hasFAQSection ? 'Detected on pages' : 'No FAQ sections found'}
@@ -2250,7 +2250,7 @@ export default function ResultsPage() {
             <div className="mb-10">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-bold text-sm">2</div>
-                <h3 className="text-xl font-bold text-gray-900">Challenges: Schema Gaps Identified</h3>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Challenges: Schema Gaps Identified</h3>
               </div>
 
               {/* Schema Status Grid */}
@@ -2267,7 +2267,7 @@ export default function ResultsPage() {
                       : "bg-red-50 border-2 border-red-200"
                   }`}>
                     <div className="text-2xl mb-1">{schema.has ? "✅" : "❌"}</div>
-                    <div className="font-semibold text-gray-900">{schema.name}</div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">{schema.name}</div>
                     <div className="text-xs text-gray-500 mt-1">{schema.impact}</div>
                   </div>
                 ))}
@@ -2277,7 +2277,7 @@ export default function ResultsPage() {
               <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-5 border border-gray-200">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-lg">🔍</span>
-                  <span className="font-semibold text-gray-900">Our Analysis Explained</span>
+                  <span className="font-semibold text-gray-900 dark:text-gray-100">Our Analysis Explained</span>
                 </div>
                 <div className="space-y-3">
                   {reportData.websiteAudit.robotsAnalysisReason && (
@@ -2332,7 +2332,7 @@ export default function ResultsPage() {
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-6">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold text-sm">3</div>
-                  <h3 className="text-xl font-bold text-gray-900">Actions: Schema Markup to Add</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Actions: Schema Markup to Add</h3>
                 </div>
 
                 <p className="text-gray-600 mb-4 text-sm">
@@ -2354,7 +2354,7 @@ export default function ResultsPage() {
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">🏢</span>
                           <div className="text-left">
-                            <span className="font-bold text-gray-900">Organization Schema</span>
+                            <span className="font-bold text-gray-900 dark:text-gray-100">Organization Schema</span>
                             <p className="text-xs text-gray-600">Helps AI identify your brand • Add to homepage</p>
                           </div>
                         </div>
@@ -2404,7 +2404,7 @@ export default function ResultsPage() {
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">🛍️</span>
                           <div className="text-left">
-                            <span className="font-bold text-gray-900">Product Schema</span>
+                            <span className="font-bold text-gray-900 dark:text-gray-100">Product Schema</span>
                             <p className="text-xs text-gray-600">Required for AI shopping recommendations • Add to each product page</p>
                           </div>
                         </div>
@@ -2457,7 +2457,7 @@ export default function ResultsPage() {
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">❓</span>
                           <div className="text-left">
-                            <span className="font-bold text-gray-900">FAQ Schema</span>
+                            <span className="font-bold text-gray-900 dark:text-gray-100">FAQ Schema</span>
                             <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Highest Impact!</span>
                             <p className="text-xs text-gray-600">3x more likely to be cited by AI • Add to FAQ & landing pages</p>
                           </div>
@@ -2554,7 +2554,7 @@ export default function ResultsPage() {
         {expandedSection === "recommendations" && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">💡 All Recommendations</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">💡 All Recommendations</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
                 <ChevronUp className="w-6 h-6" />
               </button>
@@ -2587,7 +2587,7 @@ export default function ResultsPage() {
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-3xl">{rec.stageIcon}</span>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900">{rec.stage} Stage</h3>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{rec.stage} Stage</h3>
                         <div className="text-sm text-gray-500">Current visibility: {Math.round(rec.visibilityScore)}%</div>
                       </div>
                     </div>
@@ -2599,7 +2599,7 @@ export default function ResultsPage() {
                           <div className="bg-white rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-lg">🔍</span>
-                              <span className="font-semibold text-gray-900">Pattern Identified</span>
+                              <span className="font-semibold text-gray-900 dark:text-gray-100">Pattern Identified</span>
                             </div>
                             <p className="text-gray-600">{rec.recommendation.commonPattern}</p>
                           </div>
@@ -2610,7 +2610,7 @@ export default function ResultsPage() {
                           <div className="bg-white rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-lg">📚</span>
-                              <span className="font-semibold text-gray-900">Content Type Needed</span>
+                              <span className="font-semibold text-gray-900 dark:text-gray-100">Content Type Needed</span>
                             </div>
                             <p className="text-gray-600">{rec.recommendation.contentType}</p>
                           </div>
@@ -2621,7 +2621,7 @@ export default function ResultsPage() {
                           <div className="bg-white rounded-lg p-4 border-l-4 border-amber-500">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-lg">✅</span>
-                              <span className="font-semibold text-gray-900">Recommended Action</span>
+                              <span className="font-semibold text-gray-900 dark:text-gray-100">Recommended Action</span>
                             </div>
                             <p className="text-gray-700 font-medium">{rec.recommendation.focusedAction}</p>
                           </div>
@@ -2656,7 +2656,7 @@ export default function ResultsPage() {
             {reportData.websiteAudit?.recommendations?.length > 0 && (
               <div className="mt-8 pt-8 border-t">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">🔧 Technical Recommendations</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">🔧 Technical Recommendations</h3>
                   {!limits.showDetailedRecommendations && (
                     <PremiumBadge size="md" />
                   )}
@@ -2665,7 +2665,7 @@ export default function ResultsPage() {
                   {reportData.websiteAudit.recommendations.slice(0, limits.showDetailedRecommendations ? undefined : 1).map((rec: any, i: number) => (
                     <div key={i} className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-gray-900">{rec.title}</span>
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">{rec.title}</span>
                         <span className={`text-xs font-bold px-2 py-1 rounded ${
                           rec.priority === "high" ? "bg-red-100 text-red-700" :
                           rec.priority === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
@@ -2701,7 +2701,7 @@ export default function ResultsPage() {
         {expandedSection === "competitive" && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">🏆 Competitive Landscape</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🏆 Competitive Landscape</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
                 <ChevronUp className="w-6 h-6" />
               </button>
@@ -2790,7 +2790,7 @@ export default function ResultsPage() {
                       <span className="text-2xl">
                         {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
                       </span>
-                      <h4 className="font-bold text-gray-900">{stage?.stageLabel || "Stage"}</h4>
+                      <h4 className="font-bold text-gray-900 dark:text-gray-100">{stage?.stageLabel || "Stage"}</h4>
                     </div>
 
                     <div className="space-y-3">
@@ -2901,7 +2901,7 @@ export default function ResultsPage() {
         {expandedSection === "methodology" && (
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900">❓ How It Works - Methodology & Transparency</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">❓ How It Works - Methodology & Transparency</h2>
               <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
                 <ChevronUp className="w-6 h-6" />
               </button>
@@ -2919,17 +2919,17 @@ export default function ResultsPage() {
                 <div className="grid md:grid-cols-3 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4">
                     <div className="text-2xl font-bold text-blue-700 mb-1">50%</div>
-                    <div className="font-semibold text-gray-900">Mention Rate</div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">Mention Rate</div>
                     <p className="text-sm text-gray-600">How often AI platforms mention your brand when answering relevant questions.</p>
                   </div>
                   <div className="bg-cyan-50 rounded-lg p-4">
                     <div className="text-2xl font-bold text-cyan-700 mb-1">30%</div>
-                    <div className="font-semibold text-gray-900">Position</div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">Position</div>
                     <p className="text-sm text-gray-600">Where your brand appears in responses. Being mentioned first is better than being listed third.</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-4">
                     <div className="text-2xl font-bold text-green-700 mb-1">20%</div>
-                    <div className="font-semibold text-gray-900">Sentiment</div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">Sentiment</div>
                     <p className="text-sm text-gray-600">Whether AI speaks positively, neutrally, or negatively about your brand.</p>
                   </div>
                 </div>
@@ -2947,28 +2947,28 @@ export default function ResultsPage() {
                   <div className="flex gap-3 items-start">
                     <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
                     <div>
-                      <span className="font-semibold text-gray-900">Question Discovery</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">Question Discovery</span>
                       <p className="text-sm text-gray-600">We pull real questions from search data (DataForSEO) and generate strategic questions based on your industry.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
                     <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
                     <div>
-                      <span className="font-semibold text-gray-900">Multi-Platform Testing</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">Multi-Platform Testing</span>
                       <p className="text-sm text-gray-600">Each question is sent to all 4 AI platforms: ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. We run multiple tests per platform for statistical reliability.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
                     <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
                     <div>
-                      <span className="font-semibold text-gray-900">Response Analysis</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">Response Analysis</span>
                       <p className="text-sm text-gray-600">We analyze each response for brand mentions, positioning, sentiment, and competitor references using pattern matching and NLP.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
                     <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
                     <div>
-                      <span className="font-semibold text-gray-900">Technical Audit</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">Technical Audit</span>
                       <p className="text-sm text-gray-600">If you provided a domain, we scan your website for schema markup, content structure, FAQ sections, and robots.txt settings that affect AI visibility.</p>
                     </div>
                   </div>
