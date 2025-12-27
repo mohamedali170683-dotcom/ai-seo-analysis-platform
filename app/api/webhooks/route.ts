@@ -1,6 +1,16 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import crypto from 'crypto';
+import {
+  apiHandler,
+  apiSuccess,
+  apiError,
+  parseJsonBody,
+  getUserId,
+  getPaginationParams,
+  apiPaginated,
+  validateRequired,
+} from '@/lib/api/utils';
+import { HTTP_STATUS } from '@/lib/constants';
 
 // Generate secure webhook secret
 function generateWebhookSecret(): string {
@@ -8,77 +18,68 @@ function generateWebhookSecret(): string {
 }
 
 // GET /api/webhooks - List all webhooks
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || 'demo-user';
+export const GET = apiHandler(async (request: Request) => {
+  const { searchParams } = new URL(request.url);
+  const userId = getUserId(searchParams);
+  const { page, limit, skip } = getPaginationParams(searchParams);
 
-    const webhooks = await prisma.webhookConfig.findMany({
+  const [webhooks, total] = await Promise.all([
+    prisma.webhookConfig.findMany({
       where: { userId },
       include: {
         deliveries: {
           orderBy: { timestamp: 'desc' },
-          take: 10
-        }
+          take: 10,
+        },
       },
-      orderBy: { createdAt: 'desc' }
-    });
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.webhookConfig.count({ where: { userId } }),
+  ]);
 
-    return NextResponse.json({
-      success: true,
-      webhooks
-    });
-  } catch (error: any) {
-    console.error('Error fetching webhooks:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
-}
+  return apiPaginated(webhooks, { page, limit, total });
+});
 
 // POST /api/webhooks - Create new webhook
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const {
-      userId = 'demo-user',
-      name,
-      url,
-      events = [],
-      enabled = true
-    } = body;
+export const POST = apiHandler(async (request: Request) => {
+  const [body, parseError] = await parseJsonBody<{
+    userId?: string;
+    name?: string;
+    url?: string;
+    events?: string[];
+    enabled?: boolean;
+  }>(request);
 
-    if (!name || !url) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+  if (parseError) return parseError;
 
-    // Generate secure secret
-    const secret = generateWebhookSecret();
+  const {
+    userId = 'demo-user',
+    name,
+    url,
+    events = [],
+    enabled = true,
+  } = body!;
 
-    const webhook = await prisma.webhookConfig.create({
-      data: {
-        userId,
-        name,
-        url,
-        secret,
-        events,
-        enabled
-      }
-    });
-
-    return NextResponse.json({
-      success: true,
-      webhook
-    });
-  } catch (error: any) {
-    console.error('Error creating webhook:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+  const missingError = validateRequired({ name, url }, ['name', 'url']);
+  if (missingError) {
+    return apiError(missingError, HTTP_STATUS.BAD_REQUEST);
   }
-}
+
+  // Generate secure secret
+  const secret = generateWebhookSecret();
+
+  const webhook = await prisma.webhookConfig.create({
+    data: {
+      userId,
+      name: name!,
+      url: url!,
+      secret,
+      events,
+      enabled,
+    },
+  });
+
+  return apiSuccess({ webhook }, HTTP_STATUS.CREATED);
+});

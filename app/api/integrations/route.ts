@@ -1,68 +1,69 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
+import {
+  apiHandler,
+  apiSuccess,
+  apiError,
+  parseJsonBody,
+  getUserId,
+  getPaginationParams,
+  apiPaginated,
+  validateRequired,
+} from '@/lib/api/utils';
+import { HTTP_STATUS } from '@/lib/constants';
 
 // GET /api/integrations - List all integrations
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || 'demo-user';
+export const GET = apiHandler(async (request: Request) => {
+  const { searchParams } = new URL(request.url);
+  const userId = getUserId(searchParams);
+  const { page, limit, skip } = getPaginationParams(searchParams);
 
-    const integrations = await prisma.integration.findMany({
+  const [integrations, total] = await Promise.all([
+    prisma.integration.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' }
-    });
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.integration.count({ where: { userId } }),
+  ]);
 
-    return NextResponse.json({
-      success: true,
-      integrations
-    });
-  } catch (error: any) {
-    console.error('Error fetching integrations:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
-  }
-}
+  return apiPaginated(integrations, { page, limit, total });
+});
 
 // POST /api/integrations - Create/Connect new integration
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const {
-      userId = 'demo-user',
-      type,
-      name,
-      config = {},
-      enabled = true
-    } = body;
+export const POST = apiHandler(async (request: Request) => {
+  const [body, parseError] = await parseJsonBody<{
+    userId?: string;
+    type?: string;
+    name?: string;
+    config?: Record<string, unknown>;
+    enabled?: boolean;
+  }>(request);
 
-    if (!type || !name) {
-      return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
-        { status: 400 }
-      );
-    }
+  if (parseError) return parseError;
 
-    const integration = await prisma.integration.create({
-      data: {
-        userId,
-        type,
-        name,
-        config,
-        enabled
-      }
-    });
+  const {
+    userId = 'demo-user',
+    type,
+    name,
+    config = {},
+    enabled = true,
+  } = body!;
 
-    return NextResponse.json({
-      success: true,
-      integration
-    });
-  } catch (error: any) {
-    console.error('Error creating integration:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+  const missingError = validateRequired({ type, name }, ['type', 'name']);
+  if (missingError) {
+    return apiError(missingError, HTTP_STATUS.BAD_REQUEST);
   }
-}
+
+  const integration = await prisma.integration.create({
+    data: {
+      userId,
+      type: type!,
+      name: name!,
+      config,
+      enabled,
+    },
+  });
+
+  return apiSuccess({ integration }, HTTP_STATUS.CREATED);
+});
