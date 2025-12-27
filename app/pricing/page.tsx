@@ -78,7 +78,7 @@ export default function PricingPage() {
           </p>
 
           {/* Billing Toggle */}
-          <div className="inline-flex items-center bg-white rounded-full p-1 shadow-lg border">
+          <div className="inline-flex items-center bg-white dark:bg-gray-800 rounded-full p-1 shadow-lg border">
             <button
               onClick={() => setBillingCycle("monthly")}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all ${
@@ -110,7 +110,7 @@ export default function PricingPage() {
 
           {/* One-Time Report Option */}
           <div className="mt-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Or get a <span className="font-semibold text-blue-600">single comprehensive report for €{TIER_PRICING.professional.oneTimeReport}</span> (one-off, no subscription)
             </p>
           </div>
@@ -133,7 +133,7 @@ export default function PricingPage() {
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
                 <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€{partnerPrice.toLocaleString()}</span>
-                <span className="text-gray-500">/month</span>
+                <span className="text-gray-500 dark:text-gray-400">/month</span>
               </div>
               {billingCycle === "annual" && (
                 <p className="text-sm text-green-600 font-medium mt-1">
@@ -161,7 +161,7 @@ export default function PricingPage() {
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <Check className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  <span className="text-gray-700">{feature}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                 </li>
               ))}
             </ul>
@@ -196,7 +196,7 @@ export default function PricingPage() {
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
                 <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€{professionalPrice}</span>
-                <span className="text-gray-500">/month</span>
+                <span className="text-gray-500 dark:text-gray-400">/month</span>
               </div>
               {billingCycle === "annual" && (
                 <p className="text-sm text-green-600 font-medium mt-1">
@@ -230,7 +230,7 @@ export default function PricingPage() {
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span className="text-gray-700">{feature}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                 </li>
               ))}
             </ul>
@@ -257,7 +257,7 @@ export default function PricingPage() {
           </div>
 
           {/* FREE TIER */}
-          <div className="order-2 lg:order-3 border border-gray-200 rounded-2xl p-8 bg-white dark:bg-gray-800">
+          <div className="order-2 lg:order-3 border border-gray-200 dark:border-gray-700 rounded-2xl p-8 bg-white dark:bg-gray-800">
             <div className="text-center mb-6">
               <div className="inline-flex items-center gap-1 bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full mb-3">
                 <Zap className="w-3 h-3" />
@@ -270,7 +270,7 @@ export default function PricingPage() {
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
                 <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€0</span>
-                <span className="text-gray-500">/month</span>
+                <span className="text-gray-500 dark:text-gray-400">/month</span>
               </div>
               <p className="text-sm text-gray-500 mt-1">Free forever</p>
             </div>
@@ -288,7 +288,7 @@ export default function PricingPage() {
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <span className="text-gray-700">{feature}</span>
+                  <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                 </li>
               ))}
               <li className="flex items-start gap-2 text-sm text-amber-600 bg-amber-50 p-2 rounded-lg -mx-2 mt-2">
@@ -320,7 +320,7 @@ export default function PricingPage() {
         </div>
 
         {/* Feature Comparison Table */}
-        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden mb-16">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl border shadow-sm overflow-hidden mb-16">
           <div className="p-6 border-b">
             <h2 className="text-2xl font-bold text-gray-900 text-center">Compare All Features</h2>
           </div>
@@ -330,7 +330,7 @@ export default function PricingPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Feature</th>
-                  <th className="text-center px-6 py-4 text-sm font-semibold text-gray-600">Free</th>
+                  <th className="text-center px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Free</th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-blue-600 bg-blue-50">Professional</th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-amber-600">Partner</th>
                 </tr>
@@ -362,7 +362,7 @@ export default function PricingPage() {
                 ].map((row, i) => (
                   <tr key={i} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">{row.feature}</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">
+                    <td className="px-6 py-4 text-center text-sm text-gray-600 dark:text-gray-400">
                       {typeof row.free === "boolean" ? (
                         row.free ? <Check className="w-5 h-5 text-green-500 mx-auto" /> : <span className="text-gray-300">—</span>
                       ) : row.free}
@@ -415,7 +415,7 @@ export default function PricingPage() {
                 a: "Yes! 30-day money-back guarantee on Professional. If you're not satisfied, contact us for a full refund."
               },
             ].map((faq, i) => (
-              <div key={i} className="bg-white rounded-xl border p-6">
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-xl border p-6">
                 <h3 className="font-semibold text-gray-900 mb-2">{faq.q}</h3>
                 <p className="text-gray-600 text-sm">{faq.a}</p>
               </div>
@@ -449,7 +449,7 @@ export default function PricingPage() {
 
       {/* Footer */}
       <footer className="border-t mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-sm text-gray-500">
+        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
           <p>© 2024 Velaris. AI Visibility Analysis Platform.</p>
         </div>
       </footer>

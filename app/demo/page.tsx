@@ -335,7 +335,7 @@ function DemoPageContent() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+      <header className="bg-white border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -455,7 +455,7 @@ function DemoPageContent() {
         </div>
 
         {/* Visual User Journey Map */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 mb-12">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-8 mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Your Brand's AI Journey</h2>
           <p className="text-center text-gray-600 mb-8">Click on any stage to see detailed visibility analysis</p>
           <div className="relative">
@@ -472,7 +472,7 @@ function DemoPageContent() {
                     <div className={`bg-gradient-to-br ${stage.color} w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center shadow-xl border-4 border-white`}>
                       <Icon className="w-12 h-12 text-white" />
                     </div>
-                    <div className={`bg-white rounded-xl p-4 shadow-lg border-2 transition-all cursor-pointer hover:shadow-2xl ${
+                    <div className={`bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg border-2 transition-all cursor-pointer hover:shadow-2xl ${
                       isExpanded ? 'border-blue-500 scale-105' : 'border-gray-100'
                     }`}>
                       <div className="text-sm text-gray-500 font-semibold mb-1">STAGE {index + 1}</div>
@@ -480,7 +480,7 @@ function DemoPageContent() {
                       <p className="text-sm text-gray-600 mb-4">{stage.stageDescription}</p>
                       <div className="bg-gray-50 rounded-lg p-3 mb-4">
                         <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stage.portrayal.visibilityScore}</div>
-                        <div className="text-xs text-gray-600">Visibility Score</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Visibility Score</div>
                       </div>
                       <div className="text-xs text-gray-500 mb-4">
                         {stage.portrayal.mentionRate}% mention rate • {stage.portrayal.totalAnswersAnalyzed} responses analyzed
@@ -510,14 +510,14 @@ function DemoPageContent() {
         </div>
 
         {/* Sentiment Guide */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-xl p-8 mb-12 border-2 border-gray-200">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl shadow-xl p-8 mb-12 border-2 border-gray-200 dark:border-gray-700">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">📊 Understanding Sentiment Analysis</h2>
           <p className="text-center text-gray-600 mb-8">How we evaluate whether AI responses are favorable, neutral, or critical of your brand</p>
           <div className="grid md:grid-cols-3 gap-6">
             {Object.entries(DEMO_DATA.sentimentDefinitions).map(([key, data]) => (
-              <div key={key} className={`bg-white rounded-xl p-6 border-4 ${
+              <div key={key} className={`bg-white dark:bg-gray-800 rounded-xl p-6 border-4 ${
                 data.color === 'green' ? 'border-green-200' :
-                data.color === 'red' ? 'border-red-200' : 'border-gray-200'
+                data.color === 'red' ? 'border-red-200' : 'border-gray-200 dark:border-gray-700'
               }`}>
                 <div className="text-center mb-4">
                   <div className="text-5xl mb-2">{data.emoji}</div>
@@ -611,7 +611,7 @@ export default function DemoPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-gray-500">Loading demo...</div>
+          <div className="text-gray-500 dark:text-gray-400">Loading demo...</div>
         </div>
       </div>
     }>
@@ -624,7 +624,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
   const Icon = stage.icon;
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-100">
+    <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden border-4 border-gray-100">
       {/* Stage Header */}
       <div className={`bg-gradient-to-r ${stage.color} p-8 text-white`}>
         <div className="flex items-center gap-4 mb-4">
@@ -658,7 +658,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               <div key={i} className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border-2 border-blue-100">
                 <div className="text-base font-semibold text-gray-900 mb-2">{q.question}</div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">📊 {q.searchVolume?.toLocaleString()} searches/mo</span>
+                  <span className="text-gray-600 dark:text-gray-400">📊 {q.searchVolume?.toLocaleString()} searches/mo</span>
                   <span className="bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold">{q.answersAnalyzed} AI responses analyzed</span>
                 </div>
               </div>
@@ -698,7 +698,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
             </div>
 
             {/* Sentiment Analysis */}
-            <div className="bg-white rounded-2xl p-6 border-4 border-gray-100 shadow-lg">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 border-4 border-gray-100 shadow-lg">
               <div className="font-bold text-gray-900 mb-4 text-xl">😊 Sentiment Breakdown:</div>
               <div className="grid grid-cols-3 gap-4 mb-6">
                 {/* Positive */}
@@ -719,7 +719,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 <div className={`p-6 rounded-xl text-center transition-all ${
                   stage.portrayal.sentiment.dominant === 'neutral'
                     ? 'bg-gray-500 text-white shadow-2xl scale-105 ring-4 ring-gray-200'
-                    : 'bg-gray-50 text-gray-700 border-2 border-gray-200'
+                    : 'bg-gray-50 text-gray-700 border-2 border-gray-200 dark:border-gray-700'
                 }`}>
                   <div className="text-4xl mb-2">😐</div>
                   <div className="text-4xl font-bold mb-1">{stage.portrayal.sentiment.neutral}%</div>
@@ -744,10 +744,10 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 </div>
               </div>
               <div className="bg-gray-50 p-4 rounded-lg text-center">
-                <span className="text-gray-700">Overall Sentiment: </span>
+                <span className="text-gray-700 dark:text-gray-300">Overall Sentiment: </span>
                 <strong className={`text-xl capitalize ${
                   stage.portrayal.sentiment.dominant === "positive" ? "text-green-600" :
-                  stage.portrayal.sentiment.dominant === "negative" ? "text-red-600" : "text-gray-600"
+                  stage.portrayal.sentiment.dominant === "negative" ? "text-red-600" : "text-gray-600 dark:text-gray-400"
                 }`}>
                   {stage.portrayal.sentiment.dominant}
                 </strong>
@@ -762,7 +762,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </div>
               <div className="space-y-4">
                 {stage.portrayal.aiAnswerExamples.map((example: any, i: number) => (
-                  <div key={i} className="bg-white rounded-xl p-5 border-2 border-yellow-300 shadow-sm">
+                  <div key={i} className="bg-white dark:bg-gray-800 rounded-xl p-5 border-2 border-yellow-300 shadow-sm">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold">
@@ -823,7 +823,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-semibold text-gray-900 dark:text-gray-100">{comp.competitorName}</span>
                       <div className="text-right">
-                        <span className="text-2xl font-bold text-gray-700">{comp.mentionRate}%</span>
+                        <span className="text-2xl font-bold text-gray-700 dark:text-gray-300">{comp.mentionRate}%</span>
                         <span className="text-sm text-gray-600 ml-2">• Position #{comp.avgPosition}</span>
                       </div>
                     </div>

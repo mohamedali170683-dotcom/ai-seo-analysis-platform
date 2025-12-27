@@ -60,7 +60,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-500">Loading project...</div>
+        <div className="text-gray-500 dark:text-gray-400">Loading project...</div>
       </div>
     );
   }
@@ -80,7 +80,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <Link
             href="/dashboard"
@@ -92,7 +92,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{project.name}</h1>
-              <p className="text-gray-600">{project.domain}</p>
+              <p className="text-gray-600 dark:text-gray-400">{project.domain}</p>
             </div>
           </div>
         </div>
@@ -101,19 +101,19 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       <main className="container mx-auto px-4 py-8">
         {/* Stats */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">Keywords</div>
             <div className="text-2xl font-bold">{project._count?.keywords || 0}</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">AI Overview Checks</div>
             <div className="text-2xl font-bold">{project._count?.aiOverviews || 0}</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">Traffic Data Points</div>
             <div className="text-2xl font-bold">{project._count?.trafficData || 0}</div>
           </div>
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="text-sm text-gray-600 mb-1">Chatbot Queries</div>
             <div className="text-2xl font-bold">{project._count?.chatbotQueries || 0}</div>
           </div>
@@ -121,7 +121,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Add Keywords */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center">
               <Plus className="w-5 h-5 mr-2" />
               Add Keywords
@@ -145,7 +145,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           {/* Keywords List */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center">
               <Search className="w-5 h-5 mr-2" />
               Keywords ({project.keywords?.length || 0})
@@ -160,7 +160,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                     <div>
                       <div className="font-medium">{kw.keyword}</div>
                       {kw.searchVolume && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                           {kw.searchVolume.toLocaleString()} searches/mo
                         </div>
                       )}
@@ -174,7 +174,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 No keywords yet. Add some to get started!
               </div>
             )}

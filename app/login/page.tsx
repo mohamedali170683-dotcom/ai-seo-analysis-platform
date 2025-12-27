@@ -69,7 +69,7 @@ function LoginForm() {
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 bg-white/10 dark:bg-gray-800/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             placeholder="Enter your username"
             required
             autoComplete="username"
@@ -91,7 +91,7 @@ function LoginForm() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 bg-white/10 dark:bg-gray-800/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             placeholder="Enter your password"
             required
             autoComplete="current-password"
@@ -124,11 +124,11 @@ function LoginFormSkeleton() {
     <div className="space-y-6 animate-pulse">
       <div>
         <div className="h-4 w-20 bg-white/20 rounded mb-2"></div>
-        <div className="h-12 bg-white/10 rounded-lg"></div>
+        <div className="h-12 bg-white/10 dark:bg-gray-800/10 rounded-lg"></div>
       </div>
       <div>
         <div className="h-4 w-20 bg-white/20 rounded mb-2"></div>
-        <div className="h-12 bg-white/10 rounded-lg"></div>
+        <div className="h-12 bg-white/10 dark:bg-gray-800/10 rounded-lg"></div>
       </div>
       <div className="h-12 bg-cyan-600/50 rounded-lg"></div>
     </div>
@@ -141,7 +141,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-2xl mb-4">
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-white">AI Visibility Platform</h1>
@@ -149,7 +149,7 @@ export default function LoginPage() {
         </div>
 
         {/* Login Form */}
-        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+        <div className="bg-white/10 dark:bg-gray-800/10 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
           <Suspense fallback={<LoginFormSkeleton />}>
             <LoginForm />
           </Suspense>

@@ -254,7 +254,7 @@ export default function WPPDemoPage() {
                 <h1 className="text-xl font-bold text-gray-900 mt-1">
                   {data.client} - {data.primaryBrand} & ESN
                 </h1>
-                <p className="text-sm text-gray-500">https://morenutrition.de</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">https://morenutrition.de</p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -315,7 +315,7 @@ export default function WPPDemoPage() {
               <div className="text-purple-100 text-sm">Brands Tracked</div>
             </div>
           </div>
-          <div className="mt-4 bg-white/10 rounded-lg p-3 text-center text-sm">
+          <div className="mt-4 bg-white/10 dark:bg-gray-800/10 rounded-lg p-3 text-center text-sm">
             ℹ️ This analysis covers {data.questions.length} questions across {formatNumber(data.totalSearchVolume)}+ monthly searches to measure AI visibility
           </div>
         </div>
@@ -358,7 +358,7 @@ export default function WPPDemoPage() {
             </div>
           </div>
 
-          <div className="bg-white/10 rounded-xl p-4 mb-6">
+          <div className="bg-white/10 dark:bg-gray-800/10 rounded-xl p-4 mb-6">
             <h3 className="font-semibold mb-3 text-center">ℹ️ How This Score is Calculated</h3>
             <div className="grid grid-cols-4 gap-4">
               <div className="text-center">
@@ -389,7 +389,7 @@ export default function WPPDemoPage() {
         <div className="mb-8">
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Your Brand&apos;s AI Journey</h2>
-            <p className="text-gray-600">Click on any stage to see detailed visibility analysis</p>
+            <p className="text-gray-600 dark:text-gray-400">Click on any stage to see detailed visibility analysis</p>
             <div className="flex items-center justify-center gap-2 mt-2">
               <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ Real Data from 102 AI Responses</span>
             </div>
@@ -405,7 +405,7 @@ export default function WPPDemoPage() {
                 <div
                   key={stage}
                   onClick={() => setExpandedStage(isExpanded ? null : stage)}
-                  className={`bg-white rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+                  className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
                     isExpanded ? `ring-2 ring-${config.color}-500` : ""
                   }`}
                 >
@@ -435,7 +435,7 @@ export default function WPPDemoPage() {
 
         {/* Expanded Stage Details */}
         {expandedStage && (
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
             {(() => {
               const stage = expandedStage;
               const config = STAGE_CONFIG[stage as keyof typeof STAGE_CONFIG];
@@ -472,7 +472,7 @@ export default function WPPDemoPage() {
                         <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Questions Analyzed</h4>
                         <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ Real Data</span>
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
                         Total AI Responses: <span className="font-bold text-gray-900 dark:text-gray-100">{metrics.responseCount}</span>
                       </div>
                     </div>
@@ -481,9 +481,9 @@ export default function WPPDemoPage() {
                         <div key={i} className={`${config.bgLight} rounded-xl p-4 border-2 ${config.borderColor} border-opacity-20`}>
                           <p className="font-medium text-gray-900 mb-2">{q.question}</p>
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="text-gray-500">📊</span>
+                            <span className="text-gray-500 dark:text-gray-400">📊</span>
                             <span className="font-semibold">{formatNumber(q.searchVolume)}</span>
-                            <span className="text-gray-500">searches/mo</span>
+                            <span className="text-gray-500 dark:text-gray-400">searches/mo</span>
                           </div>
                         </div>
                       ))}
@@ -498,7 +498,7 @@ export default function WPPDemoPage() {
                     
                     <div className="grid md:grid-cols-2 gap-6">
                       {/* Mention Rate */}
-                      <div className="bg-white rounded-xl p-6 text-center">
+                      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center">
                         <div className="text-sm text-gray-500 mb-2">MENTION RATE</div>
                         <div className={`text-4xl font-bold mb-2 ${
                           metrics.mentionRate >= 70 ? "text-green-600" :
@@ -506,18 +506,18 @@ export default function WPPDemoPage() {
                         }`}>
                           {metrics.mentionRate}%
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           {data.primaryBrand} appears in {metrics.mentionRate}% of AI responses
                         </p>
                       </div>
 
                       {/* Average Position */}
-                      <div className="bg-white rounded-xl p-6 text-center">
+                      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 text-center">
                         <div className="text-sm text-gray-500 mb-2">AVERAGE POSITION</div>
                         <div className="text-4xl font-bold text-blue-600 mb-2">
                           #{metrics.avgPosition.toFixed(1)}
                         </div>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           When mentioned, appears in position #{metrics.avgPosition.toFixed(1)} on average
                         </p>
                       </div>
@@ -547,17 +547,17 @@ export default function WPPDemoPage() {
                       <div className="bg-green-50 rounded-xl p-6 text-center border-2 border-green-200">
                         <div className="text-3xl mb-2">😊</div>
                         <div className="text-3xl font-bold text-green-600">{metrics.sentiment.positive}%</div>
-                        <div className="text-sm text-gray-600">Positive</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Positive</div>
                       </div>
-                      <div className="bg-gray-50 rounded-xl p-6 text-center border-2 border-gray-200">
+                      <div className="bg-gray-50 rounded-xl p-6 text-center border-2 border-gray-200 dark:border-gray-700">
                         <div className="text-3xl mb-2">😐</div>
-                        <div className="text-3xl font-bold text-gray-600">{metrics.sentiment.neutral}%</div>
-                        <div className="text-sm text-gray-600">Neutral</div>
+                        <div className="text-3xl font-bold text-gray-600 dark:text-gray-400">{metrics.sentiment.neutral}%</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Neutral</div>
                       </div>
                       <div className="bg-red-50 rounded-xl p-6 text-center border-2 border-red-200">
                         <div className="text-3xl mb-2">😞</div>
                         <div className="text-3xl font-bold text-red-600">{metrics.sentiment.negative}%</div>
-                        <div className="text-sm text-gray-600">Negative</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400">Negative</div>
                       </div>
                     </div>
                     <div className={`mt-4 text-center p-3 rounded-lg ${
@@ -594,7 +594,7 @@ export default function WPPDemoPage() {
                     {/* Sample Response Card */}
                     {samples.filter(s => s.platform === selectedPlatform).length > 0 ? (
                       samples.filter(s => s.platform === selectedPlatform).map((sample, i) => (
-                        <div key={i} className={`bg-white rounded-xl p-6 border-l-4 ${
+                        <div key={i} className={`bg-white dark:bg-gray-800 rounded-xl p-6 border-l-4 ${
                           sample.sentiment === "positive" ? "border-green-500" :
                           sample.sentiment === "negative" ? "border-red-500" : "border-gray-400"
                         } shadow-sm`}>
@@ -608,7 +608,7 @@ export default function WPPDemoPage() {
                             <span className={`text-xs px-2 py-1 rounded ${
                               sample.sentiment === "positive" ? "bg-green-50 text-green-600" :
                               sample.sentiment === "negative" ? "bg-red-50 text-red-600" :
-                              "bg-gray-50 text-gray-600"
+                              "bg-gray-50 text-gray-600 dark:text-gray-400"
                             }`}>{sample.sentiment}</span>
                           </div>
                           <p className="text-sm text-gray-500 mb-2">Question: &quot;{sample.question}&quot;</p>
@@ -616,7 +616,7 @@ export default function WPPDemoPage() {
                           {sample.brandMentions && (
                             <div className="mt-3 flex flex-wrap gap-2">
                               {sample.brandMentions.map((brand, j) => (
-                                <span key={j} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                                <span key={j} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600 dark:text-gray-400">
                                   {brand}
                                 </span>
                               ))}
@@ -625,7 +625,7 @@ export default function WPPDemoPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="bg-gray-50 rounded-xl p-6 text-center text-gray-500">
+                      <div className="bg-gray-50 rounded-xl p-6 text-center text-gray-500 dark:text-gray-400">
                         No sample responses available for {selectedPlatform} in this stage
                       </div>
                     )}
@@ -690,7 +690,7 @@ export default function WPPDemoPage() {
 
                     {recommendation && (
                       <div className="space-y-4">
-                        <div className="bg-white rounded-lg p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-lg">📋</span>
                             <span className="font-semibold text-gray-900 dark:text-gray-100">Common Patterns Identified</span>
@@ -698,7 +698,7 @@ export default function WPPDemoPage() {
                           <p className="text-gray-600 text-sm">{recommendation.pattern}</p>
                         </div>
 
-                        <div className="bg-white rounded-lg p-4">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-lg">📝</span>
                             <span className="font-semibold text-gray-900 dark:text-gray-100">Content Type Needed</span>
@@ -706,7 +706,7 @@ export default function WPPDemoPage() {
                           <p className="text-gray-600 text-sm">{recommendation.contentType}</p>
                         </div>
 
-                        <div className="bg-white rounded-lg p-4 border-l-4 border-amber-500">
+                        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-amber-500">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-lg">✅</span>
                             <span className="font-semibold text-gray-900 dark:text-gray-100">Recommended Action</span>
@@ -723,7 +723,7 @@ export default function WPPDemoPage() {
         )}
 
         {/* Share of Voice by Platform */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">📊 Share of Voice by Platform</h3>
             <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ Real Data</span>
@@ -768,7 +768,7 @@ export default function WPPDemoPage() {
         </div>
 
         {/* Persona Visibility */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">👥 Visibility by Persona</h3>
             <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ Real Data</span>
@@ -840,7 +840,7 @@ export default function WPPDemoPage() {
         </div>
 
         {/* Sentiment by Brand */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">💭 Brand Sentiment Analysis</h3>
             <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ Real Data</span>
@@ -886,7 +886,7 @@ export default function WPPDemoPage() {
         </div>
 
         {/* Top Questions Table */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">🏆 Question Winners</h3>
             <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">✅ Real Data</span>
@@ -907,7 +907,7 @@ export default function WPPDemoPage() {
               <tbody>
                 {data.results.topQuestions.map((q, i) => (
                   <tr key={i} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-700">{q.question}</td>
+                    <td className="py-3 px-4 text-sm text-gray-700 dark:text-gray-300">{q.question}</td>
                     <td className="py-3 px-4 text-center text-sm font-medium">{formatNumber(q.searchVolume)}</td>
                     <td className="py-3 px-4 text-center">
                       <span className={`text-xs px-2 py-1 rounded-full font-medium ${
@@ -936,7 +936,7 @@ export default function WPPDemoPage() {
         </div>
 
         {/* Data Sources & Methodology Section */}
-        <div id="methodology-section" className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+        <div id="methodology-section" className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
           <h3 className="text-xl font-bold text-gray-900 mb-6">📋 Methodology: 100% Real Data</h3>
           
           <div className="bg-green-50 rounded-xl p-6 border-2 border-green-200 mb-6">
@@ -988,15 +988,15 @@ export default function WPPDemoPage() {
           <div className="bg-blue-50 rounded-xl p-6 border-2 border-blue-200">
             <h4 className="font-bold text-blue-900 mb-4">🔑 Key Findings from Real Data</h4>
             <div className="grid md:grid-cols-3 gap-4 text-sm text-blue-800">
-              <div className="bg-white rounded-lg p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                 <strong className="block mb-2">ESN Dominance</strong>
                 ESN mentioned in ~90% of &quot;best protein&quot; queries. Called the &quot;Goldstandard&quot; by Gemini. Strong &quot;Made in Germany&quot; quality narrative.
               </div>
-              <div className="bg-white rounded-lg p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                 <strong className="block mb-2">More Nutrition Positioning</strong>
                 Dominates lifestyle/diet contexts (100% of taste-focused queries). Strong in &quot;Abnehmen&quot; (weight loss) and &quot;nicht leiden beim Diäten&quot; narratives.
               </div>
-              <div className="bg-white rounded-lg p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                 <strong className="block mb-2">Clear Segmentation</strong>
                 AI platforms clearly distinguish: ESN = Performance athletes, More Nutrition = Lifestyle/dieting. Copilot: &quot;ESN wirkt funktionaler, More Nutrition emotionaler.&quot;
               </div>
@@ -1007,7 +1007,7 @@ export default function WPPDemoPage() {
         {/* Footer */}
         <div className="text-center text-sm text-gray-500 py-8 border-t mt-8">
           <p className="mb-2">Analysis performed on {data.analysisDate}</p>
-          <p className="font-medium text-gray-700">AI audit solution from WPP Media Holistic Search</p>
+          <p className="font-medium text-gray-700 dark:text-gray-300">AI audit solution from WPP Media Holistic Search</p>
         </div>
       </div>
     </div>

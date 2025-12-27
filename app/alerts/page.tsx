@@ -182,7 +182,7 @@ export default function AlertsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading alerts...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading alerts...</p>
         </div>
       </div>
     );
@@ -214,7 +214,7 @@ export default function AlertsPage() {
         {/* Stats Overview - Evidence-Based Design */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           {/* Active Alerts - Primary Metric with Status */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Alerts</span>
               <div className="flex items-center gap-2">
@@ -225,12 +225,12 @@ export default function AlertsPage() {
                   <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} />
                 )}
               </div>
-              <span className="text-sm text-gray-500">of {alerts.length} total</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">of {alerts.length} total</span>
             </div>
           </div>
 
           {/* Total Alerts - Gray (Informational) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Alerts</span>
               <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{alerts.length}</span>
@@ -238,7 +238,7 @@ export default function AlertsPage() {
           </div>
 
           {/* Triggered Count - Only colored if > 0 (Actionable) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Triggered (30d)</span>
               <div className="flex items-center gap-2">
@@ -260,7 +260,7 @@ export default function AlertsPage() {
           </div>
 
           {/* Channels - Gray (Informational) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Channels</span>
               <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -271,7 +271,7 @@ export default function AlertsPage() {
         </div>
 
         {/* Alert Types Overview */}
-        <div className="bg-white rounded-xl border-2 border-gray-200 p-6 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Available Alert Types
           </h2>
@@ -303,8 +303,8 @@ export default function AlertsPage() {
         </div>
 
         {/* Alerts List */}
-        <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Configured Alerts</h2>
           </div>
 
@@ -322,18 +322,18 @@ export default function AlertsPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-gray-900 dark:text-gray-100">{alert.name}</h3>
-                        <p className="text-sm text-gray-600">{info.description}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{info.description}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4">
                       <div className="text-right">
-                        <p className="text-xs text-gray-600">Triggered</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Triggered</p>
                         <p className="font-semibold text-gray-900 dark:text-gray-100">
                           {alert.triggerCount}x
                         </p>
                         {alert.lastTriggered && (
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
                             Last: {new Date(alert.lastTriggered).toLocaleDateString()}
                           </p>
                         )}
@@ -363,7 +363,7 @@ export default function AlertsPage() {
                       </button>
 
                       <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
-                        <Edit className="w-5 h-5 text-gray-600" />
+                        <Edit className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                       </button>
 
                       <button className="p-2 hover:bg-red-100 rounded-lg transition-colors">
@@ -374,7 +374,7 @@ export default function AlertsPage() {
 
                   {/* Expanded Details */}
                   {expandedAlert === alert.id && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 space-y-4">
+                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                       {/* Conditions */}
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-2 text-sm">
@@ -389,7 +389,7 @@ export default function AlertsPage() {
                               <span className="font-mono font-medium">
                                 {condition.metric}
                               </span>
-                              <span className="text-gray-600">{condition.operator}</span>
+                              <span className="text-gray-600 dark:text-gray-400">{condition.operator}</span>
                               <span className="font-bold text-blue-600">
                                 {condition.threshold}
                               </span>

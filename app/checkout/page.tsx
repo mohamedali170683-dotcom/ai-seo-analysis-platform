@@ -40,7 +40,7 @@ function CheckoutContent() {
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Order Summary */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Order Summary</h2>
             
             <div className="border-b pb-6 mb-6">
@@ -50,13 +50,13 @@ function CheckoutContent() {
                     <Sparkles className="w-5 h-5 text-blue-600" />
                     Velaris Professional
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {billing === "annual" ? "Annual subscription" : "Monthly subscription"}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-gray-900 dark:text-gray-100">€{price.toLocaleString()}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {billing === "annual" ? "/year" : "/month"}
                   </p>
                 </div>
@@ -81,7 +81,7 @@ function CheckoutContent() {
                 "PDF export & code snippets",
                 "Weekly monitoring",
               ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                <div key={i} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                   <Check className="w-4 h-4 text-green-500" />
                   {feature}
                 </div>
@@ -90,17 +90,17 @@ function CheckoutContent() {
 
             <div className="border-t pt-6">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">Today&apos;s charge</span>
+                <span className="text-gray-600 dark:text-gray-400">Today&apos;s charge</span>
                 <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">€0</span>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Your {TRIAL_DAYS}-day free trial starts today. You&apos;ll be charged €{price.toLocaleString()} on {new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toLocaleDateString()}.
               </p>
             </div>
           </div>
 
           {/* Payment Form Placeholder */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
             <div className="flex items-center gap-2 mb-6">
               <CreditCard className="w-5 h-5 text-blue-600" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Payment Details</h2>
@@ -121,7 +121,7 @@ function CheckoutContent() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Card Information</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <CreditCard className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">Stripe Elements will render here</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Stripe Elements will render here</p>
                   <p className="text-xs text-gray-400 mt-2">Prototype Mode</p>
                 </div>
               </div>
@@ -180,7 +180,7 @@ export default function CheckoutPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-gray-500">Loading checkout...</div>
+        <div className="animate-pulse text-gray-500 dark:text-gray-400">Loading checkout...</div>
       </div>
     }>
       <CheckoutContent />

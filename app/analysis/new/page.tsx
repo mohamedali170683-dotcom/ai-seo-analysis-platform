@@ -53,7 +53,7 @@ export default function NewAnalysisPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700">
@@ -92,49 +92,49 @@ export default function NewAnalysisPage() {
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-blue-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-blue-100">
             <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Search className="w-6 h-6 text-blue-600" />
             </div>
             <h3 className="font-bold text-gray-900 mb-2">12 Smart Questions</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Brand-specific questions across awareness, consideration, and decision stages
             </p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-purple-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-purple-100">
             <div className="bg-purple-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Brain className="w-6 h-6 text-purple-600" />
             </div>
             <h3 className="font-bold text-gray-900 mb-2">3 AI Platforms</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Test across ChatGPT, Gemini, and Copilot for complete visibility
             </p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-green-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-green-100">
             <div className="bg-green-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <TrendingUp className="w-6 h-6 text-green-600" />
             </div>
             <h3 className="font-bold text-gray-900 mb-2">180 AI Queries</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               5 tests per question per platform for statistical significance
             </p>
           </div>
           
-          <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-pink-100">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-2 border-pink-100">
             <div className="bg-pink-100 w-12 h-12 rounded-lg flex items-center justify-center mb-4">
               <Sparkles className="w-6 h-6 text-pink-600" />
             </div>
             <h3 className="font-bold text-gray-900 mb-2">AI Insights</h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Actionable recommendations to improve your AI visibility
             </p>
           </div>
         </div>
 
         {/* Analysis Form */}
-        <div className="bg-white rounded-3xl shadow-2xl p-12 mb-12">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-12 mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             Start Your Analysis
           </h2>
@@ -152,7 +152,7 @@ export default function NewAnalysisPage() {
                 value={formData.brandOrKeyword}
                 onChange={(e) => setFormData({ ...formData, brandOrKeyword: e.target.value })}
                 placeholder="e.g., Nike, Shopify, project management software"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
               />
               <p className="text-sm text-gray-500 mt-2">
                 Enter the brand name or keyword you want to analyze
@@ -170,7 +170,7 @@ export default function NewAnalysisPage() {
                 value={formData.domain}
                 onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
                 placeholder="e.g., nike.com, shopify.com"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
               />
               <p className="text-sm text-gray-500 mt-2">
                 Your brand's website URL (without https://)
@@ -188,7 +188,7 @@ export default function NewAnalysisPage() {
                 value={formData.competitors}
                 onChange={(e) => setFormData({ ...formData, competitors: e.target.value })}
                 placeholder="e.g., Adidas, Puma, Under Armour"
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
+                className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all text-gray-900 dark:text-gray-100"
               />
               <p className="text-sm text-gray-500 mt-2">
                 Comma-separated list of competitor brands for comparison
@@ -225,7 +225,7 @@ export default function NewAnalysisPage() {
               )}
             </button>
 
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               Analysis typically completes in 3-5 minutes (180 AI queries across 3 platforms)
             </p>
           </form>

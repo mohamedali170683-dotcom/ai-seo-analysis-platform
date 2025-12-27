@@ -171,7 +171,7 @@ export default function HallucinationDetectorPage() {
       case 'MEDIUM': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
       case 'HIGH': return 'text-orange-600 bg-orange-50 border-orange-200';
       case 'CRITICAL': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -190,7 +190,7 @@ export default function HallucinationDetectorPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+        <div className="text-gray-600 dark:text-gray-400">Loading...</div>
       </div>
     );
   }
@@ -203,13 +203,13 @@ export default function HallucinationDetectorPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
             Misinformation & Hallucination Detector
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             Detect factual errors, outdated information, and competitor confusion in LLM responses
           </p>
         </div>
 
         {/* Brand Selection & Create */}
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Your Brands</h2>
             <button
@@ -319,12 +319,12 @@ export default function HallucinationDetectorPage() {
                 className={`p-4 border rounded-md cursor-pointer transition-colors ${
                   selectedGroundTruth?.id === gt.id
                     ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                 }`}
               >
                 <h3 className="font-semibold text-lg">{gt.companyName}</h3>
                 {gt.foundedYear && (
-                  <p className="text-sm text-gray-600">Founded: {gt.foundedYear}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Founded: {gt.foundedYear}</p>
                 )}
                 {gt.hallucinationDetections?.length > 0 && (
                   <div className="mt-2">
@@ -340,7 +340,7 @@ export default function HallucinationDetectorPage() {
           </div>
 
           {groundTruths.length === 0 && !showCreateForm && (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               No brands added yet. Click &quot;Add Brand&quot; to get started.
             </div>
           )}
@@ -350,7 +350,7 @@ export default function HallucinationDetectorPage() {
         {selectedGroundTruth && (
           <>
             {/* Accuracy Dashboard */}
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Brand Accuracy Report</h2>
                 <button
@@ -366,7 +366,7 @@ export default function HallucinationDetectorPage() {
                 <>
                   {/* Overall Score */}
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Overall Accuracy</span>
                         <div className="flex items-baseline gap-2">
@@ -390,10 +390,10 @@ export default function HallucinationDetectorPage() {
                                    <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />;
                           })()}
                         </div>
-                        <span className="text-xs font-medium text-gray-500">{latestDetection.riskLevel} Risk</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{latestDetection.riskLevel} Risk</span>
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hallucinations Found</span>
                         <div className="flex items-baseline gap-2">
@@ -413,7 +413,7 @@ export default function HallucinationDetectorPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Recommendations</span>
                         <div className="flex items-baseline gap-2">
@@ -433,11 +433,11 @@ export default function HallucinationDetectorPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">LLMs Tested</span>
                         <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">2</span>
-                        <span className="text-xs text-gray-500">ChatGPT, Gemini</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">ChatGPT, Gemini</span>
                       </div>
                     </div>
                   </div>
@@ -448,7 +448,7 @@ export default function HallucinationDetectorPage() {
                       <h3 className="text-lg font-semibold mb-3">Detected Hallucinations</h3>
                       <div className="space-y-3">
                         {latestDetection.hallucinations.map((h) => (
-                          <div key={h.id} className="p-4 border border-gray-200 rounded-md">
+                          <div key={h.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <span
@@ -476,10 +476,10 @@ export default function HallucinationDetectorPage() {
                                 >
                                   {h.severity}
                                 </span>
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
                                   {h.llm.toUpperCase()}
                                 </span>
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                   {h.category.replace(/_/g, ' ')}
                                 </span>
                               </div>
@@ -513,7 +513,7 @@ export default function HallucinationDetectorPage() {
                       <h3 className="text-lg font-semibold mb-3">Recommendations</h3>
                       <div className="space-y-3">
                         {latestDetection.recommendations.map((r) => (
-                          <div key={r.id} className="p-4 border border-gray-200 rounded-md">
+                          <div key={r.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md">
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-medium">{r.title}</h4>
                               <span
@@ -541,7 +541,7 @@ export default function HallucinationDetectorPage() {
                               </span>
                             </div>
                             <p className="text-sm text-gray-600 mb-2">{r.description}</p>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               Affected LLMs: {r.affectedLLMs.join(', ')}
                             </div>
                           </div>
@@ -551,7 +551,7 @@ export default function HallucinationDetectorPage() {
                   )}
                 </>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   No scans run yet. Click &quot;Run New Scan&quot; to start detecting hallucinations.
                 </div>
               )}

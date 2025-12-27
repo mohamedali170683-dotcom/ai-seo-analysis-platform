@@ -235,7 +235,7 @@ export default function FeaturesPage() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
                   {category.category}
                 </h2>
-                <p className="text-gray-600">{category.description}</p>
+                <p className="text-gray-600 dark:text-gray-400">{category.description}</p>
               </div>
 
               {/* Features Grid */}
@@ -245,7 +245,7 @@ export default function FeaturesPage() {
                   return (
                     <div
                       key={featureIndex}
-                      className="bg-white rounded-xl border-2 border-gray-200 hover:border-blue-300 transition-all p-6 hover:shadow-lg"
+                      className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 hover:border-blue-300 transition-all p-6 hover:shadow-lg"
                     >
                       {/* Feature Header */}
                       <div className="flex items-start justify-between mb-4">
@@ -273,7 +273,7 @@ export default function FeaturesPage() {
                       {/* Highlights */}
                       <ul className="space-y-2 mb-4">
                         {feature.highlights.map((highlight, idx) => (
-                          <li key={idx} className="flex items-start text-xs text-gray-700">
+                          <li key={idx} className="flex items-start text-xs text-gray-700 dark:text-gray-300">
                             <CheckCircle2 className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                             <span>{highlight}</span>
                           </li>

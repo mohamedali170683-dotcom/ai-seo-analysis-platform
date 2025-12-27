@@ -53,7 +53,7 @@ export default function ChatbotTestPage() {
           Back to Dashboard
         </Link>
 
-        <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 mb-8">
           <div className="flex items-center mb-6">
             <div className="bg-purple-100 p-3 rounded-lg mr-4">
               <Bot className="w-8 h-8 text-purple-600" />
@@ -62,7 +62,7 @@ export default function ChatbotTestPage() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Chatbot Visibility Tester
               </h1>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-400">
                 Test if your brand appears in ChatGPT responses (powered by OpenAI)
               </p>
             </div>
@@ -129,7 +129,7 @@ export default function ChatbotTestPage() {
                 <h2 className="text-xl font-bold mb-4">Visibility Analysis</h2>
 
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div className="bg-white rounded-lg p-6">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
                     <div className="text-sm text-gray-600 mb-2">
                       Brand Mentioned?
                     </div>
@@ -142,7 +142,7 @@ export default function ChatbotTestPage() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-lg p-6">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
                     <div className="text-sm text-gray-600 mb-2">
                       Visibility Score
                     </div>
@@ -158,7 +158,7 @@ export default function ChatbotTestPage() {
                 </div>
 
                 {result.citedUrls && result.citedUrls.length > 0 && (
-                  <div className="bg-white rounded-lg p-4 mb-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
                     <div className="text-sm font-medium text-gray-700 mb-2">
                       URLs Cited: {result.citedUrls.length}
                     </div>
@@ -172,9 +172,9 @@ export default function ChatbotTestPage() {
               </div>
 
               {/* ChatGPT Response */}
-              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <div className="bg-gray-50 rounded-lg p-6 border border-gray-200 dark:border-gray-700">
                 <h3 className="font-bold text-lg mb-3">ChatGPT Response</h3>
-                <div className="bg-white rounded-lg p-4 text-gray-800 whitespace-pre-wrap">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-gray-800 whitespace-pre-wrap">
                   {result.response}
                 </div>
                 <div className="text-xs text-gray-500 mt-3">
@@ -250,7 +250,7 @@ export default function ChatbotTestPage() {
           <p className="text-gray-700 mb-2">
             This tool asks ChatGPT your question and analyzes:
           </p>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
+          <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
             <li>Whether your brand is mentioned in the response</li>
             <li>Position of mention (earlier = better visibility)</li>
             <li>Visibility score based on prominence</li>

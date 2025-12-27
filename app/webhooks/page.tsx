@@ -149,7 +149,7 @@ export default function WebhooksPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading webhooks...</p>
+          <p className="text-gray-600 dark:text-gray-400">Loading webhooks...</p>
         </div>
       </div>
     );
@@ -181,7 +181,7 @@ export default function WebhooksPage() {
         {/* Stats Overview - Evidence-Based Design */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
           {/* Active Webhooks - Primary Metric */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Active Webhooks</span>
               <div className="flex items-center gap-2">
@@ -192,12 +192,12 @@ export default function WebhooksPage() {
                   <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} />
                 )}
               </div>
-              <span className="text-sm text-gray-500">of {webhooks.length} total</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">of {webhooks.length} total</span>
             </div>
           </div>
 
           {/* Total Deliveries - Gray (Informational) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Deliveries</span>
               <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -207,7 +207,7 @@ export default function WebhooksPage() {
           </div>
 
           {/* Success Rate - Semantic Color Based on Performance */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Success Rate</span>
               <div className="flex items-center gap-2">
@@ -246,7 +246,7 @@ export default function WebhooksPage() {
           </div>
 
           {/* Failed Deliveries - Only red if > 0 (Actionable) */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Failed Deliveries</span>
               <div className="flex items-center gap-2">
@@ -269,8 +269,8 @@ export default function WebhooksPage() {
         </div>
 
         {/* Webhooks List */}
-        <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden mb-8">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Configured Webhooks
             </h2>
@@ -313,11 +313,11 @@ export default function WebhooksPage() {
                       }
                       className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
                     >
-                      <Eye className="w-5 h-5 text-gray-600" />
+                      <Eye className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                     </button>
 
                     <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
-                      <Edit className="w-5 h-5 text-gray-600" />
+                      <Edit className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                     </button>
 
                     <button className="p-2 hover:bg-red-100 rounded-lg transition-colors">
@@ -338,9 +338,9 @@ export default function WebhooksPage() {
                       className="p-1 hover:bg-gray-200 rounded transition-colors"
                     >
                       {showSecrets[webhook.id] ? (
-                        <EyeOff className="w-4 h-4 text-gray-600" />
+                        <EyeOff className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       ) : (
-                        <Eye className="w-4 h-4 text-gray-600" />
+                        <Eye className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       )}
                     </button>
                     <button
@@ -350,7 +350,7 @@ export default function WebhooksPage() {
                       {copiedSecret === webhook.id ? (
                         <Check className="w-4 h-4 text-green-600" />
                       ) : (
-                        <Copy className="w-4 h-4 text-gray-600" />
+                        <Copy className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       )}
                     </button>
                   </div>
@@ -374,21 +374,21 @@ export default function WebhooksPage() {
                 {/* Stats */}
                 <div className="grid grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Deliveries</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Deliveries</p>
                     <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{webhook.deliveryCount}</p>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Success</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Success</p>
                     <p className="text-lg font-bold text-green-700">
                       {webhook.deliveryCount - webhook.failureCount}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-red-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Failed</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Failed</p>
                     <p className="text-lg font-bold text-red-700">{webhook.failureCount}</p>
                   </div>
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <p className="text-xs text-gray-600">Last Triggered</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Last Triggered</p>
                     <p className="text-sm font-bold text-blue-700">
                       {webhook.lastTriggered
                         ? new Date(webhook.lastTriggered).toLocaleTimeString()
@@ -399,7 +399,7 @@ export default function WebhooksPage() {
 
                 {/* Delivery History */}
                 {selectedWebhook === webhook.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                     <h4 className="font-semibold text-gray-900 mb-3">Recent Deliveries</h4>
                     <div className="space-y-2">
                       {getWebhookDeliveries(webhook).length === 0 ? (
@@ -422,7 +422,7 @@ export default function WebhooksPage() {
                             )}
                             <div>
                               <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{delivery.event}</p>
-                              <p className="text-xs text-gray-600">
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
                                 {new Date(delivery.timestamp).toLocaleString()}
                                 {delivery.errorMessage && (
                                   <span className="text-red-600 ml-2">• {delivery.errorMessage}</span>
@@ -442,7 +442,7 @@ export default function WebhooksPage() {
                                 {delivery.responseCode}
                               </span>
                             )}
-                            <span className="text-xs text-gray-500">{delivery.attempts} attempt(s)</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{delivery.attempts} attempt(s)</span>
                           </div>
                         </div>
                         ))
