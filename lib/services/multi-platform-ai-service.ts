@@ -115,7 +115,7 @@ export class MultiPlatformAIService {
         timeout: 20000,
         maxRetries: 1,
       });
-      this.platformStatus.Perplexity = { isReal: true, reason: "Perplexity API (llama-3.1-sonar-small-128k-online)" };
+      this.platformStatus.Perplexity = { isReal: true, reason: "Perplexity API (sonar)" };
       console.log("✅ [AI] Perplexity API initialized (REAL)");
     } else {
       console.log("⚠️ [AI] Perplexity API key not provided - will use simulation");
@@ -470,7 +470,7 @@ export class MultiPlatformAIService {
 
         const completion = await this.perplexityClient!.chat.completions.create(
           {
-            model: "llama-3.1-sonar-small-128k-online", // Perplexity's online model with web search
+            model: "sonar", // Perplexity's online model with web search
             messages: [
               { role: "system", content: geoContext },
               { role: "user", content: question }
@@ -533,7 +533,7 @@ export class MultiPlatformAIService {
           const analysis = this.analyzeResponse(fullResponse, brandName, competitors);
           results.push({
             platform: "Perplexity" as const,
-            modelVersion: "llama-3.1-sonar-small-128k-online",
+            modelVersion: "sonar",
             queryNumber: i,
             question,
             fullResponse,
