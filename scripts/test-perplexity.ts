@@ -21,7 +21,7 @@ async function testPerplexity() {
   try {
     console.log("\n🧪 Testing Perplexity API...");
     const completion = await client.chat.completions.create({
-      model: "llama-3.1-sonar-small-128k-online",
+      model: "sonar",
       messages: [
         { role: "user", content: "What is the capital of France?" }
       ],
