@@ -22,7 +22,7 @@ import { HTTP_STATUS, PAGINATION } from '@/lib/constants';
 /**
  * Create a success response
  */
-export function apiSuccess<T>(data: T, status = HTTP_STATUS.OK): NextResponse {
+export function apiSuccess<T>(data: T, status: number = HTTP_STATUS.OK): NextResponse {
   return NextResponse.json({ success: true, ...data }, { status });
 }
 
@@ -31,7 +31,7 @@ export function apiSuccess<T>(data: T, status = HTTP_STATUS.OK): NextResponse {
  */
 export function apiError(
   message: string,
-  status = HTTP_STATUS.INTERNAL_ERROR,
+  status: number = HTTP_STATUS.INTERNAL_ERROR,
   details?: unknown
 ): NextResponse {
   return NextResponse.json(
