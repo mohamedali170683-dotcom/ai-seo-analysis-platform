@@ -34,14 +34,14 @@ export function apiError(
   status: number = HTTP_STATUS.INTERNAL_ERROR,
   details?: unknown
 ): NextResponse {
-  return NextResponse.json(
-    {
-      success: false,
-      error: message,
-      ...(details && { details }),
-    },
-    { status }
-  );
+  const body: { success: false; error: string; details?: unknown } = {
+    success: false,
+    error: message,
+  };
+  if (details !== undefined) {
+    body.details = details;
+  }
+  return NextResponse.json(body, { status });
 }
 
 /**
