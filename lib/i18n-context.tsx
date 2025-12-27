@@ -7,7 +7,7 @@ export type UILanguage = 'en' | 'de';
 interface I18nContextType {
   language: UILanguage;
   setLanguage: (lang: UILanguage) => void;
-  t: (key: string) => string;
+  t: (key: string, replacements?: Record<string, string | number>) => string;
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
@@ -235,7 +235,7 @@ export function useI18n() {
     return {
       language: 'en' as UILanguage,
       setLanguage: () => {},
-      t: (key: string) => key,
+      t: (key: string, replacements?: Record<string, string | number>) => key,
     };
   }
   return context;
