@@ -93,6 +93,52 @@ function markdownToHtml(text: string): string {
     .replace(/\n/g, '<br>');
 }
 
+// Smart snippet extractor that cuts at sentence boundaries
+function extractSmartSnippet(text: string, maxLength: number = 400, focusKeyword?: string): string {
+  if (!text) return '';
+
+  // Remove markdown symbols for clean display
+  let cleanText = text.replace(/\*\*/g, '').replace(/\*/g, '');
+
+  let startPos = 0;
+
+  // If we have a focus keyword, try to center the snippet around it
+  if (focusKeyword) {
+    const keywordIndex = cleanText.toLowerCase().indexOf(focusKeyword.toLowerCase());
+    if (keywordIndex !== -1) {
+      // Start a bit before the keyword to provide context
+      startPos = Math.max(0, keywordIndex - 100);
+    }
+  }
+
+  // Extract a chunk of text
+  let snippet = cleanText.substring(startPos, startPos + maxLength);
+
+  // Find the last complete sentence within our length
+  const sentenceEndings = ['. ', '! ', '? ', '.\n', '!\n', '?\n'];
+  let lastSentenceEnd = -1;
+
+  for (const ending of sentenceEndings) {
+    const pos = snippet.lastIndexOf(ending);
+    if (pos > lastSentenceEnd && pos > 100) { // At least 100 chars for a meaningful snippet
+      lastSentenceEnd = pos;
+    }
+  }
+
+  if (lastSentenceEnd > 0) {
+    snippet = snippet.substring(0, lastSentenceEnd + 1);
+  }
+
+  // Clean up
+  snippet = snippet.trim();
+
+  // Add ellipsis if we're not at the start/end
+  if (startPos > 0) snippet = '...' + snippet;
+  if (startPos + snippet.length < cleanText.length) snippet = snippet + '...';
+
+  return snippet;
+}
+
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
@@ -1026,9 +1072,9 @@ export default function ResultsPage() {
                                           ? "with a <strong>negative tone</strong>"
                                           : "with a <strong>neutral tone</strong>";
 
-                                        const exampleSnippet = firstSnippet.substring(0, 80);
+                                        const exampleSnippet = extractSmartSnippet(firstSnippet, 300, reportData.brandOrKeyword);
                                         const snippetPhrase = exampleSnippet
-                                          ? ` as shown in this snippet: <em>"${exampleSnippet}..."</em>`
+                                          ? ` as shown in this snippet: <em>"${exampleSnippet}"</em>`
                                           : "";
 
                                         return (
@@ -1062,9 +1108,9 @@ export default function ResultsPage() {
                                         .sort((a, b) => b[1] - a[1])
                                         .map(([name]) => name);
 
-                                      // Get a snippet from the first response
+                                      // Get a smart snippet from the first response
                                       const firstResponse = responses[0]?.fullResponse || responses[0]?.context || '';
-                                      const snippet = firstResponse.substring(0, 200).replace(/\*/g, '').trim();
+                                      const snippet = extractSmartSnippet(firstResponse, 500);
 
                                       return (
                                         <div className="space-y-2 text-sm text-gray-700">
