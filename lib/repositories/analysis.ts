@@ -35,6 +35,18 @@ export interface AnalysisWithResults extends Analysis {
     title: string;
     priority: number;
   }[];
+  discoveredQuestions?: {
+    id: string;
+    question: string;
+    searchVolume: number;
+    category: string | null;
+  }[];
+  detectedCompetitors?: {
+    id: string;
+    competitorName: string;
+    domain: string | null;
+    overlapScore: number;
+  }[];
 }
 
 // =============================================================================
@@ -125,7 +137,7 @@ class AnalysisRepository extends BaseRepository<
             category: true,
           },
         },
-        competitors: {
+        detectedCompetitors: {
           select: {
             id: true,
             competitorName: true,
