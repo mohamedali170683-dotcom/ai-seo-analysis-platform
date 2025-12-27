@@ -333,7 +333,7 @@ function DemoPageContent() {
   const DEMO_DATA = demoData;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="container mx-auto px-4 py-4">
@@ -352,7 +352,7 @@ function DemoPageContent() {
                   ✨ DEMO REPORT - PROTOTYPE
                 </div>
               )}
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {DEMO_DATA.brandOrKeyword} - WPP Media Holistic Search
               </h1>
               <p className="text-gray-600 mt-1">{DEMO_DATA.domain}</p>
@@ -479,7 +479,7 @@ function DemoPageContent() {
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{stage.stageLabel}</h3>
                       <p className="text-sm text-gray-600 mb-4">{stage.stageDescription}</p>
                       <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                        <div className="text-3xl font-bold text-gray-900">{stage.portrayal.visibilityScore}</div>
+                        <div className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stage.portrayal.visibilityScore}</div>
                         <div className="text-xs text-gray-600">Visibility Score</div>
                       </div>
                       <div className="text-xs text-gray-500 mb-4">
@@ -647,7 +647,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
         {/* Questions + Statistical Significance */}
         <div className="mb-10">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold text-gray-900">Questions Analyzed</h3>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Questions Analyzed</h3>
             <div className="bg-green-100 border-2 border-green-300 rounded-xl px-4 py-2">
               <div className="text-xs text-green-700 font-semibold">STATISTICALLY SIGNIFICANT</div>
               <div className="text-2xl font-bold text-green-900">{stage.portrayal.totalAnswersAnalyzed} responses</div>
@@ -821,7 +821,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 {stage.portrayal.competitorComparison.map((comp: any, i: number) => (
                   <div key={i}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-semibold text-gray-900">{comp.competitorName}</span>
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">{comp.competitorName}</span>
                       <div className="text-right">
                         <span className="text-2xl font-bold text-gray-700">{comp.mentionRate}%</span>
                         <span className="text-sm text-gray-600 ml-2">• Position #{comp.avgPosition}</span>

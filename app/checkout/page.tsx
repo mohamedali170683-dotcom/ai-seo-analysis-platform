@@ -55,7 +55,7 @@ function CheckoutContent() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-gray-900">€{price.toLocaleString()}</p>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100">€{price.toLocaleString()}</p>
                   <p className="text-sm text-gray-500">
                     {billing === "annual" ? "/year" : "/month"}
                   </p>
@@ -71,7 +71,7 @@ function CheckoutContent() {
             </div>
 
             <div className="space-y-3 mb-6">
-              <h4 className="font-medium text-gray-900">What&apos;s included:</h4>
+              <h4 className="font-medium text-gray-900 dark:text-gray-100">What&apos;s included:</h4>
               {[
                 "All 4 AI platforms",
                 "18 questions per analysis",
@@ -91,7 +91,7 @@ function CheckoutContent() {
             <div className="border-t pt-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-600">Today&apos;s charge</span>
-                <span className="text-2xl font-bold text-gray-900">€0</span>
+                <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">€0</span>
               </div>
               <p className="text-sm text-gray-500">
                 Your {TRIAL_DAYS}-day free trial starts today. You&apos;ll be charged €{price.toLocaleString()} on {new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toLocaleDateString()}.
@@ -103,7 +103,7 @@ function CheckoutContent() {
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="flex items-center gap-2 mb-6">
               <CreditCard className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">Payment Details</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Payment Details</h2>
             </div>
 
             {/* Placeholder for Stripe Elements */}

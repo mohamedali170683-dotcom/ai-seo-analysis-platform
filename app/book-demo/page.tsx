@@ -60,7 +60,7 @@ export default function BookDemoPage() {
               <div className="bg-gray-50 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Calendar className="w-5 h-5 text-blue-600" />
-                  <h3 className="font-semibold text-gray-900">Select a Time</h3>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">Select a Time</h3>
                 </div>
                 
                 {/* Placeholder for Calendly embed */}

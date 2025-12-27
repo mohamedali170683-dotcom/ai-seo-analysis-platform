@@ -59,7 +59,7 @@ export default function ChatbotTestPage() {
               <Bot className="w-8 h-8 text-purple-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 Chatbot Visibility Tester
               </h1>
               <p className="text-gray-600">

@@ -468,14 +468,14 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-gray-900">
+    <div className="min-h-screen bg-[#F5F5F7] text-gray-900 dark:text-gray-100">
       {/* Header - Apple Style */}
       <header className="border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-2 transition-colors">
             ← Back to Dashboard
           </Link>
-          <h1 className="text-xl font-bold text-gray-900">Velaris</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Velaris</h1>
           <div className="w-32" />
         </div>
       </header>
@@ -530,7 +530,7 @@ export default function AnalyzePage() {
 
             {/* Value Proposition - Apple Style */}
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900">
+              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">
                 {tier === "free" ? "Get Your AI Visibility Check" : "Take Control of Your AI Visibility"}
               </h2>
               <p className="text-xl text-gray-600 mb-6">
@@ -539,21 +539,21 @@ export default function AnalyzePage() {
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="bg-gray-50 rounded-xl p-5">
                   <div className="text-3xl mb-3">📊</div>
-                  <h3 className="font-semibold mb-1 text-gray-900">Real Search Data</h3>
+                  <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">Real Search Data</h3>
                   <p className="text-sm text-gray-500">
                     Questions people actually search
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
                   <div className="text-3xl mb-3">🎯</div>
-                  <h3 className="font-semibold mb-1 text-gray-900">4 AI Platforms</h3>
+                  <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">4 AI Platforms</h3>
                   <p className="text-sm text-gray-500">
                     ChatGPT, Gemini, Copilot & Perplexity
                   </p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-5">
                   <div className="text-3xl mb-3">🔬</div>
-                  <h3 className="font-semibold mb-1 text-gray-900">You Choose</h3>
+                  <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">You Choose</h3>
                   <p className="text-sm text-gray-500">
                     {tier === "free" 
                       ? "Up to 3 questions • Awareness stage" 
@@ -580,7 +580,7 @@ export default function AnalyzePage() {
             {/* Form - Apple Style */}
             <div className="bg-white rounded-2xl p-8 space-y-6 max-w-xl mx-auto shadow-lg border border-gray-100">
               <div className="text-center">
-                <h3 className="text-xl font-semibold mb-2 text-gray-900">Enter Your Brand Details</h3>
+                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Enter Your Brand Details</h3>
                 <p className="text-sm text-gray-500">We'll find the questions that matter for your brand</p>
               </div>
               
@@ -642,7 +642,7 @@ export default function AnalyzePage() {
                           >
                             <div className="flex items-center gap-2">
                               <User className={`w-4 h-4 ${selectedPersona === persona.name ? "text-blue-600" : "text-gray-400"}`} />
-                              <span className="font-medium text-gray-900">{persona.name}</span>
+                              <span className="font-medium text-gray-900 dark:text-gray-100">{persona.name}</span>
                               {selectedPersona === persona.name && (
                                 <span className="ml-auto text-blue-600 text-xs font-semibold">Selected</span>
                               )}
@@ -847,7 +847,7 @@ export default function AnalyzePage() {
 
             {/* How it works - Apple Style */}
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">How It Works</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">How It Works</h3>
               <div className="grid md:grid-cols-4 gap-4">
                 <div className="text-center p-4">
                   <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">1</div>
@@ -878,7 +878,7 @@ export default function AnalyzePage() {
               <div className="bg-white rounded-2xl p-5 border border-gray-200 shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Select Questions to Test</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Select Questions to Test</h2>
                     <p className="text-gray-500">Minimum 3 questions from any stage</p>
                   </div>
                   <div className="flex items-center gap-3">
@@ -1060,7 +1060,7 @@ export default function AnalyzePage() {
 
             {/* Platform selection - Apple Style */}
             <div className="bg-white rounded-2xl p-6 mt-6 border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">AI Platforms to Test</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">AI Platforms to Test</h3>
               
               <div className="grid grid-cols-3 gap-4">
                 {(["ChatGPT", "Gemini", "Perplexity"] as Platform[]).map((platform) => {
@@ -1097,7 +1097,7 @@ export default function AnalyzePage() {
 
             {/* FAQ Section - Questions Selection */}
             <div className="bg-white rounded-2xl p-6 mt-6 border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900">Frequently Asked Questions</h3>
+              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Frequently Asked Questions</h3>
               <div className="space-y-4">
                 <details className="group">
                   <summary className="cursor-pointer text-gray-700 font-medium hover:text-gray-900 list-none flex items-center justify-between">
@@ -1164,7 +1164,7 @@ export default function AnalyzePage() {
             {showConfirmModal && (
               <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                 <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-                  <h3 className="text-xl font-bold mb-4 text-center text-gray-900">Confirm Your Selection</h3>
+                  <h3 className="text-xl font-bold mb-4 text-center text-gray-900 dark:text-gray-100">Confirm Your Selection</h3>
                   
                   <div className="space-y-3 mb-6">
                     <div className={`flex justify-between items-center p-3 rounded-xl ${
@@ -1202,7 +1202,7 @@ export default function AnalyzePage() {
                     
                     <div className="border-t border-gray-200 pt-3 mt-3">
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold text-lg text-gray-900">Total</span>
+                        <span className="font-semibold text-lg text-gray-900 dark:text-gray-100">Total</span>
                         <span className="text-2xl font-bold text-blue-500">
                           {getSelectionBreakdown().total} questions
                         </span>
@@ -1296,15 +1296,15 @@ export default function AnalyzePage() {
               {/* Stats Grid */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-gray-900">{getTotalSelected()}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{getTotalSelected()}</div>
                   <div className="text-xs text-gray-500">Questions</div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-gray-900">{selectedPlatforms.length}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedPlatforms.length}</div>
                   <div className="text-xs text-gray-500">Platforms</div>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-gray-900">{getTotalSelected() * selectedPlatforms.length * limits.testsPerQuestion}</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{getTotalSelected() * selectedPlatforms.length * limits.testsPerQuestion}</div>
                   <div className="text-xs text-gray-500">Tests</div>
                 </div>
               </div>
