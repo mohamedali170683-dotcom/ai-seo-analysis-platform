@@ -46,6 +46,7 @@ export default function AnalyzePage() {
   const [domain, setDomain] = useState("");
   const [category, setCategory] = useState("");
   const [targetCountry, setTargetCountry] = useState("US");
+  const [questionLanguage, setQuestionLanguage] = useState("en");
   const [competitors, setCompetitors] = useState("");
   
   // AI Persona suggestions - simplified approach
@@ -182,6 +183,7 @@ export default function AnalyzePage() {
           brandName,
           category,
           targetCountry, // Add country for geo-specific responses
+          questionLanguage, // Language for questions and responses
           competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           tier, // Pass tier to control real data vs strategic questions
           // Persona context for question generation (simplified)
@@ -332,6 +334,7 @@ export default function AnalyzePage() {
           domain,
           category,
           targetCountry, // Add country for geo-specific analysis
+          questionLanguage, // Language for questions and responses
           competitors: limits.maxCompetitors > 0 ? competitors.split(",").map(c => c.trim()).filter(Boolean).slice(0, limits.maxCompetitors) : [],
           selectedQuestions: allQuestions.map(q => ({
             question: q.question,
@@ -730,6 +733,30 @@ export default function AnalyzePage() {
                   </select>
                   <p className="text-xs text-gray-400 mt-2">
                     LLM responses vary by region. Select your target market for accurate results.
+                  </p>
+                </div>
+
+                {/* Question Language */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Question Language *</label>
+                  <select
+                    value={questionLanguage}
+                    onChange={(e) => setQuestionLanguage(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                  >
+                    <option value="en">🇬🇧 English</option>
+                    <option value="de">🇩🇪 German (Deutsch)</option>
+                    <option value="fr">🇫🇷 French (Français)</option>
+                    <option value="es">🇪🇸 Spanish (Español)</option>
+                    <option value="it">🇮🇹 Italian (Italiano)</option>
+                    <option value="pt">🇵🇹 Portuguese (Português)</option>
+                    <option value="nl">🇳🇱 Dutch (Nederlands)</option>
+                    <option value="ja">🇯🇵 Japanese (日本語)</option>
+                    <option value="ko">🇰🇷 Korean (한국어)</option>
+                    <option value="zh">🇨🇳 Chinese (中文)</option>
+                  </select>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Language for AI-generated questions. AI responses will be in this language.
                   </p>
                 </div>
 
