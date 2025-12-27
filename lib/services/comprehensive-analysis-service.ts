@@ -1,9 +1,9 @@
-import OpenAI from "openai";
 import { EnhancedQuestionService, DiscoveredQuestion } from "./enhanced-question-service";
 import { MultiPlatformAIService, QuestionAnalysis, AIResponse } from "./multi-platform-ai-service";
 import { QUERY_REPETITION_CONFIG, generatePersonaInformedQuestions } from "./persona-query-engine";
 import { analyzeCitations, calculateAwarenessScoreFromCitations, CitationAnalysis } from "./citation-detector";
 import { detectPatterns, generateExecutiveSummary, ExecutiveSummary, PatternAnalysis } from "./analysis-insights-engine";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 // Stage weights: Awareness 20%, Consideration 35%, Decision 45%
 const STAGE_WEIGHTS = {
@@ -172,9 +172,10 @@ export class ComprehensiveAnalysisService {
       if (questions.length > 0) {
         console.log(`📝 [ANALYSIS] Sample: "${questions[0].question}" (vol: ${questions[0].searchVolume}, source: ${questions[0].source})`);
       }
-    } catch (error: any) {
-      console.error(`❌ [ANALYSIS] Question generation failed: ${error.message}`);
-      throw new Error(`Question generation failed: ${error.message}`);
+    } catch (error) {
+      const errorMsg = getErrorMessage(error);
+      console.error(`❌ [ANALYSIS] Question generation failed: ${errorMsg}`);
+      throw new Error(`Question generation failed: ${errorMsg}`);
     }
 
     // Step 2: Test questions with ADAPTIVE REPETITION by stage
@@ -212,8 +213,8 @@ export class ComprehensiveAnalysisService {
         allResponses.push(...analysis.responses);
         
         console.log(`✅ [ANALYSIS] Question ${i + 1} done: ${analysis.aggregated.mentionRate}% mention rate`);
-      } catch (error: any) {
-        console.error(`⚠️ [ANALYSIS] Question ${i + 1} failed: ${error.message}`);
+      } catch (error) {
+        console.error(`⚠️ [ANALYSIS] Question ${i + 1} failed: ${getErrorMessage(error)}`);
         // Add empty result so we don't lose the question
         analyses.push({
           question: question.question,
