@@ -602,30 +602,30 @@ export default function AnalyzePage() {
 
                 {/* Category / Vertical - Simple text input with AI suggestions */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.category")} *</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t("form.category")} *</label>
                   <input
                     type="text"
                     value={category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
-                    placeholder={ t("form.categoryPlaceholder")}
-                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    placeholder={t("form.categoryPlaceholder")}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
-                  <p className="text-xs text-gray-400 mt-2">
-                    Enter your product category or vertical. We'll suggest relevant buyer personas.
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    {t('form.categoryHelp')}
                   </p>
                 </div>
 
                 {/* AI-Generated Persona Suggestions */}
                 {(loadingPersonas || suggestedPersonas.length > 0) && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
                       <Wand2 className="w-4 h-4 text-purple-500" />
                       Suggested Buyer Personas
                       {loadingPersonas && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
                     </label>
-                    
+
                     {loadingPersonas ? (
-                      <div className="bg-gray-50 rounded-xl p-4 text-center text-gray-500 text-sm">
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 text-center text-gray-500 dark:text-gray-400 text-sm">
                         Generating AI persona suggestions...
                       </div>
                     ) : (
@@ -641,17 +641,17 @@ export default function AnalyzePage() {
                             className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
                               selectedPersona === persona.name
                                 ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                                : "border-gray-200 dark:border-gray-700 bg-gray-50 hover:border-blue-300"
+                                : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-blue-300"
                             }`}
                           >
                             <div className="flex items-center gap-2">
-                              <User className={`w-4 h-4 ${selectedPersona === persona.name ? "text-blue-600" : "text-gray-400"}`} />
+                              <User className={`w-4 h-4 ${selectedPersona === persona.name ? "text-blue-600 dark:text-blue-400" : "text-gray-400"}`} />
                               <span className="font-medium text-gray-900 dark:text-gray-100">{persona.name}</span>
                               {selectedPersona === persona.name && (
-                                <span className="ml-auto text-blue-600 text-xs font-semibold">Selected</span>
+                                <span className="ml-auto text-blue-600 dark:text-blue-400 text-xs font-semibold">Selected</span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1 ml-6">{persona.motivation}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-6">{persona.motivation}</p>
                           </button>
                         ))}
                         
@@ -665,8 +665,8 @@ export default function AnalyzePage() {
                             }}
                             className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
                               !selectedPersona && !showCustomPersona
-                                ? "border-blue-500 bg-blue-50 text-blue-700 dark:text-blue-300"
-                                : "border-gray-200 dark:border-gray-700 text-gray-600 hover:border-gray-300"
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                                : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300"
                             }`}
                           >
                             All personas
@@ -679,8 +679,8 @@ export default function AnalyzePage() {
                             }}
                             className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
                               showCustomPersona
-                                ? "border-blue-500 bg-blue-50 text-blue-700 dark:text-blue-300"
-                                : "border-gray-200 dark:border-gray-700 text-gray-600 hover:border-gray-300"
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
+                                : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300"
                             }`}
                           >
                             Custom persona
@@ -694,15 +694,15 @@ export default function AnalyzePage() {
                 {/* Custom Persona Input (shown when user clicks "Custom persona") */}
                 {showCustomPersona && (
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Your Custom Persona</label>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Your Custom Persona</label>
                     <input
                       type="text"
                       value={customPersona}
                       onChange={(e) => setCustomPersona(e.target.value)}
                       placeholder="e.g., Budget-conscious first-time buyer"
-                      className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                      className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                     />
-                    <p className="text-xs text-gray-400 mt-2">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                       Describe the buyer persona you want to focus on
                     </p>
                   </div>
@@ -710,11 +710,11 @@ export default function AnalyzePage() {
 
                 {/* Country / Target Market */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.country")} *</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t("form.country")} *</label>
                   <select
                     value={targetCountry}
                     onChange={(e) => setTargetCountry(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   >
                     <option value="US">🇺🇸 United States</option>
                     <option value="GB">🇬🇧 United Kingdom</option>
@@ -735,18 +735,18 @@ export default function AnalyzePage() {
                     <option value="AE">🇦🇪 United Arab Emirates</option>
                     <option value="SA">🇸🇦 Saudi Arabia</option>
                   </select>
-                  <p className="text-xs text-gray-400 mt-2">
-                    LLM responses vary by region. Select your target market for accurate results.
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    {t('form.countryHelp')}
                   </p>
                 </div>
 
                 {/* Question Language */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.questionLanguage")} *</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t("form.questionLanguage")} *</label>
                   <select
                     value={questionLanguage}
                     onChange={(e) => setQuestionLanguage(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   >
                     <option value="en">🇬🇧 English</option>
                     <option value="de">🇩🇪 German (Deutsch)</option>
@@ -759,39 +759,39 @@ export default function AnalyzePage() {
                     <option value="ko">🇰🇷 Korean (한국어)</option>
                     <option value="zh">🇨🇳 Chinese (中文)</option>
                   </select>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Language for AI-generated questions. AI responses will be in this language.
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    {t('form.questionLanguageHelp')}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.domain")} ({ t("common.optional")})</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t("form.domain")} ({t("common.optional")})</label>
                   <input
                     type="text"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
-                    placeholder={ t("form.domainPlaceholder")}
-                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    placeholder={t("form.domainPlaceholder")}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
-                  <p className="text-xs text-gray-400 mt-2">For technical audit of your website</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{t('form.domainHelp')}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Competitors (optional)
-                    {tier === "free" && <span className="text-xs text-gray-400 font-normal ml-2">1 in Free tier</span>}
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    {t('form.competitors')} ({t('common.optional')})
+                    {tier === "free" && <span className="text-xs text-gray-400 dark:text-gray-500 font-normal ml-2">1 in Free tier</span>}
                   </label>
                   <input
                     type="text"
                     value={competitors}
                     onChange={(e) => setCompetitors(e.target.value)}
-                    placeholder={tier === "free" ? "e.g., Adidas" : "e.g., Adidas, Puma, New Balance"}
-                    className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
+                    placeholder={tier === "free" ? t('form.competitorsFree') : t('form.competitorsPlaceholder')}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
-                  <p className="text-xs text-gray-400 mt-2">
-                    {tier === "free" 
-                      ? "Compare with 1 competitor. Upgrade for more." 
-                      : `Compare with up to ${limits.maxCompetitors} competitors`
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    {tier === "free"
+                      ? "Compare with 1 competitor. Upgrade for more."
+                      : t('form.competitorsHelp', { max: limits.maxCompetitors.toString() })
                     }
                   </p>
                 </div>
