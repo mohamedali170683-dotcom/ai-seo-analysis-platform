@@ -1,54 +1,50 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
+import {
+  apiHandler,
+  apiSuccess,
+  apiError,
+  parseJsonBody,
+  isValidId,
+} from '@/lib/api/utils';
+import { HTTP_STATUS } from '@/lib/constants';
+
+type RouteContext = { params: Promise<{ id: string }> };
 
 // PATCH /api/integrations/[id] - Update integration
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const body = await request.json();
+export const PATCH = apiHandler(async (request: Request, context?: { params?: Record<string, string> }) => {
+  const { id } = await (context as RouteContext).params;
 
-    const integration = await prisma.integration.update({
-      where: { id },
-      data: body
-    });
-
-    return NextResponse.json({
-      success: true,
-      integration
-    });
-  } catch (error: any) {
-    console.error('Error updating integration:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+  if (!isValidId(id)) {
+    return apiError('Invalid integration ID', HTTP_STATUS.BAD_REQUEST);
   }
-}
+
+  const [body, parseError] = await parseJsonBody<{
+    name?: string;
+    config?: Record<string, unknown>;
+    enabled?: boolean;
+  }>(request);
+
+  if (parseError) return parseError;
+
+  const integration = await prisma.integration.update({
+    where: { id },
+    data: body!,
+  });
+
+  return apiSuccess({ integration });
+});
 
 // DELETE /api/integrations/[id] - Disconnect/Delete integration
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
+export const DELETE = apiHandler(async (_request: Request, context?: { params?: Record<string, string> }) => {
+  const { id } = await (context as RouteContext).params;
 
-    await prisma.integration.delete({
-      where: { id }
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: 'Integration disconnected successfully'
-    });
-  } catch (error: any) {
-    console.error('Error deleting integration:', error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+  if (!isValidId(id)) {
+    return apiError('Invalid integration ID', HTTP_STATUS.BAD_REQUEST);
   }
-}
+
+  await prisma.integration.delete({
+    where: { id },
+  });
+
+  return apiSuccess({ message: 'Integration disconnected successfully' });
+});
