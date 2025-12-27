@@ -585,7 +585,7 @@ export default function AnalyzePage() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 space-y-6 max-w-xl mx-auto shadow-lg border border-gray-100">
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Enter Your Brand Details</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">We'll find the questions that matter for your brand</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{ t('form.subtitle')}</p>
               </div>
               
               <div className="space-y-5">
@@ -602,12 +602,12 @@ export default function AnalyzePage() {
 
                 {/* Category / Vertical - Simple text input with AI suggestions */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Category / Vertical *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.category")} *</label>
                   <input
                     type="text"
                     value={category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
-                    placeholder="e.g., running shoes, SaaS productivity tools, skincare"
+                    placeholder={ t("form.categoryPlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">
@@ -710,7 +710,7 @@ export default function AnalyzePage() {
 
                 {/* Country / Target Market */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Target Country / Market *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.country")} *</label>
                   <select
                     value={targetCountry}
                     onChange={(e) => setTargetCountry(e.target.value)}
@@ -742,7 +742,7 @@ export default function AnalyzePage() {
 
                 {/* Question Language */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Question Language *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.questionLanguage")} *</label>
                   <select
                     value={questionLanguage}
                     onChange={(e) => setQuestionLanguage(e.target.value)}
@@ -765,12 +765,12 @@ export default function AnalyzePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Domain (optional)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.domain")} ({ t("common.optional")})</label>
                   <input
                     type="text"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
-                    placeholder="e.g., nike.com"
+                    placeholder={ t("form.domainPlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">For technical audit of your website</p>
