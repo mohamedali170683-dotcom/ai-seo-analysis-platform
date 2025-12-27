@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { CitationAnalysis } from "./citation-detector";
+import { getErrorMessage } from "@/lib/utils/errors";
 
 export type AIPlatform = "ChatGPT" | "Gemini" | "Perplexity";
 
@@ -94,10 +95,11 @@ export class MultiPlatformAIService {
         this.platformStatus.Gemini = { isReal: true, reason: "Google Gemini API" };
         console.log("✅ [AI] Gemini client created");
         console.log(`   → Key: ${geminiApiKey.substring(0, 8)}... (${geminiApiKey.length} chars)`);
-      } catch (initError: any) {
-        console.error(`❌ [AI] Gemini client init FAILED: ${initError.message}`);
+      } catch (initError) {
+        const errMsg = getErrorMessage(initError);
+        console.error(`❌ [AI] Gemini client init FAILED: ${errMsg}`);
         this.geminiClient = null;
-        this.platformStatus.Gemini = { isReal: false, reason: `Init error: ${initError.message}` };
+        this.platformStatus.Gemini = { isReal: false, reason: `Init error: ${errMsg}` };
       }
     } else {
       const reason = !geminiApiKey ? "No API key" : 
@@ -219,8 +221,8 @@ export class MultiPlatformAIService {
         );
         console.log(`  ✓ ${platform}: ${result.length}/${numTests}`);
         return result;
-      } catch (error: any) {
-        console.warn(`  ✗ ${platform}: ${error.message}`);
+      } catch (error) {
+        console.warn(`  ✗ ${platform}: ${getErrorMessage(error)}`);
         return [] as AIResponse[];
       }
     });
@@ -397,23 +399,25 @@ export class MultiPlatformAIService {
         }
         console.warn(`  ⚠️ [${platform}] Test ${i} returned empty response`);
         return null;
-      } catch (error: any) {
+      } catch (error) {
+        const errMsg = getErrorMessage(error);
+        const errorObj = error as Record<string, unknown>;
         const errorDetails = {
-          message: error.message,
-          code: error.code,
-          status: error.status,
-          type: error.type,
+          message: errMsg,
+          code: errorObj?.code,
+          status: errorObj?.status,
+          type: errorObj?.type,
         };
         console.error(`  ❌ [${platform}] Test ${i} FAILED:`, JSON.stringify(errorDetails, null, 2));
 
         // Log specific error types
-        if (error.message?.includes('timeout') || error.message?.includes('aborted')) {
+        if (errMsg.includes('timeout') || errMsg.includes('aborted')) {
           console.error(`     → Timeout error - API took too long to respond`);
-        } else if (error.message?.includes('401') || error.message?.includes('authentication')) {
+        } else if (errMsg.includes('401') || errMsg.includes('authentication')) {
           console.error(`     → Authentication error - Check API key for ${platform}`);
-        } else if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+        } else if (errMsg.includes('429') || errMsg.includes('rate limit')) {
           console.error(`     → Rate limit error - Too many requests`);
-        } else if (error.message?.includes('500') || error.message?.includes('502') || error.message?.includes('503')) {
+        } else if (errMsg.includes('500') || errMsg.includes('502') || errMsg.includes('503')) {
           console.error(`     → Server error - ${platform} API is experiencing issues`);
         }
 
@@ -491,7 +495,8 @@ export class MultiPlatformAIService {
         
         try {
           // Check for citations in the completion object
-          const citations = (completion as any).citations || [];
+          const completionWithCitations = completion as { citations?: Array<string | { url: string; title?: string }> };
+          const citations = completionWithCitations.citations || [];
           if (citations.length > 0) {
             hasGrounding = true;
             for (const citation of citations) {
@@ -523,8 +528,8 @@ export class MultiPlatformAIService {
               hasGrounding = true;
             }
           }
-        } catch (citationError: any) {
-          console.warn(`  ⚠️ [Perplexity] Test ${i} citation extraction failed: ${citationError.message}`);
+        } catch (citationError) {
+          console.warn(`  ⚠️ [Perplexity] Test ${i} citation extraction failed: ${getErrorMessage(citationError)}`);
         }
         
         if (fullResponse) {
@@ -550,8 +555,8 @@ export class MultiPlatformAIService {
         if (idx < numTests - 1) {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
-      } catch (error: any) {
-        console.error(`  ❌ [Perplexity] Test ${i} ERROR: ${error.message}`);
+      } catch (error) {
+        console.error(`  ❌ [Perplexity] Test ${i} ERROR: ${getErrorMessage(error)}`);
         results.push(null);
       }
     }
@@ -660,10 +665,10 @@ export class MultiPlatformAIService {
           
           if (response.ok && data.candidates?.[0]?.content?.parts) {
             // Extract full text from all parts
-            const parts = data.candidates[0].content.parts;
+            const parts = data.candidates[0].content.parts as Array<{ text?: string }>;
             fullResponse = parts
-              .filter((p: any) => p.text)
-              .map((p: any) => p.text)
+              .filter((p) => p.text)
+              .map((p) => p.text)
               .join('\n');
             
             usedModel = modelName;
@@ -695,8 +700,8 @@ export class MultiPlatformAIService {
             console.warn(`     ✗ ${modelName}: ${data.error.message?.substring(0, 80)}`);
             continue;
           }
-        } catch (fetchError: any) {
-          console.warn(`     ✗ ${modelName}: ${fetchError.message?.substring(0, 50)}`);
+        } catch (fetchError) {
+          console.warn(`     ✗ ${modelName}: ${getErrorMessage(fetchError).substring(0, 50)}`);
           continue;
         }
       }
