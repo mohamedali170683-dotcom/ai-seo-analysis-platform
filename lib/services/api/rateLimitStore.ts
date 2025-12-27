@@ -214,13 +214,14 @@ class RedisRateLimitStore implements RateLimitStoreInterface {
   }
 
   async increment(key: string, windowSeconds: number): Promise<RateLimitEntry> {
+    interface RedisChain {
+      incr: (key: string) => RedisChain;
+      expire: (key: string, seconds: number, mode: string) => RedisChain;
+      ttl: (key: string) => RedisChain;
+      exec: () => Promise<[Error | null, unknown][]>;
+    }
     const redis = this.redis as {
-      multi: () => {
-        incr: (key: string) => unknown;
-        expire: (key: string, seconds: number, mode: string) => unknown;
-        ttl: (key: string) => unknown;
-        exec: () => Promise<[Error | null, unknown][]>;
-      };
+      multi: () => RedisChain;
     };
 
     const fullKey = this.prefix + key;
