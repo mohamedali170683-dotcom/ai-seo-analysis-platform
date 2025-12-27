@@ -585,7 +585,7 @@ export default function AnalyzePage() {
             <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 space-y-6 max-w-xl mx-auto shadow-lg border border-gray-100">
               <div className="text-center">
                 <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Enter Your Brand Details</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">We'll find the questions that matter for your brand</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{ t('form.subtitle')}</p>
               </div>
               
               <div className="space-y-5">
@@ -602,12 +602,12 @@ export default function AnalyzePage() {
 
                 {/* Category / Vertical - Simple text input with AI suggestions */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Category / Vertical *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.category")} *</label>
                   <input
                     type="text"
                     value={category}
                     onChange={(e) => handleCategoryChange(e.target.value)}
-                    placeholder="e.g., running shoes, SaaS productivity tools, skincare"
+                    placeholder={ t("form.categoryPlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">
@@ -640,7 +640,7 @@ export default function AnalyzePage() {
                             }}
                             className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
                               selectedPersona === persona.name
-                                ? "border-blue-500 bg-blue-50"
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                                 : "border-gray-200 dark:border-gray-700 bg-gray-50 hover:border-blue-300"
                             }`}
                           >
@@ -665,7 +665,7 @@ export default function AnalyzePage() {
                             }}
                             className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
                               !selectedPersona && !showCustomPersona
-                                ? "border-blue-500 bg-blue-50 text-blue-700"
+                                ? "border-blue-500 bg-blue-50 text-blue-700 dark:text-blue-300"
                                 : "border-gray-200 dark:border-gray-700 text-gray-600 hover:border-gray-300"
                             }`}
                           >
@@ -679,7 +679,7 @@ export default function AnalyzePage() {
                             }}
                             className={`flex-1 py-2 px-3 text-sm rounded-lg border transition-all ${
                               showCustomPersona
-                                ? "border-blue-500 bg-blue-50 text-blue-700"
+                                ? "border-blue-500 bg-blue-50 text-blue-700 dark:text-blue-300"
                                 : "border-gray-200 dark:border-gray-700 text-gray-600 hover:border-gray-300"
                             }`}
                           >
@@ -710,7 +710,7 @@ export default function AnalyzePage() {
 
                 {/* Country / Target Market */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Target Country / Market *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.country")} *</label>
                   <select
                     value={targetCountry}
                     onChange={(e) => setTargetCountry(e.target.value)}
@@ -742,7 +742,7 @@ export default function AnalyzePage() {
 
                 {/* Question Language */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Question Language *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.questionLanguage")} *</label>
                   <select
                     value={questionLanguage}
                     onChange={(e) => setQuestionLanguage(e.target.value)}
@@ -765,12 +765,12 @@ export default function AnalyzePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">Domain (optional)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">{ t("form.domain")} ({ t("common.optional")})</label>
                   <input
                     type="text"
                     value={domain}
                     onChange={(e) => setDomain(e.target.value)}
-                    placeholder="e.g., nike.com"
+                    placeholder={ t("form.domainPlaceholder")}
                     className="w-full bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 mt-2">For technical audit of your website</p>
@@ -919,7 +919,7 @@ export default function AnalyzePage() {
               </div>
               <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 text-center">
                 <div className="text-2xl mb-2">⚖️</div>
-                <h4 className="font-semibold text-orange-800">Consideration</h4>
+                <h4 className="font-semibold text-orange-800 dark:text-orange-200">Consideration</h4>
                 <p className="text-xs text-orange-600">"Best...?"</p>
               </div>
               <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
@@ -938,9 +938,9 @@ export default function AnalyzePage() {
                 const isLocked = !isStageAllowed(group.stage);
                 
                 const stageColors = {
-                  awareness: { bg: "bg-purple-50", border: "border-purple-200", accent: "text-purple-600", selected: "bg-purple-100 border-purple-400" },
-                  consideration: { bg: "bg-orange-50", border: "border-orange-200", accent: "text-orange-600", selected: "bg-orange-100 border-orange-400" },
-                  decision: { bg: "bg-green-50", border: "border-green-200", accent: "text-green-600", selected: "bg-green-100 border-green-400" },
+                  awareness: { bg: "bg-purple-50 dark:bg-purple-900/20", border: "border-purple-200 dark:border-purple-800", accent: "text-purple-600", selected: "bg-purple-100 border-purple-400" },
+                  consideration: { bg: "bg-orange-50 dark:bg-orange-900/20", border: "border-orange-200 dark:border-orange-800", accent: "text-orange-600", selected: "bg-orange-100 border-orange-400" },
+                  decision: { bg: "bg-green-50 dark:bg-green-900/20", border: "border-green-200 dark:border-green-800", accent: "text-green-600", selected: "bg-green-100 border-green-400" },
                 };
                 const colors = stageColors[group.stage];
                 
@@ -1172,7 +1172,7 @@ export default function AnalyzePage() {
                   
                   <div className="space-y-3 mb-6">
                     <div className={`flex justify-between items-center p-3 rounded-xl ${
-                      getSelectionBreakdown().awareness > 0 ? "bg-purple-50 border border-purple-200" : "bg-gray-50"
+                      getSelectionBreakdown().awareness > 0 ? "bg-purple-50 border border-purple-200 dark:border-purple-800" : "bg-gray-50"
                     }`}>
                       <span className="font-medium text-gray-700 dark:text-gray-300">🔍 Awareness</span>
                       <span className={`text-lg font-bold ${
@@ -1183,7 +1183,7 @@ export default function AnalyzePage() {
                     </div>
                     
                     <div className={`flex justify-between items-center p-3 rounded-xl ${
-                      getSelectionBreakdown().consideration > 0 ? "bg-orange-50 border border-orange-200" : "bg-gray-50"
+                      getSelectionBreakdown().consideration > 0 ? "bg-orange-50 border border-orange-200 dark:border-orange-800" : "bg-gray-50"
                     }`}>
                       <span className="font-medium text-gray-700 dark:text-gray-300">⚖️ Consideration</span>
                       <span className={`text-lg font-bold ${
@@ -1194,7 +1194,7 @@ export default function AnalyzePage() {
                     </div>
                     
                     <div className={`flex justify-between items-center p-3 rounded-xl ${
-                      getSelectionBreakdown().decision > 0 ? "bg-green-50 border border-green-200" : "bg-gray-50"
+                      getSelectionBreakdown().decision > 0 ? "bg-green-50 border border-green-200 dark:border-green-800" : "bg-gray-50"
                     }`}>
                       <span className="font-medium text-gray-700 dark:text-gray-300">✅ Decision</span>
                       <span className={`text-lg font-bold ${
@@ -1333,7 +1333,7 @@ export default function AnalyzePage() {
                   
                   return (
                     <div key={item.step} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-                      isCurrent ? "bg-blue-50 border border-blue-200" : 
+                      isCurrent ? "bg-blue-50 border border-blue-200 dark:border-blue-800" : 
                       isComplete ? "" : "opacity-40"
                     }`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${

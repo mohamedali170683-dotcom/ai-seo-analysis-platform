@@ -284,7 +284,7 @@ export default function FeaturesPage() {
                       {feature.link && (
                         <Link
                           href={feature.link}
-                          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700"
+                          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-300"
                         >
                           Try it now
                           <ArrowRight className="w-4 h-4 ml-1" />

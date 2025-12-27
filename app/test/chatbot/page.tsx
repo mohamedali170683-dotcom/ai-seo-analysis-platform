@@ -125,7 +125,7 @@ export default function ChatbotTestPage() {
           {result && (
             <div className="space-y-6">
               {/* Visibility Score */}
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border-2 border-purple-200">
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-6 border-2 border-purple-200 dark:border-purple-800">
                 <h2 className="text-xl font-bold mb-4">Visibility Analysis</h2>
 
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -186,8 +186,8 @@ export default function ChatbotTestPage() {
               <div
                 className={`rounded-lg p-6 border-2 ${
                   result.hasBrandMention
-                    ? "bg-green-50 border-green-200"
-                    : "bg-yellow-50 border-yellow-200"
+                    ? "bg-green-50 border-green-200 dark:border-green-800"
+                    : "bg-yellow-50 border-yellow-200 dark:border-yellow-800"
                 }`}
               >
                 <h3 className="font-bold text-lg mb-3">

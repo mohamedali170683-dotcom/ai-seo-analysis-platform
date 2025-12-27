@@ -56,7 +56,7 @@ export default function NewAnalysisPage() {
       <header className="bg-white border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700">
+            <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-300">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Link>
@@ -84,7 +84,7 @@ export default function NewAnalysisPage() {
             Discover how AI platforms like ChatGPT, Gemini, and Copilot mention your brand across the entire user journey
           </p>
           <div className="mt-4 inline-flex items-center gap-2 bg-blue-100 border-2 border-blue-200 rounded-xl px-4 py-2">
-            <span className="text-sm font-semibold text-blue-700">
+            <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
               🔬 180 AI queries across 3 platforms for statistically significant results
             </span>
           </div>

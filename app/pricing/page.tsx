@@ -100,8 +100,8 @@ export default function PricingPage() {
               Annual
               <span className={`text-xs px-2 py-0.5 rounded-full ${
                 billingCycle === "annual" 
-                  ? "bg-green-400 text-green-900" 
-                  : "bg-green-100 text-green-700"
+                  ? "bg-green-400 text-green-900 dark:text-green-100" 
+                  : "bg-green-100 text-green-700 dark:text-green-300"
               }`}>
                 Save €{TIER_PRICING.professional.annualSavings}
               </span>
@@ -331,7 +331,7 @@ export default function PricingPage() {
                 <tr>
                   <th className="text-left px-6 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">Feature</th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-gray-600 dark:text-gray-400">Free</th>
-                  <th className="text-center px-6 py-4 text-sm font-semibold text-blue-600 bg-blue-50">Professional</th>
+                  <th className="text-center px-6 py-4 text-sm font-semibold text-blue-600 bg-blue-50 dark:bg-blue-900/20">Professional</th>
                   <th className="text-center px-6 py-4 text-sm font-semibold text-amber-600">Partner</th>
                 </tr>
               </thead>

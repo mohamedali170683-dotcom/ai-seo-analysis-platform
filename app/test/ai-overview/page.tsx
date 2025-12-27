@@ -101,7 +101,7 @@ export default function AIOverviewTestPage() {
 
           {result && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border-2 border-blue-200">
+              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border-2 border-blue-200 dark:border-blue-800">
                 <h2 className="text-xl font-bold mb-4">Analysis Results</h2>
 
                 {/* AI Overview Status */}

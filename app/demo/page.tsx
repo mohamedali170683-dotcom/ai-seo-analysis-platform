@@ -650,7 +650,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
             <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Questions Analyzed</h3>
             <div className="bg-green-100 border-2 border-green-300 rounded-xl px-4 py-2">
               <div className="text-xs text-green-700 font-semibold">STATISTICALLY SIGNIFICANT</div>
-              <div className="text-2xl font-bold text-green-900">{stage.portrayal.totalAnswersAnalyzed} responses</div>
+              <div className="text-2xl font-bold text-green-900 dark:text-green-100">{stage.portrayal.totalAnswersAnalyzed} responses</div>
             </div>
           </div>
           <div className="grid md:grid-cols-2 gap-4">
@@ -680,7 +680,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
           <div className="space-y-8">
             {/* Mention Rate & Position */}
             <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border-2 border-blue-200 dark:border-blue-800">
                 <div className="text-sm font-semibold text-blue-700 mb-2">MENTION RATE</div>
                 <div className="text-6xl font-bold text-blue-900 mb-2">{stage.portrayal.mentionRate}%</div>
                 <p className="text-gray-700 text-sm">
@@ -688,7 +688,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                 </p>
               </div>
               
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-200">
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-200 dark:border-purple-800">
                 <div className="text-sm font-semibold text-purple-700 mb-2">AVERAGE POSITION</div>
                 <div className="text-6xl font-bold text-purple-900 mb-2">#{stage.portrayal.averagePosition}</div>
                 <p className="text-gray-700 text-sm">
@@ -755,7 +755,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
             </div>
 
             {/* AI Answer Examples - MULTIPLE */}
-            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-4 border-yellow-200">
+            <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 border-4 border-yellow-200 dark:border-yellow-800">
               <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-xl">
                 <span className="text-3xl">💬</span>
                 <span>Real AI Response Examples ({stage.portrayal.aiAnswerExamples.length} samples):</span>
@@ -790,7 +790,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
             </div>
 
             {/* Competitor Comparison - VISUAL */}
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border-4 border-purple-200">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-8 border-4 border-purple-200 dark:border-purple-800">
               <div className="font-bold text-gray-900 mb-6 flex items-center gap-3 text-2xl">
                 <span className="text-3xl">🏆</span>
                 Competitive Landscape in {stage.stageLabel}
@@ -803,7 +803,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-bold text-blue-700 text-lg">{brandName} (You) ⭐</span>
                     <div className="text-right">
-                      <span className="text-3xl font-bold text-blue-700">{stage.portrayal.mentionRate}%</span>
+                      <span className="text-3xl font-bold text-blue-700 dark:text-blue-300">{stage.portrayal.mentionRate}%</span>
                       <span className="text-sm text-gray-600 ml-2">• Position #{stage.portrayal.averagePosition}</span>
                     </div>
                   </div>
@@ -872,7 +872,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
           </div>
           
           <div className="space-y-6">
-            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 border-2 border-indigo-200">
+            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl p-6 border-2 border-indigo-200 dark:border-indigo-800">
               <div className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
                 <span className="text-2xl">🔍</span>
                 Common Pattern Identified:
@@ -882,7 +882,7 @@ function JourneyStageCard({ stage, brandName, stageNumber }: any) {
               </p>
             </div>
 
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200">
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border-2 border-purple-200 dark:border-purple-800">
               <div className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-lg">
                 <span className="text-2xl">📚</span>
                 Content Type Needed:

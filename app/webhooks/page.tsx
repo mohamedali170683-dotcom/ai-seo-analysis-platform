@@ -379,17 +379,17 @@ export default function WebhooksPage() {
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
                     <p className="text-xs text-gray-600 dark:text-gray-400">Success</p>
-                    <p className="text-lg font-bold text-green-700">
+                    <p className="text-lg font-bold text-green-700 dark:text-green-300">
                       {webhook.deliveryCount - webhook.failureCount}
                     </p>
                   </div>
                   <div className="text-center p-3 bg-red-50 rounded-lg">
                     <p className="text-xs text-gray-600 dark:text-gray-400">Failed</p>
-                    <p className="text-lg font-bold text-red-700">{webhook.failureCount}</p>
+                    <p className="text-lg font-bold text-red-700 dark:text-red-300">{webhook.failureCount}</p>
                   </div>
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
                     <p className="text-xs text-gray-600 dark:text-gray-400">Last Triggered</p>
-                    <p className="text-sm font-bold text-blue-700">
+                    <p className="text-sm font-bold text-blue-700 dark:text-blue-300">
                       {webhook.lastTriggered
                         ? new Date(webhook.lastTriggered).toLocaleTimeString()
                         : 'Never'}

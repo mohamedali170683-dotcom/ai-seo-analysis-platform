@@ -472,7 +472,7 @@ export default function ResultsPage() {
               onClick={() => limits.allowPdfExport ? alert("PDF export coming soon!") : openUpgradeModal("pdf_export")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
                 limits.allowPdfExport 
-                  ? "bg-white text-green-600 hover:bg-green-50" 
+                  ? "bg-white text-green-600 hover:bg-green-50 dark:bg-green-900/20" 
                   : "bg-white/20 text-white/80 cursor-pointer"
               }`}
             >
@@ -714,12 +714,12 @@ export default function ResultsPage() {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className={`text-center px-4 py-2 rounded-xl ${
-                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
-                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
+                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100 dark:bg-green-900/30" :
+                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-red-100 dark:bg-red-900/30"
                       }`}>
                         <div className={`text-3xl font-bold ${
-                          (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
-                          (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
+                          (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700 dark:text-green-300" :
+                          (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700 dark:text-red-300"
                         }`}>
                           {Math.round(stage?.portrayal?.visibilityScore || 0)}%
                         </div>
@@ -742,7 +742,7 @@ export default function ResultsPage() {
 
                   {/* Visibility Score Breakdown - SHOWS WHEN BUTTON CLICKED */}
                   {expandedSchemas.includes(`scoring-${stage?.stage}`) && (
-                    <div className="mb-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200">
+                    <div className="mb-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200 dark:border-purple-800">
                       <div className="space-y-3 text-sm">
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
                           <p className="font-medium text-gray-900 mb-2">Visibility Score Formula:</p>
@@ -777,7 +777,7 @@ export default function ResultsPage() {
 
                   {/* Questions Analyzed for this Stage */}
                   {stage?.questions && stage.questions.length > 0 && (
-                    <div className="mb-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="mb-6 bg-blue-50 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
                       <h4 className="font-semibold text-gray-900 mb-3">❓ Questions Analyzed ({stage.questions.length})</h4>
                       <div className="space-y-2">
                         {stage.questions.map((q: any, idx: number) => (
@@ -909,8 +909,8 @@ export default function ResultsPage() {
                       <h4 className="font-semibold text-gray-900 mb-3">💭 Tone</h4>
                       <div className="text-center mb-3">
                         <span className={`inline-block text-lg font-bold px-4 py-2 rounded-lg ${
-                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
-                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" :
+                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700 dark:text-green-300" :
+                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700 dark:text-red-300" :
                           "bg-gray-100 text-gray-700 dark:text-gray-300"
                         }`}>
                           {stage?.portrayal?.sentiment?.dominant || "neutral"}
@@ -919,7 +919,7 @@ export default function ResultsPage() {
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">😊 Positive</span>
-                          <span className="font-bold text-green-700">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
+                          <span className="font-bold text-green-700 dark:text-green-300">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">😐 Neutral</span>
@@ -927,7 +927,7 @@ export default function ResultsPage() {
                         </div>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600 dark:text-gray-400">😞 Negative</span>
-                          <span className="font-bold text-red-700">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
+                          <span className="font-bold text-red-700 dark:text-red-300">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
                         </div>
                       </div>
                       <div className="mt-3">
@@ -1115,14 +1115,14 @@ export default function ResultsPage() {
                                       return (
                                         <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                                           {mentionedCompetitors.length > 0 && (
-                                            <div className="bg-white dark:bg-gray-800 rounded p-2 border border-orange-200">
-                                              <span className="font-semibold text-orange-800">🎯 Competitors mentioned instead:</span>{' '}
+                                            <div className="bg-white dark:bg-gray-800 rounded p-2 border border-orange-200 dark:border-orange-800">
+                                              <span className="font-semibold text-orange-800 dark:text-orange-200">🎯 Competitors mentioned instead:</span>{' '}
                                               <span className="text-gray-800">{mentionedCompetitors.join(', ')}</span>
                                             </div>
                                           )}
                                           {snippet && (
-                                            <div className="bg-white dark:bg-gray-800 rounded p-2 border border-orange-200">
-                                              <span className="font-semibold text-orange-800">📝 What they said:</span>{' '}
+                                            <div className="bg-white dark:bg-gray-800 rounded p-2 border border-orange-200 dark:border-orange-800">
+                                              <span className="font-semibold text-orange-800 dark:text-orange-200">📝 What they said:</span>{' '}
                                               <span className="text-gray-700 italic">"{snippet}..."</span>
                                             </div>
                                           )}
@@ -1169,7 +1169,7 @@ export default function ResultsPage() {
                       </button>
 
                       {expandedSchemas.includes(`rec-${stage?.stage}`) && (
-                        <div className="mt-4 bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-amber-200">
+                        <div className="mt-4 bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-amber-200 dark:border-amber-800">
                           <div className="space-y-4">
                             {/* Pattern Insight */}
                             {stage.recommendation.commonPattern && (
@@ -1473,15 +1473,15 @@ export default function ResultsPage() {
                 <p className="text-sm text-blue-800 font-medium mb-2">🔍 Awareness Stage (Citation-Based)</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
-                    <span className="font-bold text-blue-700">60%</span> Citation Rate
+                    <span className="font-bold text-blue-700 dark:text-blue-300">60%</span> Citation Rate
                     <p className="text-blue-600 text-xs">Is your content cited as a source?</p>
                   </div>
                   <div>
-                    <span className="font-bold text-blue-700">25%</span> Mention Rate
+                    <span className="font-bold text-blue-700 dark:text-blue-300">25%</span> Mention Rate
                     <p className="text-blue-600 text-xs">Is your brand mentioned?</p>
                   </div>
                   <div>
-                    <span className="font-bold text-blue-700">15%</span> Sentiment
+                    <span className="font-bold text-blue-700 dark:text-blue-300">15%</span> Sentiment
                     <p className="text-blue-600 text-xs">How positively portrayed?</p>
                   </div>
                 </div>
@@ -1492,15 +1492,15 @@ export default function ResultsPage() {
                 <p className="text-sm text-green-800 font-medium mb-2">⚖️✅ Consideration & Decision Stages (Standard)</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
-                    <span className="font-bold text-green-700">50%</span> Mention Rate
+                    <span className="font-bold text-green-700 dark:text-green-300">50%</span> Mention Rate
                     <p className="text-green-600 text-xs">How often AI mentions you</p>
                   </div>
                   <div>
-                    <span className="font-bold text-green-700">30%</span> Position
+                    <span className="font-bold text-green-700 dark:text-green-300">30%</span> Position
                     <p className="text-green-600 text-xs">Where you appear (1st = best)</p>
                   </div>
                   <div>
-                    <span className="font-bold text-green-700">20%</span> Sentiment
+                    <span className="font-bold text-green-700 dark:text-green-300">20%</span> Sentiment
                     <p className="text-green-600 text-xs">How positively portrayed?</p>
                   </div>
                 </div>
@@ -1528,10 +1528,10 @@ export default function ResultsPage() {
                     };
                     const hasNoData = data.totalTests === 0;
                     const colorClasses = {
-                      green: "border-green-200 bg-green-50",
-                      blue: "border-blue-200 bg-blue-50",
+                      green: "border-green-200 bg-green-50 dark:bg-green-900/20",
+                      blue: "border-blue-200 bg-blue-50 dark:bg-blue-900/20",
                       cyan: "border-cyan-200 bg-cyan-50",
-                      purple: "border-purple-200 bg-purple-50",
+                      purple: "border-purple-200 bg-purple-50 dark:bg-purple-900/20",
                     };
                     return (
                       <div key={platform.name} className={`rounded-xl p-4 border-2 ${hasNoData ? 'border-gray-200 dark:border-gray-700 bg-gray-50' : colorClasses[platform.color as keyof typeof colorClasses]} relative`}>
@@ -1646,12 +1646,12 @@ export default function ResultsPage() {
                       </div>
                     </div>
                     <div className={`text-center px-4 py-2 rounded-xl ${
-                      (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
-                      (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
+                      (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100 dark:bg-green-900/30" :
+                      (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-red-100 dark:bg-red-900/30"
                     }`}>
                       <div className={`text-3xl font-bold ${
-                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
-                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
+                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700 dark:text-green-300" :
+                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700 dark:text-red-300"
                       }`}>
                         {Math.round(stage?.portrayal?.visibilityScore || 0)}%
                       </div>
@@ -1669,8 +1669,8 @@ export default function ResultsPage() {
                         {stage.questions.slice(0, 6).map((q: any, qIdx: number) => (
                           <div key={qIdx} className="flex items-start gap-2 text-sm">
                             <span className={`text-xs px-2 py-0.5 rounded-full mt-0.5 ${
-                              stage?.stage === "awareness" ? "bg-blue-100 text-blue-700" :
-                              stage?.stage === "consideration" ? "bg-cyan-100 text-cyan-700" : "bg-green-100 text-green-700"
+                              stage?.stage === "awareness" ? "bg-blue-100 text-blue-700 dark:text-blue-300" :
+                              stage?.stage === "consideration" ? "bg-cyan-100 text-cyan-700 dark:text-cyan-300" : "bg-green-100 text-green-700 dark:text-green-300"
                             }`}>Q{qIdx + 1}</span>
                             <span className="text-gray-700 dark:text-gray-300">{typeof q === 'string' ? q : q.question || q.text || 'Question'}</span>
                           </div>
@@ -1685,7 +1685,7 @@ export default function ResultsPage() {
                     {stage?.stage === 'awareness' ? (
                       <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-blue-900">📚 Content Citation Analysis</h4>
+                          <h4 className="font-semibold text-blue-900 dark:text-blue-100">📚 Content Citation Analysis</h4>
                           <span className={`text-2xl font-bold ${
                             (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 ? "text-green-600" :
                             (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 25 ? "text-yellow-600" : "text-red-600"
@@ -1693,13 +1693,13 @@ export default function ResultsPage() {
                         </div>
                         <div className="bg-blue-100 rounded-lg p-3 mb-3">
                           <p className="text-sm font-medium text-blue-900 mb-1">Is your brand/content used as a source?</p>
-                          <p className="text-xs text-blue-700">
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
                             When users ask AI for awareness-level information, does the AI cite your content, website, or brand as an authoritative source?
                           </p>
                         </div>
                         <div className="space-y-2 mb-3">
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-blue-700">Citation Rate (60% weight)</span>
+                            <span className="text-blue-700 dark:text-blue-300">Citation Rate (60% weight)</span>
                             <span className="font-bold text-blue-800">{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
                           </div>
                           <div className="w-full bg-blue-200 rounded-full h-2">
@@ -1712,7 +1712,7 @@ export default function ResultsPage() {
                             />
                           </div>
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-blue-700">Mention Rate (25% weight)</span>
+                            <span className="text-blue-700 dark:text-blue-300">Mention Rate (25% weight)</span>
                             <span className="font-bold text-blue-800">{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
                           </div>
                           <div className="w-full bg-blue-200 rounded-full h-2">
@@ -1723,7 +1723,7 @@ export default function ResultsPage() {
                           </div>
                         </div>
                         <div className="bg-white/60 rounded p-2">
-                          <p className="text-xs text-blue-700">
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
                             {(() => {
                               const citedSources = stage?.portrayal?.citedSources || [];
                               if (citedSources.length > 0) {
@@ -1778,8 +1778,8 @@ export default function ResultsPage() {
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-semibold text-gray-900 dark:text-gray-100">💭 Audience Sentiment</h4>
                         <span className={`text-sm font-bold px-2 py-1 rounded ${
-                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
-                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-700 dark:text-gray-300"
+                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700 dark:text-green-300" :
+                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700 dark:text-red-300" : "bg-gray-100 text-gray-700 dark:text-gray-300"
                         }`}>{stage?.portrayal?.sentiment?.dominant || "Neutral"}</span>
                       </div>
                       <div className="space-y-2 mb-2">
@@ -1861,14 +1861,14 @@ export default function ResultsPage() {
                         <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                           <span>🔗</span> Sources Cited by AI Platforms
                         </h4>
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200">
+                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
                           {/* Brand Citations */}
                           <div className="mb-4">
                             <div className="flex items-center gap-2 mb-2">
                               <span className={`text-lg ${brandCitations.length > 0 ? '✅' : '⚠️'}`}>
                                 {brandCitations.length > 0 ? '✅' : '⚠️'}
                               </span>
-                              <span className="font-medium text-blue-900">
+                              <span className="font-medium text-blue-900 dark:text-blue-100">
                                 Your Content as Source: {brandCitations.length > 0 ? `Cited ${brandCitations.length} time(s)` : 'Not cited'}
                               </span>
                             </div>
@@ -2042,10 +2042,10 @@ export default function ResultsPage() {
                                         <div key={platform} className="bg-gray-50 rounded-lg p-3">
                                           <div className="flex items-center justify-between mb-2">
                                             <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                                              platform === "ChatGPT" ? "bg-green-100 text-green-700" :
-                                              platform === "Gemini" ? "bg-blue-100 text-blue-700" :
-                                              platform === "Perplexity" ? "bg-purple-100 text-purple-700" : 
-                                              "bg-cyan-100 text-cyan-700"
+                                              platform === "ChatGPT" ? "bg-green-100 text-green-700 dark:text-green-300" :
+                                              platform === "Gemini" ? "bg-blue-100 text-blue-700 dark:text-blue-300" :
+                                              platform === "Perplexity" ? "bg-purple-100 text-purple-700 dark:text-purple-300" : 
+                                              "bg-cyan-100 text-cyan-700 dark:text-cyan-300"
                                             }`}>{platform}</span>
                                             <div className="flex items-center gap-2">
                                               {platformAnswer.brandMentioned && (
@@ -2142,19 +2142,19 @@ export default function ResultsPage() {
                     {/* Summary Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-blue-700">{pages.length}</div>
+                        <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{pages.length}</div>
                         <div className="text-sm text-blue-600 font-medium">Pages Crawled</div>
                       </div>
                       <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-purple-700">{productPages.length}</div>
+                        <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">{productPages.length}</div>
                         <div className="text-sm text-purple-600 font-medium">Product Pages</div>
                       </div>
                       <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-cyan-700">{faqPages.length}</div>
+                        <div className="text-3xl font-bold text-cyan-700 dark:text-cyan-300">{faqPages.length}</div>
                         <div className="text-sm text-cyan-600 font-medium">FAQ Pages</div>
                       </div>
                       <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-green-700">{pagesWithSchema.length}</div>
+                        <div className="text-3xl font-bold text-green-700 dark:text-green-300">{pagesWithSchema.length}</div>
                         <div className="text-sm text-green-600 font-medium">With Schema</div>
                       </div>
                     </div>
@@ -2263,8 +2263,8 @@ export default function ResultsPage() {
                 ].map((schema) => (
                   <div key={schema.name} className={`p-4 rounded-xl text-center transition-all ${
                     schema.has 
-                      ? "bg-green-50 border-2 border-green-200" 
-                      : "bg-red-50 border-2 border-red-200"
+                      ? "bg-green-50 border-2 border-green-200 dark:border-green-800" 
+                      : "bg-red-50 border-2 border-red-200 dark:border-red-800"
                   }`}>
                     <div className="text-2xl mb-1">{schema.has ? "✅" : "❌"}</div>
                     <div className="font-semibold text-gray-900 dark:text-gray-100">{schema.name}</div>
@@ -2570,8 +2570,8 @@ export default function ResultsPage() {
                 
                 return (
                   <div key={i} className={`rounded-xl p-8 border-2 relative ${
-                    rec.stage === "Awareness" ? "bg-blue-50 border-blue-200" :
-                    rec.stage === "Consideration" ? "bg-cyan-50 border-cyan-200" : "bg-green-50 border-green-200"
+                    rec.stage === "Awareness" ? "bg-blue-50 border-blue-200 dark:border-blue-800" :
+                    rec.stage === "Consideration" ? "bg-cyan-50 border-cyan-200" : "bg-green-50 border-green-200 dark:border-green-800"
                   } ${isLocked ? "opacity-60" : ""}`}>
                     {/* Lock overlay for additional recommendations on free tier */}
                     {isLocked && (
@@ -2667,8 +2667,8 @@ export default function ResultsPage() {
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-semibold text-gray-900 dark:text-gray-100">{rec.title}</span>
                         <span className={`text-xs font-bold px-2 py-1 rounded ${
-                          rec.priority === "high" ? "bg-red-100 text-red-700" :
-                          rec.priority === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700"
+                          rec.priority === "high" ? "bg-red-100 text-red-700 dark:text-red-300" :
+                          rec.priority === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700 dark:text-blue-300"
                         }`}>
                           {rec.priority?.toUpperCase()} PRIORITY
                         </span>
@@ -2783,8 +2783,8 @@ export default function ResultsPage() {
               <div className="grid md:grid-cols-3 gap-6">
                 {journeyStages.map((stage: any, stageIdx: number) => (
                   <div key={stageIdx} className={`rounded-xl p-5 ${
-                    stage?.stage === "awareness" ? "bg-blue-50 border-2 border-blue-200" :
-                    stage?.stage === "consideration" ? "bg-cyan-50 border-2 border-cyan-200" : "bg-green-50 border-2 border-green-200"
+                    stage?.stage === "awareness" ? "bg-blue-50 border-2 border-blue-200 dark:border-blue-800" :
+                    stage?.stage === "consideration" ? "bg-cyan-50 border-2 border-cyan-200" : "bg-green-50 border-2 border-green-200 dark:border-green-800"
                   }`}>
                     <div className="flex items-center gap-2 mb-4">
                       <span className="text-2xl">
@@ -2798,8 +2798,8 @@ export default function ResultsPage() {
                       <div>
                         <div className="flex justify-between text-sm mb-1">
                           <span className={`font-bold ${
-                            stage?.stage === "awareness" ? "text-blue-700" :
-                            stage?.stage === "consideration" ? "text-cyan-700" : "text-green-700"
+                            stage?.stage === "awareness" ? "text-blue-700 dark:text-blue-300" :
+                            stage?.stage === "consideration" ? "text-cyan-700 dark:text-cyan-300" : "text-green-700 dark:text-green-300"
                           }`}>{reportData.brandOrKeyword || "You"}</span>
                           <span className="font-bold">{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
                         </div>

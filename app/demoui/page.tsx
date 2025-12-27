@@ -82,7 +82,7 @@ export default function DemoUIPage() {
       <header className="bg-white border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700">
+            <Link href="/dashboard" className="inline-flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-300">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Dashboard
             </Link>
@@ -121,7 +121,7 @@ export default function DemoUIPage() {
               className={`p-6 rounded-xl border-2 transition-all text-left ${
                 analysisMode === "demo"
                   ? "border-yellow-500 bg-yellow-50 ring-2 ring-yellow-200"
-                  : "border-gray-200 dark:border-gray-700 hover:border-yellow-300 hover:bg-yellow-50"
+                  : "border-gray-200 dark:border-gray-700 hover:border-yellow-300 hover:bg-yellow-50 dark:bg-yellow-900/20"
               }`}
             >
               <div className="flex items-center gap-3 mb-3">
@@ -192,7 +192,7 @@ export default function DemoUIPage() {
               <Clock className="w-6 h-6 text-blue-600" />
               <div>
                 <p className="font-bold text-blue-800">🔬 Real Analysis Selected</p>
-                <p className="text-sm text-blue-700">
+                <p className="text-sm text-blue-700 dark:text-blue-300">
                   This will run 180 AI queries across 3 platforms. Takes 3-5 minutes for comprehensive results.
                 </p>
               </div>
@@ -240,7 +240,7 @@ export default function DemoUIPage() {
           </h2>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 dark:text-red-300">
               <p className="font-semibold">Error</p>
               <p className="text-sm">{error}</p>
             </div>

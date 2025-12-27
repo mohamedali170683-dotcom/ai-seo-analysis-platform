@@ -59,7 +59,7 @@ export default function BookStrategyCallPage() {
                   </p>
                 </div>
 
-                <div className="mt-4 p-4 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-xl border border-amber-200">
+                <div className="mt-4 p-4 bg-gradient-to-r from-amber-100 to-yellow-100 rounded-xl border border-amber-200 dark:border-amber-800">
                   <div className="flex items-center gap-2 text-amber-800 font-semibold mb-1">
                     <Users className="w-4 h-4" />
                     Who This Is For
