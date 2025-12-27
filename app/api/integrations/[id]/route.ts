@@ -1,11 +1,11 @@
 import { prisma } from '@/lib/db/prisma';
+import { Prisma } from '@prisma/client';
 import {
   apiHandler,
   apiSuccess,
   apiError,
   parseJsonBody,
   isValidId,
-  RouteContext,
 } from '@/lib/api/utils';
 import { HTTP_STATUS } from '@/lib/constants';
 
@@ -21,7 +21,7 @@ export const PATCH = apiHandler<IdParams>(async (request, context) => {
 
   const [body, parseError] = await parseJsonBody<{
     name?: string;
-    config?: Record<string, unknown>;
+    config?: Prisma.InputJsonValue;
     enabled?: boolean;
   }>(request);
 
