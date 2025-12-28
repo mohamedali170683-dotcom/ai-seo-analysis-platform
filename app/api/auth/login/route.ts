@@ -21,27 +21,49 @@ export async function POST(request: Request) {
       );
     }
 
-    // First, check if user exists in database
-    let user = await prisma.user.findUnique({
-      where: { email: username },
-    });
-
     let isValid = false;
+    let user: { id: string; email: string; name: string | null; passwordHash?: string | null } | null = null;
 
-    if (user && user.passwordHash) {
-      // User exists with password - verify against stored hash
-      isValid = await bcrypt.compare(password, user.passwordHash);
-    } else if (username === DEMO_USERNAME && password === DEMO_PASSWORD) {
-      // Fallback to demo credentials
+    // Check demo credentials first (always works even if DB has issues)
+    if (username === DEMO_USERNAME && password === DEMO_PASSWORD) {
       isValid = true;
-      // Create or get demo user
-      if (!user) {
-        user = await prisma.user.create({
-          data: {
-            email: DEMO_USERNAME,
-            name: 'Admin',
-          },
+
+      // Try to get or create demo user
+      try {
+        user = await prisma.user.findUnique({
+          where: { email: DEMO_USERNAME },
+          select: { id: true, email: true, name: true },
         });
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              email: DEMO_USERNAME,
+              name: 'Admin',
+            },
+            select: { id: true, email: true, name: true },
+          });
+        }
+      } catch (dbError: any) {
+        console.error('DB error creating demo user:', dbError?.message);
+        // Create a temporary user object for token generation
+        user = { id: 'demo-user', email: DEMO_USERNAME, name: 'Admin' };
+      }
+    } else {
+      // Try to find user in database with password
+      try {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: username },
+        });
+
+        if (dbUser && (dbUser as any).passwordHash) {
+          isValid = await bcrypt.compare(password, (dbUser as any).passwordHash);
+          if (isValid) {
+            user = { id: dbUser.id, email: dbUser.email, name: dbUser.name };
+          }
+        }
+      } catch (dbError: any) {
+        console.error('DB error finding user:', dbError?.message);
       }
     }
 
