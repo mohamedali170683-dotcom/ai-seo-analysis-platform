@@ -7,31 +7,39 @@ const DEMO_USER_EMAIL = 'demo@example.com';
 
 async function ensureDemoUserExists() {
   try {
-    const existingUser = await prisma.user.findUnique({
-      where: { id: DEMO_USER_ID }
+    // Use upsert to ensure user exists
+    const user = await prisma.user.upsert({
+      where: { id: DEMO_USER_ID },
+      update: {}, // Don't update anything if exists
+      create: {
+        id: DEMO_USER_ID,
+        email: DEMO_USER_EMAIL
+      }
     });
+    return user.id;
+  } catch (error) {
+    console.error('Error with upsert, trying findOrCreate:', error);
 
-    if (!existingUser) {
-      // Check if user exists by email
+    // Fallback: try to find by email
+    try {
       const existingByEmail = await prisma.user.findUnique({
         where: { email: DEMO_USER_EMAIL }
       });
       if (existingByEmail) {
         return existingByEmail.id;
       }
-      // Create new demo user
-      await prisma.user.create({
+
+      // Last resort: create with a new ID
+      const newUser = await prisma.user.create({
         data: {
-          id: DEMO_USER_ID,
           email: DEMO_USER_EMAIL
         }
       });
+      return newUser.id;
+    } catch (fallbackError) {
+      console.error('Fallback user creation failed:', fallbackError);
+      throw new Error('Could not create or find demo user');
     }
-    return DEMO_USER_ID;
-  } catch (error) {
-    console.error('Error ensuring demo user exists:', error);
-    // Try to continue anyway - user might already exist
-    return DEMO_USER_ID;
   }
 }
 
@@ -41,11 +49,11 @@ async function ensureDemoUserExists() {
  */
 export async function GET() {
   try {
-    await ensureDemoUserExists();
+    const userId = await ensureDemoUserExists();
 
     const analyses = await prisma.brandGroundTruth.findMany({
       where: {
-        userId: DEMO_USER_ID
+        userId: userId
       },
       include: {
         hallucinationDetections: {
@@ -125,14 +133,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await ensureDemoUserExists();
+    const userId = await ensureDemoUserExists();
 
     // Store positioning as JSON in description field
     const positioningJson = JSON.stringify(positioning);
 
     const analysis = await prisma.brandGroundTruth.create({
       data: {
-        userId: DEMO_USER_ID,
+        userId: userId,
         companyName: brandName,
         websiteUrl: domain || null,
         industry: positioning.primary,
