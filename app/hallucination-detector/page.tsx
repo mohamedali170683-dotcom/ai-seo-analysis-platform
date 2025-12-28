@@ -1,339 +1,231 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, BookOpen, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Calculator, Database, Bot, Clock, FileCheck, Info } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
-interface GroundTruth {
-  id: string;
-  companyName: string;
-  foundedYear?: number;
-  headquarters?: string;
-  ceo?: string;
-  employeeCount?: number;
-  industry?: string;
-  description?: string;
-  websiteUrl?: string;
-  products: Product[];
-  competitorDifferentiators: CompetitorDifferentiator[];
-  hallucinationDetections: HallucinationDetection[];
+// Brand positioning types
+interface BrandPositioning {
+  primary: string;
+  secondary: string[];
+  targetAudience: string;
+  pricePoint: string;
+  keyAttributes: string[];
+  brandPromise: string;
+  tone: string[];
 }
 
-interface Product {
+interface PositioningAnalysis {
   id: string;
-  name: string;
-  launchYear?: number;
-  currentlyAvailable: boolean;
+  brandName: string;
+  domain: string;
+  positioning: BrandPositioning;
+  createdAt: string;
+  scans: PositioningScan[];
 }
 
-interface CompetitorDifferentiator {
-  id: string;
-  competitor: string;
-  theirFeature: string;
-  ourEquivalent?: string;
-  commonlyConfused: boolean;
-}
-
-interface HallucinationDetection {
+interface PositioningScan {
   id: string;
   scanDate: string;
   status: string;
-  overallAccuracy?: number;
-  adjustedAccuracy?: number;
-  riskLevel?: string;
-  hallucinations: Hallucination[];
-  recommendations: Recommendation[];
-  transparentAnalysis?: TransparentAnalysis;
+  alignmentScore: number;
+  llmResults: LLMPositioningResult[];
 }
 
-interface Hallucination {
-  id: string;
-  llm: string;
-  query: string;
-  claimedFact: string;
-  actualFact: string;
-  category: string;
-  severity: string;
-  status: string;
-}
-
-interface Recommendation {
-  id: string;
-  priority: string;
-  category: string;
-  title: string;
-  description: string;
-  affectedLLMs: string[];
-  status: string;
-}
-
-// Transparent Analysis Types
-interface QueryResult {
-  query: string;
-  response: string;
-  timestamp: number;
-}
-
-interface ExtractedClaimData {
-  type: string;
-  value: string;
-  fullContext: string;
-}
-
-interface ClaimVerification {
-  claim: ExtractedClaimData;
-  status: 'verified_correct' | 'verified_incorrect' | 'unverifiable';
-  groundTruthValue: string | null;
-  discrepancyType: string | null;
-  severity: string | null;
-}
-
-interface LLMAnalysis {
+interface LLMPositioningResult {
   llm: string;
   model: string;
-  queries: QueryResult[];
-  extractedClaims: ExtractedClaimData[];
-  verifications: ClaimVerification[];
-  accuracy: number;
-  correctCount: number;
-  incorrectCount: number;
-  unverifiableCount: number;
+  alignmentScore: number;
+  responses: PositioningResponse[];
 }
 
-interface TransparentAnalysis {
-  groundTruthFields: {
-    field: string;
-    value: string | number | null;
-    tested: boolean;
-  }[];
-  queriesGenerated: string[];
-  llmAnalyses: LLMAnalysis[];
-  scoringBreakdown: {
-    totalClaimsExtracted: number;
-    verifiableClaims: number;
-    correctClaims: number;
-    incorrectClaims: number;
-    unverifiableClaims: number;
-    baseAccuracy: number;
-    severityPenalty: number;
-    adjustedAccuracy: number;
-    riskLevel: string;
-    methodology: string;
-  };
+interface PositioningResponse {
+  aspect: string;
+  question: string;
+  expectedAnswer: string;
+  llmAnswer: string;
+  alignment: 'aligned' | 'partially_aligned' | 'misaligned';
+  explanation: string;
 }
 
-interface FetchedBrandData {
-  companyName: string;
-  description?: string;
-  foundedYear?: number;
-  headquarters?: string;
-  ceo?: string;
-  employeeCount?: number;
-  industry?: string;
-  websiteUrl?: string;
-  positioning?: {
-    primary: string;
-    secondary?: string[];
-    pricePoint?: string;
-    keyAttributes?: string[];
-    suggestedDescription?: string;
-  };
-  sources: Array<{
-    type: 'wikipedia' | 'website' | 'inferred';
-    field: string;
-    confidence: number;
-  }>;
-  confidence: {
-    overall: number;
-    wikipedia: number;
-    website: number;
-  };
-}
+// Positioning options
+const POSITIONING_OPTIONS = [
+  'premium', 'luxury', 'affordable', 'value', 'innovative', 'traditional',
+  'sustainable', 'eco-friendly', 'tech-forward', 'customer-centric',
+  'quality-focused', 'disruptive', 'professional', 'enterprise',
+  'lifestyle', 'health-conscious', 'performance', 'reliable'
+];
 
-type FormStep = 'search' | 'review' | 'manual';
+const PRICE_POINTS = ['budget', 'value', 'mid-range', 'premium', 'luxury'];
+
+const TONE_OPTIONS = [
+  'professional', 'friendly', 'authoritative', 'playful', 'sophisticated',
+  'innovative', 'trustworthy', 'bold', 'minimalist', 'warm'
+];
 
 // FAQ Data
 const faqItems = [
   {
-    question: "How does the auto-fetch feature work?",
-    answer: "When you enter a brand name or website URL, we automatically search Wikipedia and the company's website to gather verified information. We extract data from Wikipedia's infobox (company facts table) and parse structured data (JSON-LD, meta tags) from the website. This gives you a head start instead of manually entering everything."
+    question: "What is Brand Positioning Alignment?",
+    answer: "Brand Positioning Alignment checks if AI models (like ChatGPT and Gemini) describe your brand the same way you position it on your website and marketing materials. For example, if you position yourself as a 'premium, innovative' brand, we verify that LLMs don't describe you as 'budget' or 'traditional'."
   },
   {
-    question: "What is Brand Positioning and how is it detected?",
-    answer: "Brand positioning describes how a brand differentiates itself in the market. We analyze text from Wikipedia and the company website to detect positioning signals like 'premium', 'innovative', 'affordable', 'sustainable', etc. We also identify price points (budget, mid-range, premium, luxury) and key brand attributes. This helps the detector understand what claims should be accurate about your brand."
+    question: "How do we extract your brand positioning?",
+    answer: "We analyze your website's homepage, about page, and meta descriptions to understand how you describe your brand. We look for positioning signals like price points (luxury, affordable), attributes (innovative, sustainable), target audience, and brand tone. You can then adjust these before running the analysis."
   },
   {
-    question: "Why might some fields not be fetched automatically?",
-    answer: "Not all companies have complete Wikipedia pages, and website structured data varies. Some reasons fields might be missing: 1) The Wikipedia page doesn't have an infobox, 2) The information is formatted differently than expected, 3) The website doesn't use standard meta tags or JSON-LD schema. You can always add or edit this information manually."
+    question: "What questions do we ask the LLMs?",
+    answer: "We ask questions like 'How would you describe [brand]'s market positioning?', 'Is [brand] a premium or budget brand?', 'What is [brand]'s target audience?', 'What are [brand]'s key differentiators?'. These questions test if the LLM's perception matches your intended positioning."
   },
   {
-    question: "What does the confidence score mean?",
-    answer: "The confidence score (shown as a percentage) indicates how reliable the fetched data is. Higher scores mean data was found from multiple authoritative sources. Wikipedia data typically has 85-95% confidence, while structured data from official websites has 90-100% confidence. Lower scores suggest you should verify the information before saving."
+    question: "What does the alignment score mean?",
+    answer: "The alignment score (0-100%) shows how well LLMs represent your brand positioning. 90%+ means excellent alignment. 70-89% means mostly aligned with some gaps. Below 70% indicates significant misalignment that could affect how customers perceive your brand through AI interactions."
   },
   {
-    question: "How does the hallucination detection scan work?",
-    answer: "After you save your brand's ground truth data, you can run a scan. The system asks AI models (ChatGPT, Gemini) questions about your brand and compares their answers against your verified data. Any discrepancies—like wrong founding dates, incorrect CEO names, or fabricated features—are flagged as hallucinations with severity ratings."
-  },
-  {
-    question: "What should I do when hallucinations are detected?",
-    answer: "Each hallucination comes with recommendations. For critical issues (like wrong safety claims), you may need to update your public content to be clearer. For minor issues (outdated info), ensure your latest data is published online. The goal is to help AI models learn correct information about your brand over time."
-  },
-  {
-    question: "Can I edit the auto-fetched information?",
-    answer: "Yes! All auto-fetched data is fully editable before you save. The fetched data is just a starting point—you should review and correct any inaccuracies. The small labels under each field show where the data came from (Wikipedia or website), so you know which sources to verify."
+    question: "Why does brand positioning alignment matter?",
+    answer: "As more customers use AI assistants to research products and make decisions, how LLMs describe your brand directly impacts perception and sales. If ChatGPT tells users you're a 'budget brand' when you position as 'premium', you may lose high-value customers who trust that AI recommendation."
   }
 ];
 
 export default function HallucinationDetectorPage() {
-  const [groundTruths, setGroundTruths] = useState<GroundTruth[]>([]);
-  const [selectedGroundTruth, setSelectedGroundTruth] = useState<GroundTruth | null>(null);
+  const [analyses, setAnalyses] = useState<PositioningAnalysis[]>([]);
+  const [selectedAnalysis, setSelectedAnalysis] = useState<PositioningAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
-  // Transparency section states
-  const [showMethodology, setShowMethodology] = useState(false);
-  const [showGroundTruth, setShowGroundTruth] = useState(false);
-  const [showQueries, setShowQueries] = useState(false);
-  const [showVerifications, setShowVerifications] = useState(false);
-  const [expandedLLM, setExpandedLLM] = useState<string | null>(null);
-  const [lastScanAnalysis, setLastScanAnalysis] = useState<TransparentAnalysis | null>(null);
-
-  // New state for auto-fetch flow
-  const [formStep, setFormStep] = useState<FormStep>('search');
-  const [searchQuery, setSearchQuery] = useState('');
+  // Form states
+  const [brandName, setBrandName] = useState('');
+  const [domain, setDomain] = useState('');
   const [isFetching, setIsFetching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [fetchedData, setFetchedData] = useState<FetchedBrandData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [formStep, setFormStep] = useState<'input' | 'positioning'>('input');
 
-  const [formData, setFormData] = useState({
-    companyName: '',
-    foundedYear: '',
-    headquarters: '',
-    ceo: '',
-    employeeCount: '',
-    industry: '',
-    websiteUrl: '',
-    description: '',
-    positioning: '',
-    pricePoint: ''
+  // Positioning form
+  const [positioning, setPositioning] = useState<BrandPositioning>({
+    primary: '',
+    secondary: [],
+    targetAudience: '',
+    pricePoint: '',
+    keyAttributes: [],
+    brandPromise: '',
+    tone: []
   });
 
+  // Scan results
+  const [lastScanResult, setLastScanResult] = useState<PositioningScan | null>(null);
+  const [expandedLLM, setExpandedLLM] = useState<string | null>(null);
+
   useEffect(() => {
-    fetchGroundTruths();
+    fetchAnalyses();
   }, []);
 
-  const fetchGroundTruths = async () => {
+  const fetchAnalyses = async () => {
     try {
-      const response = await fetch('/api/ground-truth');
+      const response = await fetch('/api/brand-positioning');
       const data = await response.json();
       if (data.success) {
-        setGroundTruths(data.data);
-        if (data.data.length > 0 && !selectedGroundTruth) {
-          setSelectedGroundTruth(data.data[0]);
+        setAnalyses(data.data || []);
+        if (data.data?.length > 0 && !selectedAnalysis) {
+          setSelectedAnalysis(data.data[0]);
         }
       }
     } catch (error) {
-      console.error('Error fetching ground truths:', error);
+      console.error('Error fetching analyses:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFetchBrandData = async () => {
-    if (!searchQuery.trim()) return;
+  const handleFetchPositioning = async () => {
+    if (!brandName.trim() || !domain.trim()) return;
 
     setIsFetching(true);
     setFetchError(null);
 
     try {
-      const response = await fetch('/api/brand-data/fetch', {
+      // Normalize domain
+      let normalizedDomain = domain.trim();
+      if (!normalizedDomain.startsWith('http')) {
+        normalizedDomain = `https://${normalizedDomain}`;
+      }
+
+      const response = await fetch('/api/brand-positioning/fetch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brandNameOrUrl: searchQuery.trim() })
+        body: JSON.stringify({ brandName: brandName.trim(), domain: normalizedDomain })
       });
 
       const data = await response.json();
 
       if (data.success && data.data) {
-        setFetchedData(data.data);
-        // Pre-fill form with fetched data
-        setFormData({
-          companyName: data.data.companyName || searchQuery,
-          foundedYear: data.data.foundedYear?.toString() || '',
-          headquarters: data.data.headquarters || '',
-          ceo: data.data.ceo || '',
-          employeeCount: data.data.employeeCount?.toString() || '',
-          industry: data.data.industry || '',
-          websiteUrl: data.data.websiteUrl || '',
-          description: data.data.description || '',
-          positioning: data.data.positioning?.primary || '',
-          pricePoint: data.data.positioning?.pricePoint || ''
+        setPositioning({
+          primary: data.data.positioning?.primary || '',
+          secondary: data.data.positioning?.secondary || [],
+          targetAudience: data.data.positioning?.targetAudience || '',
+          pricePoint: data.data.positioning?.pricePoint || '',
+          keyAttributes: data.data.positioning?.keyAttributes || [],
+          brandPromise: data.data.positioning?.brandPromise || '',
+          tone: data.data.positioning?.tone || []
         });
-        setFormStep('review');
+        setFormStep('positioning');
       } else {
-        setFetchError(data.error || 'Failed to fetch brand data. Try entering information manually.');
+        setFetchError(data.error || 'Could not fetch positioning. Please enter manually.');
+        // Still move to positioning step with empty form
+        setFormStep('positioning');
       }
     } catch (error) {
-      console.error('Error fetching brand data:', error);
-      setFetchError('Failed to fetch brand data. Please try again or enter manually.');
+      console.error('Error fetching positioning:', error);
+      setFetchError('Failed to fetch. Please enter positioning manually.');
+      setFormStep('positioning');
     } finally {
       setIsFetching(false);
     }
   };
 
-  const handleCreateGroundTruth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSaveAnalysis = async () => {
+    if (!brandName.trim() || !positioning.primary) {
+      setSaveError('Please enter brand name and at least a primary positioning');
+      return;
+    }
+
+    setIsSaving(true);
     setSaveError(null);
     setSaveSuccess(false);
-    setIsSaving(true);
 
     try {
-      const payload = {
-        companyName: formData.companyName,
-        foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : undefined,
-        headquarters: formData.headquarters || undefined,
-        ceo: formData.ceo || undefined,
-        employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
-        industry: formData.industry || undefined,
-        websiteUrl: formData.websiteUrl || undefined,
-        description: formData.description || undefined
-      };
-
-      console.log('Saving brand with payload:', payload);
-
-      const response = await fetch('/api/ground-truth', {
+      const response = await fetch('/api/brand-positioning', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          brandName: brandName.trim(),
+          domain: domain.trim(),
+          positioning
+        })
       });
 
       const data = await response.json();
-      console.log('Save response:', data);
 
       if (data.success) {
         setSaveSuccess(true);
-        await fetchGroundTruths();
-        // Select the newly created brand
+        await fetchAnalyses();
         if (data.data?.id) {
-          const newBrand = { ...data.data, hallucinationDetections: [], products: [], competitorDifferentiators: [] };
-          setSelectedGroundTruth(newBrand);
+          setSelectedAnalysis(data.data);
         }
-        // Reset form after short delay to show success message
         setTimeout(() => {
           resetForm();
         }, 1500);
       } else {
-        setSaveError(data.error || 'Failed to save brand. Please try again.');
+        setSaveError(data.error || 'Failed to save. Please try again.');
       }
     } catch (error) {
-      console.error('Error creating ground truth:', error);
-      setSaveError('Failed to save brand. Please check your connection and try again.');
+      console.error('Error saving analysis:', error);
+      setSaveError('Failed to save. Please check your connection.');
     } finally {
       setIsSaving(false);
     }
@@ -341,57 +233,43 @@ export default function HallucinationDetectorPage() {
 
   const resetForm = () => {
     setShowCreateForm(false);
-    setFormStep('search');
-    setSearchQuery('');
-    setFetchedData(null);
+    setFormStep('input');
+    setBrandName('');
+    setDomain('');
+    setPositioning({
+      primary: '',
+      secondary: [],
+      targetAudience: '',
+      pricePoint: '',
+      keyAttributes: [],
+      brandPromise: '',
+      tone: []
+    });
     setFetchError(null);
     setSaveError(null);
     setSaveSuccess(false);
-    setFormData({
-      companyName: '',
-      foundedYear: '',
-      headquarters: '',
-      ceo: '',
-      employeeCount: '',
-      industry: '',
-      websiteUrl: '',
-      description: '',
-      positioning: '',
-      pricePoint: ''
-    });
   };
 
-  const runScan = async (groundTruthId: string) => {
+  const runPositioningScan = async (analysisId: string) => {
     setIsScanning(true);
-    setLastScanAnalysis(null);
+    setLastScanResult(null);
+
     try {
-      const response = await fetch('/api/hallucination-detection/scan', {
+      const response = await fetch('/api/brand-positioning/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groundTruthId })
+        body: JSON.stringify({ analysisId })
       });
 
       const data = await response.json();
-      if (data.success) {
-        // Capture transparent analysis from scan result
-        if (data.data.transparentAnalysis) {
-          setLastScanAnalysis(data.data.transparentAnalysis);
-        }
-        await fetchGroundTruths();
-        // Refresh selected ground truth
-        const detailResponse = await fetch(`/api/ground-truth/${groundTruthId}`);
-        const detailData = await detailResponse.json();
-        if (detailData.success) {
-          // Merge transparent analysis into the detection
-          const updatedGroundTruth = {
-            ...detailData.data,
-            hallucinationDetections: detailData.data.hallucinationDetections?.map((d: HallucinationDetection, idx: number) =>
-              idx === 0 && data.data.transparentAnalysis
-                ? { ...d, transparentAnalysis: data.data.transparentAnalysis }
-                : d
-            )
-          };
-          setSelectedGroundTruth(updatedGroundTruth);
+      if (data.success && data.data) {
+        setLastScanResult(data.data);
+        await fetchAnalyses();
+        // Refresh selected analysis
+        const updated = await fetch(`/api/brand-positioning/${analysisId}`);
+        const updatedData = await updated.json();
+        if (updatedData.success) {
+          setSelectedAnalysis(updatedData.data);
         }
       }
     } catch (error) {
@@ -401,31 +279,58 @@ export default function HallucinationDetectorPage() {
     }
   };
 
-  const getRiskColor = (riskLevel?: string) => {
-    switch (riskLevel) {
-      case 'LOW': return 'text-green-600 bg-green-50 border-green-200';
-      case 'MEDIUM': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      case 'HIGH': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'CRITICAL': return 'text-red-600 bg-red-50 border-red-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200 dark:border-gray-700';
+  const toggleSecondary = (value: string) => {
+    setPositioning(prev => ({
+      ...prev,
+      secondary: prev.secondary.includes(value)
+        ? prev.secondary.filter(s => s !== value)
+        : [...prev.secondary, value]
+    }));
+  };
+
+  const toggleTone = (value: string) => {
+    setPositioning(prev => ({
+      ...prev,
+      tone: prev.tone.includes(value)
+        ? prev.tone.filter(t => t !== value)
+        : [...prev.tone, value]
+    }));
+  };
+
+  const toggleAttribute = (value: string) => {
+    setPositioning(prev => ({
+      ...prev,
+      keyAttributes: prev.keyAttributes.includes(value)
+        ? prev.keyAttributes.filter(a => a !== value)
+        : [...prev.keyAttributes, value]
+    }));
+  };
+
+  const getAlignmentIcon = (alignment: string) => {
+    switch (alignment) {
+      case 'aligned': return <TrendingUp className="w-4 h-4 text-green-600" />;
+      case 'partially_aligned': return <Minus className="w-4 h-4 text-yellow-600" />;
+      case 'misaligned': return <TrendingDown className="w-4 h-4 text-red-600" />;
+      default: return null;
     }
   };
 
-  const getSourceIcon = (type: string) => {
-    switch (type) {
-      case 'wikipedia': return <BookOpen className="w-3 h-3" />;
-      case 'website': return <Globe className="w-3 h-3" />;
-      default: return <Sparkles className="w-3 h-3" />;
+  const getAlignmentColor = (alignment: string) => {
+    switch (alignment) {
+      case 'aligned': return 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800';
+      case 'partially_aligned': return 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800';
+      case 'misaligned': return 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800';
+      default: return 'bg-gray-50 border-gray-200 dark:bg-gray-700 dark:border-gray-700';
     }
   };
 
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600';
-    if (confidence >= 0.6) return 'text-yellow-600';
-    return 'text-orange-600';
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return SEMANTIC_COLORS.positive;
+    if (score >= 70) return SEMANTIC_COLORS.warning;
+    return SEMANTIC_COLORS.critical;
   };
 
-  const latestDetection = selectedGroundTruth?.hallucinationDetections?.[0];
+  const latestScan = selectedAnalysis?.scans?.[0] || lastScanResult;
 
   if (isLoading) {
     return (
@@ -443,10 +348,10 @@ export default function HallucinationDetectorPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                Misinformation & Hallucination Detector
+                Brand Positioning Alignment
               </h1>
               <p className="mt-2 text-gray-600 dark:text-gray-400">
-                Detect factual errors, outdated information, and competitor confusion in LLM responses
+                Check if AI models portray your brand the way you position it
               </p>
             </div>
             <button
@@ -507,9 +412,7 @@ export default function HallucinationDetectorPage() {
               onClick={() => {
                 setShowCreateForm(!showCreateForm);
                 if (!showCreateForm) {
-                  setFormStep('search');
-                  setSaveError(null);
-                  setSaveSuccess(false);
+                  resetForm();
                 }
               }}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -518,95 +421,106 @@ export default function HallucinationDetectorPage() {
             </button>
           </div>
 
-          {/* Create Form - New Multi-Step Flow */}
+          {/* Create Form */}
           {showCreateForm && (
             <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
-              {/* Step 1: Search/Fetch */}
-              {formStep === 'search' && (
+              {/* Step 1: Brand Name & Domain */}
+              {formStep === 'input' && (
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                      Add New Brand
+                      Add Your Brand
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      Enter a brand name or website URL to automatically fetch company information from Wikipedia and their website.
-                      We&apos;ll extract details like founding year, headquarters, CEO, employee count, industry, and detect the brand&apos;s market positioning.
+                      Enter your brand name and website domain. We&apos;ll analyze your website to understand how you position your brand.
                     </p>
                   </div>
 
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Brand Name *
+                      </label>
                       <input
                         type="text"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && !isFetching && handleFetchBrandData()}
-                        placeholder="e.g., Apple, Tesla, Microsoft, or https://company.com"
-                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        value={brandName}
+                        onChange={(e) => setBrandName(e.target.value)}
+                        placeholder="e.g., Apple, Nike, Tesla"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     </div>
-                    <button
-                      onClick={handleFetchBrandData}
-                      disabled={isFetching || !searchQuery.trim()}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2 min-w-[140px] justify-center"
-                    >
-                      {isFetching ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Fetching...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          Fetch Info
-                        </>
-                      )}
-                    </button>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Website Domain *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={domain}
+                          onChange={(e) => setDomain(e.target.value)}
+                          placeholder="e.g., apple.com"
+                          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                        <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
                   </div>
 
                   {fetchError && (
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-400 text-sm">
+                    <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md text-yellow-700 dark:text-yellow-400 text-sm">
                       {fetchError}
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span>or</span>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => setFormStep('manual')}
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      onClick={handleFetchPositioning}
+                      disabled={isFetching || !brandName.trim() || !domain.trim()}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
                     >
-                      enter information manually
+                      {isFetching ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Analyzing Website...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Fetch Brand Positioning
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setFormStep('positioning')}
+                      disabled={!brandName.trim()}
+                      className="px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                    >
+                      Skip & Enter Manually
                     </button>
                   </div>
 
-                  {/* Quick info about what gets fetched */}
                   <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
                     <p className="text-sm text-blue-800 dark:text-blue-300">
-                      <strong>What we fetch:</strong> Company name, founding year, headquarters, CEO, employee count, industry, website, description, and brand positioning (premium, innovative, affordable, etc.)
+                      <strong>What we analyze:</strong> Your homepage, about page, meta descriptions, and key messaging to understand your brand positioning, target audience, price point, and brand tone.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Review Fetched Data */}
-              {formStep === 'review' && fetchedData && (
-                <form onSubmit={handleCreateGroundTruth} className="space-y-6">
+              {/* Step 2: Review & Edit Positioning */}
+              {formStep === 'positioning' && (
+                <div className="space-y-6">
                   <div>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-2">
                       <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                        Review & Edit Brand Information
+                        Define Your Brand Positioning
                       </h3>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className={`${getConfidenceColor(fetchedData.confidence.overall)}`}>
-                          {Math.round(fetchedData.confidence.overall * 100)}% confidence
-                        </span>
-                      </div>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        for {brandName}
+                      </span>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                      We found the following information. Please review and edit as needed before saving.
-                      Fields marked with a source label were automatically fetched.
+                      Review and adjust how you want your brand to be perceived. This is what we&apos;ll check against LLM descriptions.
                     </p>
                   </div>
 
@@ -624,220 +538,126 @@ export default function HallucinationDetectorPage() {
                     </div>
                   )}
 
-                  {/* Data Sources */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {fetchedData.confidence.wikipedia > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded text-xs">
-                        <BookOpen className="w-3 h-3" />
-                        Wikipedia
-                      </span>
-                    )}
-                    {fetchedData.confidence.website > 0 && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded text-xs">
-                        <Globe className="w-3 h-3" />
-                        Website
-                      </span>
-                    )}
+                  {/* Primary Positioning */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Primary Positioning *
+                    </label>
+                    <select
+                      value={positioning.primary}
+                      onChange={(e) => setPositioning({ ...positioning, primary: e.target.value })}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    >
+                      <option value="">Select primary positioning...</option>
+                      {POSITIONING_OPTIONS.map(opt => (
+                        <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Brand Positioning Card */}
-                  {fetchedData.positioning && (
-                    <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                        <span className="font-medium text-purple-900 dark:text-purple-100">Detected Brand Positioning</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        <span className="px-2 py-1 bg-purple-600 text-white rounded text-sm">
-                          {fetchedData.positioning.primary.replace(/-/g, ' ')}
-                        </span>
-                        {fetchedData.positioning.secondary?.map((pos, i) => (
-                          <span key={i} className="px-2 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded text-sm">
-                            {pos.replace(/-/g, ' ')}
-                          </span>
-                        ))}
-                        {fetchedData.positioning.pricePoint && (
-                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded text-sm">
-                            {fetchedData.positioning.pricePoint}
-                          </span>
-                        )}
-                      </div>
-                      {fetchedData.positioning.keyAttributes && fetchedData.positioning.keyAttributes.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {fetchedData.positioning.keyAttributes.map((attr, i) => (
-                            <span key={i} className="px-2 py-0.5 bg-white/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 rounded text-xs">
-                              {attr}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      {fetchedData.positioning.suggestedDescription && (
-                        <p className="mt-2 text-sm text-purple-800 dark:text-purple-200 italic">
-                          &quot;{fetchedData.positioning.suggestedDescription}&quot;
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Editable Fields */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Company Name *
-                      </label>
-                      <div className="relative">
-                        <input
-                          type="text"
-                          required
-                          value={formData.companyName}
-                          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md pr-8 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        />
-                        <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      </div>
-                      {fetchedData.sources.find(s => s.field === 'companyName') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'companyName')?.type || '')}
-                          from {fetchedData.sources.find(s => s.field === 'companyName')?.type}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Founded Year
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.foundedYear}
-                        onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        min="1800"
-                        max={new Date().getFullYear()}
-                      />
-                      {fetchedData.sources.find(s => s.field === 'foundedYear') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'foundedYear')?.type || '')}
-                          from {fetchedData.sources.find(s => s.field === 'foundedYear')?.type}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Headquarters
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.headquarters}
-                        onChange={(e) => setFormData({ ...formData, headquarters: e.target.value })}
-                        placeholder="e.g., Cupertino, California, USA"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                      {fetchedData.sources.find(s => s.field === 'headquarters') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'headquarters')?.type || '')}
-                          from {fetchedData.sources.find(s => s.field === 'headquarters')?.type}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        CEO
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.ceo}
-                        onChange={(e) => setFormData({ ...formData, ceo: e.target.value })}
-                        placeholder="e.g., Tim Cook"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                      {fetchedData.sources.find(s => s.field === 'ceo') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'ceo')?.type || '')}
-                          from {fetchedData.sources.find(s => s.field === 'ceo')?.type}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Employee Count
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.employeeCount}
-                        onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
-                        placeholder="e.g., 164000"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        min="1"
-                      />
-                      {fetchedData.sources.find(s => s.field === 'employeeCount') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'employeeCount')?.type || '')}
-                          from {fetchedData.sources.find(s => s.field === 'employeeCount')?.type}
-                        </span>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Industry
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.industry}
-                        onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                        placeholder="e.g., Consumer electronics, Software"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                      {fetchedData.sources.find(s => s.field === 'industry') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'industry')?.type || '')}
-                          from {fetchedData.sources.find(s => s.field === 'industry')?.type}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Website URL
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.websiteUrl}
-                        onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                        placeholder="https://www.example.com"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={3}
-                        placeholder="Brief description of the company..."
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                      {fetchedData.sources.find(s => s.field === 'description') && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'description')?.type || '')}
-                          from {fetchedData.sources.find(s => s.field === 'description')?.type}
-                        </span>
-                      )}
+                  {/* Secondary Positioning */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Secondary Positioning (select all that apply)
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {POSITIONING_OPTIONS.filter(opt => opt !== positioning.primary).map(opt => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => toggleSecondary(opt)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                            positioning.secondary.includes(opt)
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                          }`}
+                        >
+                          {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Price Point */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Price Point
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {PRICE_POINTS.map(pp => (
+                        <button
+                          key={pp}
+                          type="button"
+                          onClick={() => setPositioning({ ...positioning, pricePoint: pp })}
+                          className={`px-4 py-2 rounded-md text-sm border transition-colors ${
+                            positioning.pricePoint === pp
+                              ? 'bg-purple-600 text-white border-purple-600'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400'
+                          }`}
+                        >
+                          {pp.charAt(0).toUpperCase() + pp.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Target Audience */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Target Audience
+                    </label>
+                    <input
+                      type="text"
+                      value={positioning.targetAudience}
+                      onChange={(e) => setPositioning({ ...positioning, targetAudience: e.target.value })}
+                      placeholder="e.g., Young professionals aged 25-40, tech-savvy consumers"
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    />
+                  </div>
+
+                  {/* Brand Promise */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Brand Promise / Value Proposition
+                    </label>
+                    <textarea
+                      value={positioning.brandPromise}
+                      onChange={(e) => setPositioning({ ...positioning, brandPromise: e.target.value })}
+                      placeholder="e.g., We deliver innovative technology that simplifies your life"
+                      rows={2}
+                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    />
+                  </div>
+
+                  {/* Brand Tone */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Brand Tone / Voice
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {TONE_OPTIONS.map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => toggleTone(t)}
+                          className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
+                            positioning.tone.includes(t)
+                              ? 'bg-green-600 text-white border-green-600'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-green-400'
+                          }`}
+                        >
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-4">
                     <button
-                      type="submit"
-                      disabled={isSaving || !formData.companyName.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2 min-w-[120px] justify-center"
+                      onClick={handleSaveAnalysis}
+                      disabled={isSaving || !positioning.primary}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
                     >
                       {isSaving ? (
                         <>
@@ -845,204 +665,58 @@ export default function HallucinationDetectorPage() {
                           Saving...
                         </>
                       ) : (
-                        'Save Brand'
+                        <>
+                          <Target className="w-4 h-4" />
+                          Save Brand Positioning
+                        </>
                       )}
                     </button>
                     <button
-                      type="button"
-                      onClick={() => setFormStep('search')}
-                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+                      onClick={() => setFormStep('input')}
+                      className="px-4 py-3 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
                     >
                       Back
                     </button>
                     <button
-                      type="button"
                       onClick={resetForm}
-                      className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                      className="px-4 py-3 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
                     >
                       Cancel
                     </button>
                   </div>
-                </form>
-              )}
-
-              {/* Manual Entry Mode */}
-              {formStep === 'manual' && (
-                <form onSubmit={handleCreateGroundTruth} className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                      Enter Brand Information Manually
-                    </h3>
-                  </div>
-
-                  {/* Success/Error Messages */}
-                  {saveSuccess && (
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md text-green-700 dark:text-green-400 text-sm flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Brand saved successfully!
-                    </div>
-                  )}
-                  {saveError && (
-                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-400 text-sm flex items-center gap-2">
-                      <XCircle className="w-4 h-4" />
-                      {saveError}
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Company Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={formData.companyName}
-                        onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Founded Year
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.foundedYear}
-                        onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                        min="1800"
-                        max={new Date().getFullYear()}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Headquarters
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.headquarters}
-                        onChange={(e) => setFormData({ ...formData, headquarters: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        CEO
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.ceo}
-                        onChange={(e) => setFormData({ ...formData, ceo: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Employee Count
-                      </label>
-                      <input
-                        type="number"
-                        value={formData.employeeCount}
-                        onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Industry
-                      </label>
-                      <input
-                        type="text"
-                        value={formData.industry}
-                        onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Website URL
-                      </label>
-                      <input
-                        type="url"
-                        value={formData.websiteUrl}
-                        onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Description
-                      </label>
-                      <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={isSaving || !formData.companyName.trim()}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2 min-w-[120px] justify-center"
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          Saving...
-                        </>
-                      ) : (
-                        'Create Brand'
-                      )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setFormStep('search')}
-                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
-                    >
-                      Back to Search
-                    </button>
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
+                </div>
               )}
             </div>
           )}
 
           {/* Brand List */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {groundTruths.map((gt) => (
+            {analyses.map((analysis) => (
               <div
-                key={gt.id}
-                onClick={() => setSelectedGroundTruth(gt)}
+                key={analysis.id}
+                onClick={() => setSelectedAnalysis(analysis)}
                 className={`p-4 border rounded-md cursor-pointer transition-colors ${
-                  selectedGroundTruth?.id === gt.id
+                  selectedAnalysis?.id === analysis.id
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <h3 className="font-semibold text-lg dark:text-gray-100">{gt.companyName}</h3>
-                {gt.foundedYear && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Founded: {gt.foundedYear}</p>
-                )}
-                {gt.industry && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{gt.industry}</p>
-                )}
-                {gt.hallucinationDetections?.length > 0 && (
+                <h3 className="font-semibold text-lg dark:text-gray-100">{analysis.brandName}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{analysis.domain}</p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
+                    {analysis.positioning?.primary}
+                  </span>
+                  {analysis.positioning?.pricePoint && (
+                    <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded">
+                      {analysis.positioning.pricePoint}
+                    </span>
+                  )}
+                </div>
+                {analysis.scans?.length > 0 && (
                   <div className="mt-2">
-                    <span className={`text-xs px-2 py-1 rounded ${getRiskColor(
-                      gt.hallucinationDetections[0].riskLevel
-                    )}`}>
-                      {gt.hallucinationDetections[0].riskLevel || 'No scans'}
+                    <span className="text-sm" style={{ color: getScoreColor(analysis.scans[0].alignmentScore) }}>
+                      {analysis.scans[0].alignmentScore}% alignment
                     </span>
                   </div>
                 )}
@@ -1050,542 +724,241 @@ export default function HallucinationDetectorPage() {
             ))}
           </div>
 
-          {groundTruths.length === 0 && !showCreateForm && (
+          {analyses.length === 0 && !showCreateForm && (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               No brands added yet. Click &quot;Add Brand&quot; to get started.
             </div>
           )}
         </div>
 
-        {/* Selected Brand Details */}
-        {selectedGroundTruth && (
-          <>
-            {/* Accuracy Dashboard */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-              <div className="flex items-center justify-between mb-6">
+        {/* Selected Brand Analysis */}
+        {selectedAnalysis && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold dark:text-gray-100">
+                  Positioning Alignment Report
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  {selectedAnalysis.brandName} • {selectedAnalysis.domain}
+                </p>
+              </div>
+              <button
+                onClick={() => runPositioningScan(selectedAnalysis.id)}
+                disabled={isScanning}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
+              >
+                {isScanning ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Scanning LLMs...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Run Alignment Check
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Your Defined Positioning */}
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                <Target className="w-5 h-5 text-blue-600" />
+                Your Brand Positioning
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <h2 className="text-xl font-semibold dark:text-gray-100">Brand Accuracy Report</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {selectedGroundTruth.companyName}
-                    {selectedGroundTruth.industry && ` • ${selectedGroundTruth.industry}`}
+                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Primary</span>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{selectedAnalysis.positioning?.primary}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Price Point</span>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{selectedAnalysis.positioning?.pricePoint || 'Not set'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Target Audience</span>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{selectedAnalysis.positioning?.targetAudience || 'Not set'}</p>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Tone</span>
+                  <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+                    {selectedAnalysis.positioning?.tone?.join(', ') || 'Not set'}
                   </p>
                 </div>
-                <button
-                  onClick={() => runScan(selectedGroundTruth.id)}
-                  disabled={isScanning}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
-                >
-                  {isScanning ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Scanning...
-                    </>
-                  ) : (
-                    'Run New Scan'
-                  )}
-                </button>
               </div>
+              {selectedAnalysis.positioning?.brandPromise && (
+                <div className="mt-3">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Brand Promise</span>
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{selectedAnalysis.positioning.brandPromise}</p>
+                </div>
+              )}
+            </div>
 
-              {latestDetection ? (
-                <>
-                  {/* Overall Score */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Adjusted Accuracy</span>
-                        <div className="flex items-baseline gap-2">
-                          <span
-                            className="text-3xl font-bold"
-                            style={{
-                              color: (() => {
-                                const accuracy = latestDetection.adjustedAccuracy || 0;
-                                return accuracy >= 90 ? SEMANTIC_COLORS.positive :
-                                       accuracy >= 70 ? SEMANTIC_COLORS.warning :
-                                       SEMANTIC_COLORS.critical;
-                              })()
-                            }}
-                          >
-                            {latestDetection.adjustedAccuracy || 0}%
-                          </span>
-                          {(() => {
-                            const accuracy = latestDetection.adjustedAccuracy || 0;
-                            return accuracy >= 90 ? <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} /> :
-                                   accuracy >= 70 ? <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.warning}} /> :
-                                   <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />;
-                          })()}
-                        </div>
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{latestDetection.riskLevel || 'Unknown'} Risk</span>
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Claims Verified</span>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                            {lastScanAnalysis?.scoringBreakdown?.verifiableClaims || '—'}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {lastScanAnalysis?.scoringBreakdown?.correctClaims || 0} correct, {lastScanAnalysis?.scoringBreakdown?.incorrectClaims || 0} incorrect
+            {latestScan ? (
+              <>
+                {/* Overall Alignment Score */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                        Overall Alignment
+                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span
+                          className="text-3xl font-bold"
+                          style={{ color: getScoreColor(latestScan.alignmentScore) }}
+                        >
+                          {latestScan.alignmentScore}%
                         </span>
+                        {latestScan.alignmentScore >= 90 ? (
+                          <CheckCircle2 className="w-5 h-5" style={{ color: SEMANTIC_COLORS.positive }} />
+                        ) : latestScan.alignmentScore >= 70 ? (
+                          <AlertTriangle className="w-5 h-5" style={{ color: SEMANTIC_COLORS.warning }} />
+                        ) : (
+                          <XCircle className="w-5 h-5" style={{ color: SEMANTIC_COLORS.critical }} />
+                        )}
                       </div>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                  </div>
+                  {latestScan.llmResults?.map((result) => (
+                    <div key={result.llm} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Hallucinations Found</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                          {result.llm.toUpperCase()}
+                        </span>
                         <div className="flex items-baseline gap-2">
                           <span
                             className="text-3xl font-bold"
-                            style={{
-                              color: (latestDetection.hallucinations?.length || 0) > 0
-                                ? SEMANTIC_COLORS.critical
-                                : SEMANTIC_COLORS.positive
-                            }}
+                            style={{ color: getScoreColor(result.alignmentScore) }}
                           >
-                            {latestDetection.hallucinations?.length || 0}
+                            {result.alignmentScore}%
                           </span>
-                          {(latestDetection.hallucinations?.length || 0) > 0 ? (
-                            <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{result.model}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* LLM Results Detail */}
+                <div className="space-y-4">
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Eye className="w-5 h-5 text-blue-600" />
+                    Detailed Comparison
+                  </h3>
+
+                  {latestScan.llmResults?.map((result) => (
+                    <div key={result.llm} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setExpandedLLM(expandedLLM === result.llm ? null : result.llm)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Bot className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                          <div>
+                            <span className="font-medium text-gray-900 dark:text-gray-100">{result.llm.toUpperCase()}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({result.model})</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span
+                            className="text-lg font-bold"
+                            style={{ color: getScoreColor(result.alignmentScore) }}
+                          >
+                            {result.alignmentScore}% aligned
+                          </span>
+                          {expandedLLM === result.llm ? (
+                            <ChevronUp className="w-5 h-5 text-gray-500" />
                           ) : (
-                            <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} />
+                            <ChevronDown className="w-5 h-5 text-gray-500" />
                           )}
                         </div>
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">LLMs Tested</span>
-                        <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                          {lastScanAnalysis?.llmAnalyses?.length || 2}
-                        </span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">
-                          {lastScanAnalysis?.llmAnalyses?.map(a => a.model).join(', ') || 'ChatGPT, Gemini'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Transparency Section Header */}
-                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
-                      <Eye className="w-5 h-5" />
-                      <span className="font-medium">Full Transparency Report</span>
-                    </div>
-                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
-                      Below you can see exactly what was tested, every query sent to each LLM, their responses, how claims were verified, and how the accuracy score was calculated.
-                    </p>
-                  </div>
-
-                  {/* Scoring Methodology */}
-                  {lastScanAnalysis?.scoringBreakdown && (
-                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => setShowMethodology(!showMethodology)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Calculator className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-                          <span className="font-medium text-gray-900 dark:text-gray-100">Scoring Methodology</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">— How the accuracy score was calculated</span>
-                        </div>
-                        {showMethodology ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
                       </button>
-                      {showMethodology && (
-                        <div className="p-4 bg-white dark:bg-gray-800">
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                            <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{lastScanAnalysis.scoringBreakdown.totalClaimsExtracted}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">Total Claims Extracted</div>
-                            </div>
-                            <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
-                              <div className="text-2xl font-bold text-green-600">{lastScanAnalysis.scoringBreakdown.correctClaims}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">Verified Correct</div>
-                            </div>
-                            <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded">
-                              <div className="text-2xl font-bold text-red-600">{lastScanAnalysis.scoringBreakdown.incorrectClaims}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">Verified Incorrect</div>
-                            </div>
-                            <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
-                              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{lastScanAnalysis.scoringBreakdown.unverifiableClaims}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">Unverifiable</div>
-                            </div>
-                          </div>
-                          <div className="space-y-3 text-sm">
-                            <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
-                              <span className="text-gray-600 dark:text-gray-400">Base Accuracy (Correct / Verifiable × 100)</span>
-                              <span className="font-medium text-gray-900 dark:text-gray-100">{lastScanAnalysis.scoringBreakdown.baseAccuracy}%</span>
-                            </div>
-                            <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded">
-                              <span className="text-gray-600 dark:text-gray-400">Severity Penalty (based on error severity)</span>
-                              <span className="font-medium text-red-600">-{lastScanAnalysis.scoringBreakdown.severityPenalty}%</span>
-                            </div>
-                            <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-2 border-blue-200 dark:border-blue-800">
-                              <span className="font-medium text-gray-900 dark:text-gray-100">Final Adjusted Accuracy</span>
-                              <span className="text-xl font-bold" style={{
-                                color: lastScanAnalysis.scoringBreakdown.adjustedAccuracy >= 90 ? SEMANTIC_COLORS.positive :
-                                       lastScanAnalysis.scoringBreakdown.adjustedAccuracy >= 70 ? SEMANTIC_COLORS.warning :
-                                       SEMANTIC_COLORS.critical
-                              }}>{lastScanAnalysis.scoringBreakdown.adjustedAccuracy}%</span>
-                            </div>
-                          </div>
-                          <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
-                            <strong>Formula:</strong> {lastScanAnalysis.scoringBreakdown.methodology}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
 
-                  {/* Ground Truth Fields Tested */}
-                  {lastScanAnalysis?.groundTruthFields && (
-                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => setShowGroundTruth(!showGroundTruth)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Database className="w-5 h-5 text-green-600 dark:text-green-400" />
-                          <span className="font-medium text-gray-900 dark:text-gray-100">Ground Truth Data</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">— Your verified brand facts used for comparison</span>
-                        </div>
-                        {showGroundTruth ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
-                      </button>
-                      {showGroundTruth && (
-                        <div className="p-4 bg-white dark:bg-gray-800">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {lastScanAnalysis.groundTruthFields.map((field, idx) => (
-                              <div key={idx} className={`flex items-center justify-between p-3 rounded border ${field.tested ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700'}`}>
-                                <div>
-                                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{field.field}</span>
-                                  <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">{field.value || 'Not set'}</span>
-                                </div>
-                                {field.tested ? (
-                                  <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                                    <CheckCircle2 className="w-3 h-3" /> Tested
+                      {expandedLLM === result.llm && (
+                        <div className="p-4 space-y-4">
+                          {result.responses?.map((response, idx) => (
+                            <div
+                              key={idx}
+                              className={`p-4 rounded-lg border ${getAlignmentColor(response.alignment)}`}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                  {getAlignmentIcon(response.alignment)}
+                                  <span className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+                                    {response.aspect.replace(/_/g, ' ')}
                                   </span>
-                                ) : (
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">Not tested</span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Queries & Responses */}
-                  {lastScanAnalysis?.llmAnalyses && (
-                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => setShowQueries(!showQueries)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                          <span className="font-medium text-gray-900 dark:text-gray-100">LLM Queries & Responses</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">— Every question sent and answer received</span>
-                        </div>
-                        {showQueries ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
-                      </button>
-                      {showQueries && (
-                        <div className="p-4 bg-white dark:bg-gray-800">
-                          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-sm text-yellow-800 dark:text-yellow-300">
-                            <strong>Queries Generated:</strong> {lastScanAnalysis.queriesGenerated.length} questions were sent to each LLM
-                          </div>
-                          <div className="space-y-4">
-                            {lastScanAnalysis.llmAnalyses.map((analysis) => (
-                              <div key={analysis.llm} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                                <button
-                                  onClick={() => setExpandedLLM(expandedLLM === analysis.llm ? null : analysis.llm)}
-                                  className="w-full flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <Bot className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                                    <div>
-                                      <span className="font-medium text-gray-900 dark:text-gray-100">{analysis.llm.toUpperCase()}</span>
-                                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({analysis.model})</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 ml-4">
-                                      <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded">{analysis.correctCount} correct</span>
-                                      <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs rounded">{analysis.incorrectCount} incorrect</span>
-                                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs rounded">{analysis.unverifiableCount} unverifiable</span>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium" style={{
-                                      color: analysis.accuracy >= 90 ? SEMANTIC_COLORS.positive :
-                                             analysis.accuracy >= 70 ? SEMANTIC_COLORS.warning :
-                                             SEMANTIC_COLORS.critical
-                                    }}>{analysis.accuracy}% accurate</span>
-                                    {expandedLLM === analysis.llm ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                                  </div>
-                                </button>
-                                {expandedLLM === analysis.llm && (
-                                  <div className="p-4 space-y-4">
-                                    {analysis.queries.map((q, qIdx) => (
-                                      <div key={qIdx} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-200 dark:border-gray-700">
-                                          <div className="flex items-start gap-2">
-                                            <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
-                                            <div>
-                                              <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">Query {qIdx + 1}</div>
-                                              <div className="text-sm text-gray-700 dark:text-gray-300">{q.query}</div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                        <div className="p-3 bg-gray-50 dark:bg-gray-700/50">
-                                          <div className="flex items-start gap-2">
-                                            <Bot className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
-                                            <div>
-                                              <div className="flex items-center gap-2 mb-1">
-                                                <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">Response</span>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                                  <Clock className="w-3 h-3" />
-                                                  {new Date(q.timestamp).toLocaleTimeString()}
-                                                </span>
-                                              </div>
-                                              <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{q.response}</div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Claim Verifications */}
-                  {lastScanAnalysis?.llmAnalyses && (
-                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                      <button
-                        onClick={() => setShowVerifications(!showVerifications)}
-                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <FileCheck className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-                          <span className="font-medium text-gray-900 dark:text-gray-100">Claim Verification Details</span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400">— How each extracted claim was verified</span>
-                        </div>
-                        {showVerifications ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
-                      </button>
-                      {showVerifications && (
-                        <div className="p-4 bg-white dark:bg-gray-800">
-                          {lastScanAnalysis.llmAnalyses.map((analysis) => (
-                            <div key={analysis.llm} className="mb-6 last:mb-0">
-                              <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                                <Bot className="w-4 h-4" />
-                                {analysis.llm.toUpperCase()} Verifications
-                              </h4>
-                              {analysis.verifications.length > 0 ? (
-                                <div className="space-y-2">
-                                  {analysis.verifications.map((v, vIdx) => (
-                                    <div key={vIdx} className={`p-3 rounded border ${
-                                      v.status === 'verified_correct' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
-                                      v.status === 'verified_incorrect' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
-                                      'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700'
-                                    }`}>
-                                      <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                          <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">{v.claim.type}</span>
-                                            {v.status === 'verified_correct' && <CheckCircle2 className="w-4 h-4 text-green-600" />}
-                                            {v.status === 'verified_incorrect' && <XCircle className="w-4 h-4 text-red-600" />}
-                                            {v.status === 'unverifiable' && <Info className="w-4 h-4 text-gray-500" />}
-                                          </div>
-                                          <div className="text-sm text-gray-900 dark:text-gray-100">
-                                            <strong>Claimed:</strong> {v.claim.value}
-                                          </div>
-                                          {v.groundTruthValue && (
-                                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                              <strong>Ground Truth:</strong> {v.groundTruthValue}
-                                            </div>
-                                          )}
-                                          {v.discrepancyType && (
-                                            <div className="text-xs text-red-600 dark:text-red-400 mt-1">
-                                              Discrepancy: {v.discrepancyType.replace(/_/g, ' ')}
-                                            </div>
-                                          )}
-                                        </div>
-                                        <div className="ml-4">
-                                          {v.severity && (
-                                            <span className={`px-2 py-1 text-xs font-medium rounded ${
-                                              v.severity === 'CRITICAL' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400' :
-                                              v.severity === 'HIGH' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400' :
-                                              v.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400' :
-                                              'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'
-                                            }`}>{v.severity}</span>
-                                          )}
-                                        </div>
-                                      </div>
-                                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
-                                        Context: &quot;{v.claim.fullContext}&quot;
-                                      </div>
-                                    </div>
-                                  ))}
                                 </div>
-                              ) : (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">No verifiable claims extracted from this LLM&apos;s responses.</p>
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  response.alignment === 'aligned' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400' :
+                                  response.alignment === 'partially_aligned' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400' :
+                                  'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400'
+                                }`}>
+                                  {response.alignment.replace(/_/g, ' ')}
+                                </span>
+                              </div>
+
+                              <div className="mb-3">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                  <strong>Question:</strong> {response.question}
+                                </p>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                                  <span className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase">Your Positioning</span>
+                                  <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{response.expectedAnswer}</p>
+                                </div>
+                                <div className="p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600">
+                                  <span className="text-xs font-medium text-purple-600 dark:text-purple-400 uppercase">LLM Says</span>
+                                  <p className="text-sm text-gray-900 dark:text-gray-100 mt-1">{response.llmAnswer}</p>
+                                </div>
+                              </div>
+
+                              {response.explanation && (
+                                <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 italic">
+                                  {response.explanation}
+                                </div>
                               )}
                             </div>
                           ))}
                         </div>
                       )}
                     </div>
-                  )}
-
-                  {/* Hallucinations List */}
-                  {latestDetection.hallucinations && latestDetection.hallucinations.length > 0 && (
-                    <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100 flex items-center gap-2">
-                        <XCircle className="w-5 h-5 text-red-600" />
-                        Detected Hallucinations ({latestDetection.hallucinations.length})
-                      </h3>
-                      <div className="space-y-3">
-                        {latestDetection.hallucinations.map((h) => (
-                          <div key={h.id} className="p-4 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                            <div className="flex items-start justify-between mb-2">
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className="px-2 py-1 rounded text-xs font-medium"
-                                  style={{
-                                    backgroundColor: (() => {
-                                      switch (h.severity) {
-                                        case 'CRITICAL': return '#fee2e2';
-                                        case 'HIGH': return '#fed7aa';
-                                        case 'MEDIUM': return '#fef3c7';
-                                        case 'LOW': return '#dbeafe';
-                                        default: return '#f3f4f6';
-                                      }
-                                    })(),
-                                    color: (() => {
-                                      switch (h.severity) {
-                                        case 'CRITICAL': return SEMANTIC_COLORS.critical;
-                                        case 'HIGH': return '#ea580c';
-                                        case 'MEDIUM': return SEMANTIC_COLORS.warning;
-                                        case 'LOW': return '#2563eb';
-                                        default: return '#4b5563';
-                                      }
-                                    })()
-                                  }}
-                                >
-                                  {h.severity}
-                                </span>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {h.llm.toUpperCase()}
-                                </span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {h.category.replace(/_/g, ' ')}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-sm mb-2 dark:text-gray-300">
-                              <strong>Query:</strong> {h.query}
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-red-600 dark:text-red-400 font-medium">LLM Claimed:</span>
-                                <div className="mt-1 p-2 bg-red-100 dark:bg-red-900/40 rounded dark:text-gray-200">
-                                  {h.claimedFact}
-                                </div>
-                              </div>
-                              <div>
-                                <span className="text-green-600 dark:text-green-400 font-medium">Your Ground Truth:</span>
-                                <div className="mt-1 p-2 bg-green-100 dark:bg-green-900/40 rounded dark:text-gray-200">
-                                  {h.actualFact}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Recommendations */}
-                  {latestDetection.recommendations && latestDetection.recommendations.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100 flex items-center gap-2">
-                        <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                        Recommendations ({latestDetection.recommendations.length})
-                      </h3>
-                      <div className="space-y-3">
-                        {latestDetection.recommendations.map((r) => (
-                          <div key={r.id} className="p-4 border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium dark:text-gray-100">{r.title}</h4>
-                              <span
-                                className="px-2 py-1 rounded text-xs font-medium"
-                                style={{
-                                  backgroundColor: (() => {
-                                    switch (r.priority) {
-                                      case 'critical': return '#fee2e2';
-                                      case 'high': return '#fed7aa';
-                                      case 'medium': return '#fef3c7';
-                                      default: return '#dbeafe';
-                                    }
-                                  })(),
-                                  color: (() => {
-                                    switch (r.priority) {
-                                      case 'critical': return SEMANTIC_COLORS.critical;
-                                      case 'high': return '#ea580c';
-                                      case 'medium': return SEMANTIC_COLORS.warning;
-                                      default: return '#2563eb';
-                                    }
-                                  })()
-                                }}
-                              >
-                                {r.priority.toUpperCase()}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{r.description}</p>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Affected LLMs: {r.affectedLLMs.join(', ')}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                  <div className="mb-4">
-                    <Eye className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600" />
-                  </div>
-                  <p className="mb-4 text-lg font-medium">No scans run yet</p>
-                  <p className="text-sm mb-6">Click &quot;Run New Scan&quot; to start detecting hallucinations and see a full transparency report of the analysis.</p>
-                  <div className="text-left max-w-md mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">What the scan will do:</h4>
-                    <ul className="text-sm space-y-2">
-                      <li className="flex items-start gap-2">
-                        <MessageSquare className="w-4 h-4 text-blue-500 mt-0.5" />
-                        <span>Send fact-checking questions to ChatGPT and Gemini</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <FileCheck className="w-4 h-4 text-green-500 mt-0.5" />
-                        <span>Extract claims from LLM responses</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Database className="w-4 h-4 text-purple-500 mt-0.5" />
-                        <span>Compare claims against your ground truth data</span>
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <Calculator className="w-4 h-4 text-orange-500 mt-0.5" />
-                        <span>Calculate accuracy with full methodology breakdown</span>
-                      </li>
-                    </ul>
-                  </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          </>
+              </>
+            ) : (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="mb-4">
+                  <Target className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600" />
+                </div>
+                <p className="mb-4 text-lg font-medium">No alignment checks run yet</p>
+                <p className="text-sm mb-6">
+                  Click &quot;Run Alignment Check&quot; to see how LLMs describe your brand compared to your positioning.
+                </p>
+                <div className="text-left max-w-md mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">What we&apos;ll check:</h4>
+                  <ul className="text-sm space-y-2">
+                    <li className="flex items-start gap-2">
+                      <MessageSquare className="w-4 h-4 text-blue-500 mt-0.5" />
+                      <span>Ask LLMs about your brand&apos;s positioning</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Target className="w-4 h-4 text-purple-500 mt-0.5" />
+                      <span>Compare their answers to your defined positioning</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <TrendingUp className="w-4 h-4 text-green-500 mt-0.5" />
+                      <span>Calculate alignment score for each aspect</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
