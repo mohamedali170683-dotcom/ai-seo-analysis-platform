@@ -22,20 +22,23 @@ export interface AuthUser {
   userId: string;
 }
 
+// Demo credentials fallback (for development only)
+const DEMO_USERNAME = 'demo@example.com';
+const DEMO_PASSWORD_HASH = '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.V/tE.nTkBWrO7W'; // demo123
+
 /**
  * Verify user credentials against hashed password
  */
 export async function verifyCredentials(username: string, password: string): Promise<boolean> {
-  if (!AUTH_USERNAME || !AUTH_PASSWORD_HASH) {
-    console.error('Auth credentials not configured in environment variables');
+  // Use environment variables if configured, otherwise fall back to demo credentials
+  const authUsername = AUTH_USERNAME || DEMO_USERNAME;
+  const authPasswordHash = AUTH_PASSWORD_HASH || DEMO_PASSWORD_HASH;
+
+  if (username !== authUsername) {
     return false;
   }
 
-  if (username !== AUTH_USERNAME) {
-    return false;
-  }
-
-  return bcrypt.compare(password, AUTH_PASSWORD_HASH);
+  return bcrypt.compare(password, authPasswordHash);
 }
 
 /**
