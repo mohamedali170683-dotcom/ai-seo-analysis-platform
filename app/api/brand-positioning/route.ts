@@ -6,25 +6,33 @@ const DEMO_USER_ID = 'demo-user-001';
 const DEMO_USER_EMAIL = 'demo@example.com';
 
 async function ensureDemoUserExists() {
-  const existingUser = await prisma.user.findUnique({
-    where: { id: DEMO_USER_ID }
-  });
+  try {
+    const existingUser = await prisma.user.findUnique({
+      where: { id: DEMO_USER_ID }
+    });
 
-  if (!existingUser) {
-    const existingByEmail = await prisma.user.findUnique({
-      where: { email: DEMO_USER_EMAIL }
-    });
-    if (existingByEmail) {
-      return existingByEmail.id;
-    }
-    await prisma.user.create({
-      data: {
-        id: DEMO_USER_ID,
-        email: DEMO_USER_EMAIL
+    if (!existingUser) {
+      // Check if user exists by email
+      const existingByEmail = await prisma.user.findUnique({
+        where: { email: DEMO_USER_EMAIL }
+      });
+      if (existingByEmail) {
+        return existingByEmail.id;
       }
-    });
+      // Create new demo user
+      await prisma.user.create({
+        data: {
+          id: DEMO_USER_ID,
+          email: DEMO_USER_EMAIL
+        }
+      });
+    }
+    return DEMO_USER_ID;
+  } catch (error) {
+    console.error('Error ensuring demo user exists:', error);
+    // Try to continue anyway - user might already exist
+    return DEMO_USER_ID;
   }
-  return DEMO_USER_ID;
 }
 
 /**
@@ -145,8 +153,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error creating brand positioning:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { success: false, error: 'Failed to create brand positioning' },
+      { success: false, error: `Failed to create brand positioning: ${errorMessage}` },
       { status: 500 }
     );
   }
