@@ -7,25 +7,99 @@ datasource db {
   url      = env("POSTGRES_PRISMA_URL")
 }
 
+// ============================================
+// ENUMS
+// ============================================
+
+enum AnalysisStatus {
+  pending
+  running
+  completed
+  failed
+}
+
+enum ScanStatus {
+  pending
+  in_progress
+  completed
+  failed
+}
+
+enum HallucinationSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum HallucinationCategory {
+  DATE_ERROR
+  COMPETITOR_CONFUSION
+  FABRICATION
+  OUTDATED_INFO
+  EXAGGERATION
+  MISATTRIBUTION
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Priority {
+  critical
+  high
+  medium
+  low
+}
+
+enum TaskStatus {
+  pending
+  in_progress
+  completed
+  dismissed
+}
+
+enum Frequency {
+  hourly
+  daily
+  weekly
+  monthly
+  custom
+}
+
+// ============================================
+// CORE MODELS
+// ============================================
+
 model User {
-  id               String             @id @default(cuid())
-  email            String             @unique
-  createdAt        DateTime           @default(now())
-  analyses         Analysis[]
-  projects         Project[]
-  brandGroundTruths BrandGroundTruth[]
+  id                  String                @id @default(cuid())
+  email               String                @unique
+  name                String?
+  createdAt           DateTime              @default(now())
+
+  // Relations with cascade delete
+  analyses            Analysis[]
+  projects            Project[]
+  brandGroundTruths   BrandGroundTruth[]
+  scheduledScans      ScheduledScan[]
+  alertConfigs        AlertConfig[]
+  webhookConfigs      WebhookConfig[]
+  integrations        Integration[]
 }
 
 model Analysis {
   id                   String                @id @default(cuid())
   userId               String
-  user                 User                  @relation(fields: [userId], references: [id])
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   brandOrKeyword       String
   domain               String?
   competitors          String[]
   targetCountry        String?               // ISO country code (US, UK, DE, etc.)
   targetRegion         String?               // Optional region specification
-  status               String                @default("pending")
+  status               AnalysisStatus        @default(pending)
   progress             Int                   @default(0)
   currentStep          String?
   createdAt            DateTime              @default(now())
@@ -35,9 +109,12 @@ model Analysis {
   detectedCompetitors  DetectedCompetitor[]
   aiInsights           AIInsight[]
 
+  @@unique([userId, brandOrKeyword, domain])
   @@index([userId])
   @@index([status])
   @@index([targetCountry])
+  @@index([userId, status])
+  @@index([status, createdAt])
   @@map("analyses")
 }
 
@@ -61,7 +138,6 @@ model AITestResult {
   id             String   @id @default(cuid())
   analysisId     String
   analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  questionId     String?
   question       String
   platform       String
   brandMentioned Boolean
@@ -116,11 +192,14 @@ model AIInsight {
   @@map("ai_insights")
 }
 
-// Forma & Attention Models
+// ============================================
+// FORMA & ATTENTION MODELS
+// ============================================
+
 model Project {
   id               String            @id @default(cuid())
   userId           String
-  user             User              @relation(fields: [userId], references: [id])
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   brandName        String
   websiteUrl       String?
   industry         String?
@@ -137,36 +216,36 @@ model Assessment {
   id                    String   @id @default(cuid())
   projectId             String
   project               Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
+
   // Overall BSOS
   bsosScore             Float    @default(0)
-  
+
   // Website/Blog Component (0-33)
   websiteScore          Float    @default(0)
   websiteBiasScore      Float    @default(0)
   websiteChoiceScore    Float    @default(0)
   websiteJourneyScore   Float    @default(0)
-  
+
   // Social Media Component (0-33)
   socialScore           Float    @default(0)
   socialContentScore    Float    @default(0)
   socialTriggersScore   Float    @default(0)
   socialVisualScore     Float    @default(0)
-  
+
   // Paid Advertising Component (0-34)
   adScore               Float    @default(0)
   adCreativeScore       Float    @default(0)
   adPersuasionScore     Float    @default(0)
   adLandingScore        Float    @default(0)
-  
+
   // Assessment Data (JSON)
   websiteData           Json?
   socialData            Json?
   adData                Json?
-  
+
   // Recommendations
   recommendations       Json?
-  
+
   // Status
   status                String   @default("draft")
   createdAt             DateTime @default(now())
@@ -178,11 +257,14 @@ model Assessment {
   @@map("assessments")
 }
 
-// Misinformation & Hallucination Detection Models
+// ============================================
+// MISINFORMATION & HALLUCINATION DETECTION
+// ============================================
+
 model BrandGroundTruth {
   id                          String                        @id @default(cuid())
   userId                      String
-  user                        User                          @relation(fields: [userId], references: [id])
+  user                        User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Company Information
   companyName                 String
@@ -211,6 +293,7 @@ model BrandGroundTruth {
   createdAt                   DateTime                      @default(now())
   updatedAt                   DateTime                      @updatedAt
 
+  @@unique([userId, companyName])
   @@index([userId])
   @@index([companyName])
   @@map("brand_ground_truths")
@@ -306,12 +389,12 @@ model HallucinationDetection {
 
   // Scan metadata
   scanDate                DateTime               @default(now())
-  status                  String                 @default("pending") // pending, in_progress, completed, failed
+  status                  ScanStatus             @default(pending)
 
   // Overall scores
   overallAccuracy         Float?
   adjustedAccuracy        Float?
-  riskLevel               String?                // LOW, MEDIUM, HIGH, CRITICAL
+  riskLevel               RiskLevel?
 
   // Per-LLM results
   chatgptAccuracy         Float?
@@ -350,8 +433,8 @@ model Hallucination {
   // Hallucination details
   claimedFact         String
   actualFact          String
-  category            String                  // DATE_ERROR, COMPETITOR_CONFUSION, FABRICATION, OUTDATED_INFO, EXAGGERATION, MISATTRIBUTION
-  severity            String                  // CRITICAL, HIGH, MEDIUM, LOW
+  category            HallucinationCategory
+  severity            HallucinationSeverity
   severityScore       Int
 
   // Context
@@ -359,7 +442,7 @@ model Hallucination {
   responseSnippet     String?
 
   // Actions
-  status              String                  @default("open") // open, addressed, ignored
+  status              TaskStatus              @default(pending)
   suggestedAction     String?
 
   createdAt           DateTime                @default(now())
@@ -378,7 +461,7 @@ model Recommendation {
   detectionId         String
   detection           HallucinationDetection  @relation(fields: [detectionId], references: [id], onDelete: Cascade)
 
-  priority            String                  // critical, high, medium, low
+  priority            Priority
   category            String
   title               String
   description         String
@@ -386,7 +469,7 @@ model Recommendation {
   suggestedContent    String?
 
   // Tracking
-  status              String                  @default("pending") // pending, in_progress, completed, dismissed
+  status              TaskStatus              @default(pending)
   implementedAt       DateTime?
 
   createdAt           DateTime                @default(now())
@@ -398,10 +481,14 @@ model Recommendation {
   @@map("recommendations")
 }
 
-// Automation & Scheduling Models
+// ============================================
+// AUTOMATION & SCHEDULING
+// ============================================
+
 model ScheduledScan {
   id                  String              @id @default(cuid())
   userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   brandOrKeyword      String
   domain              String?
   competitors         String[]
@@ -411,7 +498,7 @@ model ScheduledScan {
   enabled             Boolean             @default(true)
 
   // Schedule configuration
-  frequency           String              // hourly, daily, weekly, monthly, custom
+  frequency           Frequency           @default(daily)
   hour                Int?                // 0-23 for daily/weekly/monthly
   dayOfWeek           Int?                // 0-6 for weekly (0=Sunday)
   dayOfMonth          Int?                // 1-31 for monthly
@@ -443,7 +530,7 @@ model ScanExecution {
   scheduledScanId     String
   scheduledScan       ScheduledScan       @relation(fields: [scheduledScanId], references: [id], onDelete: Cascade)
 
-  status              String              @default("pending") // pending, running, completed, failed
+  status              ScanStatus          @default(pending)
   startTime           DateTime            @default(now())
   endTime             DateTime?
   error               String?
@@ -457,10 +544,14 @@ model ScanExecution {
   @@map("scan_executions")
 }
 
-// Alert Configuration Models
+// ============================================
+// ALERTS & NOTIFICATIONS
+// ============================================
+
 model AlertConfig {
   id                  String              @id @default(cuid())
   userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   name                String
   type                String              // visibility_drop, competitor_takeover, hallucination_detected, etc.
@@ -510,10 +601,14 @@ model AlertEvent {
   @@map("alert_events")
 }
 
-// Webhook Configuration Models
+// ============================================
+// WEBHOOKS & INTEGRATIONS
+// ============================================
+
 model WebhookConfig {
   id                  String              @id @default(cuid())
   userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   name                String
   url                 String
@@ -534,6 +629,7 @@ model WebhookConfig {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
+  @@unique([userId, url])
   @@index([userId])
   @@index([enabled])
   @@map("webhook_configs")
@@ -545,7 +641,7 @@ model WebhookDelivery {
   webhookConfig       WebhookConfig       @relation(fields: [webhookConfigId], references: [id], onDelete: Cascade)
 
   event               String              // Event type that triggered
-  status              String              @default("pending") // pending, success, failed
+  status              ScanStatus          @default(pending)
   attempts            Int                 @default(0)
   responseCode        Int?
   errorMessage        String?
@@ -559,10 +655,10 @@ model WebhookDelivery {
   @@map("webhook_deliveries")
 }
 
-// Integration Models
 model Integration {
   id                  String              @id @default(cuid())
   userId              String
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   type                String              // zapier, slack, google_sheets, discord, teams, airtable, etc.
   name                String
@@ -578,6 +674,7 @@ model Integration {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
 
+  @@unique([userId, type])
   @@index([userId])
   @@index([type])
   @@index([enabled])

@@ -48,6 +48,7 @@
     "@vercel/functions": "^3.3.4",
     "autoprefixer": "^10.4.22",
     "axios": "^1.7.2",
+    "bcryptjs": "^3.0.3",
     "bullmq": "^5.63.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -56,6 +57,7 @@
     "date-fns": "^4.1.0",
     "googleapis": "^166.0.0",
     "ioredis": "^5.8.2",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.553.0",
     "next": "^16.0.8",
     "openai": "^6.9.0",
@@ -70,6 +72,8 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.3",

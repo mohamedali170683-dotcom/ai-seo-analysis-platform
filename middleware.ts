@@ -1,28 +1,76 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || '';
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
   '/wpp-demo',
   '/login',
-  '/api/',  // All API routes are public (they handle their own auth if needed)
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/health',
+];
+
+// API routes that require authentication
+const PROTECTED_API_ROUTES = [
+  '/api/analysis',
+  '/api/brand-positioning',
+  '/api/ground-truth',
+  '/api/hallucination-detection',
+  '/api/integrations',
+  '/api/alerts',
+  '/api/webhooks',
+  '/api/automation',
+  '/api/projects',
 ];
 
 // Check if the path starts with any public route
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some(route => 
-    pathname === route || pathname.startsWith(route)
+  return PUBLIC_ROUTES.some(route =>
+    pathname === route || pathname.startsWith(route + '/')
   );
+}
+
+// Check if the path is a protected API route
+function isProtectedApiRoute(pathname: string): boolean {
+  return PROTECTED_API_ROUTES.some(route =>
+    pathname === route || pathname.startsWith(route + '/') || pathname.startsWith(route + '?')
+  );
+}
+
+interface TokenPayload {
+  username: string;
+  userId: string;
+  iat: number;
+  exp: number;
+}
+
+function verifyToken(token: string): TokenPayload | null {
+  if (!JWT_SECRET) {
+    console.error('JWT_SECRET is not configured');
+    return null;
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET, {
+      algorithms: ['HS256'],
+    }) as TokenPayload;
+    return decoded;
+  } catch {
+    return null;
+  }
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  
+
   // Allow public routes
   if (isPublicRoute(pathname)) {
     return NextResponse.next();
   }
-  
+
   // Allow static files and Next.js internals
   if (
     pathname.startsWith('/_next') ||
@@ -31,36 +79,55 @@ export function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
-  
+
   // Check for auth cookie
   const authToken = request.cookies.get('auth-token')?.value;
-  
+
   if (!authToken) {
-    // Redirect to login
+    // For API routes, return 401
+    if (isProtectedApiRoute(pathname)) {
+      return NextResponse.json(
+        { success: false, message: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    // For pages, redirect to login
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
-  
-  // Verify the token (simple check - in production use JWT verification)
-  try {
-    const decoded = Buffer.from(authToken, 'base64').toString('utf-8');
-    const tokenData = JSON.parse(decoded);
-    
-    // Check if token is valid and not expired
-    if (tokenData.username === 'mohamed.ali' && tokenData.exp > Date.now()) {
-      return NextResponse.next();
+
+  // Verify the JWT token
+  const tokenPayload = verifyToken(authToken);
+
+  if (!tokenPayload) {
+    // For API routes, return 401
+    if (isProtectedApiRoute(pathname)) {
+      const response = NextResponse.json(
+        { success: false, message: 'Invalid or expired token' },
+        { status: 401 }
+      );
+      response.cookies.delete('auth-token');
+      return response;
     }
-  } catch {
-    // Invalid token
+    // For pages, redirect to login
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    const response = NextResponse.redirect(loginUrl);
+    response.cookies.delete('auth-token');
+    return response;
   }
-  
-  // Invalid or expired token - redirect to login
-  const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('redirect', pathname);
-  const response = NextResponse.redirect(loginUrl);
-  response.cookies.delete('auth-token');
-  return response;
+
+  // Add user info to request headers for API routes
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-user-id', tokenPayload.userId);
+  requestHeaders.set('x-username', tokenPayload.username);
+
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
 export const config = {

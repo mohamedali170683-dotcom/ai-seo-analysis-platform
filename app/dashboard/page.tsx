@@ -1,13 +1,43 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { Bot, ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, HelpCircle, Sparkles, Lock } from "lucide-react";
+import { ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, Sparkles, Lock } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
 import { SEMANTIC_COLORS } from "@/lib/theme/colors";
+
+// Type definitions
+interface Project {
+  id: string;
+  brandName: string;
+  websiteUrl?: string;
+  industry?: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+  _count?: {
+    keywords?: number;
+    aiOverviews?: number;
+    chatbotQueries?: number;
+  };
+}
+
+interface Analysis {
+  id: string;
+  brandOrKeyword: string;
+  domain?: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  progress: number;
+  currentStep?: string;
+  createdAt: string;
+  completedAt?: string;
+  questionsCount?: number;
+  testsCount?: number;
+  insightsCount?: number;
+}
 
 // FAQ Data
 const FAQ_DATA = [
@@ -103,8 +133,9 @@ export default function DashboardPage() {
     setShowUpgradeModal(true);
   };
 
-  const [projects, setProjects] = useState<any[]>([]);
-  const [analyses, setAnalyses] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [analyses, setAnalyses] = useState<Analysis[]>([]);
+  const analysesRef = useRef<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
@@ -154,6 +185,11 @@ export default function DashboardPage() {
     }
   };
 
+  // Keep ref in sync with state for polling
+  useEffect(() => {
+    analysesRef.current = analyses;
+  }, [analyses]);
+
   useEffect(() => {
     const loadData = async () => {
       await Promise.all([loadProjects(), loadAnalyses()]);
@@ -161,9 +197,9 @@ export default function DashboardPage() {
     };
     loadData();
 
-    // Poll for running analyses
+    // Poll for running analyses using ref to avoid stale closure
     const interval = setInterval(() => {
-      if (analyses.some((a) => a.status === "running" || a.status === "pending")) {
+      if (analysesRef.current.some((a) => a.status === "running" || a.status === "pending")) {
         loadAnalyses();
       }
     }, 3000);
