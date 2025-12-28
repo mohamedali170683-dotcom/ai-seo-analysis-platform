@@ -24,21 +24,26 @@ export interface AuthUser {
 
 // Demo credentials fallback (for development only)
 const DEMO_USERNAME = 'demo@example.com';
-const DEMO_PASSWORD_HASH = '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.V/tE.nTkBWrO7W'; // demo123
+const DEMO_PASSWORD = 'demo123';
 
 /**
  * Verify user credentials against hashed password
  */
 export async function verifyCredentials(username: string, password: string): Promise<boolean> {
-  // Use environment variables if configured, otherwise fall back to demo credentials
-  const authUsername = AUTH_USERNAME || DEMO_USERNAME;
-  const authPasswordHash = AUTH_PASSWORD_HASH || DEMO_PASSWORD_HASH;
-
-  if (username !== authUsername) {
-    return false;
+  // If environment variables are configured, use bcrypt verification
+  if (AUTH_USERNAME && AUTH_PASSWORD_HASH) {
+    if (username !== AUTH_USERNAME) {
+      return false;
+    }
+    return bcrypt.compare(password, AUTH_PASSWORD_HASH);
   }
 
-  return bcrypt.compare(password, authPasswordHash);
+  // Fallback to demo credentials (plain text comparison for development)
+  if (username === DEMO_USERNAME && password === DEMO_PASSWORD) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
