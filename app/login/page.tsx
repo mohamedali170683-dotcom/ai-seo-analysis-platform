@@ -33,8 +33,8 @@ function LoginForm() {
 
       if (data.success) {
         // Redirect to the original page or dashboard
-        router.push(redirectTo);
-        router.refresh();
+        // Use window.location for a full page reload to ensure cookies are sent
+        window.location.href = redirectTo;
       } else {
         setError(data.message || "Login failed");
       }
