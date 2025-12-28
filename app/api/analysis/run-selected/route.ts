@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { prisma } from "@/lib/db/prisma";
+import { AnalysisStatus } from "@prisma/client";
 import { MultiPlatformAIService } from "@/lib/services/multi-platform-ai-service";
 import { WebsiteAuditService, WebsiteAuditResult } from "@/lib/services/website-audit-service";
 
@@ -196,7 +197,7 @@ export async function POST(request: Request) {
         domain: domain || null,
         competitors: finalCompetitors,
         targetCountry: targetCountry,
-        status: "running",
+        status: AnalysisStatus.running,
         progress: 0,
         currentStep: "Starting analysis...",
       },
@@ -238,7 +239,7 @@ export async function POST(request: Request) {
             await prisma.analysis.update({
               where: { id: analysis.id },
               data: {
-                status: "failed",
+                status: AnalysisStatus.failed,
                 currentStep: `Error: ${err.message?.substring(0, 200) || "Unknown error"}`,
               },
             });
@@ -846,7 +847,7 @@ async function executeSelectedAnalysis(
       await prisma.analysis.update({
         where: { id: analysisId },
         data: {
-          status: "completed",
+          status: AnalysisStatus.completed,
           progress: 100,
           currentStep: `Analysis complete! Visibility: ${avgMentionRate}%${websiteAudit ? ` | Tech Score: ${websiteAudit.technicalScore}/100` : ""}`,
           completedAt: new Date(),
@@ -867,7 +868,7 @@ async function executeSelectedAnalysis(
       await prisma.analysis.update({
         where: { id: analysisId },
         data: {
-          status: "failed",
+          status: AnalysisStatus.failed,
           currentStep: `Error: ${error.message?.substring(0, 200)}`,
         },
       });

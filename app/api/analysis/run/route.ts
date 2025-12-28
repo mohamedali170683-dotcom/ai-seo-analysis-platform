@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { waitUntil } from "@vercel/functions";
 import { prisma } from "@/lib/db/prisma";
+import { AnalysisStatus } from "@prisma/client";
 import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analysis-service";
 
 // Allow up to 5 minutes for analysis
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
           brandOrKeyword,
           domain: domain || null,
           competitors: competitorsArray,
-          status: "running",
+          status: AnalysisStatus.running,
           progress: 1,
           currentStep: "Initializing...",
         },
@@ -139,7 +140,7 @@ export async function POST(request: Request) {
           return prisma.analysis.update({
             where: { id: analysis.id },
             data: {
-              status: "failed",
+              status: AnalysisStatus.failed,
               currentStep: `Error: ${err.message?.substring(0, 200) || "Unknown error"}`,
             },
           }).catch((updateErr: Error) => {
@@ -421,7 +422,7 @@ async function executeAnalysis(
     await prisma.analysis.update({
       where: { id: analysisId },
       data: {
-        status: "completed",
+        status: AnalysisStatus.completed,
         progress: 100,
         currentStep: "Analysis complete!",
         completedAt: new Date(),
@@ -435,7 +436,7 @@ async function executeAnalysis(
     await prisma.analysis.update({
       where: { id: analysisId },
       data: {
-        status: "failed",
+        status: AnalysisStatus.failed,
         progress: 0,
         currentStep: `Failed: ${error.message?.substring(0, 200) || "Unknown error"}`,
       },

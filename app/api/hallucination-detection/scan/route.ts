@@ -1,7 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
+import { Priority, RiskLevel, ScanStatus, HallucinationCategory, HallucinationSeverity } from '@prisma/client';
 import HallucinationDetectionEngine from '@/lib/services/hallucination-detection-engine';
 import OpenAI from 'openai';
+
+// Map string category to enum
+function mapCategory(category: string): HallucinationCategory {
+  const mapping: Record<string, HallucinationCategory> = {
+    'DATE_ERROR': HallucinationCategory.DATE_ERROR,
+    'COMPETITOR_CONFUSION': HallucinationCategory.COMPETITOR_CONFUSION,
+    'FABRICATION': HallucinationCategory.FABRICATION,
+    'OUTDATED_INFO': HallucinationCategory.OUTDATED_INFO,
+    'EXAGGERATION': HallucinationCategory.EXAGGERATION,
+    'MISATTRIBUTION': HallucinationCategory.MISATTRIBUTION,
+  };
+  return mapping[category] || HallucinationCategory.FABRICATION;
+}
+
+// Map string severity to enum
+function mapSeverity(severity: string): HallucinationSeverity {
+  const mapping: Record<string, HallucinationSeverity> = {
+    'CRITICAL': HallucinationSeverity.CRITICAL,
+    'HIGH': HallucinationSeverity.HIGH,
+    'MEDIUM': HallucinationSeverity.MEDIUM,
+    'LOW': HallucinationSeverity.LOW,
+  };
+  return mapping[severity] || HallucinationSeverity.LOW;
+}
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -98,7 +123,7 @@ export async function POST(request: NextRequest) {
     const detection = await prisma.hallucinationDetection.create({
       data: {
         groundTruthId,
-        status: 'in_progress'
+        status: ScanStatus.in_progress
       }
     });
 
@@ -230,8 +255,8 @@ export async function POST(request: NextRequest) {
             query: result.query,
             claimedFact: v.claim.value,
             actualFact: v.groundTruthValue || 'Unknown',
-            category: v.discrepancy?.type || 'UNKNOWN',
-            severity: v.severity || 'LOW',
+            category: mapCategory(v.discrepancy?.type || 'FABRICATION'),
+            severity: mapSeverity(v.severity || 'LOW'),
             severityScore: HallucinationDetectionEngine.getSeverityScore(
               v.severity || 'LOW'
             ).score,
@@ -293,11 +318,11 @@ export async function POST(request: NextRequest) {
     const adjustedAccuracy = Math.max(0, baseAccuracyValue - severityPenalty);
 
     // Determine risk level
-    const getRiskLevel = (accuracy: number) => {
-      if (accuracy >= 90) return 'LOW';
-      if (accuracy >= 70) return 'MEDIUM';
-      if (accuracy >= 50) return 'HIGH';
-      return 'CRITICAL';
+    const getRiskLevel = (accuracy: number): RiskLevel => {
+      if (accuracy >= 90) return RiskLevel.LOW;
+      if (accuracy >= 70) return RiskLevel.MEDIUM;
+      if (accuracy >= 50) return RiskLevel.HIGH;
+      return RiskLevel.CRITICAL;
     };
     const riskLevel = getRiskLevel(adjustedAccuracy);
 
@@ -352,10 +377,10 @@ export async function POST(request: NextRequest) {
     const updatedDetection = await prisma.hallucinationDetection.update({
       where: { id: detection.id },
       data: {
-        status: 'completed',
+        status: ScanStatus.completed,
         overallAccuracy,
         adjustedAccuracy,
-        riskLevel,
+        riskLevel: riskLevel,
         chatgptAccuracy: llmAccuracies['chatgpt'],
         geminiAccuracy: llmAccuracies['gemini'],
         totalClaims,
@@ -512,24 +537,31 @@ function generateRecommendations(
   hallucinations: any[],
   brandName: string
 ): Array<{
-  priority: string;
+  priority: Priority;
   category: string;
   title: string;
   description: string;
   affectedLLMs: string[];
   suggestedContent: string;
 }> {
-  const recommendations: any[] = [];
+  const recommendations: Array<{
+    priority: Priority;
+    category: string;
+    title: string;
+    description: string;
+    affectedLLMs: string[];
+    suggestedContent: string;
+  }> = [];
 
   // Critical hallucinations
   const critical = hallucinations.filter(h => h.severity === 'CRITICAL');
   if (critical.length > 0) {
     recommendations.push({
-      priority: 'critical',
+      priority: Priority.critical,
       category: 'misinformation_correction',
       title: 'Correct critical misinformation immediately',
       description: `Found ${critical.length} critical misinformation issues that require immediate attention.`,
-      affectedLLMs: [...new Set(critical.map(h => h.llm))],
+      affectedLLMs: [...new Set(critical.map(h => h.llm))] as string[],
       suggestedContent: 'Issue press release with correct information. Update all official sources.'
     });
   }
@@ -538,11 +570,11 @@ function generateRecommendations(
   const competitorConfusion = hallucinations.filter(h => h.category === 'COMPETITOR_CONFUSION');
   if (competitorConfusion.length > 0) {
     recommendations.push({
-      priority: 'high',
+      priority: Priority.high,
       category: 'differentiation',
       title: 'Clarify brand differentiation from competitors',
       description: `LLMs are confusing ${brandName} features with competitor features.`,
-      affectedLLMs: [...new Set(competitorConfusion.map(h => h.llm))],
+      affectedLLMs: [...new Set(competitorConfusion.map(h => h.llm))] as string[],
       suggestedContent: 'Create comparison content highlighting unique features and differentiators.'
     });
   }
@@ -551,11 +583,11 @@ function generateRecommendations(
   const outdated = hallucinations.filter(h => h.category === 'OUTDATED_INFO');
   if (outdated.length > 0) {
     recommendations.push({
-      priority: 'medium',
+      priority: Priority.medium,
       category: 'content_refresh',
       title: 'Update outdated information across web presence',
       description: `Found ${outdated.length} instances of outdated information.`,
-      affectedLLMs: [...new Set(outdated.map(h => h.llm))],
+      affectedLLMs: [...new Set(outdated.map(h => h.llm))] as string[],
       suggestedContent: 'Audit and update Wikipedia, company website, and press releases with current information.'
     });
   }

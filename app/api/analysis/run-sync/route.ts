@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { AnalysisStatus } from "@prisma/client";
 import { ComprehensiveAnalysisService } from "@/lib/services/comprehensive-analysis-service";
 
 // Allow up to 5 minutes for analysis
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
         brandOrKeyword,
         domain: domain || null,
         competitors: competitorsArray,
-        status: "running",
+        status: AnalysisStatus.running,
         progress: 1,
         currentStep: "Starting...",
       },
@@ -173,7 +174,7 @@ export async function POST(request: Request) {
     await prisma.analysis.update({
       where: { id: analysis.id },
       data: {
-        status: "completed",
+        status: AnalysisStatus.completed,
         progress: 100,
         currentStep: "Analysis complete!",
         completedAt: new Date(),

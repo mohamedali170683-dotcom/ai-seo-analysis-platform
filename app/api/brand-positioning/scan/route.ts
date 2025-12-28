@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
+import { ScanStatus, RiskLevel } from '@prisma/client';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -102,10 +103,10 @@ export async function POST(request: NextRequest) {
     const detection = await prisma.hallucinationDetection.create({
       data: {
         groundTruthId: analysisId,
-        status: 'completed',
+        status: ScanStatus.completed,
         overallAccuracy: overallScore,
         adjustedAccuracy: overallScore,
-        riskLevel: overallScore >= 90 ? 'LOW' : overallScore >= 70 ? 'MEDIUM' : overallScore >= 50 ? 'HIGH' : 'CRITICAL',
+        riskLevel: overallScore >= 90 ? RiskLevel.LOW : overallScore >= 70 ? RiskLevel.MEDIUM : overallScore >= 50 ? RiskLevel.HIGH : RiskLevel.CRITICAL,
         totalClaims: totalResponses.length,
         correctClaims: alignedCount,
         incorrectClaims: totalResponses.filter(r => r.alignment === 'misaligned').length,
