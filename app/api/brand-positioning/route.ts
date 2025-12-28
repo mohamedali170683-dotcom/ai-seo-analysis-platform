@@ -62,7 +62,7 @@ export async function GET() {
     });
 
     // Transform to positioning format
-    const formattedAnalyses = analyses.map(a => {
+    const formattedAnalyses = analyses.map((a: { id: string; companyName: string; websiteUrl: string | null; industry: string | null; description: string | null; createdAt: Date; hallucinationDetections: Array<{ id: string; scanDate: Date; status: string; adjustedAccuracy: number | null; hallucinations: unknown[]; recommendations: unknown[] }> }) => {
       // Parse positioning from description JSON if available
       let positioning = null;
       try {
@@ -87,7 +87,7 @@ export async function GET() {
           tone: []
         },
         createdAt: a.createdAt.toISOString(),
-        scans: a.hallucinationDetections.map(d => ({
+        scans: a.hallucinationDetections.map((d: { id: string; scanDate: Date; status: string; adjustedAccuracy: number | null }) => ({
           id: d.id,
           scanDate: d.scanDate.toISOString(),
           status: d.status,

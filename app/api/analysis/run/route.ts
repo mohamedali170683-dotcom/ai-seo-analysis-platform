@@ -142,7 +142,7 @@ export async function POST(request: Request) {
               status: "failed",
               currentStep: `Error: ${err.message?.substring(0, 200) || "Unknown error"}`,
             },
-          }).catch((updateErr) => {
+          }).catch((updateErr: Error) => {
             console.error(`❌ [API] Failed to update analysis status:`, updateErr.message);
           });
         })
@@ -440,6 +440,6 @@ async function executeAnalysis(
         progress: 0,
         currentStep: `Failed: ${error.message?.substring(0, 200) || "Unknown error"}`,
       },
-    }).catch(e => console.error(`❌ [EXEC] Failed to update failure status: ${e}`));
+    }).catch((e: Error) => console.error(`❌ [EXEC] Failed to update failure status: ${e}`));
   }
 }
