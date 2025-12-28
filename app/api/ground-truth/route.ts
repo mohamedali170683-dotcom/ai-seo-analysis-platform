@@ -1,14 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 
+const DEMO_USER_ID = 'demo-user-id';
+const DEMO_USER_EMAIL = 'demo@example.com';
+
+/**
+ * Ensure demo user exists for development/demo purposes
+ */
+async function ensureDemoUserExists() {
+  const existingUser = await prisma.user.findUnique({
+    where: { id: DEMO_USER_ID }
+  });
+
+  if (!existingUser) {
+    // Check if email already exists (might have different id)
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: DEMO_USER_EMAIL }
+    });
+
+    if (existingByEmail) {
+      return existingByEmail.id;
+    }
+
+    // Create demo user
+    await prisma.user.create({
+      data: {
+        id: DEMO_USER_ID,
+        email: DEMO_USER_EMAIL
+      }
+    });
+    console.log('Created demo user');
+  }
+
+  return DEMO_USER_ID;
+}
+
 /**
  * GET /api/ground-truth
  * Get all ground truth entries for the user
  */
 export async function GET(request: NextRequest) {
   try {
-    // TODO: Get userId from authentication
-    const userId = 'demo-user-id'; // Replace with actual auth
+    // Ensure demo user exists
+    const userId = await ensureDemoUserExists();
 
     const groundTruths = await prisma.brandGroundTruth.findMany({
       where: { userId },
@@ -19,7 +53,11 @@ export async function GET(request: NextRequest) {
         competitorDifferentiators: true,
         hallucinationDetections: {
           orderBy: { scanDate: 'desc' },
-          take: 5 // Latest 5 scans
+          take: 5, // Latest 5 scans
+          include: {
+            hallucinations: true,
+            recommendations: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -41,8 +79,8 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // TODO: Get userId from authentication
-    const userId = 'demo-user-id'; // Replace with actual auth
+    // Ensure demo user exists
+    const userId = await ensureDemoUserExists();
 
     const body = await request.json();
 
@@ -146,8 +184,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: groundTruth }, { status: 201 });
   } catch (error) {
     console.error('Error creating ground truth:', error);
+
+    // Return more detailed error for debugging
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = error instanceof Error && 'code' in error ? (error as any).code : undefined;
+
     return NextResponse.json(
-      { success: false, error: 'Failed to create ground truth' },
+      {
+        success: false,
+        error: `Failed to create ground truth: ${errorMessage}`,
+        code: errorDetails
+      },
       { status: 500 }
     );
   }
