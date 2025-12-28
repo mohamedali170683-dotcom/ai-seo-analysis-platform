@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, BookOpen, Sparkles, Edit3 } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, BookOpen, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 interface GroundTruth {
@@ -96,19 +96,56 @@ interface FetchedBrandData {
 
 type FormStep = 'search' | 'review' | 'manual';
 
+// FAQ Data
+const faqItems = [
+  {
+    question: "How does the auto-fetch feature work?",
+    answer: "When you enter a brand name or website URL, we automatically search Wikipedia and the company's website to gather verified information. We extract data from Wikipedia's infobox (company facts table) and parse structured data (JSON-LD, meta tags) from the website. This gives you a head start instead of manually entering everything."
+  },
+  {
+    question: "What is Brand Positioning and how is it detected?",
+    answer: "Brand positioning describes how a brand differentiates itself in the market. We analyze text from Wikipedia and the company website to detect positioning signals like 'premium', 'innovative', 'affordable', 'sustainable', etc. We also identify price points (budget, mid-range, premium, luxury) and key brand attributes. This helps the detector understand what claims should be accurate about your brand."
+  },
+  {
+    question: "Why might some fields not be fetched automatically?",
+    answer: "Not all companies have complete Wikipedia pages, and website structured data varies. Some reasons fields might be missing: 1) The Wikipedia page doesn't have an infobox, 2) The information is formatted differently than expected, 3) The website doesn't use standard meta tags or JSON-LD schema. You can always add or edit this information manually."
+  },
+  {
+    question: "What does the confidence score mean?",
+    answer: "The confidence score (shown as a percentage) indicates how reliable the fetched data is. Higher scores mean data was found from multiple authoritative sources. Wikipedia data typically has 85-95% confidence, while structured data from official websites has 90-100% confidence. Lower scores suggest you should verify the information before saving."
+  },
+  {
+    question: "How does the hallucination detection scan work?",
+    answer: "After you save your brand's ground truth data, you can run a scan. The system asks AI models (ChatGPT, Gemini) questions about your brand and compares their answers against your verified data. Any discrepancies—like wrong founding dates, incorrect CEO names, or fabricated features—are flagged as hallucinations with severity ratings."
+  },
+  {
+    question: "What should I do when hallucinations are detected?",
+    answer: "Each hallucination comes with recommendations. For critical issues (like wrong safety claims), you may need to update your public content to be clearer. For minor issues (outdated info), ensure your latest data is published online. The goal is to help AI models learn correct information about your brand over time."
+  },
+  {
+    question: "Can I edit the auto-fetched information?",
+    answer: "Yes! All auto-fetched data is fully editable before you save. The fetched data is just a starting point—you should review and correct any inaccuracies. The small labels under each field show where the data came from (Wikipedia or website), so you know which sources to verify."
+  }
+];
+
 export default function HallucinationDetectorPage() {
   const [groundTruths, setGroundTruths] = useState<GroundTruth[]>([]);
   const [selectedGroundTruth, setSelectedGroundTruth] = useState<GroundTruth | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showFaq, setShowFaq] = useState(false);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   // New state for auto-fetch flow
   const [formStep, setFormStep] = useState<FormStep>('search');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFetching, setIsFetching] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [fetchedData, setFetchedData] = useState<FetchedBrandData | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -163,7 +200,7 @@ export default function HallucinationDetectorPage() {
         setFetchedData(data.data);
         // Pre-fill form with fetched data
         setFormData({
-          companyName: data.data.companyName || '',
+          companyName: data.data.companyName || searchQuery,
           foundedYear: data.data.foundedYear?.toString() || '',
           headquarters: data.data.headquarters || '',
           ceo: data.data.ceo || '',
@@ -176,7 +213,7 @@ export default function HallucinationDetectorPage() {
         });
         setFormStep('review');
       } else {
-        setFetchError(data.error || 'Failed to fetch brand data');
+        setFetchError(data.error || 'Failed to fetch brand data. Try entering information manually.');
       }
     } catch (error) {
       console.error('Error fetching brand data:', error);
@@ -188,29 +225,53 @@ export default function HallucinationDetectorPage() {
 
   const handleCreateGroundTruth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError(null);
+    setSaveSuccess(false);
+    setIsSaving(true);
+
     try {
+      const payload = {
+        companyName: formData.companyName,
+        foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : undefined,
+        headquarters: formData.headquarters || undefined,
+        ceo: formData.ceo || undefined,
+        employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
+        industry: formData.industry || undefined,
+        websiteUrl: formData.websiteUrl || undefined,
+        description: formData.description || undefined
+      };
+
+      console.log('Saving brand with payload:', payload);
+
       const response = await fetch('/api/ground-truth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          companyName: formData.companyName,
-          foundedYear: formData.foundedYear ? parseInt(formData.foundedYear) : undefined,
-          headquarters: formData.headquarters || undefined,
-          ceo: formData.ceo || undefined,
-          employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
-          industry: formData.industry || undefined,
-          websiteUrl: formData.websiteUrl || undefined,
-          description: formData.description || undefined
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
+      console.log('Save response:', data);
+
       if (data.success) {
+        setSaveSuccess(true);
         await fetchGroundTruths();
-        resetForm();
+        // Select the newly created brand
+        if (data.data?.id) {
+          const newBrand = { ...data.data, hallucinationDetections: [], products: [], competitorDifferentiators: [] };
+          setSelectedGroundTruth(newBrand);
+        }
+        // Reset form after short delay to show success message
+        setTimeout(() => {
+          resetForm();
+        }, 1500);
+      } else {
+        setSaveError(data.error || 'Failed to save brand. Please try again.');
       }
     } catch (error) {
       console.error('Error creating ground truth:', error);
+      setSaveError('Failed to save brand. Please check your connection and try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -220,6 +281,8 @@ export default function HallucinationDetectorPage() {
     setSearchQuery('');
     setFetchedData(null);
     setFetchError(null);
+    setSaveError(null);
+    setSaveSuccess(false);
     setFormData({
       companyName: '',
       foundedYear: '',
@@ -247,13 +310,10 @@ export default function HallucinationDetectorPage() {
       if (data.success) {
         await fetchGroundTruths();
         // Refresh selected ground truth
-        const updatedGT = groundTruths.find(gt => gt.id === groundTruthId);
-        if (updatedGT) {
-          const detailResponse = await fetch(`/api/ground-truth/${groundTruthId}`);
-          const detailData = await detailResponse.json();
-          if (detailData.success) {
-            setSelectedGroundTruth(detailData.data);
-          }
+        const detailResponse = await fetch(`/api/ground-truth/${groundTruthId}`);
+        const detailData = await detailResponse.json();
+        if (detailData.success) {
+          setSelectedGroundTruth(detailData.data);
         }
       }
     } catch (error) {
@@ -302,13 +362,64 @@ export default function HallucinationDetectorPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-            Misinformation & Hallucination Detector
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Detect factual errors, outdated information, and competitor confusion in LLM responses
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                Misinformation & Hallucination Detector
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Detect factual errors, outdated information, and competitor confusion in LLM responses
+              </p>
+            </div>
+            <button
+              onClick={() => setShowFaq(!showFaq)}
+              className="flex items-center gap-2 px-4 py-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+            >
+              <HelpCircle className="w-5 h-5" />
+              <span>How it works</span>
+            </button>
+          </div>
         </div>
+
+        {/* FAQ Section */}
+        {showFaq && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold dark:text-gray-100 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-blue-500" />
+                Frequently Asked Questions
+              </h2>
+              <button
+                onClick={() => setShowFaq(false)}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {faqItems.map((item, index) => (
+                <div key={index} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setOpenFaqIndex(openFaqIndex === index ? null : index)}
+                    className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <span className="font-medium text-gray-900 dark:text-gray-100">{item.question}</span>
+                    {openFaqIndex === index ? (
+                      <ChevronUp className="w-5 h-5 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-gray-500" />
+                    )}
+                  </button>
+                  {openFaqIndex === index && (
+                    <div className="px-4 pb-4 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                      {item.answer}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Brand Selection & Create */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
@@ -319,6 +430,8 @@ export default function HallucinationDetectorPage() {
                 setShowCreateForm(!showCreateForm);
                 if (!showCreateForm) {
                   setFormStep('search');
+                  setSaveError(null);
+                  setSaveSuccess(false);
                 }
               }}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -339,6 +452,7 @@ export default function HallucinationDetectorPage() {
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                       Enter a brand name or website URL to automatically fetch company information from Wikipedia and their website.
+                      We&apos;ll extract details like founding year, headquarters, CEO, employee count, industry, and detect the brand&apos;s market positioning.
                     </p>
                   </div>
 
@@ -348,8 +462,8 @@ export default function HallucinationDetectorPage() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleFetchBrandData()}
-                        placeholder="e.g., Apple, Tesla, or https://company.com"
+                        onKeyDown={(e) => e.key === 'Enter' && !isFetching && handleFetchBrandData()}
+                        placeholder="e.g., Apple, Tesla, Microsoft, or https://company.com"
                         className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -357,7 +471,7 @@ export default function HallucinationDetectorPage() {
                     <button
                       onClick={handleFetchBrandData}
                       disabled={isFetching || !searchQuery.trim()}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
+                      className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2 min-w-[140px] justify-center"
                     >
                       {isFetching ? (
                         <>
@@ -388,6 +502,13 @@ export default function HallucinationDetectorPage() {
                       enter information manually
                     </button>
                   </div>
+
+                  {/* Quick info about what gets fetched */}
+                  <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md">
+                    <p className="text-sm text-blue-800 dark:text-blue-300">
+                      <strong>What we fetch:</strong> Company name, founding year, headquarters, CEO, employee count, industry, website, description, and brand positioning (premium, innovative, affordable, etc.)
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -407,8 +528,23 @@ export default function HallucinationDetectorPage() {
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                       We found the following information. Please review and edit as needed before saving.
+                      Fields marked with a source label were automatically fetched.
                     </p>
                   </div>
+
+                  {/* Success/Error Messages */}
+                  {saveSuccess && (
+                    <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md text-green-700 dark:text-green-400 text-sm flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Brand saved successfully!
+                    </div>
+                  )}
+                  {saveError && (
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-400 text-sm flex items-center gap-2">
+                      <XCircle className="w-4 h-4" />
+                      {saveError}
+                    </div>
+                  )}
 
                   {/* Data Sources */}
                   <div className="flex flex-wrap gap-2 mb-4">
@@ -498,6 +634,8 @@ export default function HallucinationDetectorPage() {
                         value={formData.foundedYear}
                         onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        min="1800"
+                        max={new Date().getFullYear()}
                       />
                       {fetchedData.sources.find(s => s.field === 'foundedYear') && (
                         <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
@@ -515,6 +653,7 @@ export default function HallucinationDetectorPage() {
                         type="text"
                         value={formData.headquarters}
                         onChange={(e) => setFormData({ ...formData, headquarters: e.target.value })}
+                        placeholder="e.g., Cupertino, California, USA"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                       {fetchedData.sources.find(s => s.field === 'headquarters') && (
@@ -533,6 +672,7 @@ export default function HallucinationDetectorPage() {
                         type="text"
                         value={formData.ceo}
                         onChange={(e) => setFormData({ ...formData, ceo: e.target.value })}
+                        placeholder="e.g., Tim Cook"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                       {fetchedData.sources.find(s => s.field === 'ceo') && (
@@ -551,7 +691,9 @@ export default function HallucinationDetectorPage() {
                         type="number"
                         value={formData.employeeCount}
                         onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
+                        placeholder="e.g., 164000"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        min="1"
                       />
                       {fetchedData.sources.find(s => s.field === 'employeeCount') && (
                         <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
@@ -569,6 +711,7 @@ export default function HallucinationDetectorPage() {
                         type="text"
                         value={formData.industry}
                         onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                        placeholder="e.g., Consumer electronics, Software"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                       {fetchedData.sources.find(s => s.field === 'industry') && (
@@ -587,6 +730,7 @@ export default function HallucinationDetectorPage() {
                         type="url"
                         value={formData.websiteUrl}
                         onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                        placeholder="https://www.example.com"
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                     </div>
@@ -599,6 +743,7 @@ export default function HallucinationDetectorPage() {
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={3}
+                        placeholder="Brief description of the company..."
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                       />
                       {fetchedData.sources.find(s => s.field === 'description') && (
@@ -613,9 +758,17 @@ export default function HallucinationDetectorPage() {
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      disabled={isSaving || !formData.companyName.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2 min-w-[120px] justify-center"
                     >
-                      Save Brand
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Brand'
+                      )}
                     </button>
                     <button
                       type="button"
@@ -644,6 +797,20 @@ export default function HallucinationDetectorPage() {
                     </h3>
                   </div>
 
+                  {/* Success/Error Messages */}
+                  {saveSuccess && (
+                    <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md text-green-700 dark:text-green-400 text-sm flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Brand saved successfully!
+                    </div>
+                  )}
+                  {saveError && (
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-400 text-sm flex items-center gap-2">
+                      <XCircle className="w-4 h-4" />
+                      {saveError}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -666,6 +833,8 @@ export default function HallucinationDetectorPage() {
                         value={formData.foundedYear}
                         onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        min="1800"
+                        max={new Date().getFullYear()}
                       />
                     </div>
                     <div>
@@ -739,9 +908,17 @@ export default function HallucinationDetectorPage() {
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      disabled={isSaving || !formData.companyName.trim()}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2 min-w-[120px] justify-center"
                     >
-                      Create Brand
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Create Brand'
+                      )}
                     </button>
                     <button
                       type="button"
@@ -808,13 +985,26 @@ export default function HallucinationDetectorPage() {
             {/* Accuracy Dashboard */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold dark:text-gray-100">Brand Accuracy Report</h2>
+                <div>
+                  <h2 className="text-xl font-semibold dark:text-gray-100">Brand Accuracy Report</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {selectedGroundTruth.companyName}
+                    {selectedGroundTruth.industry && ` • ${selectedGroundTruth.industry}`}
+                  </p>
+                </div>
                 <button
                   onClick={() => runScan(selectedGroundTruth.id)}
                   disabled={isScanning}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
                 >
-                  {isScanning ? 'Scanning...' : 'Run New Scan'}
+                  {isScanning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Scanning...
+                    </>
+                  ) : (
+                    'Run New Scan'
+                  )}
                 </button>
               </div>
 
@@ -1008,7 +1198,8 @@ export default function HallucinationDetectorPage() {
                 </>
               ) : (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                  No scans run yet. Click &quot;Run New Scan&quot; to start detecting hallucinations.
+                  <p className="mb-4">No scans run yet. Click &quot;Run New Scan&quot; to start detecting hallucinations.</p>
+                  <p className="text-sm">The scan will query AI models about your brand and compare responses against your verified data.</p>
                 </div>
               )}
             </div>
