@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   Home,
   Search,
-  Shield,
+  Target,
   Zap,
   Bell,
   Webhook,
@@ -32,7 +32,7 @@ export function Navigation() {
   const featureLinks = [
     { href: '/features', label: 'All Features', icon: Sparkles },
     { href: '/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/hallucination-detector', label: 'Hallucination Detector', icon: Shield },
+    { href: '/hallucination-detector', label: 'Brand Positioning', icon: Target },
     { href: '/automation', label: 'Automation', icon: Zap },
     { href: '/alerts', label: 'Alerts', icon: Bell },
     { href: '/webhooks', label: 'Webhooks', icon: Webhook },
