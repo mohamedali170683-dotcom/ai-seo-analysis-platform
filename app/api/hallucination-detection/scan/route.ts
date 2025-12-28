@@ -5,6 +5,61 @@ import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Types for transparent analysis data
+interface QueryResult {
+  query: string;
+  response: string;
+  timestamp: number;
+}
+
+interface ExtractedClaimData {
+  type: string;
+  value: string;
+  fullContext: string;
+}
+
+interface ClaimVerification {
+  claim: ExtractedClaimData;
+  status: 'verified_correct' | 'verified_incorrect' | 'unverifiable';
+  groundTruthValue: string | null;
+  discrepancyType: string | null;
+  severity: string | null;
+}
+
+interface LLMAnalysis {
+  llm: string;
+  model: string;
+  queries: QueryResult[];
+  extractedClaims: ExtractedClaimData[];
+  verifications: ClaimVerification[];
+  accuracy: number;
+  correctCount: number;
+  incorrectCount: number;
+  unverifiableCount: number;
+}
+
+interface TransparentAnalysisData {
+  groundTruthFields: {
+    field: string;
+    value: string | number | null;
+    tested: boolean;
+  }[];
+  queriesGenerated: string[];
+  llmAnalyses: LLMAnalysis[];
+  scoringBreakdown: {
+    totalClaimsExtracted: number;
+    verifiableClaims: number;
+    correctClaims: number;
+    incorrectClaims: number;
+    unverifiableClaims: number;
+    baseAccuracy: number;
+    severityPenalty: number;
+    adjustedAccuracy: number;
+    riskLevel: string;
+    methodology: string;
+  };
+}
+
 /**
  * POST /api/hallucination-detection/scan
  * Run a hallucination detection scan for a brand
@@ -50,10 +105,21 @@ export async function POST(request: NextRequest) {
     // Generate fact-checking queries
     const queries = generateFactCheckingQueries(groundTruthData);
 
-    // Query all LLMs
+    // Build ground truth fields for transparency
+    const groundTruthFields = [
+      { field: 'Company Name', value: groundTruthData.companyName, tested: true },
+      { field: 'Founded Year', value: groundTruthData.foundedYear, tested: !!groundTruthData.foundedYear },
+      { field: 'Headquarters', value: groundTruthData.headquarters, tested: !!groundTruthData.headquarters },
+      { field: 'CEO', value: groundTruthData.ceo, tested: !!groundTruthData.ceo },
+      { field: 'Employee Count', value: groundTruthData.employeeCount, tested: !!groundTruthData.employeeCount },
+      { field: 'Industry', value: groundTruthData.industry, tested: false }, // Not directly queried
+      { field: 'Products', value: groundTruthData.products.length > 0 ? `${groundTruthData.products.length} products` : null, tested: groundTruthData.products.length > 0 },
+    ];
+
+    // Query all LLMs with detailed logging
     const llmResults = await Promise.all([
-      queryLLM('chatgpt', queries, groundTruthData.companyName),
-      queryLLM('gemini', queries, groundTruthData.companyName)
+      queryLLMWithDetails('chatgpt', 'gpt-4o-mini', queries, groundTruthData.companyName),
+      queryLLMWithDetails('gemini', 'gemini-2.0-flash', queries, groundTruthData.companyName)
     ]);
 
     // Transform ground truth data for detection engine
@@ -103,16 +169,32 @@ export async function POST(request: NextRequest) {
       }))
     };
 
-    // Process results for each LLM
-    const allHallucinations = [];
+    // Process results for each LLM with full transparency
+    const allHallucinations: any[] = [];
     const llmAccuracies: Record<string, number> = {};
+    const llmAnalyses: LLMAnalysis[] = [];
 
-    for (const { llm, results } of llmResults) {
+    for (const { llm, model, results } of llmResults) {
+      const llmExtractedClaims: ExtractedClaimData[] = [];
+      const llmVerifications: ClaimVerification[] = [];
+      let llmCorrect = 0;
+      let llmIncorrect = 0;
+      let llmUnverifiable = 0;
+
       for (const result of results) {
         // Extract claims from response
         const extractedClaims = HallucinationDetectionEngine.extractClaims(
           result.response
         );
+
+        // Store extracted claims for transparency
+        for (const claim of extractedClaims) {
+          llmExtractedClaims.push({
+            type: claim.type,
+            value: claim.value,
+            fullContext: claim.fullContext
+          });
+        }
 
         // Verify claims against ground truth
         const verificationResults = HallucinationDetectionEngine.verifyClaims(
@@ -121,12 +203,24 @@ export async function POST(request: NextRequest) {
           groundTruthData.companyName
         );
 
-        // Calculate accuracy for this LLM
-        const accuracyScore = HallucinationDetectionEngine.calculateAccuracyScore(
-          verificationResults
-        );
+        // Store verifications for transparency
+        for (const v of verificationResults) {
+          llmVerifications.push({
+            claim: {
+              type: v.claim.type,
+              value: v.claim.value,
+              fullContext: v.claim.fullContext
+            },
+            status: v.status,
+            groundTruthValue: v.groundTruthValue,
+            discrepancyType: v.discrepancy?.type || null,
+            severity: v.severity || null
+          });
 
-        llmAccuracies[llm] = accuracyScore.adjustedAccuracy;
+          if (v.status === 'verified_correct') llmCorrect++;
+          else if (v.status === 'verified_incorrect') llmIncorrect++;
+          else llmUnverifiable++;
+        }
 
         // Extract hallucinations
         const hallucinations = verificationResults
@@ -148,47 +242,86 @@ export async function POST(request: NextRequest) {
 
         allHallucinations.push(...hallucinations);
       }
+
+      // Calculate accuracy for this LLM
+      const verifiable = llmCorrect + llmIncorrect;
+      const llmAccuracy = verifiable > 0 ? Math.round((llmCorrect / verifiable) * 100) : 0;
+      llmAccuracies[llm] = llmAccuracy;
+
+      // Build LLM analysis for transparency
+      llmAnalyses.push({
+        llm,
+        model,
+        queries: results.map(r => ({
+          query: r.query,
+          response: r.response,
+          timestamp: r.timestamp
+        })),
+        extractedClaims: llmExtractedClaims,
+        verifications: llmVerifications,
+        accuracy: llmAccuracy,
+        correctCount: llmCorrect,
+        incorrectCount: llmIncorrect,
+        unverifiableCount: llmUnverifiable
+      });
     }
 
-    // Calculate overall statistics
-    const totalClaims = llmResults.reduce((sum, { results }) =>
-      sum + results.reduce((s, r) =>
-        s + HallucinationDetectionEngine.extractClaims(r.response).length, 0
-      ), 0
-    );
+    // Calculate overall statistics with full breakdown
+    const allVerifications = llmAnalyses.flatMap(a => a.verifications);
+    const totalClaimsExtracted = allVerifications.length;
+    const correctClaimsCount = allVerifications.filter(v => v.status === 'verified_correct').length;
+    const incorrectClaimsCount = allVerifications.filter(v => v.status === 'verified_incorrect').length;
+    const unverifiableClaimsCount = allVerifications.filter(v => v.status === 'unverifiable').length;
 
-    const correctClaims = totalClaims - allHallucinations.length;
-    const incorrectClaims = allHallucinations.length;
+    const verifiableTotal = correctClaimsCount + incorrectClaimsCount;
+    const baseAccuracyValue = verifiableTotal > 0 ? (correctClaimsCount / verifiableTotal) * 100 : 0;
 
-    const overallAccuracy = totalClaims > 0
-      ? ((correctClaims / totalClaims) * 100)
-      : 0;
+    // Calculate severity penalty
+    const severityPenalty = allVerifications
+      .filter(v => v.status === 'verified_incorrect' && v.severity)
+      .reduce((sum, v) => {
+        const severityScore = HallucinationDetectionEngine.getSeverityScore(
+          (v.severity as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW') || 'LOW'
+        ).score;
+        return sum + (severityScore * 2);
+      }, 0);
 
-    const adjustedAccuracy = HallucinationDetectionEngine.calculateAccuracyScore(
-      llmResults.flatMap(({ results }) =>
-        results.flatMap(r => {
-          const claims = HallucinationDetectionEngine.extractClaims(r.response);
-          return HallucinationDetectionEngine.verifyClaims(
-            claims,
-            brandGroundTruth,
-            groundTruthData.companyName
-          );
-        })
-      )
-    ).adjustedAccuracy;
+    const totalClaims = totalClaimsExtracted;
+    const correctClaims = correctClaimsCount;
+    const incorrectClaims = incorrectClaimsCount;
+    const overallAccuracy = baseAccuracyValue;
+    const adjustedAccuracy = Math.max(0, baseAccuracyValue - severityPenalty);
 
-    const riskLevel = HallucinationDetectionEngine.calculateAccuracyScore(
-      llmResults.flatMap(({ results }) =>
-        results.flatMap(r => {
-          const claims = HallucinationDetectionEngine.extractClaims(r.response);
-          return HallucinationDetectionEngine.verifyClaims(
-            claims,
-            brandGroundTruth,
-            groundTruthData.companyName
-          );
-        })
-      )
-    ).riskLevel.level;
+    // Determine risk level
+    const getRiskLevel = (accuracy: number) => {
+      if (accuracy >= 90) return 'LOW';
+      if (accuracy >= 70) return 'MEDIUM';
+      if (accuracy >= 50) return 'HIGH';
+      return 'CRITICAL';
+    };
+    const riskLevel = getRiskLevel(adjustedAccuracy);
+
+    // Build scoring breakdown for transparency
+    const scoringBreakdown = {
+      totalClaimsExtracted,
+      verifiableClaims: verifiableTotal,
+      correctClaims: correctClaimsCount,
+      incorrectClaims: incorrectClaimsCount,
+      unverifiableClaims: unverifiableClaimsCount,
+      baseAccuracy: Math.round(baseAccuracyValue),
+      severityPenalty: Math.round(severityPenalty),
+      adjustedAccuracy: Math.round(adjustedAccuracy),
+      riskLevel,
+      methodology: `Base accuracy = (Correct Claims / Verifiable Claims) × 100 = (${correctClaimsCount} / ${verifiableTotal}) × 100 = ${Math.round(baseAccuracyValue)}%. Severity penalty of ${Math.round(severityPenalty)}% was applied based on the severity of incorrect claims (CRITICAL: -20%, HIGH: -14%, MEDIUM: -8%, LOW: -4%). Final adjusted accuracy: ${Math.round(adjustedAccuracy)}%.`
+    };
+
+    // Build complete transparent analysis data
+    const transparentAnalysis: TransparentAnalysisData = {
+      groundTruthFields,
+      queriesGenerated: queries,
+      llmAnalyses,
+      scoringBreakdown
+    };
 
     // Save hallucinations to database
     if (allHallucinations.length > 0) {
@@ -239,7 +372,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: updatedDetection
+      data: {
+        ...updatedDetection,
+        transparentAnalysis
+      }
     }, { status: 200 });
 
   } catch (error) {
@@ -285,16 +421,18 @@ function generateFactCheckingQueries(groundTruth: any): string[] {
 }
 
 /**
- * Query an LLM with fact-checking questions
+ * Query an LLM with fact-checking questions (with detailed logging)
  */
-async function queryLLM(
+async function queryLLMWithDetails(
   llm: string,
+  model: string,
   queries: string[],
   brandName: string
-): Promise<{ llm: string; results: Array<{ query: string; response: string }> }> {
-  const results: Array<{ query: string; response: string }> = [];
+): Promise<{ llm: string; model: string; results: Array<{ query: string; response: string; timestamp: number }> }> {
+  const results: Array<{ query: string; response: string; timestamp: number }> = [];
 
   for (const query of queries) {
+    const timestamp = Date.now();
     try {
       let response = '';
 
@@ -341,14 +479,14 @@ async function queryLLM(
         }
       }
 
-      results.push({ query, response });
+      results.push({ query, response, timestamp });
     } catch (error) {
       console.error(`Error querying ${llm}:`, error);
-      results.push({ query, response: 'Error: Could not get response' });
+      results.push({ query, response: 'Error: Could not get response', timestamp });
     }
   }
 
-  return { llm, results };
+  return { llm, model, results };
 }
 
 /**

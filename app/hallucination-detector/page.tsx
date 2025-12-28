@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, BookOpen, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, BookOpen, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Calculator, Database, Bot, Clock, FileCheck, Info } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 interface GroundTruth {
@@ -43,6 +43,7 @@ interface HallucinationDetection {
   riskLevel?: string;
   hallucinations: Hallucination[];
   recommendations: Recommendation[];
+  transparentAnalysis?: TransparentAnalysis;
 }
 
 interface Hallucination {
@@ -64,6 +65,61 @@ interface Recommendation {
   description: string;
   affectedLLMs: string[];
   status: string;
+}
+
+// Transparent Analysis Types
+interface QueryResult {
+  query: string;
+  response: string;
+  timestamp: number;
+}
+
+interface ExtractedClaimData {
+  type: string;
+  value: string;
+  fullContext: string;
+}
+
+interface ClaimVerification {
+  claim: ExtractedClaimData;
+  status: 'verified_correct' | 'verified_incorrect' | 'unverifiable';
+  groundTruthValue: string | null;
+  discrepancyType: string | null;
+  severity: string | null;
+}
+
+interface LLMAnalysis {
+  llm: string;
+  model: string;
+  queries: QueryResult[];
+  extractedClaims: ExtractedClaimData[];
+  verifications: ClaimVerification[];
+  accuracy: number;
+  correctCount: number;
+  incorrectCount: number;
+  unverifiableCount: number;
+}
+
+interface TransparentAnalysis {
+  groundTruthFields: {
+    field: string;
+    value: string | number | null;
+    tested: boolean;
+  }[];
+  queriesGenerated: string[];
+  llmAnalyses: LLMAnalysis[];
+  scoringBreakdown: {
+    totalClaimsExtracted: number;
+    verifiableClaims: number;
+    correctClaims: number;
+    incorrectClaims: number;
+    unverifiableClaims: number;
+    baseAccuracy: number;
+    severityPenalty: number;
+    adjustedAccuracy: number;
+    riskLevel: string;
+    methodology: string;
+  };
 }
 
 interface FetchedBrandData {
@@ -136,6 +192,14 @@ export default function HallucinationDetectorPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showFaq, setShowFaq] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
+
+  // Transparency section states
+  const [showMethodology, setShowMethodology] = useState(false);
+  const [showGroundTruth, setShowGroundTruth] = useState(false);
+  const [showQueries, setShowQueries] = useState(false);
+  const [showVerifications, setShowVerifications] = useState(false);
+  const [expandedLLM, setExpandedLLM] = useState<string | null>(null);
+  const [lastScanAnalysis, setLastScanAnalysis] = useState<TransparentAnalysis | null>(null);
 
   // New state for auto-fetch flow
   const [formStep, setFormStep] = useState<FormStep>('search');
@@ -299,6 +363,7 @@ export default function HallucinationDetectorPage() {
 
   const runScan = async (groundTruthId: string) => {
     setIsScanning(true);
+    setLastScanAnalysis(null);
     try {
       const response = await fetch('/api/hallucination-detection/scan', {
         method: 'POST',
@@ -308,12 +373,25 @@ export default function HallucinationDetectorPage() {
 
       const data = await response.json();
       if (data.success) {
+        // Capture transparent analysis from scan result
+        if (data.data.transparentAnalysis) {
+          setLastScanAnalysis(data.data.transparentAnalysis);
+        }
         await fetchGroundTruths();
         // Refresh selected ground truth
         const detailResponse = await fetch(`/api/ground-truth/${groundTruthId}`);
         const detailData = await detailResponse.json();
         if (detailData.success) {
-          setSelectedGroundTruth(detailData.data);
+          // Merge transparent analysis into the detection
+          const updatedGroundTruth = {
+            ...detailData.data,
+            hallucinationDetections: detailData.data.hallucinationDetections?.map((d: HallucinationDetection, idx: number) =>
+              idx === 0 && data.data.transparentAnalysis
+                ? { ...d, transparentAnalysis: data.data.transparentAnalysis }
+                : d
+            )
+          };
+          setSelectedGroundTruth(updatedGroundTruth);
         }
       }
     } catch (error) {
@@ -1014,7 +1092,7 @@ export default function HallucinationDetectorPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Overall Accuracy</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Adjusted Accuracy</span>
                         <div className="flex items-baseline gap-2">
                           <span
                             className="text-3xl font-bold"
@@ -1027,7 +1105,7 @@ export default function HallucinationDetectorPage() {
                               })()
                             }}
                           >
-                            {latestDetection.adjustedAccuracy}%
+                            {latestDetection.adjustedAccuracy || 0}%
                           </span>
                           {(() => {
                             const accuracy = latestDetection.adjustedAccuracy || 0;
@@ -1036,7 +1114,20 @@ export default function HallucinationDetectorPage() {
                                    <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />;
                           })()}
                         </div>
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{latestDetection.riskLevel} Risk</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{latestDetection.riskLevel || 'Unknown'} Risk</span>
+                      </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Claims Verified</span>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                            {lastScanAnalysis?.scoringBreakdown?.verifiableClaims || '—'}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {lastScanAnalysis?.scoringBreakdown?.correctClaims || 0} correct, {lastScanAnalysis?.scoringBreakdown?.incorrectClaims || 0} incorrect
+                        </span>
                       </div>
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -1048,33 +1139,15 @@ export default function HallucinationDetectorPage() {
                             style={{
                               color: (latestDetection.hallucinations?.length || 0) > 0
                                 ? SEMANTIC_COLORS.critical
-                                : SEMANTIC_COLORS.muted
+                                : SEMANTIC_COLORS.positive
                             }}
                           >
                             {latestDetection.hallucinations?.length || 0}
                           </span>
-                          {(latestDetection.hallucinations?.length || 0) > 0 && (
+                          {(latestDetection.hallucinations?.length || 0) > 0 ? (
                             <XCircle className="w-5 h-5" style={{color: SEMANTIC_COLORS.critical}} />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Recommendations</span>
-                        <div className="flex items-baseline gap-2">
-                          <span
-                            className="text-3xl font-bold"
-                            style={{
-                              color: (latestDetection.recommendations?.length || 0) > 0
-                                ? SEMANTIC_COLORS.warning
-                                : SEMANTIC_COLORS.muted
-                            }}
-                          >
-                            {latestDetection.recommendations?.length || 0}
-                          </span>
-                          {(latestDetection.recommendations?.length || 0) > 0 && (
-                            <AlertTriangle className="w-5 h-5" style={{color: SEMANTIC_COLORS.warning}} />
+                          ) : (
+                            <CheckCircle2 className="w-5 h-5" style={{color: SEMANTIC_COLORS.positive}} />
                           )}
                         </div>
                       </div>
@@ -1082,19 +1155,301 @@ export default function HallucinationDetectorPage() {
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
                         <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">LLMs Tested</span>
-                        <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">2</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">ChatGPT, Gemini</span>
+                        <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                          {lastScanAnalysis?.llmAnalyses?.length || 2}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {lastScanAnalysis?.llmAnalyses?.map(a => a.model).join(', ') || 'ChatGPT, Gemini'}
+                        </span>
                       </div>
                     </div>
                   </div>
 
+                  {/* Transparency Section Header */}
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                    <div className="flex items-center gap-2 text-blue-800 dark:text-blue-300">
+                      <Eye className="w-5 h-5" />
+                      <span className="font-medium">Full Transparency Report</span>
+                    </div>
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
+                      Below you can see exactly what was tested, every query sent to each LLM, their responses, how claims were verified, and how the accuracy score was calculated.
+                    </p>
+                  </div>
+
+                  {/* Scoring Methodology */}
+                  {lastScanAnalysis?.scoringBreakdown && (
+                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setShowMethodology(!showMethodology)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Calculator className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                          <span className="font-medium text-gray-900 dark:text-gray-100">Scoring Methodology</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">— How the accuracy score was calculated</span>
+                        </div>
+                        {showMethodology ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+                      </button>
+                      {showMethodology && (
+                        <div className="p-4 bg-white dark:bg-gray-800">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                              <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{lastScanAnalysis.scoringBreakdown.totalClaimsExtracted}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Total Claims Extracted</div>
+                            </div>
+                            <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded">
+                              <div className="text-2xl font-bold text-green-600">{lastScanAnalysis.scoringBreakdown.correctClaims}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Verified Correct</div>
+                            </div>
+                            <div className="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded">
+                              <div className="text-2xl font-bold text-red-600">{lastScanAnalysis.scoringBreakdown.incorrectClaims}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Verified Incorrect</div>
+                            </div>
+                            <div className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded">
+                              <div className="text-2xl font-bold text-gray-600 dark:text-gray-400">{lastScanAnalysis.scoringBreakdown.unverifiableClaims}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">Unverifiable</div>
+                            </div>
+                          </div>
+                          <div className="space-y-3 text-sm">
+                            <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded">
+                              <span className="text-gray-600 dark:text-gray-400">Base Accuracy (Correct / Verifiable × 100)</span>
+                              <span className="font-medium text-gray-900 dark:text-gray-100">{lastScanAnalysis.scoringBreakdown.baseAccuracy}%</span>
+                            </div>
+                            <div className="flex items-center justify-between p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                              <span className="text-gray-600 dark:text-gray-400">Severity Penalty (based on error severity)</span>
+                              <span className="font-medium text-red-600">-{lastScanAnalysis.scoringBreakdown.severityPenalty}%</span>
+                            </div>
+                            <div className="flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-900/20 rounded border-2 border-blue-200 dark:border-blue-800">
+                              <span className="font-medium text-gray-900 dark:text-gray-100">Final Adjusted Accuracy</span>
+                              <span className="text-xl font-bold" style={{
+                                color: lastScanAnalysis.scoringBreakdown.adjustedAccuracy >= 90 ? SEMANTIC_COLORS.positive :
+                                       lastScanAnalysis.scoringBreakdown.adjustedAccuracy >= 70 ? SEMANTIC_COLORS.warning :
+                                       SEMANTIC_COLORS.critical
+                              }}>{lastScanAnalysis.scoringBreakdown.adjustedAccuracy}%</span>
+                            </div>
+                          </div>
+                          <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
+                            <strong>Formula:</strong> {lastScanAnalysis.scoringBreakdown.methodology}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Ground Truth Fields Tested */}
+                  {lastScanAnalysis?.groundTruthFields && (
+                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setShowGroundTruth(!showGroundTruth)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Database className="w-5 h-5 text-green-600 dark:text-green-400" />
+                          <span className="font-medium text-gray-900 dark:text-gray-100">Ground Truth Data</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">— Your verified brand facts used for comparison</span>
+                        </div>
+                        {showGroundTruth ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+                      </button>
+                      {showGroundTruth && (
+                        <div className="p-4 bg-white dark:bg-gray-800">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {lastScanAnalysis.groundTruthFields.map((field, idx) => (
+                              <div key={idx} className={`flex items-center justify-between p-3 rounded border ${field.tested ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700'}`}>
+                                <div>
+                                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{field.field}</span>
+                                  <span className="text-sm text-gray-600 dark:text-gray-400 ml-2">{field.value || 'Not set'}</span>
+                                </div>
+                                {field.tested ? (
+                                  <span className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                                    <CheckCircle2 className="w-3 h-3" /> Tested
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">Not tested</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Queries & Responses */}
+                  {lastScanAnalysis?.llmAnalyses && (
+                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setShowQueries(!showQueries)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                          <span className="font-medium text-gray-900 dark:text-gray-100">LLM Queries & Responses</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">— Every question sent and answer received</span>
+                        </div>
+                        {showQueries ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+                      </button>
+                      {showQueries && (
+                        <div className="p-4 bg-white dark:bg-gray-800">
+                          <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded text-sm text-yellow-800 dark:text-yellow-300">
+                            <strong>Queries Generated:</strong> {lastScanAnalysis.queriesGenerated.length} questions were sent to each LLM
+                          </div>
+                          <div className="space-y-4">
+                            {lastScanAnalysis.llmAnalyses.map((analysis) => (
+                              <div key={analysis.llm} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                <button
+                                  onClick={() => setExpandedLLM(expandedLLM === analysis.llm ? null : analysis.llm)}
+                                  className="w-full flex items-center justify-between p-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Bot className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                                    <div>
+                                      <span className="font-medium text-gray-900 dark:text-gray-100">{analysis.llm.toUpperCase()}</span>
+                                      <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">({analysis.model})</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 ml-4">
+                                      <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded">{analysis.correctCount} correct</span>
+                                      <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs rounded">{analysis.incorrectCount} incorrect</span>
+                                      <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs rounded">{analysis.unverifiableCount} unverifiable</span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium" style={{
+                                      color: analysis.accuracy >= 90 ? SEMANTIC_COLORS.positive :
+                                             analysis.accuracy >= 70 ? SEMANTIC_COLORS.warning :
+                                             SEMANTIC_COLORS.critical
+                                    }}>{analysis.accuracy}% accurate</span>
+                                    {expandedLLM === analysis.llm ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                  </div>
+                                </button>
+                                {expandedLLM === analysis.llm && (
+                                  <div className="p-4 space-y-4">
+                                    {analysis.queries.map((q, qIdx) => (
+                                      <div key={qIdx} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border-b border-gray-200 dark:border-gray-700">
+                                          <div className="flex items-start gap-2">
+                                            <MessageSquare className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5" />
+                                            <div>
+                                              <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">Query {qIdx + 1}</div>
+                                              <div className="text-sm text-gray-700 dark:text-gray-300">{q.query}</div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="p-3 bg-gray-50 dark:bg-gray-700/50">
+                                          <div className="flex items-start gap-2">
+                                            <Bot className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5" />
+                                            <div>
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">Response</span>
+                                                <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                                  <Clock className="w-3 h-3" />
+                                                  {new Date(q.timestamp).toLocaleTimeString()}
+                                                </span>
+                                              </div>
+                                              <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{q.response}</div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Claim Verifications */}
+                  {lastScanAnalysis?.llmAnalyses && (
+                    <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                      <button
+                        onClick={() => setShowVerifications(!showVerifications)}
+                        className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileCheck className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                          <span className="font-medium text-gray-900 dark:text-gray-100">Claim Verification Details</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">— How each extracted claim was verified</span>
+                        </div>
+                        {showVerifications ? <ChevronUp className="w-5 h-5 text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-500" />}
+                      </button>
+                      {showVerifications && (
+                        <div className="p-4 bg-white dark:bg-gray-800">
+                          {lastScanAnalysis.llmAnalyses.map((analysis) => (
+                            <div key={analysis.llm} className="mb-6 last:mb-0">
+                              <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                                <Bot className="w-4 h-4" />
+                                {analysis.llm.toUpperCase()} Verifications
+                              </h4>
+                              {analysis.verifications.length > 0 ? (
+                                <div className="space-y-2">
+                                  {analysis.verifications.map((v, vIdx) => (
+                                    <div key={vIdx} className={`p-3 rounded border ${
+                                      v.status === 'verified_correct' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+                                      v.status === 'verified_incorrect' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                                      'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700'
+                                    }`}>
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">{v.claim.type}</span>
+                                            {v.status === 'verified_correct' && <CheckCircle2 className="w-4 h-4 text-green-600" />}
+                                            {v.status === 'verified_incorrect' && <XCircle className="w-4 h-4 text-red-600" />}
+                                            {v.status === 'unverifiable' && <Info className="w-4 h-4 text-gray-500" />}
+                                          </div>
+                                          <div className="text-sm text-gray-900 dark:text-gray-100">
+                                            <strong>Claimed:</strong> {v.claim.value}
+                                          </div>
+                                          {v.groundTruthValue && (
+                                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                              <strong>Ground Truth:</strong> {v.groundTruthValue}
+                                            </div>
+                                          )}
+                                          {v.discrepancyType && (
+                                            <div className="text-xs text-red-600 dark:text-red-400 mt-1">
+                                              Discrepancy: {v.discrepancyType.replace(/_/g, ' ')}
+                                            </div>
+                                          )}
+                                        </div>
+                                        <div className="ml-4">
+                                          {v.severity && (
+                                            <span className={`px-2 py-1 text-xs font-medium rounded ${
+                                              v.severity === 'CRITICAL' ? 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400' :
+                                              v.severity === 'HIGH' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-400' :
+                                              v.severity === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400' :
+                                              'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400'
+                                            }`}>{v.severity}</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+                                        Context: &quot;{v.claim.fullContext}&quot;
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">No verifiable claims extracted from this LLM&apos;s responses.</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Hallucinations List */}
                   {latestDetection.hallucinations && latestDetection.hallucinations.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100">Detected Hallucinations</h3>
+                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100 flex items-center gap-2">
+                        <XCircle className="w-5 h-5 text-red-600" />
+                        Detected Hallucinations ({latestDetection.hallucinations.length})
+                      </h3>
                       <div className="space-y-3">
                         {latestDetection.hallucinations.map((h) => (
-                          <div key={h.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md">
+                          <div key={h.id} className="p-4 border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 rounded-lg">
                             <div className="flex items-start justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <span
@@ -1135,14 +1490,14 @@ export default function HallucinationDetectorPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <span className="text-red-600 dark:text-red-400 font-medium">Claimed:</span>
-                                <div className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded dark:text-gray-200">
+                                <span className="text-red-600 dark:text-red-400 font-medium">LLM Claimed:</span>
+                                <div className="mt-1 p-2 bg-red-100 dark:bg-red-900/40 rounded dark:text-gray-200">
                                   {h.claimedFact}
                                 </div>
                               </div>
                               <div>
-                                <span className="text-green-600 dark:text-green-400 font-medium">Actual:</span>
-                                <div className="mt-1 p-2 bg-green-50 dark:bg-green-900/20 rounded dark:text-gray-200">
+                                <span className="text-green-600 dark:text-green-400 font-medium">Your Ground Truth:</span>
+                                <div className="mt-1 p-2 bg-green-100 dark:bg-green-900/40 rounded dark:text-gray-200">
                                   {h.actualFact}
                                 </div>
                               </div>
@@ -1156,10 +1511,13 @@ export default function HallucinationDetectorPage() {
                   {/* Recommendations */}
                   {latestDetection.recommendations && latestDetection.recommendations.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100">Recommendations</h3>
+                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100 flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                        Recommendations ({latestDetection.recommendations.length})
+                      </h3>
                       <div className="space-y-3">
                         {latestDetection.recommendations.map((r) => (
-                          <div key={r.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md">
+                          <div key={r.id} className="p-4 border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-medium dark:text-gray-100">{r.title}</h4>
                               <span
@@ -1198,8 +1556,32 @@ export default function HallucinationDetectorPage() {
                 </>
               ) : (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                  <p className="mb-4">No scans run yet. Click &quot;Run New Scan&quot; to start detecting hallucinations.</p>
-                  <p className="text-sm">The scan will query AI models about your brand and compare responses against your verified data.</p>
+                  <div className="mb-4">
+                    <Eye className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600" />
+                  </div>
+                  <p className="mb-4 text-lg font-medium">No scans run yet</p>
+                  <p className="text-sm mb-6">Click &quot;Run New Scan&quot; to start detecting hallucinations and see a full transparency report of the analysis.</p>
+                  <div className="text-left max-w-md mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">What the scan will do:</h4>
+                    <ul className="text-sm space-y-2">
+                      <li className="flex items-start gap-2">
+                        <MessageSquare className="w-4 h-4 text-blue-500 mt-0.5" />
+                        <span>Send fact-checking questions to ChatGPT and Gemini</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <FileCheck className="w-4 h-4 text-green-500 mt-0.5" />
+                        <span>Extract claims from LLM responses</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Database className="w-4 h-4 text-purple-500 mt-0.5" />
+                        <span>Compare claims against your ground truth data</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Calculator className="w-4 h-4 text-orange-500 mt-0.5" />
+                        <span>Calculate accuracy with full methodology breakdown</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               )}
             </div>
