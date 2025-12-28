@@ -491,7 +491,7 @@ export class MultiPlatformAIService {
         
         try {
           // Check for citations in the completion object
-          const citations = (completion as any).citations || [];
+          const citations: Array<string | { url: string; title?: string; snippet?: string }> = (completion as any).citations || [];
           if (citations.length > 0) {
             hasGrounding = true;
             for (const citation of citations) {
