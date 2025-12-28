@@ -1,38 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db/prisma';
 
-// Demo user ID (same as ground-truth routes)
-const DEMO_USER_ID = 'demo-user-001';
-const DEMO_USER_EMAIL = 'demo@example.com';
+/**
+ * Get authenticated user ID from token, or create user if needed
+ */
+async function getAuthenticatedUserId(): Promise<string> {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth-token')?.value;
 
-async function ensureDemoUserExists() {
-  try {
-    const existingUser = await prisma.user.findUnique({
-      where: { id: DEMO_USER_ID }
-    });
+  let username = 'demo-user'; // fallback
 
-    if (!existingUser) {
-      // Check if user exists by email
-      const existingByEmail = await prisma.user.findUnique({
-        where: { email: DEMO_USER_EMAIL }
-      });
-      if (existingByEmail) {
-        return existingByEmail.id;
+  if (authToken) {
+    try {
+      const decoded = Buffer.from(authToken, 'base64').toString('utf-8');
+      const tokenData = JSON.parse(decoded);
+      if (tokenData.username) {
+        username = tokenData.username;
       }
-      // Create new demo user
-      await prisma.user.create({
-        data: {
-          id: DEMO_USER_ID,
-          email: DEMO_USER_EMAIL
-        }
-      });
+    } catch {
+      // Invalid token, use default
     }
-    return DEMO_USER_ID;
-  } catch (error) {
-    console.error('Error ensuring demo user exists:', error);
-    // Try to continue anyway - user might already exist
-    return DEMO_USER_ID;
   }
+
+  // Create email from username
+  const email = `${username.replace(/[^a-zA-Z0-9]/g, '.')}@velaris.app`;
+
+  // Find or create user
+  const user = await prisma.user.upsert({
+    where: { email },
+    update: {},
+    create: { email }
+  });
+
+  return user.id;
 }
 
 /**
@@ -41,11 +42,11 @@ async function ensureDemoUserExists() {
  */
 export async function GET() {
   try {
-    await ensureDemoUserExists();
+    const userId = await getAuthenticatedUserId();
 
     const analyses = await prisma.brandGroundTruth.findMany({
       where: {
-        userId: DEMO_USER_ID
+        userId: userId
       },
       include: {
         hallucinationDetections: {
@@ -61,7 +62,7 @@ export async function GET() {
     });
 
     // Transform to positioning format
-    const formattedAnalyses = analyses.map(a => {
+    const formattedAnalyses = analyses.map((a: { id: string; companyName: string; websiteUrl: string | null; industry: string | null; description: string | null; createdAt: Date; hallucinationDetections: Array<{ id: string; scanDate: Date; status: string; adjustedAccuracy: number | null; hallucinations: unknown[]; recommendations: unknown[] }> }) => {
       // Parse positioning from description JSON if available
       let positioning = null;
       try {
@@ -86,7 +87,7 @@ export async function GET() {
           tone: []
         },
         createdAt: a.createdAt.toISOString(),
-        scans: a.hallucinationDetections.map(d => ({
+        scans: a.hallucinationDetections.map((d: { id: string; scanDate: Date; status: string; adjustedAccuracy: number | null }) => ({
           id: d.id,
           scanDate: d.scanDate.toISOString(),
           status: d.status,
@@ -125,14 +126,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await ensureDemoUserExists();
+    const userId = await getAuthenticatedUserId();
 
     // Store positioning as JSON in description field
     const positioningJson = JSON.stringify(positioning);
 
     const analysis = await prisma.brandGroundTruth.create({
       data: {
-        userId: DEMO_USER_ID,
+        userId: userId,
         companyName: brandName,
         websiteUrl: domain || null,
         industry: positioning.primary,

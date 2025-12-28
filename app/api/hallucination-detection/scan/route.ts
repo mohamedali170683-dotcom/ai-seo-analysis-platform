@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         employeeCount: groundTruthData.employeeCount || undefined,
         revenue: groundTruthData.revenue || undefined
       },
-      products: groundTruthData.products.map(p => ({
+      products: groundTruthData.products.map((p: { name: string; launchYear: number | null; currentlyAvailable: boolean; priceMin: number | null; priceMax: number | null; currency: string | null; keyFeatures: string[]; categories: string[]; discontinuedYear: number | null; successorProduct: string | null }) => ({
         name: p.name,
         launchYear: p.launchYear || undefined,
         currentlyAvailable: p.currentlyAvailable,
@@ -148,20 +148,20 @@ export async function POST(request: NextRequest) {
         discontinuedYear: p.discontinuedYear || undefined,
         successorProduct: p.successorProduct || undefined
       })),
-      historicalFacts: groundTruthData.historicalFacts.map(f => ({
+      historicalFacts: groundTruthData.historicalFacts.map((f: { fact: string; year: number; category: string; verificationSource: string | null }) => ({
         fact: f.fact,
         year: f.year,
         category: f.category,
         verificationSource: f.verificationSource || undefined
       })),
-      approvedClaims: groundTruthData.approvedClaims.map(c => ({
+      approvedClaims: groundTruthData.approvedClaims.map((c: { claim: string; category: string; approved: boolean; regulatoryRestrictions: string[]; expirationDate: Date | null }) => ({
         claim: c.claim,
         category: c.category,
         approved: c.approved,
         regulatoryRestrictions: c.regulatoryRestrictions,
         expirationDate: c.expirationDate?.toISOString()
       })),
-      competitorDifferentiators: groundTruthData.competitorDifferentiators.map(d => ({
+      competitorDifferentiators: groundTruthData.competitorDifferentiators.map((d: { competitor: string; theirFeature: string; ourEquivalent: string | null; commonlyConfused: boolean }) => ({
         competitor: d.competitor,
         theirFeature: d.theirFeature,
         ourEquivalent: d.ourEquivalent || undefined,

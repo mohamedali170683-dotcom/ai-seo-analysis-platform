@@ -57,7 +57,7 @@ export async function GET(
         tone: []
       },
       createdAt: analysis.createdAt.toISOString(),
-      scans: analysis.hallucinationDetections.map(d => ({
+      scans: analysis.hallucinationDetections.map((d: { id: string; scanDate: Date; status: string; adjustedAccuracy: number | null; chatgptAccuracy: number | null; geminiAccuracy: number | null }) => ({
         id: d.id,
         scanDate: d.scanDate.toISOString(),
         status: d.status,

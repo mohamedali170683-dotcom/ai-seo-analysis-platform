@@ -87,7 +87,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       count: analyses.length,
-      analyses: analyses.map(a => ({
+      analyses: analyses.map((a: { id: string; brandOrKeyword: string; status: string; progress: number; currentStep: string | null; createdAt: Date; completedAt: Date | null; _count: { aiTestResults: number; discoveredQuestions: number } }) => ({
         id: a.id,
         brandOrKeyword: a.brandOrKeyword,
         status: a.status,

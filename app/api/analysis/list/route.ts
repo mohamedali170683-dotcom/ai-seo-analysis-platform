@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      analyses: analyses.map((a) => ({
+      analyses: analyses.map((a: { id: string; brandOrKeyword: string; domain: string | null; status: string; progress: number; currentStep: string | null; createdAt: Date; completedAt: Date | null; _count: { discoveredQuestions: number; aiTestResults: number; aiInsights: number } }) => ({
         id: a.id,
         brandOrKeyword: a.brandOrKeyword,
         domain: a.domain,
