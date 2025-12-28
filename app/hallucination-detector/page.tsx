@@ -410,14 +410,32 @@ export default function HallucinationDetectorPage() {
             <h2 className="text-xl font-semibold dark:text-gray-100">Your Brands</h2>
             <button
               onClick={() => {
-                setShowCreateForm(!showCreateForm);
-                if (!showCreateForm) {
-                  resetForm();
+                if (showCreateForm) {
+                  // Closing the form
+                  setShowCreateForm(false);
+                } else {
+                  // Opening the form - reset first, then show
+                  setFormStep('input');
+                  setBrandName('');
+                  setDomain('');
+                  setPositioning({
+                    primary: '',
+                    secondary: [],
+                    targetAudience: '',
+                    pricePoint: '',
+                    keyAttributes: [],
+                    brandPromise: '',
+                    tone: []
+                  });
+                  setFetchError(null);
+                  setSaveError(null);
+                  setSaveSuccess(false);
+                  setShowCreateForm(true);
                 }
               }}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              + Add Brand
+              {showCreateForm ? 'Cancel' : '+ Add Brand'}
             </button>
           </div>
 

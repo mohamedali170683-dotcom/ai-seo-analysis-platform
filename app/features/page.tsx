@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {
-  Shield,
+  Target,
   Zap,
   Bell,
   Webhook,
@@ -39,18 +39,18 @@ const features = [
         ]
       },
       {
-        name: 'Hallucination Detection & Brand Safety',
-        icon: Shield,
-        description: 'Detect and track false information, pricing errors, and brand safety issues across AI platforms',
+        name: 'Brand Positioning Alignment',
+        icon: Target,
+        description: 'Check if AI models portray your brand the way you position it in your owned media',
         status: 'live',
         link: '/hallucination-detector',
         highlights: [
-          '8 hallucination types: pricing errors, fake products, outdated info, false claims, etc.',
-          'Brand safety scoring (0-100)',
-          'Ground truth management system with JSON import/export',
-          'Automated fact-checking against verified data',
-          'Historical tracking of hallucinations over time',
-          'Actionable recommendations to fix detected issues'
+          'Auto-fetch brand positioning from your website',
+          'Define positioning: premium, innovative, affordable, sustainable, etc.',
+          'Compare LLM perception vs your intended positioning',
+          'Alignment scoring per LLM (ChatGPT, Gemini)',
+          'Detailed breakdown of positioning matches and mismatches',
+          'Track positioning alignment over time'
         ]
       }
     ]

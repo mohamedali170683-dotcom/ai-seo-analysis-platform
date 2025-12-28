@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Shield,
+  Target,
   Zap,
   Search,
   TrendingUp,
@@ -27,9 +27,9 @@ export default function HomePage() {
       color: 'blue'
     },
     {
-      icon: Shield,
-      title: 'Hallucination Detection',
-      description: 'Detect and track 8 types of AI hallucinations with brand safety scoring and ground truth management',
+      icon: Target,
+      title: 'Brand Positioning',
+      description: 'Check if AI models portray your brand the way you position it, with alignment scoring and detailed comparisons',
       link: '/hallucination-detector',
       color: 'purple'
     },
@@ -51,7 +51,7 @@ export default function HomePage() {
 
   const benefits = [
     'Monitor your brand across 6 AI platforms in real-time',
-    'Detect hallucinations and false information automatically',
+    'Check if AI portrays your brand the way you position it',
     'Track competitors and their visibility trends',
     'Get actionable recommendations with ROI scoring',
     'Automate monitoring with scheduled scans and alerts',
@@ -101,8 +101,8 @@ export default function HomePage() {
             <div className="text-sm text-gray-600 dark:text-gray-400">AI Platforms Monitored</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 text-center">
-            <div className="text-4xl font-bold text-purple-600 mb-2">8</div>
-            <div className="text-sm text-gray-600 dark:text-gray-400">Hallucination Types Detected</div>
+            <div className="text-4xl font-bold text-purple-600 mb-2">18</div>
+            <div className="text-sm text-gray-600 dark:text-gray-400">Positioning Attributes Tracked</div>
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 text-center">
             <div className="text-4xl font-bold text-green-600 mb-2">9</div>
@@ -189,7 +189,7 @@ export default function HomePage() {
               onClick={() => router.push('/hallucination-detector')}
               className="inline-flex items-center px-8 py-4 border-2 border-white text-white rounded-lg font-semibold hover:bg-white/10 dark:bg-gray-800/10 transition-colors"
             >
-              Try Hallucination Detector
+              Try Brand Positioning
             </button>
           </div>
         </div>
