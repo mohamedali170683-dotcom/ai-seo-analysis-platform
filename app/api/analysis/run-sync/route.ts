@@ -117,7 +117,6 @@ export async function POST(request: Request) {
         await prisma.aITestResult.create({
           data: {
             analysisId: analysis.id,
-            questionId: null,
             question: response.question,
             platform: response.platform,
             brandMentioned: response.brandMentioned,

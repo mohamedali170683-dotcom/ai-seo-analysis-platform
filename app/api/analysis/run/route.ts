@@ -279,7 +279,6 @@ async function executeAnalysis(
         await prisma.aITestResult.create({
           data: {
             analysisId,
-            questionId: null,
             question: response.question,
             platform: response.platform,
             brandMentioned: response.brandMentioned,
