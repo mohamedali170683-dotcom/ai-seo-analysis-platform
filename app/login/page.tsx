@@ -34,13 +34,17 @@ function LoginForm() {
       if (data.success) {
         // Redirect to the original page or dashboard
         // Use window.location for a full page reload to ensure cookies are sent
-        window.location.href = redirectTo;
+        const destination = redirectTo === '/' ? '/dashboard' : redirectTo;
+        console.log('Login successful, redirecting to:', destination);
+        window.location.replace(destination);
+        return; // Don't set isLoading to false, let the redirect happen
       } else {
         setError(data.message || "Login failed");
+        setIsLoading(false);
       }
-    } catch {
+    } catch (err) {
+      console.error('Login error:', err);
       setError("An error occurred. Please try again.");
-    } finally {
       setIsLoading(false);
     }
   };

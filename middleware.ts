@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || '';
+// Must match the fallback secret in lib/auth/index.ts
+const DEV_JWT_SECRET = 'dev-secret-key-do-not-use-in-production-velaris-2024';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || DEV_JWT_SECRET;
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
