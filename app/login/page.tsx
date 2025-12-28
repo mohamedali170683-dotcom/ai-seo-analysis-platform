@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Lock, User, AlertCircle, Loader2 } from "lucide-react";
 
 // Main login form component that uses useSearchParams
@@ -157,6 +158,16 @@ export default function LoginPage() {
           <Suspense fallback={<LoginFormSkeleton />}>
             <LoginForm />
           </Suspense>
+
+          {/* Register Link */}
+          <div className="mt-6 text-center">
+            <p className="text-slate-400 text-sm">
+              Don&apos;t have an account?{" "}
+              <Link href="/register" className="text-cyan-400 hover:text-cyan-300 font-medium">
+                Create one
+              </Link>
+            </p>
+          </div>
         </div>
 
         {/* Footer */}

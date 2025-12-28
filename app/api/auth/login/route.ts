@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verifyCredentials, generateToken } from '@/lib/auth';
+import bcrypt from 'bcryptjs';
+import { generateToken } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
+
+// Demo credentials fallback
+const DEMO_USERNAME = 'admin@velaris.io';
+const DEMO_PASSWORD = 'Velaris2024!Secure';
 
 export async function POST(request: Request) {
   try {
@@ -16,29 +21,35 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify credentials against hashed password
-    const isValid = await verifyCredentials(username, password);
-
-    if (!isValid) {
-      // Use generic message to prevent username enumeration
-      return NextResponse.json(
-        { success: false, message: 'Invalid username or password' },
-        { status: 401 }
-      );
-    }
-
-    // Get or create user in database
+    // First, check if user exists in database
     let user = await prisma.user.findUnique({
       where: { email: username },
     });
 
-    if (!user) {
-      user = await prisma.user.create({
-        data: {
-          email: username,
-          name: username,
-        },
-      });
+    let isValid = false;
+
+    if (user && user.passwordHash) {
+      // User exists with password - verify against stored hash
+      isValid = await bcrypt.compare(password, user.passwordHash);
+    } else if (username === DEMO_USERNAME && password === DEMO_PASSWORD) {
+      // Fallback to demo credentials
+      isValid = true;
+      // Create or get demo user
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            email: DEMO_USERNAME,
+            name: 'Admin',
+          },
+        });
+      }
+    }
+
+    if (!isValid || !user) {
+      return NextResponse.json(
+        { success: false, message: 'Invalid email or password' },
+        { status: 401 }
+      );
     }
 
     // Generate signed JWT token

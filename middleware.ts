@@ -10,7 +10,9 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || DEV_
 const PUBLIC_ROUTES = [
   '/wpp-demo',
   '/login',
+  '/register',
   '/api/auth/login',
+  '/api/auth/register',
   '/api/auth/logout',
   '/api/health',
 ];
