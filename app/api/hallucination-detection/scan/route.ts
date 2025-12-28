@@ -28,7 +28,15 @@ function mapSeverity(severity: string): HallucinationSeverity {
   return mapping[severity] || HallucinationSeverity.LOW;
 }
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy initialization to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
 
 // Types for transparent analysis data
 interface QueryResult {
@@ -462,7 +470,7 @@ async function queryLLMWithDetails(
       let response = '';
 
       if (llm === 'chatgpt') {
-        const completion = await openai.chat.completions.create({
+        const completion = await getOpenAIClient().chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
             {

@@ -3,7 +3,15 @@ import { prisma } from '@/lib/db/prisma';
 import { ScanStatus, RiskLevel } from '@prisma/client';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy initialization to avoid build-time errors
+let openaiClient: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
 
 interface BrandPositioning {
   primary: string;
@@ -217,7 +225,7 @@ async function queryLLMForPositioning(
       let llmAnswer = '';
 
       if (llmName === 'chatgpt') {
-        const completion = await openai.chat.completions.create({
+        const completion = await getOpenAIClient().chat.completions.create({
           model: 'gpt-4o-mini',
           messages: [
             {
