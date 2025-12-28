@@ -107,17 +107,27 @@ export class BrandDataFetcher {
       brandName = this.extractBrandNameFromUrl(brandNameOrUrl);
     }
 
+    console.log(`[BrandDataFetcher] Fetching data for: "${brandName}"`);
+
     // Fetch data from multiple sources in parallel
     const [wikipediaData, websiteData] = await Promise.all([
       this.fetchFromWikipedia(brandName).catch(err => {
-        console.warn('Wikipedia fetch failed:', err.message);
+        console.warn('[BrandDataFetcher] Wikipedia fetch failed:', err.message);
         return null;
       }),
       websiteUrl ? this.fetchFromWebsite(websiteUrl).catch(err => {
-        console.warn('Website fetch failed:', err.message);
+        console.warn('[BrandDataFetcher] Website fetch failed:', err.message);
         return null;
       }) : Promise.resolve(null)
     ]);
+
+    if (wikipediaData) {
+      console.log('[BrandDataFetcher] Wikipedia data found:', {
+        title: wikipediaData.pageData?.title,
+        infoboxKeys: Object.keys(wikipediaData.infobox),
+        infobox: wikipediaData.infobox
+      });
+    }
 
     // Merge data with priority: website > wikipedia > inferred
     const mergedData = this.mergeData(brandName, wikipediaData, websiteData, sources);
@@ -156,13 +166,14 @@ export class BrandDataFetcher {
         srlimit: '5'
       });
 
+      console.log(`[BrandDataFetcher] Searching Wikipedia for: "${brandName} company"`);
       const searchResponse = await fetch(searchUrl);
       if (!searchResponse.ok) {
         throw new Error(`Wikipedia search failed: ${searchResponse.status}`);
       }
 
       const searchData = await searchResponse.json();
-      const searchResults: WikipediaSearchResult[] = searchData?.query?.search || [];
+      let searchResults: WikipediaSearchResult[] = searchData?.query?.search || [];
 
       if (searchResults.length === 0) {
         // Try without "company" suffix
@@ -177,17 +188,22 @@ export class BrandDataFetcher {
 
         const altSearchResponse = await fetch(altSearchUrl);
         const altSearchData = await altSearchResponse.json();
-        const altResults = altSearchData?.query?.search || [];
+        searchResults = altSearchData?.query?.search || [];
 
-        if (altResults.length === 0) {
+        if (searchResults.length === 0) {
+          console.log('[BrandDataFetcher] No Wikipedia results found');
           return null;
         }
-        searchResults.push(...altResults);
       }
 
       // Find the best match (prioritize company pages)
       const bestMatch = this.findBestWikipediaMatch(searchResults, brandName);
-      if (!bestMatch) return null;
+      if (!bestMatch) {
+        console.log('[BrandDataFetcher] No suitable Wikipedia match found');
+        return null;
+      }
+
+      console.log(`[BrandDataFetcher] Best match: "${bestMatch.title}" (pageid: ${bestMatch.pageid})`);
 
       // Fetch the page content with extracts
       const pageUrl = `${this.wikipediaBaseUrl}?` + new URLSearchParams({
@@ -229,63 +245,220 @@ export class BrandDataFetcher {
         categories
       };
     } catch (error) {
-      console.error('Wikipedia fetch error:', error);
+      console.error('[BrandDataFetcher] Wikipedia fetch error:', error);
       return null;
     }
   }
 
   /**
    * Parse Wikipedia infobox for structured data
+   * Improved version that handles nested templates and complex formatting
    */
   private parseWikipediaInfobox(wikitext: string): WikipediaInfobox {
     const infobox: WikipediaInfobox = {};
 
-    // Match infobox template
-    const infoboxMatch = wikitext.match(/\{\{Infobox[^}]*\}\}/is);
-    if (!infoboxMatch) return infobox;
+    // Find the infobox - handle nested braces properly
+    const infoboxStart = wikitext.search(/\{\{Infobox/i);
+    if (infoboxStart === -1) {
+      console.log('[BrandDataFetcher] No infobox found in wikitext');
+      return infobox;
+    }
 
-    const infoboxText = infoboxMatch[0];
+    // Extract infobox by counting braces
+    let braceCount = 0;
+    let infoboxEnd = infoboxStart;
+    for (let i = infoboxStart; i < wikitext.length; i++) {
+      if (wikitext[i] === '{') braceCount++;
+      if (wikitext[i] === '}') braceCount--;
+      if (braceCount === 0) {
+        infoboxEnd = i + 1;
+        break;
+      }
+    }
 
-    // Extract key-value pairs
-    const patterns: Record<string, RegExp> = {
-      founded: /\|\s*(?:founded|foundation|established)\s*=\s*\{\{[^}]*\|(\d{4})\}\}|\|\s*(?:founded|foundation|established)\s*=\s*(\d{4})/i,
-      headquarters: /\|\s*(?:headquarters|hq_location|location|location_city)\s*=\s*([^\n|]+)/i,
-      ceo: /\|\s*(?:key_people|CEO|chief_executive)\s*=\s*([^\n|]+)/i,
-      employees: /\|\s*(?:num_employees|employees)\s*=\s*([^\n|]+)/i,
-      industry: /\|\s*(?:industry|industries)\s*=\s*([^\n|]+)/i,
-      revenue: /\|\s*(?:revenue)\s*=\s*([^\n|]+)/i,
-      parent: /\|\s*(?:parent|owner)\s*=\s*([^\n|]+)/i,
-      website: /\|\s*(?:website|url|homepage)\s*=\s*\{\{(?:URL|url)\|([^}|]+)/i,
-      type: /\|\s*(?:type|company_type)\s*=\s*([^\n|]+)/i,
-      traded_as: /\|\s*(?:traded_as)\s*=\s*([^\n|]+)/i
-    };
+    const infoboxText = wikitext.substring(infoboxStart, infoboxEnd);
+    console.log(`[BrandDataFetcher] Infobox length: ${infoboxText.length} chars`);
 
-    for (const [key, pattern] of Object.entries(patterns)) {
-      const match = infoboxText.match(pattern);
+    // Split into lines and parse key-value pairs
+    const lines = infoboxText.split('\n');
+
+    for (const line of lines) {
+      // Match lines like "| key = value" or "| key = {{template|value}}"
+      const match = line.match(/^\s*\|\s*([a-z_]+)\s*=\s*(.*)$/i);
       if (match) {
-        // Get the first non-null capture group
-        const value = (match[1] || match[2] || '').trim();
-        if (value) {
-          infobox[key] = this.cleanWikipediaValue(value);
+        const key = match[1].toLowerCase().trim();
+        let value = match[2].trim();
+
+        // Clean up the value
+        value = this.cleanWikipediaValue(value);
+
+        if (value && value.length > 0) {
+          infobox[key] = value;
         }
       }
     }
 
-    return infobox;
+    // Map common variations to standard keys
+    const keyMappings: Record<string, string[]> = {
+      'founded': ['founded', 'foundation', 'established', 'inception', 'formed'],
+      'headquarters': ['headquarters', 'hq_location', 'hq_location_city', 'location', 'location_city', 'location_country', 'hq'],
+      'ceo': ['ceo', 'chief_executive', 'key_people', 'leader_name', 'president'],
+      'employees': ['num_employees', 'employees', 'number_of_employees', 'staff'],
+      'industry': ['industry', 'industries', 'genre', 'sector'],
+      'revenue': ['revenue', 'net_income', 'gross_income'],
+      'website': ['website', 'url', 'homepage', 'web'],
+      'parent': ['parent', 'parent_company', 'owner', 'owners'],
+      'traded_as': ['traded_as', 'traded', 'stock_symbol', 'symbol'],
+      'type': ['type', 'company_type', 'structure']
+    };
+
+    // Normalize keys
+    const normalized: WikipediaInfobox = {};
+    for (const [standardKey, variations] of Object.entries(keyMappings)) {
+      for (const variant of variations) {
+        if (infobox[variant] && !normalized[standardKey]) {
+          normalized[standardKey] = infobox[variant];
+          break;
+        }
+      }
+    }
+
+    // Extract specific data with enhanced parsing
+
+    // Founded year - look for 4-digit year
+    if (normalized.founded) {
+      const yearMatch = normalized.founded.match(/\b(1[89]\d{2}|20[0-2]\d)\b/);
+      if (yearMatch) {
+        normalized.founded = yearMatch[1];
+      }
+    }
+
+    // CEO/Key people - extract the first person's name
+    if (normalized.ceo) {
+      // Handle formats like "[[Tim Cook]] ([[CEO]])" or "John Smith, CEO"
+      let ceoValue = normalized.ceo;
+      // Remove role titles in parentheses or after comma
+      ceoValue = ceoValue.replace(/\s*\([^)]*CEO[^)]*\)/gi, '');
+      ceoValue = ceoValue.replace(/,\s*CEO.*/i, '');
+      // Take first person if multiple listed
+      if (ceoValue.includes('*')) {
+        const firstPerson = ceoValue.split('*')[1];
+        if (firstPerson) ceoValue = firstPerson;
+      }
+      // Clean wiki links
+      ceoValue = ceoValue.replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, '$1');
+      ceoValue = ceoValue.replace(/\{\{[^}]+\}\}/g, '').trim();
+      // Remove "as" prefixes like "[[CEO]] as of 2020"
+      ceoValue = ceoValue.replace(/as of \d{4}/gi, '').trim();
+      normalized.ceo = ceoValue.split('\n')[0].trim(); // Take first line
+    }
+
+    // Headquarters - clean up location
+    if (normalized.headquarters) {
+      let hq = normalized.headquarters;
+      // Handle {{unbulleted list|...}} and similar templates
+      if (hq.includes('unbulleted')) {
+        const parts = hq.match(/\|([^|{}]+)/g);
+        if (parts && parts.length > 0) {
+          hq = parts.map(p => p.replace(/^\|/, '').trim()).join(', ');
+        }
+      }
+      // Handle plainlist
+      if (hq.includes('plainlist') || hq.includes('Plainlist')) {
+        const listItems = hq.match(/\*\s*([^\n*]+)/g);
+        if (listItems && listItems.length > 0) {
+          hq = listItems[0].replace(/^\*\s*/, '').trim();
+        }
+      }
+      // Clean wiki links and templates
+      hq = hq.replace(/\[\[([^|\]]+)(?:\|[^\]]+)?\]\]/g, '$1');
+      hq = hq.replace(/\{\{[^}]+\}\}/g, '');
+      hq = hq.replace(/\s*\n.*/s, ''); // Take first line only
+      normalized.headquarters = hq.trim();
+    }
+
+    // Employee count - extract number
+    if (normalized.employees) {
+      const empValue = normalized.employees;
+      // Handle formats like "164,000 (2023)", "~150,000", "approx. 100k"
+      const numMatch = empValue.match(/([0-9,]+(?:\.[0-9]+)?)\s*(?:k|K|thousand|million|M)?/);
+      if (numMatch) {
+        let count = numMatch[1].replace(/,/g, '');
+        const suffix = numMatch[0].toLowerCase();
+        if (suffix.includes('k') || suffix.includes('thousand')) {
+          count = String(parseFloat(count) * 1000);
+        } else if (suffix.includes('m') || suffix.includes('million')) {
+          count = String(parseFloat(count) * 1000000);
+        }
+        normalized.employees = String(Math.round(parseFloat(count)));
+      }
+    }
+
+    // Website - extract URL
+    if (normalized.website) {
+      let web = normalized.website;
+      // Handle {{URL|example.com}} or {{url|https://example.com}}
+      const urlMatch = web.match(/\{\{(?:URL|url)\|([^}|]+)/i);
+      if (urlMatch) {
+        web = urlMatch[1];
+      }
+      // Clean any remaining template markup
+      web = web.replace(/\{\{[^}]+\}\}/g, '').trim();
+      normalized.website = web;
+    }
+
+    console.log('[BrandDataFetcher] Parsed infobox:', normalized);
+    return normalized;
   }
 
   /**
    * Clean Wikipedia markup from values
    */
   private cleanWikipediaValue(value: string): string {
-    return value
-      .replace(/\[\[([^|\]]+)\|?[^\]]*\]\]/g, '$1') // [[Link|Text]] -> Link or Text
-      .replace(/\{\{[^}]+\}\}/g, '') // Remove templates
-      .replace(/<[^>]+>/g, '') // Remove HTML
-      .replace(/'''?/g, '') // Remove bold/italic
-      .replace(/&nbsp;/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    let cleaned = value;
+
+    // Handle {{Start date|YYYY|MM|DD}} templates
+    const startDateMatch = cleaned.match(/\{\{(?:Start date|start date)[^|]*\|(\d{4})/i);
+    if (startDateMatch) {
+      return startDateMatch[1];
+    }
+
+    // Handle {{URL|...}} templates
+    const urlMatch = cleaned.match(/\{\{(?:URL|url)\|([^}|]+)/i);
+    if (urlMatch) {
+      return urlMatch[1].trim();
+    }
+
+    // Handle {{Increase}}, {{Decrease}} and similar
+    cleaned = cleaned.replace(/\{\{(?:Increase|Decrease|Steady)\}\}/gi, '');
+
+    // Handle {{nowrap|...}}
+    cleaned = cleaned.replace(/\{\{nowrap\|([^}]+)\}\}/gi, '$1');
+
+    // Handle {{ubl|...}} (unbulleted list)
+    cleaned = cleaned.replace(/\{\{ubl\|([^}]+)\}\}/gi, '$1');
+
+    // Handle wiki links [[Link|Display]] -> Display, [[Link]] -> Link
+    cleaned = cleaned.replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g, '$2');
+    cleaned = cleaned.replace(/\[\[([^\]]+)\]\]/g, '$1');
+
+    // Remove remaining templates but keep their content if simple
+    cleaned = cleaned.replace(/\{\{[^{}|]+\|([^{}]+)\}\}/g, '$1');
+    cleaned = cleaned.replace(/\{\{[^{}]+\}\}/g, '');
+
+    // Remove HTML tags
+    cleaned = cleaned.replace(/<[^>]+>/g, '');
+
+    // Remove reference tags
+    cleaned = cleaned.replace(/<ref[^>]*>.*?<\/ref>/gi, '');
+    cleaned = cleaned.replace(/<ref[^/>]*\/>/gi, '');
+
+    // Clean up whitespace and special chars
+    cleaned = cleaned.replace(/&nbsp;/g, ' ');
+    cleaned = cleaned.replace(/'''?/g, '');
+    cleaned = cleaned.replace(/\s+/g, ' ');
+
+    return cleaned.trim();
   }
 
   /**
@@ -311,10 +484,13 @@ export class BrandDataFetcher {
       else if (titleLower.includes(brandLower)) score += 25;
 
       // Company-related keywords in snippet
-      const companyKeywords = ['company', 'corporation', 'inc.', 'ltd', 'founded', 'headquartered', 'ceo'];
+      const companyKeywords = ['company', 'corporation', 'inc.', 'ltd', 'founded', 'headquartered', 'ceo', 'multinational', 'business'];
       for (const keyword of companyKeywords) {
         if (snippetLower.includes(keyword)) score += 10;
       }
+
+      // Penalize disambiguation pages
+      if (titleLower.includes('disambiguation')) score -= 50;
 
       return { result, score };
     });
@@ -336,6 +512,8 @@ export class BrandDataFetcher {
     ogData?: Record<string, string>;
   } | null> {
     try {
+      console.log(`[BrandDataFetcher] Fetching website: ${url}`);
+
       // Fetch the website HTML
       const response = await fetch(url, {
         headers: {
@@ -366,9 +544,11 @@ export class BrandDataFetcher {
       // Parse JSON-LD structured data
       const structuredData = this.extractJsonLd(html);
 
+      console.log('[BrandDataFetcher] Website data:', { title, hasDescription: !!description, hasStructuredData: !!structuredData });
+
       return { title, description, keywords, structuredData, ogData };
     } catch (error) {
-      console.error('Website fetch error:', error);
+      console.error('[BrandDataFetcher] Website fetch error:', error);
       return null;
     }
   }
@@ -427,6 +607,13 @@ export class BrandDataFetcher {
           const org = data.find(d => d['@type'] === 'Organization' || d['@type'] === 'Corporation');
           if (org) return org;
         }
+        // Check @graph array
+        if (data['@graph'] && Array.isArray(data['@graph'])) {
+          const org = data['@graph'].find((d: Record<string, unknown>) =>
+            d['@type'] === 'Organization' || d['@type'] === 'Corporation'
+          );
+          if (org) return org;
+        }
       } catch {
         // Ignore JSON parse errors
       }
@@ -452,6 +639,11 @@ export class BrandDataFetcher {
     if (wikipediaData) {
       const { pageData, infobox } = wikipediaData;
 
+      // Use page title as company name if more specific
+      if (pageData?.title && !pageData.title.includes('disambiguation')) {
+        data.companyName = pageData.title;
+      }
+
       if (pageData?.extract) {
         data.description = pageData.extract.substring(0, 500);
         sources.push({ type: 'wikipedia', url: pageData.fullurl, field: 'description', confidence: 0.9 });
@@ -476,8 +668,8 @@ export class BrandDataFetcher {
       }
 
       if (infobox.employees) {
-        const count = this.parseEmployeeCount(infobox.employees);
-        if (count) {
+        const count = parseInt(infobox.employees.replace(/,/g, ''));
+        if (!isNaN(count) && count > 0) {
           data.employeeCount = count;
           sources.push({ type: 'wikipedia', field: 'employeeCount', confidence: 0.7 });
         }
@@ -505,6 +697,11 @@ export class BrandDataFetcher {
           sources.push({ type: 'wikipedia', field: 'stockTicker', confidence: 0.9 });
         }
       }
+
+      if (infobox.parent) {
+        data.parentCompany = infobox.parent;
+        sources.push({ type: 'wikipedia', field: 'parentCompany', confidence: 0.85 });
+      }
     }
 
     // Override/supplement with website data
@@ -512,13 +709,13 @@ export class BrandDataFetcher {
       if (websiteData.structuredData) {
         const sd = websiteData.structuredData;
 
-        if (sd.name && !data.companyName) {
-          data.companyName = sd.name as string;
+        if (sd.name && typeof sd.name === 'string') {
+          data.companyName = sd.name;
           sources.push({ type: 'website', field: 'companyName', confidence: 1.0 });
         }
 
-        if (sd.description && !data.description) {
-          data.description = sd.description as string;
+        if (sd.description && typeof sd.description === 'string' && !data.description) {
+          data.description = sd.description;
           sources.push({ type: 'website', field: 'description', confidence: 0.95 });
         }
 
@@ -526,10 +723,30 @@ export class BrandDataFetcher {
           const year = new Date(sd.foundingDate as string).getFullYear();
           if (!isNaN(year)) {
             data.foundedYear = year;
-            // Update source to website (higher priority)
             const existingIdx = sources.findIndex(s => s.field === 'foundedYear');
             if (existingIdx >= 0) sources.splice(existingIdx, 1);
             sources.push({ type: 'website', field: 'foundedYear', confidence: 1.0 });
+          }
+        }
+
+        // Extract address from structured data
+        if (sd.address && typeof sd.address === 'object') {
+          const addr = sd.address as Record<string, string>;
+          const parts = [addr.addressLocality, addr.addressRegion, addr.addressCountry].filter(Boolean);
+          if (parts.length > 0 && !data.headquarters) {
+            data.headquarters = parts.join(', ');
+            sources.push({ type: 'website', field: 'headquarters', confidence: 0.95 });
+          }
+        }
+
+        // Number of employees from structured data
+        if (sd.numberOfEmployees && typeof sd.numberOfEmployees === 'object') {
+          const emp = sd.numberOfEmployees as Record<string, unknown>;
+          if (emp.value && typeof emp.value === 'number') {
+            data.employeeCount = emp.value;
+            const existingIdx = sources.findIndex(s => s.field === 'employeeCount');
+            if (existingIdx >= 0) sources.splice(existingIdx, 1);
+            sources.push({ type: 'website', field: 'employeeCount', confidence: 1.0 });
           }
         }
       }
@@ -562,25 +779,26 @@ export class BrandDataFetcher {
       mergedData.industry || '',
       wikipediaData?.pageData?.extract || '',
       websiteData?.description || '',
-      ...(websiteData?.keywords || [])
+      ...(websiteData?.keywords || []),
+      ...(wikipediaData?.categories || [])
     ].join(' ').toLowerCase();
 
     // Positioning detection patterns
     const positioningPatterns: Record<PositioningType, string[]> = {
-      'premium': ['premium', 'luxury', 'high-end', 'exclusive', 'prestige', 'finest'],
-      'innovative': ['innovative', 'innovation', 'cutting-edge', 'pioneer', 'breakthrough', 'revolutionary'],
-      'affordable': ['affordable', 'budget', 'value', 'low-cost', 'economical', 'savings'],
-      'sustainable': ['sustainable', 'eco-friendly', 'green', 'environmental', 'carbon', 'renewable'],
-      'luxury': ['luxury', 'luxurious', 'opulent', 'elite', 'premium'],
-      'disruptive': ['disrupt', 'transform', 'revolutionize', 'change the way', 'reimagine'],
-      'traditional': ['tradition', 'heritage', 'established', 'legacy', 'since 18', 'since 19'],
-      'tech-forward': ['technology', 'digital', 'ai', 'artificial intelligence', 'tech', 'software'],
-      'customer-centric': ['customer', 'user', 'experience', 'service', 'satisfaction', 'support'],
-      'quality-focused': ['quality', 'craftsmanship', 'excellence', 'precision', 'reliable'],
-      'value-oriented': ['value', 'best price', 'affordable quality', 'smart choice'],
-      'lifestyle': ['lifestyle', 'living', 'wellness', 'health', 'life'],
-      'professional': ['professional', 'enterprise', 'business', 'b2b', 'corporate'],
-      'enterprise': ['enterprise', 'business solution', 'corporate', 'organization']
+      'premium': ['premium', 'luxury', 'high-end', 'exclusive', 'prestige', 'finest', 'upscale'],
+      'innovative': ['innovative', 'innovation', 'cutting-edge', 'pioneer', 'breakthrough', 'revolutionary', 'disruptive technology'],
+      'affordable': ['affordable', 'budget', 'value', 'low-cost', 'economical', 'savings', 'cheap'],
+      'sustainable': ['sustainable', 'eco-friendly', 'green', 'environmental', 'carbon', 'renewable', 'climate'],
+      'luxury': ['luxury', 'luxurious', 'opulent', 'elite', 'haute', 'exclusive'],
+      'disruptive': ['disrupt', 'transform', 'revolutionize', 'change the way', 'reimagine', 'redefine'],
+      'traditional': ['tradition', 'heritage', 'established', 'legacy', 'since 18', 'since 19', 'founded in'],
+      'tech-forward': ['technology', 'digital', 'ai', 'artificial intelligence', 'tech', 'software', 'platform'],
+      'customer-centric': ['customer', 'user experience', 'customer service', 'satisfaction', 'support', 'customer first'],
+      'quality-focused': ['quality', 'craftsmanship', 'excellence', 'precision', 'reliable', 'trusted'],
+      'value-oriented': ['value', 'best price', 'affordable quality', 'smart choice', 'great value'],
+      'lifestyle': ['lifestyle', 'living', 'wellness', 'health', 'life', 'experience'],
+      'professional': ['professional', 'expert', 'specialist', 'b2b'],
+      'enterprise': ['enterprise', 'business solution', 'corporate', 'organization', 'fortune 500']
     };
 
     const scores: Record<PositioningType, number> = {} as Record<PositioningType, number>;
@@ -604,18 +822,19 @@ export class BrandDataFetcher {
     }
 
     // Detect price point
-    if (allText.includes('luxury') || allText.includes('premium')) {
+    if (allText.includes('luxury') || allText.includes('premium') || allText.includes('high-end')) {
       positioning.pricePoint = 'premium';
-    } else if (allText.includes('affordable') || allText.includes('budget')) {
+    } else if (allText.includes('affordable') || allText.includes('budget') || allText.includes('low-cost')) {
       positioning.pricePoint = 'budget';
-    } else if (allText.includes('value')) {
+    } else if (allText.includes('value') || allText.includes('mid-range')) {
       positioning.pricePoint = 'mid-range';
     }
 
     // Extract key attributes
     const attributePatterns = [
       'innovative', 'reliable', 'trusted', 'leading', 'global',
-      'sustainable', 'fast', 'secure', 'simple', 'powerful'
+      'sustainable', 'fast', 'secure', 'simple', 'powerful',
+      'modern', 'efficient', 'smart', 'creative', 'dynamic'
     ];
     positioning.keyAttributes = attributePatterns.filter(attr =>
       allText.includes(attr)
@@ -637,20 +856,22 @@ export class BrandDataFetcher {
     const parts: string[] = [];
 
     if (positioning.pricePoint) {
-      parts.push(`${positioning.pricePoint} brand`);
+      parts.push(`A ${positioning.pricePoint} brand`);
+    } else {
+      parts.push('A brand');
     }
 
-    parts.push(`focusing on ${positioning.primary.replace(/-/g, ' ')}`);
+    parts.push(`known for ${positioning.primary.replace(/-/g, ' ')}`);
 
     if (positioning.secondary && positioning.secondary.length > 0) {
-      parts.push(`with emphasis on ${positioning.secondary[0].replace(/-/g, ' ')}`);
+      parts.push(`and ${positioning.secondary[0].replace(/-/g, ' ')}`);
     }
 
     if (data.industry) {
-      parts.push(`in the ${data.industry} industry`);
+      parts.push(`in the ${data.industry} sector`);
     }
 
-    return parts.join(' ');
+    return parts.join(' ') + '.';
   }
 
   /**
@@ -661,16 +882,26 @@ export class BrandDataFetcher {
     websiteData: Awaited<ReturnType<typeof this.fetchFromWebsite>>,
     sources: DataSource[]
   ): FetchedBrandData['confidence'] {
-    const wikipediaConfidence = wikipediaData ? 0.8 : 0;
+    const wikipediaConfidence = wikipediaData ? 0.85 : 0;
     const websiteConfidence = websiteData ? 0.9 : 0;
 
-    // Overall is average of source confidences
-    const avgSourceConfidence = sources.length > 0
-      ? sources.reduce((sum, s) => sum + s.confidence, 0) / sources.length
-      : 0;
+    // Overall is weighted average
+    let overall = 0;
+    if (wikipediaData && websiteData) {
+      overall = (wikipediaConfidence + websiteConfidence) / 2;
+    } else if (wikipediaData) {
+      overall = wikipediaConfidence;
+    } else if (websiteData) {
+      overall = websiteConfidence;
+    }
+
+    // Boost if we have many sources
+    if (sources.length >= 5) {
+      overall = Math.min(overall + 0.1, 1);
+    }
 
     return {
-      overall: Math.round(((wikipediaConfidence + websiteConfidence + avgSourceConfidence) / 3) * 100) / 100,
+      overall: Math.round(overall * 100) / 100,
       wikipedia: wikipediaConfidence,
       website: websiteConfidence
     };
@@ -680,22 +911,25 @@ export class BrandDataFetcher {
    * Utility: Check if string is a URL
    */
   private isUrl(str: string): boolean {
-    return str.startsWith('http://') || str.startsWith('https://') || str.includes('.');
+    return str.startsWith('http://') || str.startsWith('https://') ||
+           (str.includes('.') && !str.includes(' ') && str.length > 4);
   }
 
   /**
    * Utility: Normalize URL
    */
   private normalizeUrl(url: string): string {
-    if (!url.startsWith('http')) {
-      url = 'https://' + url;
+    let normalized = url.trim();
+
+    if (!normalized.startsWith('http')) {
+      normalized = 'https://' + normalized;
     }
-    // Ensure trailing slash is consistent
+
     try {
-      const parsed = new URL(url);
+      const parsed = new URL(normalized);
       return parsed.origin;
     } catch {
-      return url;
+      return normalized;
     }
   }
 
@@ -710,40 +944,27 @@ export class BrandDataFetcher {
       // Remove www. and common TLDs
       let name = hostname
         .replace(/^www\./, '')
-        .replace(/\.(com|org|net|io|co|inc|corp)$/i, '')
+        .replace(/\.(com|org|net|io|co|inc|corp|biz|info)$/i, '')
         .replace(/\./g, ' ');
 
-      // Capitalize first letter
-      return name.charAt(0).toUpperCase() + name.slice(1);
+      // Capitalize first letter of each word
+      name = name.split(' ').map(word =>
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+
+      return name;
     } catch {
       return url;
     }
   }
 
   /**
-   * Utility: Parse employee count from various formats
-   */
-  private parseEmployeeCount(value: string): number | undefined {
-    // Handle formats like "100,000", "100000", "~100,000", "100k"
-    const cleaned = value.replace(/[,\s]/g, '').replace(/~/g, '');
-
-    // Handle "k" suffix
-    if (cleaned.toLowerCase().endsWith('k')) {
-      const num = parseFloat(cleaned.slice(0, -1));
-      return isNaN(num) ? undefined : Math.round(num * 1000);
-    }
-
-    const num = parseInt(cleaned);
-    return isNaN(num) ? undefined : num;
-  }
-
-  /**
    * Utility: Extract stock ticker from traded_as field
    */
   private extractStockTicker(value: string): string | undefined {
-    // Match patterns like "NASDAQ: AAPL", "NYSE: IBM"
-    const match = value.match(/(?:NASDAQ|NYSE|LSE|TSE):\s*([A-Z]+)/i);
-    return match?.[1];
+    // Match patterns like "NASDAQ: AAPL", "NYSE: IBM", "Nasdaq: TSLA"
+    const match = value.match(/(?:NASDAQ|NYSE|LSE|TSE|FTSE|DAX):\s*([A-Z0-9]+)/i);
+    return match?.[1]?.toUpperCase();
   }
 }
 
