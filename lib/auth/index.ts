@@ -25,8 +25,8 @@ export interface AuthUser {
 }
 
 // Demo credentials fallback (for development only)
-const DEMO_USERNAME = 'demo@example.com';
-const DEMO_PASSWORD = 'demo123';
+const DEMO_USERNAME = 'admin@velaris.io';
+const DEMO_PASSWORD = 'Velaris2024!Secure';
 
 /**
  * Verify user credentials against hashed password
