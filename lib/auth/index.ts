@@ -2,12 +2,14 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 // Environment variables for authentication
-const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET;
+// Fallback secret for development only - MUST be set in production
+const DEV_JWT_SECRET = 'dev-secret-key-do-not-use-in-production-velaris-2024';
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || DEV_JWT_SECRET;
 const AUTH_USERNAME = process.env.AUTH_USERNAME;
 const AUTH_PASSWORD_HASH = process.env.AUTH_PASSWORD_HASH;
 
-if (!JWT_SECRET) {
-  console.warn('Warning: JWT_SECRET or NEXTAUTH_SECRET not set. Authentication will fail in production.');
+if (!process.env.JWT_SECRET && !process.env.NEXTAUTH_SECRET) {
+  console.warn('Warning: JWT_SECRET or NEXTAUTH_SECRET not set. Using development fallback. Set these in production!');
 }
 
 export interface TokenPayload {

@@ -58,11 +58,16 @@ export async function POST(request: Request) {
       success: true,
       message: 'Login successful'
     });
-  } catch (error) {
-    console.error('Login error:', error);
-    // Don't leak internal error details
+  } catch (error: any) {
+    console.error('Login error:', error?.message || error);
+    console.error('Login error stack:', error?.stack);
+    // Don't leak internal error details in production
+    const isDev = process.env.NODE_ENV === 'development';
     return NextResponse.json(
-      { success: false, message: 'Login failed. Please try again.' },
+      {
+        success: false,
+        message: isDev ? `Login failed: ${error?.message}` : 'Login failed. Please try again.'
+      },
       { status: 500 }
     );
   }
