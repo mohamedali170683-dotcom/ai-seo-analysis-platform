@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, BookOpen, Sparkles, Edit3 } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 interface GroundTruth {
@@ -11,6 +11,9 @@ interface GroundTruth {
   headquarters?: string;
   ceo?: string;
   employeeCount?: number;
+  industry?: string;
+  description?: string;
+  websiteUrl?: string;
   products: Product[];
   competitorDifferentiators: CompetitorDifferentiator[];
   hallucinationDetections: HallucinationDetection[];
@@ -63,12 +66,50 @@ interface Recommendation {
   status: string;
 }
 
+interface FetchedBrandData {
+  companyName: string;
+  description?: string;
+  foundedYear?: number;
+  headquarters?: string;
+  ceo?: string;
+  employeeCount?: number;
+  industry?: string;
+  websiteUrl?: string;
+  positioning?: {
+    primary: string;
+    secondary?: string[];
+    pricePoint?: string;
+    keyAttributes?: string[];
+    suggestedDescription?: string;
+  };
+  sources: Array<{
+    type: 'wikipedia' | 'website' | 'inferred';
+    field: string;
+    confidence: number;
+  }>;
+  confidence: {
+    overall: number;
+    wikipedia: number;
+    website: number;
+  };
+}
+
+type FormStep = 'search' | 'review' | 'manual';
+
 export default function HallucinationDetectorPage() {
   const [groundTruths, setGroundTruths] = useState<GroundTruth[]>([]);
   const [selectedGroundTruth, setSelectedGroundTruth] = useState<GroundTruth | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+
+  // New state for auto-fetch flow
+  const [formStep, setFormStep] = useState<FormStep>('search');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchedData, setFetchedData] = useState<FetchedBrandData | null>(null);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     companyName: '',
     foundedYear: '',
@@ -76,7 +117,10 @@ export default function HallucinationDetectorPage() {
     ceo: '',
     employeeCount: '',
     industry: '',
-    websiteUrl: ''
+    websiteUrl: '',
+    description: '',
+    positioning: '',
+    pricePoint: ''
   });
 
   useEffect(() => {
@@ -100,6 +144,48 @@ export default function HallucinationDetectorPage() {
     }
   };
 
+  const handleFetchBrandData = async () => {
+    if (!searchQuery.trim()) return;
+
+    setIsFetching(true);
+    setFetchError(null);
+
+    try {
+      const response = await fetch('/api/brand-data/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brandNameOrUrl: searchQuery.trim() })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        setFetchedData(data.data);
+        // Pre-fill form with fetched data
+        setFormData({
+          companyName: data.data.companyName || '',
+          foundedYear: data.data.foundedYear?.toString() || '',
+          headquarters: data.data.headquarters || '',
+          ceo: data.data.ceo || '',
+          employeeCount: data.data.employeeCount?.toString() || '',
+          industry: data.data.industry || '',
+          websiteUrl: data.data.websiteUrl || '',
+          description: data.data.description || '',
+          positioning: data.data.positioning?.primary || '',
+          pricePoint: data.data.positioning?.pricePoint || ''
+        });
+        setFormStep('review');
+      } else {
+        setFetchError(data.error || 'Failed to fetch brand data');
+      }
+    } catch (error) {
+      console.error('Error fetching brand data:', error);
+      setFetchError('Failed to fetch brand data. Please try again or enter manually.');
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
   const handleCreateGroundTruth = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -113,27 +199,39 @@ export default function HallucinationDetectorPage() {
           ceo: formData.ceo || undefined,
           employeeCount: formData.employeeCount ? parseInt(formData.employeeCount) : undefined,
           industry: formData.industry || undefined,
-          websiteUrl: formData.websiteUrl || undefined
+          websiteUrl: formData.websiteUrl || undefined,
+          description: formData.description || undefined
         })
       });
 
       const data = await response.json();
       if (data.success) {
         await fetchGroundTruths();
-        setShowCreateForm(false);
-        setFormData({
-          companyName: '',
-          foundedYear: '',
-          headquarters: '',
-          ceo: '',
-          employeeCount: '',
-          industry: '',
-          websiteUrl: ''
-        });
+        resetForm();
       }
     } catch (error) {
       console.error('Error creating ground truth:', error);
     }
+  };
+
+  const resetForm = () => {
+    setShowCreateForm(false);
+    setFormStep('search');
+    setSearchQuery('');
+    setFetchedData(null);
+    setFetchError(null);
+    setFormData({
+      companyName: '',
+      foundedYear: '',
+      headquarters: '',
+      ceo: '',
+      employeeCount: '',
+      industry: '',
+      websiteUrl: '',
+      description: '',
+      positioning: '',
+      pricePoint: ''
+    });
   };
 
   const runScan = async (groundTruthId: string) => {
@@ -175,14 +273,18 @@ export default function HallucinationDetectorPage() {
     }
   };
 
-  const getSeverityColor = (severity: string) => {
-    switch (severity) {
-      case 'CRITICAL': return 'bg-red-100 text-red-800';
-      case 'HIGH': return 'bg-orange-100 text-orange-800';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-800';
-      case 'LOW': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getSourceIcon = (type: string) => {
+    switch (type) {
+      case 'wikipedia': return <BookOpen className="w-3 h-3" />;
+      case 'website': return <Globe className="w-3 h-3" />;
+      default: return <Sparkles className="w-3 h-3" />;
     }
+  };
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'text-green-600';
+    if (confidence >= 0.6) return 'text-yellow-600';
+    return 'text-orange-600';
   };
 
   const latestDetection = selectedGroundTruth?.hallucinationDetections?.[0];
@@ -211,103 +313,454 @@ export default function HallucinationDetectorPage() {
         {/* Brand Selection & Create */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Your Brands</h2>
+            <h2 className="text-xl font-semibold dark:text-gray-100">Your Brands</h2>
             <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
+              onClick={() => {
+                setShowCreateForm(!showCreateForm);
+                if (!showCreateForm) {
+                  setFormStep('search');
+                }
+              }}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               + Add Brand
             </button>
           </div>
 
-          {/* Create Form */}
+          {/* Create Form - New Multi-Step Flow */}
           {showCreateForm && (
-            <form onSubmit={handleCreateGroundTruth} className="mb-6 p-4 bg-gray-50 rounded-md">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Company Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.companyName}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
+            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
+              {/* Step 1: Search/Fetch */}
+              {formStep === 'search' && (
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                      Add New Brand
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Enter a brand name or website URL to automatically fetch company information from Wikipedia and their website.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleFetchBrandData()}
+                        placeholder="e.g., Apple, Tesla, or https://company.com"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-md pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    </div>
+                    <button
+                      onClick={handleFetchBrandData}
+                      disabled={isFetching || !searchQuery.trim()}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
+                    >
+                      {isFetching ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Fetching...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          Fetch Info
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {fetchError && (
+                    <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md text-red-700 dark:text-red-400 text-sm">
+                      {fetchError}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                    <span>or</span>
+                    <button
+                      onClick={() => setFormStep('manual')}
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      enter information manually
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Founded Year
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.foundedYear}
-                    onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Headquarters
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.headquarters}
-                    onChange={(e) => setFormData({ ...formData, headquarters: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    CEO
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.ceo}
-                    onChange={(e) => setFormData({ ...formData, ceo: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Employee Count
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.employeeCount}
-                    onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Industry
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.industry}
-                    onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Create Brand
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowCreateForm(false)}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+              )}
+
+              {/* Step 2: Review Fetched Data */}
+              {formStep === 'review' && fetchedData && (
+                <form onSubmit={handleCreateGroundTruth} className="space-y-6">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        Review & Edit Brand Information
+                      </h3>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className={`${getConfidenceColor(fetchedData.confidence.overall)}`}>
+                          {Math.round(fetchedData.confidence.overall * 100)}% confidence
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      We found the following information. Please review and edit as needed before saving.
+                    </p>
+                  </div>
+
+                  {/* Data Sources */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {fetchedData.confidence.wikipedia > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded text-xs">
+                        <BookOpen className="w-3 h-3" />
+                        Wikipedia
+                      </span>
+                    )}
+                    {fetchedData.confidence.website > 0 && (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded text-xs">
+                        <Globe className="w-3 h-3" />
+                        Website
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Brand Positioning Card */}
+                  {fetchedData.positioning && (
+                    <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <span className="font-medium text-purple-900 dark:text-purple-100">Detected Brand Positioning</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        <span className="px-2 py-1 bg-purple-600 text-white rounded text-sm">
+                          {fetchedData.positioning.primary.replace(/-/g, ' ')}
+                        </span>
+                        {fetchedData.positioning.secondary?.map((pos, i) => (
+                          <span key={i} className="px-2 py-1 bg-purple-100 dark:bg-purple-800 text-purple-700 dark:text-purple-300 rounded text-sm">
+                            {pos.replace(/-/g, ' ')}
+                          </span>
+                        ))}
+                        {fetchedData.positioning.pricePoint && (
+                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-blue-300 rounded text-sm">
+                            {fetchedData.positioning.pricePoint}
+                          </span>
+                        )}
+                      </div>
+                      {fetchedData.positioning.keyAttributes && fetchedData.positioning.keyAttributes.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {fetchedData.positioning.keyAttributes.map((attr, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-white/50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-300 rounded text-xs">
+                              {attr}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {fetchedData.positioning.suggestedDescription && (
+                        <p className="mt-2 text-sm text-purple-800 dark:text-purple-200 italic">
+                          &quot;{fetchedData.positioning.suggestedDescription}&quot;
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Editable Fields */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Company Name *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          value={formData.companyName}
+                          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md pr-8 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        />
+                        <Edit3 className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      </div>
+                      {fetchedData.sources.find(s => s.field === 'companyName') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'companyName')?.type || '')}
+                          from {fetchedData.sources.find(s => s.field === 'companyName')?.type}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Founded Year
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.foundedYear}
+                        onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                      {fetchedData.sources.find(s => s.field === 'foundedYear') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'foundedYear')?.type || '')}
+                          from {fetchedData.sources.find(s => s.field === 'foundedYear')?.type}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Headquarters
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.headquarters}
+                        onChange={(e) => setFormData({ ...formData, headquarters: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                      {fetchedData.sources.find(s => s.field === 'headquarters') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'headquarters')?.type || '')}
+                          from {fetchedData.sources.find(s => s.field === 'headquarters')?.type}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        CEO
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.ceo}
+                        onChange={(e) => setFormData({ ...formData, ceo: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                      {fetchedData.sources.find(s => s.field === 'ceo') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'ceo')?.type || '')}
+                          from {fetchedData.sources.find(s => s.field === 'ceo')?.type}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Employee Count
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.employeeCount}
+                        onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                      {fetchedData.sources.find(s => s.field === 'employeeCount') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'employeeCount')?.type || '')}
+                          from {fetchedData.sources.find(s => s.field === 'employeeCount')?.type}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Industry
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.industry}
+                        onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                      {fetchedData.sources.find(s => s.field === 'industry') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'industry')?.type || '')}
+                          from {fetchedData.sources.find(s => s.field === 'industry')?.type}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Website URL
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.websiteUrl}
+                        onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                      {fetchedData.sources.find(s => s.field === 'description') && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                          {getSourceIcon(fetchedData.sources.find(s => s.field === 'description')?.type || '')}
+                          from {fetchedData.sources.find(s => s.field === 'description')?.type}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      Save Brand
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormStep('search')}
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Manual Entry Mode */}
+              {formStep === 'manual' && (
+                <form onSubmit={handleCreateGroundTruth} className="space-y-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                      Enter Brand Information Manually
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Company Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formData.companyName}
+                        onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Founded Year
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.foundedYear}
+                        onChange={(e) => setFormData({ ...formData, foundedYear: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Headquarters
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.headquarters}
+                        onChange={(e) => setFormData({ ...formData, headquarters: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        CEO
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.ceo}
+                        onChange={(e) => setFormData({ ...formData, ceo: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Employee Count
+                      </label>
+                      <input
+                        type="number"
+                        value={formData.employeeCount}
+                        onChange={(e) => setFormData({ ...formData, employeeCount: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Industry
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.industry}
+                        onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Website URL
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.websiteUrl}
+                        onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Description
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    >
+                      Create Brand
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormStep('search')}
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+                    >
+                      Back to Search
+                    </button>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
 
           {/* Brand List */}
@@ -318,13 +771,16 @@ export default function HallucinationDetectorPage() {
                 onClick={() => setSelectedGroundTruth(gt)}
                 className={`p-4 border rounded-md cursor-pointer transition-colors ${
                   selectedGroundTruth?.id === gt.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <h3 className="font-semibold text-lg">{gt.companyName}</h3>
+                <h3 className="font-semibold text-lg dark:text-gray-100">{gt.companyName}</h3>
                 {gt.foundedYear && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">Founded: {gt.foundedYear}</p>
+                )}
+                {gt.industry && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{gt.industry}</p>
                 )}
                 {gt.hallucinationDetections?.length > 0 && (
                   <div className="mt-2">
@@ -352,13 +808,13 @@ export default function HallucinationDetectorPage() {
             {/* Accuracy Dashboard */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Brand Accuracy Report</h2>
+                <h2 className="text-xl font-semibold dark:text-gray-100">Brand Accuracy Report</h2>
                 <button
                   onClick={() => runScan(selectedGroundTruth.id)}
                   disabled={isScanning}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400"
                 >
-                  {isScanning ? 'Scanning...' : '🔍 Run New Scan'}
+                  {isScanning ? 'Scanning...' : 'Run New Scan'}
                 </button>
               </div>
 
@@ -368,7 +824,7 @@ export default function HallucinationDetectorPage() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Overall Accuracy</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Overall Accuracy</span>
                         <div className="flex items-baseline gap-2">
                           <span
                             className="text-3xl font-bold"
@@ -395,7 +851,7 @@ export default function HallucinationDetectorPage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Hallucinations Found</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Hallucinations Found</span>
                         <div className="flex items-baseline gap-2">
                           <span
                             className="text-3xl font-bold"
@@ -415,7 +871,7 @@ export default function HallucinationDetectorPage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Recommendations</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Recommendations</span>
                         <div className="flex items-baseline gap-2">
                           <span
                             className="text-3xl font-bold"
@@ -435,7 +891,7 @@ export default function HallucinationDetectorPage() {
                     </div>
                     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">LLMs Tested</span>
+                        <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">LLMs Tested</span>
                         <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">2</span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">ChatGPT, Gemini</span>
                       </div>
@@ -445,7 +901,7 @@ export default function HallucinationDetectorPage() {
                   {/* Hallucinations List */}
                   {latestDetection.hallucinations && latestDetection.hallucinations.length > 0 && (
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold mb-3">Detected Hallucinations</h3>
+                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100">Detected Hallucinations</h3>
                       <div className="space-y-3">
                         {latestDetection.hallucinations.map((h) => (
                           <div key={h.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md">
@@ -456,20 +912,20 @@ export default function HallucinationDetectorPage() {
                                   style={{
                                     backgroundColor: (() => {
                                       switch (h.severity) {
-                                        case 'CRITICAL': return '#fee2e2'; // red-100
-                                        case 'HIGH': return '#fed7aa'; // orange-200
-                                        case 'MEDIUM': return '#fef3c7'; // yellow-100
-                                        case 'LOW': return '#dbeafe'; // blue-100
-                                        default: return '#f3f4f6'; // gray-100
+                                        case 'CRITICAL': return '#fee2e2';
+                                        case 'HIGH': return '#fed7aa';
+                                        case 'MEDIUM': return '#fef3c7';
+                                        case 'LOW': return '#dbeafe';
+                                        default: return '#f3f4f6';
                                       }
                                     })(),
                                     color: (() => {
                                       switch (h.severity) {
                                         case 'CRITICAL': return SEMANTIC_COLORS.critical;
-                                        case 'HIGH': return '#ea580c'; // orange-600
+                                        case 'HIGH': return '#ea580c';
                                         case 'MEDIUM': return SEMANTIC_COLORS.warning;
-                                        case 'LOW': return '#2563eb'; // blue-600
-                                        default: return '#4b5563'; // gray-600
+                                        case 'LOW': return '#2563eb';
+                                        default: return '#4b5563';
                                       }
                                     })()
                                   }}
@@ -484,19 +940,19 @@ export default function HallucinationDetectorPage() {
                                 </span>
                               </div>
                             </div>
-                            <div className="text-sm mb-2">
+                            <div className="text-sm mb-2 dark:text-gray-300">
                               <strong>Query:</strong> {h.query}
                             </div>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <span className="text-red-600 font-medium">Claimed:</span>
-                                <div className="mt-1 p-2 bg-red-50 rounded">
+                                <span className="text-red-600 dark:text-red-400 font-medium">Claimed:</span>
+                                <div className="mt-1 p-2 bg-red-50 dark:bg-red-900/20 rounded dark:text-gray-200">
                                   {h.claimedFact}
                                 </div>
                               </div>
                               <div>
-                                <span className="text-green-600 font-medium">Actual:</span>
-                                <div className="mt-1 p-2 bg-green-50 rounded">
+                                <span className="text-green-600 dark:text-green-400 font-medium">Actual:</span>
+                                <div className="mt-1 p-2 bg-green-50 dark:bg-green-900/20 rounded dark:text-gray-200">
                                   {h.actualFact}
                                 </div>
                               </div>
@@ -510,29 +966,29 @@ export default function HallucinationDetectorPage() {
                   {/* Recommendations */}
                   {latestDetection.recommendations && latestDetection.recommendations.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">Recommendations</h3>
+                      <h3 className="text-lg font-semibold mb-3 dark:text-gray-100">Recommendations</h3>
                       <div className="space-y-3">
                         {latestDetection.recommendations.map((r) => (
                           <div key={r.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-md">
                             <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium">{r.title}</h4>
+                              <h4 className="font-medium dark:text-gray-100">{r.title}</h4>
                               <span
                                 className="px-2 py-1 rounded text-xs font-medium"
                                 style={{
                                   backgroundColor: (() => {
                                     switch (r.priority) {
-                                      case 'critical': return '#fee2e2'; // red-100
-                                      case 'high': return '#fed7aa'; // orange-200
-                                      case 'medium': return '#fef3c7'; // yellow-100
-                                      default: return '#dbeafe'; // blue-100
+                                      case 'critical': return '#fee2e2';
+                                      case 'high': return '#fed7aa';
+                                      case 'medium': return '#fef3c7';
+                                      default: return '#dbeafe';
                                     }
                                   })(),
                                   color: (() => {
                                     switch (r.priority) {
                                       case 'critical': return SEMANTIC_COLORS.critical;
-                                      case 'high': return '#ea580c'; // orange-600
+                                      case 'high': return '#ea580c';
                                       case 'medium': return SEMANTIC_COLORS.warning;
-                                      default: return '#2563eb'; // blue-600
+                                      default: return '#2563eb';
                                     }
                                   })()
                                 }}
@@ -540,7 +996,7 @@ export default function HallucinationDetectorPage() {
                                 {r.priority.toUpperCase()}
                               </span>
                             </div>
-                            <p className="text-sm text-gray-600 mb-2">{r.description}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{r.description}</p>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Affected LLMs: {r.affectedLLMs.join(', ')}
                             </div>
