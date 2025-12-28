@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         category: f.category,
         verificationSource: f.verificationSource || undefined
       })),
-      approvedClaims: groundTruthData.approvedClaims.map((c: { claim: string; category: string; approved: boolean; regulatoryRestrictions: string | null; expirationDate: Date | null }) => ({
+      approvedClaims: groundTruthData.approvedClaims.map((c: { claim: string; category: string; approved: boolean; regulatoryRestrictions: string[]; expirationDate: Date | null }) => ({
         claim: c.claim,
         category: c.category,
         approved: c.approved,
