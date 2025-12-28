@@ -1,46 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db/prisma';
 
-// Demo user ID (same as ground-truth routes)
-const DEMO_USER_ID = 'demo-user-001';
-const DEMO_USER_EMAIL = 'demo@example.com';
+/**
+ * Get authenticated user ID from token, or create user if needed
+ */
+async function getAuthenticatedUserId(): Promise<string> {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth-token')?.value;
 
-async function ensureDemoUserExists() {
-  try {
-    // Use upsert to ensure user exists
-    const user = await prisma.user.upsert({
-      where: { id: DEMO_USER_ID },
-      update: {}, // Don't update anything if exists
-      create: {
-        id: DEMO_USER_ID,
-        email: DEMO_USER_EMAIL
-      }
-    });
-    return user.id;
-  } catch (error) {
-    console.error('Error with upsert, trying findOrCreate:', error);
+  let username = 'demo-user'; // fallback
 
-    // Fallback: try to find by email
+  if (authToken) {
     try {
-      const existingByEmail = await prisma.user.findUnique({
-        where: { email: DEMO_USER_EMAIL }
-      });
-      if (existingByEmail) {
-        return existingByEmail.id;
+      const decoded = Buffer.from(authToken, 'base64').toString('utf-8');
+      const tokenData = JSON.parse(decoded);
+      if (tokenData.username) {
+        username = tokenData.username;
       }
-
-      // Last resort: create with a new ID
-      const newUser = await prisma.user.create({
-        data: {
-          email: DEMO_USER_EMAIL
-        }
-      });
-      return newUser.id;
-    } catch (fallbackError) {
-      console.error('Fallback user creation failed:', fallbackError);
-      throw new Error('Could not create or find demo user');
+    } catch {
+      // Invalid token, use default
     }
   }
+
+  // Create email from username
+  const email = `${username.replace(/[^a-zA-Z0-9]/g, '.')}@velaris.app`;
+
+  // Find or create user
+  const user = await prisma.user.upsert({
+    where: { email },
+    update: {},
+    create: { email }
+  });
+
+  return user.id;
 }
 
 /**
@@ -49,7 +42,7 @@ async function ensureDemoUserExists() {
  */
 export async function GET() {
   try {
-    const userId = await ensureDemoUserExists();
+    const userId = await getAuthenticatedUserId();
 
     const analyses = await prisma.brandGroundTruth.findMany({
       where: {
@@ -133,7 +126,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = await ensureDemoUserExists();
+    const userId = await getAuthenticatedUserId();
 
     // Store positioning as JSON in description field
     const positioningJson = JSON.stringify(positioning);
