@@ -3,6 +3,9 @@ import { cookies } from 'next/headers';
 import { hashPassword, generateToken } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
 
+// Force Node.js runtime for jsonwebtoken compatibility
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

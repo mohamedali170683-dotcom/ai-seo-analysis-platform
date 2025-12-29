@@ -4,6 +4,9 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
 
+// Force Node.js runtime for jsonwebtoken compatibility
+export const runtime = 'nodejs';
+
 // Demo credentials fallback
 const DEMO_USERNAME = 'admin@velaris.io';
 const DEMO_PASSWORD = 'Velaris2024!Secure';
