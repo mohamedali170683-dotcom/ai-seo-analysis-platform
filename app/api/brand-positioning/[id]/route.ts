@@ -57,7 +57,7 @@ export async function GET(
         tone: []
       },
       createdAt: analysis.createdAt.toISOString(),
-      scans: analysis.hallucinationDetections.map((d: { id: string; scanDate: Date; status: string; adjustedAccuracy: number | null; chatgptAccuracy: number | null; geminiAccuracy: number | null }) => ({
+      scans: analysis.hallucinationDetections.map((d: { id: string; scanDate: Date; status: string; adjustedAccuracy: number | null; chatgptAccuracy: number | null; geminiAccuracy: number | null; perplexityAccuracy: number | null; claudeAccuracy: number | null }) => ({
         id: d.id,
         scanDate: d.scanDate.toISOString(),
         status: d.status,
@@ -73,6 +73,18 @@ export async function GET(
             llm: 'gemini',
             model: 'gemini-2.0-flash',
             alignmentScore: d.geminiAccuracy || 0,
+            responses: []
+          },
+          {
+            llm: 'perplexity',
+            model: 'llama-3.1-sonar-small-128k-online',
+            alignmentScore: d.perplexityAccuracy || 0,
+            responses: []
+          },
+          {
+            llm: 'claude',
+            model: 'claude-3-5-haiku-20241022',
+            alignmentScore: d.claudeAccuracy || 0,
             responses: []
           }
         ]

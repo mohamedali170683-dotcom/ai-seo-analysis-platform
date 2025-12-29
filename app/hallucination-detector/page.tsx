@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw, Trash2 } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 // Brand positioning types
@@ -125,6 +125,8 @@ export default function HallucinationDetectorPage() {
   const [isEditingPositioning, setIsEditingPositioning] = useState(false);
   const [editPositioning, setEditPositioning] = useState<BrandPositioning | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAnalyses();
@@ -376,6 +378,51 @@ export default function HallucinationDetectorPage() {
       console.error('Error saving positioning:', error);
     } finally {
       setIsSavingEdit(false);
+    }
+  };
+
+  // Select brand and fetch full data including scan results
+  const selectBrand = async (analysis: PositioningAnalysis) => {
+    setSelectedAnalysis(analysis);
+    setLastScanResult(null); // Clear previous scan result
+    setIsEditingPositioning(false);
+    setExpandedLLM(null);
+
+    // Fetch full data with LLM results
+    try {
+      const response = await fetch(`/api/brand-positioning/${analysis.id}`);
+      const data = await response.json();
+      if (data.success && data.data) {
+        setSelectedAnalysis(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching brand details:', error);
+    }
+  };
+
+  // Delete brand
+  const deleteBrand = async (id: string) => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch(`/api/brand-positioning/${id}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // Clear selection if deleted brand was selected
+        if (selectedAnalysis?.id === id) {
+          setSelectedAnalysis(null);
+          setLastScanResult(null);
+        }
+        // Refresh list
+        await fetchAnalyses();
+      }
+    } catch (error) {
+      console.error('Error deleting brand:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(null);
     }
   };
 
@@ -785,32 +832,69 @@ export default function HallucinationDetectorPage() {
             {analyses.map((analysis) => (
               <div
                 key={analysis.id}
-                onClick={() => setSelectedAnalysis(analysis)}
-                className={`p-4 border rounded-md cursor-pointer transition-colors ${
+                className={`p-4 border rounded-md transition-colors relative ${
                   selectedAnalysis?.id === analysis.id
                     ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                     : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
-                <h3 className="font-semibold text-lg dark:text-gray-100">{analysis.brandName}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{analysis.domain}</p>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
-                    {analysis.positioning?.primary}
-                  </span>
-                  {analysis.positioning?.pricePoint && (
-                    <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded">
-                      {analysis.positioning.pricePoint}
-                    </span>
-                  )}
-                </div>
-                {analysis.scans?.length > 0 && (
-                  <div className="mt-2">
-                    <span className="text-sm" style={{ color: getScoreColor(analysis.scans[0].alignmentScore) }}>
-                      {analysis.scans[0].alignmentScore}% alignment
-                    </span>
+                {/* Delete confirmation overlay */}
+                {showDeleteConfirm === analysis.id && (
+                  <div className="absolute inset-0 bg-white dark:bg-gray-800 rounded-md p-4 flex flex-col items-center justify-center z-10">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 text-center">
+                      Delete &quot;{analysis.brandName}&quot;?
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => deleteBrand(analysis.id)}
+                        disabled={isDeleting}
+                        className="px-3 py-1.5 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:bg-gray-400"
+                      >
+                        {isDeleting ? 'Deleting...' : 'Delete'}
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteConfirm(null)}
+                        className="px-3 py-1.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded hover:bg-gray-300 dark:hover:bg-gray-500"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
                 )}
+
+                <div onClick={() => selectBrand(analysis)} className="cursor-pointer">
+                  <div className="flex items-start justify-between">
+                    <h3 className="font-semibold text-lg dark:text-gray-100">{analysis.brandName}</h3>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowDeleteConfirm(analysis.id);
+                      }}
+                      className="p-1 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                      title="Delete brand"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{analysis.domain}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
+                      {analysis.positioning?.primary}
+                    </span>
+                    {analysis.positioning?.pricePoint && (
+                      <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded">
+                        {analysis.positioning.pricePoint}
+                      </span>
+                    )}
+                  </div>
+                  {analysis.scans?.length > 0 && (
+                    <div className="mt-2">
+                      <span className="text-sm" style={{ color: getScoreColor(analysis.scans[0].alignmentScore) }}>
+                        {analysis.scans[0].alignmentScore}% alignment
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>
