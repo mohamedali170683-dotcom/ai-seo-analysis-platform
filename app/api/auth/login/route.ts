@@ -96,13 +96,10 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error('Login error:', error?.message || error);
-    console.error('Login error stack:', error?.stack);
-    // Return error details for debugging (temporarily)
     return NextResponse.json(
       {
         success: false,
-        message: `Login failed: ${error?.message || 'Unknown error'}`,
-        errorType: error?.name,
+        message: 'Login failed. Please try again.',
       },
       { status: 500 }
     );
