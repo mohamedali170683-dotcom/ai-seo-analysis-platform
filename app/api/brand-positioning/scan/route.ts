@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     const [chatgptResponses, geminiResponses, perplexityResponses, claudeResponses] = await Promise.all([
       queryLLMForPositioning('chatgpt', 'gpt-4o-mini', brandName, questions, positioning),
       queryLLMForPositioning('gemini', 'gemini-2.0-flash', brandName, questions, positioning),
-      queryLLMForPositioning('perplexity', 'llama-3.1-sonar-small-128k-online', brandName, questions, positioning),
+      queryLLMForPositioning('perplexity', 'sonar', brandName, questions, positioning),
       queryLLMForPositioning('claude', 'claude-3-5-haiku-20241022', brandName, questions, positioning),
     ]);
 
@@ -326,7 +326,7 @@ async function queryLLMForPositioning(
               'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-              model: 'llama-3.1-sonar-small-128k-online',
+              model: 'sonar',
               messages: [
                 {
                   role: 'system',

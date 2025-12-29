@@ -139,7 +139,7 @@ export async function GET(
             },
             {
               llm: 'perplexity',
-              model: 'llama-3.1-sonar-small-128k-online',
+              model: 'sonar',
               alignmentScore: d.perplexityAccuracy || 0,
               responses: llmResponsesMap.perplexity
             },
