@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { jwtVerify } from 'jose';
 
 // Must match the fallback secret in lib/auth/index.ts
 const DEV_JWT_SECRET = 'dev-secret-key-do-not-use-in-production-velaris-2024';
 const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || DEV_JWT_SECRET;
+
+// Convert secret to Uint8Array for jose
+const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
@@ -51,23 +54,23 @@ interface TokenPayload {
   exp: number;
 }
 
-function verifyToken(token: string): TokenPayload | null {
+async function verifyToken(token: string): Promise<TokenPayload | null> {
   if (!JWT_SECRET) {
     console.error('JWT_SECRET is not configured');
     return null;
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, {
+    const { payload } = await jwtVerify(token, secretKey, {
       algorithms: ['HS256'],
-    }) as TokenPayload;
-    return decoded;
+    });
+    return payload as unknown as TokenPayload;
   } catch {
     return null;
   }
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
@@ -102,7 +105,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Verify the JWT token
-  const tokenPayload = verifyToken(authToken);
+  const tokenPayload = await verifyToken(authToken);
 
   if (!tokenPayload) {
     // For API routes, return 401
