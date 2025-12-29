@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 
 // Demo credentials fallback
 const DEMO_USERNAME = 'admin@velaris.io';
-const DEMO_PASSWORD = 'Velaris2024!Secure';
+const DEMO_PASSWORD = 'VelarisAdmin2024';
 
 export async function POST(request: Request) {
   try {
