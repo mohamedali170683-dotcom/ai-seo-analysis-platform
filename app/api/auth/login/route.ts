@@ -97,12 +97,12 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Login error:', error?.message || error);
     console.error('Login error stack:', error?.stack);
-    // Don't leak internal error details in production
-    const isDev = process.env.NODE_ENV === 'development';
+    // Return error details for debugging (temporarily)
     return NextResponse.json(
       {
         success: false,
-        message: isDev ? `Login failed: ${error?.message}` : 'Login failed. Please try again.'
+        message: `Login failed: ${error?.message || 'Unknown error'}`,
+        errorType: error?.name,
       },
       { status: 500 }
     );
