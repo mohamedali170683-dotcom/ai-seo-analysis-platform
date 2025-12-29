@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { generateToken } from '@/lib/auth';
 import { prisma } from '@/lib/db/prisma';
@@ -80,9 +79,14 @@ export async function POST(request: Request) {
     // Generate signed JWT token
     const token = generateToken(username, user.id);
 
-    // Set the auth cookie
-    const cookieStore = await cookies();
-    cookieStore.set('auth-token', token, {
+    // Create response and set cookie on it
+    const response = NextResponse.json({
+      success: true,
+      message: 'Login successful'
+    });
+
+    // Set the auth cookie on the response
+    response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -90,10 +94,7 @@ export async function POST(request: Request) {
       path: '/',
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Login successful'
-    });
+    return response;
   } catch (error: any) {
     console.error('Login error:', error?.message || error);
     return NextResponse.json(
