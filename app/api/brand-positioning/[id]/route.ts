@@ -96,7 +96,13 @@ export async function GET(
 
         // Parse stored hallucinations into responses format
         for (const h of d.hallucinations) {
-          let context: { aspect?: string; alignment?: string; explanation?: string; model?: string } = {};
+          let context: {
+            aspect?: string;
+            alignment?: string;
+            explanation?: string;
+            model?: string;
+            citations?: Array<{ url: string; title: string; snippet?: string }>;
+          } = {};
           try {
             if (h.fullContext) {
               context = JSON.parse(h.fullContext);
@@ -111,7 +117,8 @@ export async function GET(
             expectedAnswer: h.actualFact,
             llmAnswer: h.claimedFact,
             alignment: context.alignment || 'partially_aligned',
-            explanation: h.suggestedAction || context.explanation || ''
+            explanation: h.suggestedAction || context.explanation || '',
+            citations: context.citations && context.citations.length > 0 ? context.citations : undefined
           };
 
           if (llmResponsesMap[h.llm]) {

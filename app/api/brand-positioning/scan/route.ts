@@ -23,6 +23,12 @@ interface BrandPositioning {
   tone: string[];
 }
 
+interface Citation {
+  url: string;
+  title: string;
+  snippet?: string;
+}
+
 interface PositioningResponse {
   aspect: string;
   question: string;
@@ -30,6 +36,7 @@ interface PositioningResponse {
   llmAnswer: string;
   alignment: 'aligned' | 'partially_aligned' | 'misaligned';
   explanation: string;
+  citations?: Citation[];
 }
 
 interface LLMPositioningResult {
@@ -151,7 +158,8 @@ export async function POST(request: NextRequest) {
             aspect: response.aspect,
             alignment: response.alignment,
             explanation: response.explanation,
-            model: llmResult.model
+            model: llmResult.model,
+            citations: response.citations || []
           }),
           responseSnippet: response.llmAnswer.slice(0, 200),
           suggestedAction: response.explanation
@@ -264,6 +272,7 @@ async function queryLLMForPositioning(
   for (const q of questions) {
     try {
       let llmAnswer = '';
+      let citations: Citation[] = [];
 
       if (llmName === 'chatgpt') {
         const completion = await getOpenAIClient().chat.completions.create({
@@ -298,7 +307,11 @@ async function queryLLMForPositioning(
               generationConfig: {
                 maxOutputTokens: 300,
                 temperature: 0.3
-              }
+              },
+              // Enable grounding with Google Search for citations
+              tools: [{
+                googleSearch: {}
+              }]
             })
           });
 
@@ -309,6 +322,18 @@ async function queryLLMForPositioning(
               .filter((p: any) => p.text)
               .map((p: any) => p.text)
               .join('\n');
+
+            // Extract citations from Gemini grounding metadata
+            const groundingMetadata = data.candidates[0]?.groundingMetadata;
+            if (groundingMetadata?.groundingChunks) {
+              citations = groundingMetadata.groundingChunks
+                .filter((chunk: any) => chunk.web?.uri)
+                .map((chunk: any) => ({
+                  url: chunk.web.uri,
+                  title: chunk.web.title || new URL(chunk.web.uri).hostname.replace('www.', ''),
+                  snippet: ''
+                }));
+            }
           } else {
             console.error('Gemini API error:', data);
             llmAnswer = `[Gemini API error: ${data.error?.message || 'Unknown error'}]`;
@@ -342,6 +367,14 @@ async function queryLLMForPositioning(
           const data = await perplexityResponse.json();
           if (perplexityResponse.ok && data.choices?.[0]?.message?.content) {
             llmAnswer = data.choices[0].message.content;
+            // Extract citations from Perplexity response
+            if (data.citations && Array.isArray(data.citations)) {
+              citations = data.citations.map((url: string) => ({
+                url,
+                title: new URL(url).hostname.replace('www.', ''),
+                snippet: ''
+              }));
+            }
           } else {
             console.error('Perplexity API error:', data);
             llmAnswer = `[Perplexity API error: ${data.error?.message || 'Unknown error'}]`;
@@ -390,7 +423,8 @@ async function queryLLMForPositioning(
         expectedAnswer: q.expected,
         llmAnswer: llmAnswer.slice(0, 500),
         alignment: alignment.status,
-        explanation: alignment.explanation
+        explanation: alignment.explanation,
+        citations: citations.length > 0 ? citations : undefined
       });
     } catch (error) {
       console.error(`Error querying ${llmName}:`, error);

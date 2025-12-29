@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw, Trash2 } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw, Trash2, ExternalLink } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 // Brand positioning types
@@ -39,6 +39,12 @@ interface LLMPositioningResult {
   responses: PositioningResponse[];
 }
 
+interface Citation {
+  url: string;
+  title: string;
+  snippet?: string;
+}
+
 interface PositioningResponse {
   aspect: string;
   question: string;
@@ -46,6 +52,7 @@ interface PositioningResponse {
   llmAnswer: string;
   alignment: 'aligned' | 'partially_aligned' | 'misaligned';
   explanation: string;
+  citations?: Citation[];
 }
 
 // Positioning options
@@ -1253,6 +1260,30 @@ export default function HallucinationDetectorPage() {
                               {response.explanation && (
                                 <div className="mt-3 text-sm text-gray-600 dark:text-gray-400 italic">
                                   {response.explanation}
+                                </div>
+                              )}
+
+                              {/* Citations/Sources Section */}
+                              {response.citations && response.citations.length > 0 && (
+                                <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                                  <span className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase flex items-center gap-1">
+                                    <ExternalLink className="w-3 h-3" />
+                                    Sources ({response.citations.length})
+                                  </span>
+                                  <div className="mt-2 space-y-1">
+                                    {response.citations.map((citation, citIndex) => (
+                                      <a
+                                        key={citIndex}
+                                        href={citation.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="block text-sm text-blue-600 dark:text-blue-400 hover:underline truncate"
+                                        title={citation.url}
+                                      >
+                                        {citation.title || new URL(citation.url).hostname}
+                                      </a>
+                                    ))}
+                                  </div>
                                 </div>
                               )}
                             </div>
