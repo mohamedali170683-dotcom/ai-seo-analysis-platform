@@ -402,6 +402,7 @@ model HallucinationDetection {
   geminiAccuracy          Float?
   copilotAccuracy         Float?
   perplexityAccuracy      Float?
+  claudeAccuracy          Float?
 
   // Counts
   totalClaims             Int                    @default(0)

@@ -88,16 +88,21 @@ export async function POST(request: NextRequest) {
     // Generate positioning-focused questions
     const questions = generatePositioningQuestions(brandName, positioning);
 
-    // Query LLMs
+    // Query LLMs in parallel for better performance
     const llmResults: LLMPositioningResult[] = [];
 
-    // Query ChatGPT
-    const chatgptResponses = await queryLLMForPositioning('chatgpt', 'gpt-4o-mini', brandName, questions, positioning);
-    llmResults.push(chatgptResponses);
+    // Query all LLMs concurrently
+    const [chatgptResponses, geminiResponses, perplexityResponses, claudeResponses] = await Promise.all([
+      queryLLMForPositioning('chatgpt', 'gpt-4o-mini', brandName, questions, positioning),
+      queryLLMForPositioning('gemini', 'gemini-2.0-flash', brandName, questions, positioning),
+      queryLLMForPositioning('perplexity', 'llama-3.1-sonar-small-128k-online', brandName, questions, positioning),
+      queryLLMForPositioning('claude', 'claude-3-5-haiku-20241022', brandName, questions, positioning),
+    ]);
 
-    // Query Gemini
-    const geminiResponses = await queryLLMForPositioning('gemini', 'gemini-2.0-flash', brandName, questions, positioning);
+    llmResults.push(chatgptResponses);
     llmResults.push(geminiResponses);
+    llmResults.push(perplexityResponses);
+    llmResults.push(claudeResponses);
 
     // Calculate overall alignment score
     const totalResponses = llmResults.flatMap(r => r.responses);
@@ -121,6 +126,8 @@ export async function POST(request: NextRequest) {
         unverifiableClaims: partialCount,
         chatgptAccuracy: chatgptResponses.alignmentScore,
         geminiAccuracy: geminiResponses.alignmentScore,
+        perplexityAccuracy: perplexityResponses.alignmentScore,
+        claudeAccuracy: claudeResponses.alignmentScore,
         completedAt: new Date()
       }
     });
@@ -266,6 +273,61 @@ async function queryLLMForPositioning(
               .filter((p: any) => p.text)
               .map((p: any) => p.text)
               .join('\n');
+          }
+        }
+      } else if (llmName === 'perplexity') {
+        const apiKey = process.env.PERPLEXITY_API_KEY;
+        if (apiKey) {
+          const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+              model: 'llama-3.1-sonar-small-128k-online',
+              messages: [
+                {
+                  role: 'system',
+                  content: 'You are a brand analyst. Answer questions about brands based on your knowledge and real-time web search. Be concise and specific. If you are not sure, say so.'
+                },
+                { role: 'user', content: q.question }
+              ],
+              temperature: 0.3,
+              max_tokens: 300
+            })
+          });
+
+          const data = await perplexityResponse.json();
+          if (perplexityResponse.ok && data.choices?.[0]?.message?.content) {
+            llmAnswer = data.choices[0].message.content;
+          }
+        }
+      } else if (llmName === 'claude') {
+        const apiKey = process.env.ANTHROPIC_API_KEY;
+        if (apiKey) {
+          const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+              model: 'claude-3-5-haiku-20241022',
+              max_tokens: 300,
+              messages: [
+                {
+                  role: 'user',
+                  content: `You are a brand analyst. Answer this question about ${brandName}: ${q.question}. Be concise and specific. If you are not sure, say so.`
+                }
+              ]
+            })
+          });
+
+          const data = await claudeResponse.json();
+          if (claudeResponse.ok && data.content?.[0]?.text) {
+            llmAnswer = data.content[0].text;
           }
         }
       }

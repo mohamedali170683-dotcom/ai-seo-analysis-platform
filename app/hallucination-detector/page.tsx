@@ -121,6 +121,11 @@ export default function HallucinationDetectorPage() {
   const [lastScanResult, setLastScanResult] = useState<PositioningScan | null>(null);
   const [expandedLLM, setExpandedLLM] = useState<string | null>(null);
 
+  // Edit positioning mode
+  const [isEditingPositioning, setIsEditingPositioning] = useState(false);
+  const [editPositioning, setEditPositioning] = useState<BrandPositioning | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
   useEffect(() => {
     fetchAnalyses();
   }, []);
@@ -304,6 +309,74 @@ export default function HallucinationDetectorPage() {
         ? prev.keyAttributes.filter(a => a !== value)
         : [...prev.keyAttributes, value]
     }));
+  };
+
+  // Edit positioning functions
+  const startEditPositioning = () => {
+    if (selectedAnalysis?.positioning) {
+      setEditPositioning({ ...selectedAnalysis.positioning });
+      setIsEditingPositioning(true);
+    }
+  };
+
+  const cancelEditPositioning = () => {
+    setEditPositioning(null);
+    setIsEditingPositioning(false);
+  };
+
+  const toggleEditSecondary = (value: string) => {
+    if (!editPositioning) return;
+    setEditPositioning(prev => prev ? ({
+      ...prev,
+      secondary: prev.secondary.includes(value)
+        ? prev.secondary.filter(s => s !== value)
+        : [...prev.secondary, value]
+    }) : null);
+  };
+
+  const toggleEditTone = (value: string) => {
+    if (!editPositioning) return;
+    setEditPositioning(prev => prev ? ({
+      ...prev,
+      tone: prev.tone.includes(value)
+        ? prev.tone.filter(t => t !== value)
+        : [...prev.tone, value]
+    }) : null);
+  };
+
+  const saveEditPositioning = async () => {
+    if (!selectedAnalysis || !editPositioning) return;
+
+    setIsSavingEdit(true);
+    try {
+      const response = await fetch('/api/brand-positioning', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: selectedAnalysis.id,
+          brandName: selectedAnalysis.brandName,
+          domain: selectedAnalysis.domain,
+          positioning: editPositioning
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // Refresh the analysis data
+        await fetchAnalyses();
+        // Update selected analysis with new positioning
+        setSelectedAnalysis(prev => prev ? {
+          ...prev,
+          positioning: editPositioning
+        } : null);
+        setIsEditingPositioning(false);
+        setEditPositioning(null);
+      }
+    } catch (error) {
+      console.error('Error saving positioning:', error);
+    } finally {
+      setIsSavingEdit(false);
+    }
   };
 
   const getAlignmentIcon = (alignment: string) => {
@@ -782,35 +855,193 @@ export default function HallucinationDetectorPage() {
 
             {/* Your Defined Positioning */}
             <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
-                <Target className="w-5 h-5 text-blue-600" />
-                Your Brand Positioning
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Primary</span>
-                  <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{selectedAnalysis.positioning?.primary}</p>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Price Point</span>
-                  <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{selectedAnalysis.positioning?.pricePoint || 'Not set'}</p>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Target Audience</span>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{selectedAnalysis.positioning?.targetAudience || 'Not set'}</p>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Tone</span>
-                  <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">
-                    {selectedAnalysis.positioning?.tone?.join(', ') || 'Not set'}
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Target className="w-5 h-5 text-blue-600" />
+                  Your Brand Positioning
+                </h3>
+                {!isEditingPositioning && (
+                  <button
+                    onClick={startEditPositioning}
+                    className="flex items-center gap-1 px-3 py-1.5 text-sm text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </button>
+                )}
+              </div>
+
+              {isEditingPositioning && editPositioning ? (
+                /* Edit Mode */
+                <div className="space-y-4">
+                  {/* Primary Positioning */}
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Primary *</label>
+                    <select
+                      value={editPositioning.primary}
+                      onChange={(e) => setEditPositioning({ ...editPositioning, primary: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                    >
+                      <option value="">Select...</option>
+                      {POSITIONING_OPTIONS.map(opt => (
+                        <option key={opt} value={opt}>{opt.charAt(0).toUpperCase() + opt.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Secondary Positioning */}
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Secondary</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {POSITIONING_OPTIONS.filter(opt => opt !== editPositioning.primary).map(opt => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => toggleEditSecondary(opt)}
+                          className={`px-2 py-1 rounded text-xs border transition-colors ${
+                            editPositioning.secondary.includes(opt)
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                          }`}
+                        >
+                          {opt.charAt(0).toUpperCase() + opt.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Price Point */}
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Price Point</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PRICE_POINTS.map(pp => (
+                        <button
+                          key={pp}
+                          type="button"
+                          onClick={() => setEditPositioning({ ...editPositioning, pricePoint: pp })}
+                          className={`px-3 py-1.5 rounded text-xs border transition-colors ${
+                            editPositioning.pricePoint === pp
+                              ? 'bg-purple-600 text-white border-purple-600'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-purple-400'
+                          }`}
+                        >
+                          {pp.charAt(0).toUpperCase() + pp.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Target Audience */}
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Target Audience</label>
+                    <input
+                      type="text"
+                      value={editPositioning.targetAudience}
+                      onChange={(e) => setEditPositioning({ ...editPositioning, targetAudience: e.target.value })}
+                      placeholder="e.g., Young professionals aged 25-40"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                    />
+                  </div>
+
+                  {/* Brand Promise */}
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Brand Promise</label>
+                    <input
+                      type="text"
+                      value={editPositioning.brandPromise}
+                      onChange={(e) => setEditPositioning({ ...editPositioning, brandPromise: e.target.value })}
+                      placeholder="Your value proposition"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                    />
+                  </div>
+
+                  {/* Tone */}
+                  <div>
+                    <label className="block text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">Tone</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {TONE_OPTIONS.map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => toggleEditTone(t)}
+                          className={`px-2 py-1 rounded text-xs border transition-colors ${
+                            editPositioning.tone.includes(t)
+                              ? 'bg-green-600 text-white border-green-600'
+                              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-green-400'
+                          }`}
+                        >
+                          {t.charAt(0).toUpperCase() + t.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={saveEditPositioning}
+                      disabled={isSavingEdit || !editPositioning.primary}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
+                    >
+                      {isSavingEdit ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Changes'
+                      )}
+                    </button>
+                    <button
+                      onClick={cancelEditPositioning}
+                      className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-md"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    After saving, click &quot;Run Alignment Check&quot; to re-test with your updated positioning.
                   </p>
                 </div>
-              </div>
-              {selectedAnalysis.positioning?.brandPromise && (
-                <div className="mt-3">
-                  <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Brand Promise</span>
-                  <p className="font-medium text-gray-900 dark:text-gray-100">{selectedAnalysis.positioning.brandPromise}</p>
-                </div>
+              ) : (
+                /* Display Mode */
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Primary</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{selectedAnalysis.positioning?.primary}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Price Point</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">{selectedAnalysis.positioning?.pricePoint || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Target Audience</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{selectedAnalysis.positioning?.targetAudience || 'Not set'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Tone</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+                        {selectedAnalysis.positioning?.tone?.join(', ') || 'Not set'}
+                      </p>
+                    </div>
+                  </div>
+                  {selectedAnalysis.positioning?.secondary && selectedAnalysis.positioning.secondary.length > 0 && (
+                    <div className="mt-3">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Secondary Attributes</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 capitalize">
+                        {selectedAnalysis.positioning.secondary.join(', ')}
+                      </p>
+                    </div>
+                  )}
+                  {selectedAnalysis.positioning?.brandPromise && (
+                    <div className="mt-3">
+                      <span className="text-xs text-gray-500 dark:text-gray-400 uppercase">Brand Promise</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{selectedAnalysis.positioning.brandPromise}</p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 

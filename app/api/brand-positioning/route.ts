@@ -112,12 +112,12 @@ export async function GET() {
 
 /**
  * POST /api/brand-positioning
- * Create a new brand positioning analysis
+ * Create or update a brand positioning analysis
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { brandName, domain, positioning } = body;
+    const { id, brandName, domain, positioning } = body;
 
     if (!brandName || !positioning?.primary) {
       return NextResponse.json(
@@ -131,15 +131,31 @@ export async function POST(request: NextRequest) {
     // Store positioning as JSON in description field
     const positioningJson = JSON.stringify(positioning);
 
-    const analysis = await prisma.brandGroundTruth.create({
-      data: {
-        userId: userId,
-        companyName: brandName,
-        websiteUrl: domain || null,
-        industry: positioning.primary,
-        description: positioningJson
-      }
-    });
+    let analysis;
+
+    if (id) {
+      // Update existing analysis
+      analysis = await prisma.brandGroundTruth.update({
+        where: { id },
+        data: {
+          companyName: brandName,
+          websiteUrl: domain || null,
+          industry: positioning.primary,
+          description: positioningJson
+        }
+      });
+    } else {
+      // Create new analysis
+      analysis = await prisma.brandGroundTruth.create({
+        data: {
+          userId: userId,
+          companyName: brandName,
+          websiteUrl: domain || null,
+          industry: positioning.primary,
+          description: positioningJson
+        }
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -153,10 +169,10 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Error creating brand positioning:', error);
+    console.error('Error saving brand positioning:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { success: false, error: `Failed to create brand positioning: ${errorMessage}` },
+      { success: false, error: `Failed to save brand positioning: ${errorMessage}` },
       { status: 500 }
     );
   }
