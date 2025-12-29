@@ -43,6 +43,27 @@ export async function GET(
       positioning = null;
     }
 
+    // Define type for detection with hallucinations
+    interface DetectionWithHallucinations {
+      id: string;
+      scanDate: Date;
+      status: string;
+      adjustedAccuracy: number | null;
+      chatgptAccuracy: number | null;
+      geminiAccuracy: number | null;
+      perplexityAccuracy: number | null;
+      claudeAccuracy: number | null;
+      hallucinations: Array<{
+        id: string;
+        llm: string;
+        query: string;
+        claimedFact: string;
+        actualFact: string;
+        fullContext: string | null;
+        suggestedAction: string | null;
+      }>;
+    }
+
     const formattedAnalysis = {
       id: analysis.id,
       brandName: analysis.companyName,
@@ -57,38 +78,80 @@ export async function GET(
         tone: []
       },
       createdAt: analysis.createdAt.toISOString(),
-      scans: analysis.hallucinationDetections.map((d: { id: string; scanDate: Date; status: string; adjustedAccuracy: number | null; chatgptAccuracy: number | null; geminiAccuracy: number | null; perplexityAccuracy: number | null; claudeAccuracy: number | null }) => ({
-        id: d.id,
-        scanDate: d.scanDate.toISOString(),
-        status: d.status,
-        alignmentScore: d.adjustedAccuracy || 0,
-        llmResults: [
-          {
-            llm: 'chatgpt',
-            model: 'gpt-4o-mini',
-            alignmentScore: d.chatgptAccuracy || 0,
-            responses: []
-          },
-          {
-            llm: 'gemini',
-            model: 'gemini-2.0-flash',
-            alignmentScore: d.geminiAccuracy || 0,
-            responses: []
-          },
-          {
-            llm: 'perplexity',
-            model: 'llama-3.1-sonar-small-128k-online',
-            alignmentScore: d.perplexityAccuracy || 0,
-            responses: []
-          },
-          {
-            llm: 'claude',
-            model: 'claude-3-5-haiku-20241022',
-            alignmentScore: d.claudeAccuracy || 0,
-            responses: []
+      scans: analysis.hallucinationDetections.map((d: DetectionWithHallucinations) => {
+        // Group hallucinations by LLM to reconstruct responses
+        const llmResponsesMap: Record<string, Array<{
+          aspect: string;
+          question: string;
+          expectedAnswer: string;
+          llmAnswer: string;
+          alignment: string;
+          explanation: string;
+        }>> = {
+          chatgpt: [],
+          gemini: [],
+          perplexity: [],
+          claude: []
+        };
+
+        // Parse stored hallucinations into responses format
+        for (const h of d.hallucinations) {
+          let context: { aspect?: string; alignment?: string; explanation?: string; model?: string } = {};
+          try {
+            if (h.fullContext) {
+              context = JSON.parse(h.fullContext);
+            }
+          } catch {
+            context = {};
           }
-        ]
-      }))
+
+          const response = {
+            aspect: context.aspect || 'unknown',
+            question: h.query,
+            expectedAnswer: h.actualFact,
+            llmAnswer: h.claimedFact,
+            alignment: context.alignment || 'partially_aligned',
+            explanation: h.suggestedAction || context.explanation || ''
+          };
+
+          if (llmResponsesMap[h.llm]) {
+            llmResponsesMap[h.llm].push(response);
+          }
+        }
+
+        return {
+          id: d.id,
+          scanDate: d.scanDate.toISOString(),
+          status: d.status,
+          alignmentScore: d.adjustedAccuracy || 0,
+          llmResults: [
+            {
+              llm: 'chatgpt',
+              model: 'gpt-4o-mini',
+              alignmentScore: d.chatgptAccuracy || 0,
+              responses: llmResponsesMap.chatgpt
+            },
+            {
+              llm: 'gemini',
+              model: 'gemini-2.0-flash',
+              alignmentScore: d.geminiAccuracy || 0,
+              responses: llmResponsesMap.gemini
+            },
+            {
+              llm: 'perplexity',
+              model: 'llama-3.1-sonar-small-128k-online',
+              alignmentScore: d.perplexityAccuracy || 0,
+              responses: llmResponsesMap.perplexity
+            },
+            {
+              llm: 'claude',
+              model: 'claude-3-5-haiku-20241022',
+              alignmentScore: d.claudeAccuracy || 0,
+              responses: llmResponsesMap.claude
+            }
+          ]
+        };
+      })
     };
 
     return NextResponse.json({

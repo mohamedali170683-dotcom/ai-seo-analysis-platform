@@ -132,6 +132,40 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    // Store individual LLM responses in Hallucination table for persistence
+    const hallucinationRecords = [];
+    for (const llmResult of llmResults) {
+      for (const response of llmResult.responses) {
+        hallucinationRecords.push({
+          detectionId: detection.id,
+          llm: llmResult.llm,
+          query: response.question,
+          claimedFact: response.llmAnswer,
+          actualFact: response.expectedAnswer,
+          category: 'FABRICATION' as const, // Using as positioning alignment check
+          severity: response.alignment === 'aligned' ? 'LOW' as const :
+                   response.alignment === 'partially_aligned' ? 'MEDIUM' as const : 'HIGH' as const,
+          severityScore: response.alignment === 'aligned' ? 0 :
+                        response.alignment === 'partially_aligned' ? 50 : 100,
+          fullContext: JSON.stringify({
+            aspect: response.aspect,
+            alignment: response.alignment,
+            explanation: response.explanation,
+            model: llmResult.model
+          }),
+          responseSnippet: response.llmAnswer.slice(0, 200),
+          suggestedAction: response.explanation
+        });
+      }
+    }
+
+    // Batch insert all responses
+    if (hallucinationRecords.length > 0) {
+      await prisma.hallucination.createMany({
+        data: hallucinationRecords
+      });
+    }
+
     const scanResult = {
       id: detection.id,
       scanDate: detection.scanDate.toISOString(),
