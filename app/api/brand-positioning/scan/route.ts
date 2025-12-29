@@ -281,7 +281,9 @@ async function queryLLMForPositioning(
         llmAnswer = completion.choices[0]?.message?.content || '';
       } else if (llmName === 'gemini') {
         const apiKey = process.env.GEMINI_API_KEY;
-        if (apiKey) {
+        if (!apiKey) {
+          llmAnswer = '[Gemini API key not configured]';
+        } else {
           const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
           const geminiResponse = await fetch(url, {
@@ -307,11 +309,16 @@ async function queryLLMForPositioning(
               .filter((p: any) => p.text)
               .map((p: any) => p.text)
               .join('\n');
+          } else {
+            console.error('Gemini API error:', data);
+            llmAnswer = `[Gemini API error: ${data.error?.message || 'Unknown error'}]`;
           }
         }
       } else if (llmName === 'perplexity') {
         const apiKey = process.env.PERPLEXITY_API_KEY;
-        if (apiKey) {
+        if (!apiKey) {
+          llmAnswer = '[Perplexity API key not configured]';
+        } else {
           const perplexityResponse = await fetch('https://api.perplexity.ai/chat/completions', {
             method: 'POST',
             headers: {
@@ -335,11 +342,16 @@ async function queryLLMForPositioning(
           const data = await perplexityResponse.json();
           if (perplexityResponse.ok && data.choices?.[0]?.message?.content) {
             llmAnswer = data.choices[0].message.content;
+          } else {
+            console.error('Perplexity API error:', data);
+            llmAnswer = `[Perplexity API error: ${data.error?.message || 'Unknown error'}]`;
           }
         }
       } else if (llmName === 'claude') {
         const apiKey = process.env.ANTHROPIC_API_KEY;
-        if (apiKey) {
+        if (!apiKey) {
+          llmAnswer = '[Anthropic API key not configured]';
+        } else {
           const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -362,6 +374,9 @@ async function queryLLMForPositioning(
           const data = await claudeResponse.json();
           if (claudeResponse.ok && data.content?.[0]?.text) {
             llmAnswer = data.content[0].text;
+          } else {
+            console.error('Claude API error:', data);
+            llmAnswer = `[Claude API error: ${data.error?.message || 'Unknown error'}]`;
           }
         }
       }
