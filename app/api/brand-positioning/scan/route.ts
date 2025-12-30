@@ -481,8 +481,8 @@ function analyzeAlignment(
     const primary = positioning.primary?.toLowerCase() || '';
     const pricePoint = positioning.pricePoint?.toLowerCase() || '';
 
-    // Check for contradictions
-    const budgetTerms = ['budget', 'cheap', 'affordable', 'low-cost', 'economical'];
+    // Check for contradictions only when positioning is clearly budget or premium
+    const budgetTerms = ['budget', 'cheap', 'affordable', 'low-cost', 'economical', 'value'];
     const premiumTerms = ['premium', 'luxury', 'high-end', 'exclusive', 'expensive'];
 
     const isBudgetPositioning = budgetTerms.some(t => primary.includes(t) || pricePoint.includes(t));
@@ -491,29 +491,23 @@ function analyzeAlignment(
     const llmSaysBudget = budgetTerms.some(t => answerLower.includes(t));
     const llmSaysPremium = premiumTerms.some(t => answerLower.includes(t));
 
-    if (isBudgetPositioning && llmSaysPremium) {
-      return {
-        status: 'misaligned',
-        explanation: `LLM describes the brand as premium/high-end, but you position as ${positioning.pricePoint || positioning.primary}`
-      };
-    }
-
-    if (isPremiumPositioning && llmSaysBudget) {
-      return {
-        status: 'misaligned',
-        explanation: `LLM describes the brand as budget/affordable, but you position as ${positioning.pricePoint || positioning.primary}`
-      };
-    }
-
-    // Check for alignment with primary positioning
-    if (answerLower.includes(primary)) {
+    // First, check if LLM mentions your primary positioning - this is aligned
+    if (primary && answerLower.includes(primary)) {
       return {
         status: 'aligned',
         explanation: `LLM correctly identifies the brand as ${positioning.primary}`
       };
     }
 
-    // Check secondary positioning
+    // Check if LLM mentions your price point positioning
+    if (pricePoint && answerLower.includes(pricePoint.toLowerCase())) {
+      return {
+        status: 'aligned',
+        explanation: `LLM correctly identifies the brand's price positioning as ${positioning.pricePoint}`
+      };
+    }
+
+    // Check secondary positioning attributes
     for (const secondary of positioning.secondary || []) {
       if (answerLower.includes(secondary.toLowerCase())) {
         return {
@@ -523,9 +517,26 @@ function analyzeAlignment(
       }
     }
 
+    // Only flag as misaligned if there's a direct contradiction in price positioning
+    if (isBudgetPositioning && llmSaysPremium && !llmSaysBudget) {
+      return {
+        status: 'misaligned',
+        explanation: `LLM describes the brand as premium/high-end, but you position as ${positioning.pricePoint || positioning.primary}`
+      };
+    }
+
+    if (isPremiumPositioning && llmSaysBudget && !llmSaysPremium) {
+      return {
+        status: 'misaligned',
+        explanation: `LLM describes the brand as budget/affordable, but you position as ${positioning.pricePoint || positioning.primary}`
+      };
+    }
+
+    // If LLM mentions premium/budget but your positioning is something else (like sustainable),
+    // it's not necessarily a contradiction - it's additional info
     return {
       status: 'partially_aligned',
-      explanation: 'LLM response does not explicitly mention your positioning but no contradictions found'
+      explanation: 'LLM response does not explicitly mention your positioning but no direct contradictions found'
     };
   }
 
