@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw, Trash2, ExternalLink } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw, Trash2, ExternalLink, FileText, Lightbulb, BarChart3, Users, Download, Plus, X } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 // Brand positioning types
@@ -43,6 +43,7 @@ interface Citation {
   url: string;
   title: string;
   snippet?: string;
+  sourceType?: string;
 }
 
 interface PositioningResponse {
@@ -52,7 +53,57 @@ interface PositioningResponse {
   llmAnswer: string;
   alignment: 'aligned' | 'partially_aligned' | 'misaligned';
   explanation: string;
+  recommendation?: string;
   citations?: Citation[];
+}
+
+interface ContentRecommendation {
+  priority: 'high' | 'medium' | 'low';
+  type: string;
+  title: string;
+  description: string;
+  targetPlatforms: string[];
+}
+
+interface SourceAnalysis {
+  totalSources: number;
+  byType: Record<string, { count: number; percentage: number; urls: string[] }>;
+  insights: string[];
+}
+
+interface ScanResult {
+  id: string;
+  scanDate: string;
+  status: string;
+  alignmentScore: number;
+  llmResults: LLMPositioningResult[];
+  sourceAnalysis?: SourceAnalysis;
+  recommendations?: ContentRecommendation[];
+}
+
+interface CompetitorComparison {
+  competitor: string;
+  positioning: {
+    primary: string;
+    pricePoint: string;
+    targetAudience: string;
+    keyAttributes: string[];
+  };
+  llmPerception: {
+    chatgpt: string;
+    gemini: string;
+    perplexity: string;
+    claude: string;
+  };
+  comparisonInsights: string[];
+  differentiationOpportunities: string[];
+}
+
+interface CompetitorAnalysis {
+  brandName: string;
+  competitors: CompetitorComparison[];
+  overallInsights: string[];
+  generatedAt: string;
 }
 
 // Positioning options
@@ -125,8 +176,9 @@ export default function HallucinationDetectorPage() {
   });
 
   // Scan results
-  const [lastScanResult, setLastScanResult] = useState<PositioningScan | null>(null);
+  const [lastScanResult, setLastScanResult] = useState<ScanResult | null>(null);
   const [expandedLLM, setExpandedLLM] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'analysis' | 'sources' | 'recommendations' | 'trends' | 'competitors'>('analysis');
 
   // Edit positioning mode
   const [isEditingPositioning, setIsEditingPositioning] = useState(false);
@@ -134,6 +186,15 @@ export default function HallucinationDetectorPage() {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+
+  // Competitor comparison
+  const [showCompetitorModal, setShowCompetitorModal] = useState(false);
+  const [competitors, setCompetitors] = useState<string[]>(['']);
+  const [isComparingCompetitors, setIsComparingCompetitors] = useState(false);
+  const [competitorAnalysis, setCompetitorAnalysis] = useState<CompetitorAnalysis | null>(null);
+
+  // Export
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     fetchAnalyses();
@@ -455,6 +516,100 @@ export default function HallucinationDetectorPage() {
     if (score >= 90) return SEMANTIC_COLORS.positive;
     if (score >= 70) return SEMANTIC_COLORS.warning;
     return SEMANTIC_COLORS.critical;
+  };
+
+  // Competitor comparison functions
+  const addCompetitorField = () => {
+    if (competitors.length < 5) {
+      setCompetitors([...competitors, '']);
+    }
+  };
+
+  const removeCompetitorField = (index: number) => {
+    if (competitors.length > 1) {
+      setCompetitors(competitors.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateCompetitor = (index: number, value: string) => {
+    const updated = [...competitors];
+    updated[index] = value;
+    setCompetitors(updated);
+  };
+
+  const runCompetitorComparison = async () => {
+    if (!selectedAnalysis) return;
+    const validCompetitors = competitors.filter(c => c.trim());
+    if (validCompetitors.length === 0) return;
+
+    setIsComparingCompetitors(true);
+    try {
+      const response = await fetch('/api/brand-positioning/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brandName: selectedAnalysis.brandName,
+          competitors: validCompetitors,
+          positioning: selectedAnalysis.positioning
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setCompetitorAnalysis(data.data);
+        setShowCompetitorModal(false);
+        setActiveTab('analysis'); // Switch to analysis tab to show results
+      }
+    } catch (error) {
+      console.error('Error comparing competitors:', error);
+    } finally {
+      setIsComparingCompetitors(false);
+    }
+  };
+
+  // Export functions
+  const exportReport = async (format: 'json' | 'html' = 'html') => {
+    if (!selectedAnalysis) return;
+
+    setIsExporting(true);
+    try {
+      const response = await fetch('/api/brand-positioning/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          analysisId: selectedAnalysis.id,
+          format
+        })
+      });
+
+      if (format === 'html') {
+        const html = await response.text();
+        const blob = new Blob([html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${selectedAnalysis.brandName}-brand-report.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        const data = await response.json();
+        const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${selectedAnalysis.brandName}-brand-report.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error exporting report:', error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const latestScan = selectedAnalysis?.scans?.[0] || lastScanResult;
@@ -925,23 +1080,44 @@ export default function HallucinationDetectorPage() {
                   {selectedAnalysis.brandName} • {selectedAnalysis.domain}
                 </p>
               </div>
-              <button
-                onClick={() => runPositioningScan(selectedAnalysis.id)}
-                disabled={isScanning}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
-              >
-                {isScanning ? (
-                  <>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowCompetitorModal(true)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2"
+                >
+                  <Users className="w-4 h-4" />
+                  Compare Competitors
+                </button>
+                <button
+                  onClick={() => exportReport('html')}
+                  disabled={isExporting || !latestScan}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:bg-gray-400 flex items-center gap-2"
+                >
+                  {isExporting ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Scanning LLMs...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="w-4 h-4" />
-                    Run Alignment Check
-                  </>
-                )}
-              </button>
+                  ) : (
+                    <Download className="w-4 h-4" />
+                  )}
+                  Export
+                </button>
+                <button
+                  onClick={() => runPositioningScan(selectedAnalysis.id)}
+                  disabled={isScanning}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-2"
+                >
+                  {isScanning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Scanning LLMs...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      Run Alignment Check
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Your Defined Positioning */}
@@ -1182,7 +1358,67 @@ export default function HallucinationDetectorPage() {
                   ))}
                 </div>
 
-                {/* LLM Results Detail */}
+                {/* Tab Navigation */}
+                <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+                  <button
+                    onClick={() => setActiveTab('analysis')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'analysis'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <Eye className="w-4 h-4 inline mr-2" />
+                    Analysis
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('sources')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'sources'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 inline mr-2" />
+                    Sources
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('recommendations')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'recommendations'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <Lightbulb className="w-4 h-4 inline mr-2" />
+                    Recommendations
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('trends')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'trends'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <BarChart3 className="w-4 h-4 inline mr-2" />
+                    Trends
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('competitors')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'competitors'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <Users className="w-4 h-4 inline mr-2" />
+                    Competitors
+                  </button>
+                </div>
+
+                {/* Analysis Tab */}
+                {activeTab === 'analysis' && (
                 <div className="space-y-4">
                   <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <Eye className="w-5 h-5 text-blue-600" />
@@ -1280,10 +1516,24 @@ export default function HallucinationDetectorPage() {
                                         className="block text-sm text-blue-600 dark:text-blue-400 hover:underline truncate"
                                         title={citation.url}
                                       >
+                                        <span className="text-xs px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 rounded mr-2">
+                                          {citation.sourceType || 'website'}
+                                        </span>
                                         {citation.title || new URL(citation.url).hostname}
                                       </a>
                                     ))}
                                   </div>
+                                </div>
+                              )}
+
+                              {/* Per-response Recommendation */}
+                              {response.recommendation && (
+                                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
+                                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300 uppercase flex items-center gap-1">
+                                    <Lightbulb className="w-3 h-3" />
+                                    Recommendation
+                                  </span>
+                                  <p className="text-sm text-amber-800 dark:text-amber-200 mt-1">{response.recommendation}</p>
                                 </div>
                               )}
                             </div>
@@ -1293,6 +1543,317 @@ export default function HallucinationDetectorPage() {
                     </div>
                   ))}
                 </div>
+                )}
+
+                {/* Sources Tab */}
+                {activeTab === 'sources' && lastScanResult?.sourceAnalysis && (
+                  <div className="space-y-6">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      Source Analysis
+                    </h3>
+
+                    {/* Source Insights */}
+                    {lastScanResult.sourceAnalysis.insights.length > 0 && (
+                      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                        <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-2 flex items-center gap-2">
+                          <Lightbulb className="w-4 h-4" />
+                          Key Insights
+                        </h4>
+                        <ul className="space-y-2">
+                          {lastScanResult.sourceAnalysis.insights.map((insight, idx) => (
+                            <li key={idx} className="text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
+                              <span className="text-amber-500">•</span>
+                              {insight}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Source Distribution */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {Object.entries(lastScanResult.sourceAnalysis.byType).map(([type, data]) => (
+                        <div key={type} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">
+                            {type.replace('_', ' ')}
+                          </div>
+                          <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                            {data.count}
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {data.percentage}% of sources
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Total Sources */}
+                    <div className="text-center text-gray-500 dark:text-gray-400">
+                      Total sources found: <span className="font-bold">{lastScanResult.sourceAnalysis.totalSources}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sources Tab - No Data */}
+                {activeTab === 'sources' && !lastScanResult?.sourceAnalysis && (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <FileText className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+                    <p>Run a new alignment check to see source analysis</p>
+                  </div>
+                )}
+
+                {/* Recommendations Tab */}
+                {activeTab === 'recommendations' && lastScanResult?.recommendations && lastScanResult.recommendations.length > 0 && (
+                  <div className="space-y-4">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <Lightbulb className="w-5 h-5 text-amber-500" />
+                      Content Recommendations
+                    </h3>
+
+                    {lastScanResult.recommendations.map((rec, idx) => (
+                      <div
+                        key={idx}
+                        className={`rounded-lg border p-4 ${
+                          rec.priority === 'high'
+                            ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                            : rec.priority === 'medium'
+                            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800'
+                            : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span
+                                className={`text-xs font-medium px-2 py-0.5 rounded ${
+                                  rec.priority === 'high'
+                                    ? 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200'
+                                    : rec.priority === 'medium'
+                                    ? 'bg-amber-200 dark:bg-amber-800 text-amber-800 dark:text-amber-200'
+                                    : 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200'
+                                }`}
+                              >
+                                {rec.priority.toUpperCase()}
+                              </span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{rec.type.replace('_', ' ')}</span>
+                            </div>
+                            <h4 className="font-medium text-gray-900 dark:text-gray-100">{rec.title}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{rec.description}</p>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {rec.targetPlatforms.map((platform, pIdx) => (
+                                <span
+                                  key={pIdx}
+                                  className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-600 rounded text-gray-700 dark:text-gray-300"
+                                >
+                                  {platform}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Recommendations Tab - No Data */}
+                {activeTab === 'recommendations' && (!lastScanResult?.recommendations || lastScanResult.recommendations.length === 0) && (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <Lightbulb className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+                    <p>Run a new alignment check to get personalized recommendations</p>
+                  </div>
+                )}
+
+                {/* Trends Tab */}
+                {activeTab === 'trends' && (
+                  <div className="space-y-6">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-purple-600" />
+                      Historical Trends
+                    </h3>
+
+                    {selectedAnalysis?.scans && selectedAnalysis.scans.length > 1 ? (
+                      <>
+                        {/* Trend Chart - Simple bar representation */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Alignment Score Over Time</h4>
+                          <div className="flex items-end gap-2 h-40">
+                            {selectedAnalysis.scans.slice(0, 10).reverse().map((scan, idx) => (
+                              <div key={scan.id} className="flex-1 flex flex-col items-center">
+                                <div
+                                  className="w-full rounded-t"
+                                  style={{
+                                    height: `${scan.alignmentScore}%`,
+                                    backgroundColor: getScoreColor(scan.alignmentScore)
+                                  }}
+                                />
+                                <span className="text-xs text-gray-500 mt-1">{new Date(scan.scanDate).toLocaleDateString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Scan History Table */}
+                        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                          <table className="w-full">
+                            <thead className="bg-gray-50 dark:bg-gray-700">
+                              <tr>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Date</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Overall</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">ChatGPT</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Gemini</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Perplexity</th>
+                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Claude</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                              {selectedAnalysis.scans.map((scan) => (
+                                <tr key={scan.id}>
+                                  <td className="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">
+                                    {new Date(scan.scanDate).toLocaleDateString()}
+                                  </td>
+                                  <td className="px-4 py-2">
+                                    <span
+                                      className="font-medium"
+                                      style={{ color: getScoreColor(scan.alignmentScore) }}
+                                    >
+                                      {scan.alignmentScore}%
+                                    </span>
+                                  </td>
+                                  {scan.llmResults?.map((result) => (
+                                    <td key={result.llm} className="px-4 py-2">
+                                      <span
+                                        className="text-sm"
+                                        style={{ color: getScoreColor(result.alignmentScore) }}
+                                      >
+                                        {result.alignmentScore}%
+                                      </span>
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                        <BarChart3 className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+                        <p className="mb-2">Not enough data for trend analysis</p>
+                        <p className="text-sm">Run multiple alignment checks over time to see trends</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Competitors Tab */}
+                {activeTab === 'competitors' && (
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <Users className="w-5 h-5 text-purple-600" />
+                        Competitor Analysis
+                      </h3>
+                      <button
+                        onClick={() => setShowCompetitorModal(true)}
+                        className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 flex items-center gap-1"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Add Competitors
+                      </button>
+                    </div>
+
+                    {competitorAnalysis ? (
+                      <>
+                        {/* Overall Insights */}
+                        {competitorAnalysis.overallInsights.length > 0 && (
+                          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                            <h4 className="font-medium text-purple-800 dark:text-purple-200 mb-2">Competitive Insights</h4>
+                            <ul className="space-y-2">
+                              {competitorAnalysis.overallInsights.map((insight, idx) => (
+                                <li key={idx} className="text-sm text-purple-700 dark:text-purple-300 flex items-start gap-2">
+                                  <span className="text-purple-500">•</span>
+                                  {insight}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Competitor Cards */}
+                        <div className="space-y-4">
+                          {competitorAnalysis.competitors.map((comp, idx) => (
+                            <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                              <div className="bg-gray-50 dark:bg-gray-700 p-4">
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{comp.competitor}</h4>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
+                                    {comp.positioning.primary}
+                                  </span>
+                                  <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded">
+                                    {comp.positioning.pricePoint}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="p-4 space-y-4">
+                                {/* Comparison Insights */}
+                                {comp.comparisonInsights.length > 0 && (
+                                  <div>
+                                    <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comparison</h5>
+                                    <ul className="space-y-1">
+                                      {comp.comparisonInsights.map((insight, iIdx) => (
+                                        <li key={iIdx} className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
+                                          <span className="text-gray-400">-</span>
+                                          {insight}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* Differentiation Opportunities */}
+                                {comp.differentiationOpportunities.length > 0 && (
+                                  <div>
+                                    <h5 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Differentiation Opportunities</h5>
+                                    <ul className="space-y-1">
+                                      {comp.differentiationOpportunities.map((opp, oIdx) => (
+                                        <li key={oIdx} className="text-sm text-green-600 dark:text-green-400 flex items-start gap-2">
+                                          <Lightbulb className="w-4 h-4 mt-0.5" />
+                                          {opp}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* LLM Perceptions */}
+                                <div>
+                                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">How LLMs Describe {comp.competitor}</h5>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    {Object.entries(comp.llmPerception).map(([llm, perception]) => (
+                                      <div key={llm} className="p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm">
+                                        <span className="font-medium text-gray-700 dark:text-gray-300 uppercase text-xs">{llm}</span>
+                                        <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs">{perception.slice(0, 150)}...</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                        <Users className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+                        <p className="mb-2">No competitor analysis yet</p>
+                        <p className="text-sm">Click &quot;Add Competitors&quot; to compare your brand positioning</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-12 text-gray-500 dark:text-gray-400">
@@ -1322,6 +1883,87 @@ export default function HallucinationDetectorPage() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Competitor Comparison Modal */}
+        {showCompetitorModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Compare with Competitors
+                </h3>
+                <button
+                  onClick={() => setShowCompetitorModal(false)}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Enter competitor brand names to see how they&apos;re positioned compared to {selectedAnalysis?.brandName}.
+              </p>
+
+              <div className="space-y-3 mb-4">
+                {competitors.map((competitor, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={competitor}
+                      onChange={(e) => updateCompetitor(index, e.target.value)}
+                      placeholder={`Competitor ${index + 1}`}
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    />
+                    {competitors.length > 1 && (
+                      <button
+                        onClick={() => removeCompetitorField(index)}
+                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {competitors.length < 5 && (
+                  <button
+                    onClick={addCompetitorField}
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add another competitor
+                  </button>
+                )}
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={() => setShowCompetitorModal(false)}
+                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={runCompetitorComparison}
+                  disabled={isComparingCompetitors || !competitors.some(c => c.trim())}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 flex items-center gap-2"
+                >
+                  {isComparingCompetitors ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-4 h-4" />
+                      Compare
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

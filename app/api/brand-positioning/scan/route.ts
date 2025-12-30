@@ -27,6 +27,7 @@ interface Citation {
   url: string;
   title: string;
   snippet?: string;
+  sourceType?: string;
 }
 
 interface PositioningResponse {
@@ -36,7 +37,16 @@ interface PositioningResponse {
   llmAnswer: string;
   alignment: 'aligned' | 'partially_aligned' | 'misaligned';
   explanation: string;
+  recommendation?: string;
   citations?: Citation[];
+}
+
+interface ContentRecommendation {
+  priority: 'high' | 'medium' | 'low';
+  type: string;
+  title: string;
+  description: string;
+  targetPlatforms: string[];
 }
 
 interface LLMPositioningResult {
@@ -158,6 +168,7 @@ export async function POST(request: NextRequest) {
             aspect: response.aspect,
             alignment: response.alignment,
             explanation: response.explanation,
+            recommendation: response.recommendation,
             model: llmResult.model,
             citations: response.citations || []
           }),
@@ -174,12 +185,30 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Collect all citations for source analysis
+    const allCitations: Citation[] = [];
+    for (const result of llmResults) {
+      for (const response of result.responses) {
+        if (response.citations) {
+          allCitations.push(...response.citations);
+        }
+      }
+    }
+
+    // Analyze source distribution
+    const sourceAnalysis = analyzeSourceDistribution(allCitations);
+
+    // Generate content recommendations
+    const recommendations = await generateRecommendations(brandName, positioning, llmResults, allCitations);
+
     const scanResult = {
       id: detection.id,
       scanDate: detection.scanDate.toISOString(),
       status: 'completed',
       alignmentScore: overallScore,
-      llmResults
+      llmResults,
+      sourceAnalysis,
+      recommendations
     };
 
     return NextResponse.json({
@@ -414,8 +443,14 @@ async function queryLLMForPositioning(
         }
       }
 
-      // Analyze alignment
-      const alignment = analyzeAlignment(llmAnswer, q.expected, positioning, q.aspect);
+      // Analyze alignment using LLM for semantic understanding
+      const alignment = await analyzeAlignmentWithLLM(llmAnswer, q.expected, positioning, q.aspect, brandName);
+
+      // Categorize citations by source type
+      const categorizedCitations = citations.map(c => ({
+        ...c,
+        sourceType: categorizeSource(c.url)
+      }));
 
       responses.push({
         aspect: q.aspect,
@@ -424,7 +459,8 @@ async function queryLLMForPositioning(
         llmAnswer: llmAnswer.slice(0, 500),
         alignment: alignment.status,
         explanation: alignment.explanation,
-        citations: citations.length > 0 ? citations : undefined
+        recommendation: alignment.recommendation,
+        citations: categorizedCitations.length > 0 ? categorizedCitations : undefined
       });
     } catch (error) {
       console.error(`Error querying ${llmName}:`, error);
@@ -454,21 +490,103 @@ async function queryLLMForPositioning(
   };
 }
 
-function analyzeAlignment(
+/**
+ * Use LLM to semantically analyze alignment between brand positioning and LLM response
+ */
+async function analyzeAlignmentWithLLM(
+  llmAnswer: string,
+  expectedAnswer: string,
+  positioning: BrandPositioning,
+  aspect: string,
+  brandName: string
+): Promise<{ status: 'aligned' | 'partially_aligned' | 'misaligned'; explanation: string; recommendation?: string }> {
+  // Skip LLM analysis for error responses
+  if (llmAnswer.startsWith('[') && llmAnswer.includes('error')) {
+    return {
+      status: 'misaligned',
+      explanation: 'Could not get response from LLM',
+      recommendation: 'Ensure API keys are configured correctly'
+    };
+  }
+
+  try {
+    const analysisPrompt = `You are a brand positioning analyst. Analyze if an LLM's response about a brand aligns with the brand's intended positioning.
+
+BRAND: ${brandName}
+
+INTENDED POSITIONING:
+- Primary positioning: ${positioning.primary || 'Not specified'}
+- Secondary attributes: ${positioning.secondary?.join(', ') || 'None'}
+- Price point: ${positioning.pricePoint || 'Not specified'}
+- Target audience: ${positioning.targetAudience || 'Not specified'}
+- Brand promise: ${positioning.brandPromise || 'Not specified'}
+- Brand tone: ${positioning.tone?.join(', ') || 'Not specified'}
+
+ASPECT BEING ANALYZED: ${aspect}
+
+EXPECTED ANSWER: ${expectedAnswer}
+
+LLM'S ACTUAL RESPONSE: ${llmAnswer}
+
+Analyze the semantic alignment. Consider:
+1. Does the LLM's response match the intended positioning, even if using different words?
+2. Are there any contradictions between what the LLM says and the intended positioning?
+3. Does the LLM mention related concepts that support the positioning?
+
+Respond in this exact JSON format:
+{
+  "status": "aligned" | "partially_aligned" | "misaligned",
+  "explanation": "Brief explanation of the alignment analysis (max 100 chars)",
+  "recommendation": "Specific content recommendation to improve alignment (max 150 chars)"
+}
+
+Rules:
+- "aligned": LLM response clearly supports or matches the intended positioning
+- "partially_aligned": LLM response doesn't contradict but doesn't strongly support either
+- "misaligned": LLM response contradicts or conflicts with intended positioning`;
+
+    const completion = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: 'You are a brand positioning analyst. Always respond with valid JSON only.' },
+        { role: 'user', content: analysisPrompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 300,
+      response_format: { type: 'json_object' }
+    });
+
+    const responseText = completion.choices[0]?.message?.content || '';
+    const analysis = JSON.parse(responseText);
+
+    return {
+      status: analysis.status || 'partially_aligned',
+      explanation: analysis.explanation || 'Analysis completed',
+      recommendation: analysis.recommendation
+    };
+  } catch (error) {
+    console.error('Error in LLM alignment analysis:', error);
+    // Fallback to basic analysis
+    return analyzeAlignmentBasic(llmAnswer, expectedAnswer, positioning, aspect);
+  }
+}
+
+/**
+ * Basic keyword-based alignment analysis (fallback)
+ */
+function analyzeAlignmentBasic(
   llmAnswer: string,
   expectedAnswer: string,
   positioning: BrandPositioning,
   aspect: string
 ): { status: 'aligned' | 'partially_aligned' | 'misaligned'; explanation: string } {
   const answerLower = llmAnswer.toLowerCase();
-  const expectedLower = expectedAnswer.toLowerCase();
 
-  // Check for "I don't know" or uncertainty
+  // Check for uncertainty
   if (
     answerLower.includes("i don't know") ||
     answerLower.includes("i'm not sure") ||
-    answerLower.includes("i cannot") ||
-    answerLower.includes("i do not have")
+    answerLower.includes("i cannot")
   ) {
     return {
       status: 'partially_aligned',
@@ -476,160 +594,239 @@ function analyzeAlignment(
     };
   }
 
-  // Specific checks based on aspect
-  if (aspect === 'market_positioning' || aspect === 'price_point') {
-    const primary = positioning.primary?.toLowerCase() || '';
-    const pricePoint = positioning.pricePoint?.toLowerCase() || '';
-
-    // Check for contradictions only when positioning is clearly budget or premium
-    const budgetTerms = ['budget', 'cheap', 'affordable', 'low-cost', 'economical', 'value'];
-    const premiumTerms = ['premium', 'luxury', 'high-end', 'exclusive', 'expensive'];
-
-    const isBudgetPositioning = budgetTerms.some(t => primary.includes(t) || pricePoint.includes(t));
-    const isPremiumPositioning = premiumTerms.some(t => primary.includes(t) || pricePoint.includes(t));
-
-    const llmSaysBudget = budgetTerms.some(t => answerLower.includes(t));
-    const llmSaysPremium = premiumTerms.some(t => answerLower.includes(t));
-
-    // First, check if LLM mentions your primary positioning - this is aligned
-    if (primary && answerLower.includes(primary)) {
-      return {
-        status: 'aligned',
-        explanation: `LLM correctly identifies the brand as ${positioning.primary}`
-      };
-    }
-
-    // Check if LLM mentions your price point positioning
-    if (pricePoint && answerLower.includes(pricePoint.toLowerCase())) {
-      return {
-        status: 'aligned',
-        explanation: `LLM correctly identifies the brand's price positioning as ${positioning.pricePoint}`
-      };
-    }
-
-    // Check secondary positioning attributes
-    for (const secondary of positioning.secondary || []) {
-      if (answerLower.includes(secondary.toLowerCase())) {
-        return {
-          status: 'aligned',
-          explanation: `LLM identifies key brand attribute: ${secondary}`
-        };
-      }
-    }
-
-    // Only flag as misaligned if there's a direct contradiction in price positioning
-    if (isBudgetPositioning && llmSaysPremium && !llmSaysBudget) {
-      return {
-        status: 'misaligned',
-        explanation: `LLM describes the brand as premium/high-end, but you position as ${positioning.pricePoint || positioning.primary}`
-      };
-    }
-
-    if (isPremiumPositioning && llmSaysBudget && !llmSaysPremium) {
-      return {
-        status: 'misaligned',
-        explanation: `LLM describes the brand as budget/affordable, but you position as ${positioning.pricePoint || positioning.primary}`
-      };
-    }
-
-    // If LLM mentions premium/budget but your positioning is something else (like sustainable),
-    // it's not necessarily a contradiction - it's additional info
-    return {
-      status: 'partially_aligned',
-      explanation: 'LLM response does not explicitly mention your positioning but no direct contradictions found'
-    };
-  }
-
-  if (aspect === 'target_audience') {
-    const targetLower = positioning.targetAudience?.toLowerCase() || '';
-
-    // Check for key audience terms
-    const audienceTerms = targetLower.split(/[\s,]+/).filter(t => t.length > 3);
-    const matchingTerms = audienceTerms.filter(t => answerLower.includes(t));
-
-    if (matchingTerms.length >= 2) {
-      return {
-        status: 'aligned',
-        explanation: 'LLM correctly identifies target audience'
-      };
-    }
-
-    if (matchingTerms.length >= 1) {
-      return {
-        status: 'partially_aligned',
-        explanation: 'LLM partially matches target audience description'
-      };
-    }
-
-    return {
-      status: 'partially_aligned',
-      explanation: 'Target audience description differs but may not be contradictory'
-    };
-  }
-
-  if (aspect === 'brand_attributes') {
-    const matchedAttributes = (positioning.secondary || []).filter(attr =>
-      answerLower.includes(attr.toLowerCase())
-    );
-
-    if (matchedAttributes.length >= 2) {
-      return {
-        status: 'aligned',
-        explanation: `LLM identifies key attributes: ${matchedAttributes.join(', ')}`
-      };
-    }
-
-    if (matchedAttributes.length >= 1) {
-      return {
-        status: 'partially_aligned',
-        explanation: `LLM identifies some attributes: ${matchedAttributes.join(', ')}`
-      };
-    }
-
-    return {
-      status: 'partially_aligned',
-      explanation: 'LLM describes different attributes'
-    };
-  }
-
-  if (aspect === 'brand_voice') {
-    const matchedTones = (positioning.tone || []).filter(tone =>
-      answerLower.includes(tone.toLowerCase())
-    );
-
-    if (matchedTones.length >= 1) {
-      return {
-        status: 'aligned',
-        explanation: `LLM correctly identifies brand tone: ${matchedTones.join(', ')}`
-      };
-    }
-
-    return {
-      status: 'partially_aligned',
-      explanation: 'LLM describes a different brand voice'
-    };
-  }
-
-  // Default: check for keyword overlap
-  const expectedWords = expectedLower.split(/\s+/).filter(w => w.length > 4);
-  const matchingWords = expectedWords.filter(w => answerLower.includes(w));
-
-  if (matchingWords.length >= expectedWords.length * 0.5) {
+  // Check if primary positioning is mentioned
+  const primary = positioning.primary?.toLowerCase() || '';
+  if (primary && answerLower.includes(primary)) {
     return {
       status: 'aligned',
-      explanation: 'Response aligns with expected positioning'
+      explanation: `LLM correctly identifies the brand as ${positioning.primary}`
     };
   }
 
-  if (matchingWords.length >= 1) {
-    return {
-      status: 'partially_aligned',
-      explanation: 'Response partially matches expected positioning'
-    };
+  // Check secondary attributes
+  for (const secondary of positioning.secondary || []) {
+    if (answerLower.includes(secondary.toLowerCase())) {
+      return {
+        status: 'aligned',
+        explanation: `LLM identifies key attribute: ${secondary}`
+      };
+    }
   }
 
   return {
     status: 'partially_aligned',
-    explanation: 'Unable to determine clear alignment or misalignment'
+    explanation: 'LLM response does not explicitly mention your positioning'
+  };
+}
+
+/**
+ * Categorize a source URL by type
+ */
+function categorizeSource(url: string): string {
+  const urlLower = url.toLowerCase();
+
+  if (urlLower.includes('wikipedia.org')) return 'wikipedia';
+  if (urlLower.includes('reddit.com')) return 'reddit';
+  if (urlLower.includes('linkedin.com')) return 'linkedin';
+  if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) return 'twitter';
+  if (urlLower.includes('facebook.com')) return 'facebook';
+  if (urlLower.includes('instagram.com')) return 'instagram';
+  if (urlLower.includes('youtube.com')) return 'youtube';
+  if (urlLower.includes('tiktok.com')) return 'tiktok';
+  if (urlLower.includes('news') || urlLower.includes('bbc.') || urlLower.includes('cnn.') ||
+      urlLower.includes('reuters.') || urlLower.includes('bloomberg.')) return 'news';
+  if (urlLower.includes('blog')) return 'blog';
+  if (urlLower.includes('forbes.') || urlLower.includes('businessinsider.') ||
+      urlLower.includes('wsj.') || urlLower.includes('ft.com')) return 'business_media';
+  if (urlLower.includes('medium.com')) return 'medium';
+  if (urlLower.includes('quora.com')) return 'quora';
+  if (urlLower.includes('.gov')) return 'government';
+  if (urlLower.includes('.edu')) return 'educational';
+
+  return 'website';
+}
+
+/**
+ * Generate content recommendations based on alignment gaps
+ */
+async function generateRecommendations(
+  brandName: string,
+  positioning: BrandPositioning,
+  llmResults: LLMPositioningResult[],
+  allCitations: Citation[]
+): Promise<Array<{
+  priority: 'high' | 'medium' | 'low';
+  type: string;
+  title: string;
+  description: string;
+  targetPlatforms: string[];
+}>> {
+  // Analyze gaps
+  const misalignedAspects: string[] = [];
+  const partiallyAlignedAspects: string[] = [];
+
+  for (const result of llmResults) {
+    for (const response of result.responses) {
+      if (response.alignment === 'misaligned') {
+        misalignedAspects.push(response.aspect);
+      } else if (response.alignment === 'partially_aligned') {
+        partiallyAlignedAspects.push(response.aspect);
+      }
+    }
+  }
+
+  // Categorize existing sources
+  const sourceTypes = allCitations.map(c => categorizeSource(c.url));
+  const hasWikipedia = sourceTypes.includes('wikipedia');
+  const hasSocialMedia = sourceTypes.some(t => ['reddit', 'linkedin', 'twitter', 'facebook'].includes(t));
+  const hasNews = sourceTypes.some(t => ['news', 'business_media'].includes(t));
+
+  const recommendations: Array<{
+    priority: 'high' | 'medium' | 'low';
+    type: string;
+    title: string;
+    description: string;
+    targetPlatforms: string[];
+  }> = [];
+
+  // Wikipedia recommendation
+  if (!hasWikipedia && misalignedAspects.length > 0) {
+    recommendations.push({
+      priority: 'high',
+      type: 'content_creation',
+      title: 'Create or Update Wikipedia Presence',
+      description: `LLMs heavily rely on Wikipedia. Create/update a Wikipedia article for ${brandName} emphasizing your ${positioning.primary} positioning.`,
+      targetPlatforms: ['wikipedia']
+    });
+  }
+
+  // Social media recommendations
+  if (!hasSocialMedia) {
+    recommendations.push({
+      priority: 'medium',
+      type: 'social_media',
+      title: 'Increase Social Media Discussions',
+      description: `Engage in Reddit and LinkedIn discussions about ${positioning.primary} topics to influence LLM training data.`,
+      targetPlatforms: ['reddit', 'linkedin']
+    });
+  }
+
+  // PR/News recommendations
+  if (!hasNews && positioning.primary) {
+    recommendations.push({
+      priority: 'medium',
+      type: 'pr_outreach',
+      title: 'Publish Press Releases',
+      description: `Issue press releases highlighting ${brandName}'s ${positioning.primary} positioning to get news coverage.`,
+      targetPlatforms: ['news', 'business_media']
+    });
+  }
+
+  // Specific aspect recommendations
+  if (misalignedAspects.includes('market_positioning')) {
+    recommendations.push({
+      priority: 'high',
+      type: 'positioning_content',
+      title: 'Clarify Market Positioning',
+      description: `Create authoritative content clearly stating ${brandName} is positioned as ${positioning.primary}.`,
+      targetPlatforms: ['website', 'blog', 'linkedin']
+    });
+  }
+
+  if (misalignedAspects.includes('price_point') || partiallyAlignedAspects.includes('price_point')) {
+    recommendations.push({
+      priority: 'medium',
+      type: 'pricing_content',
+      title: 'Communicate Price Positioning',
+      description: `Publish content emphasizing ${brandName}'s ${positioning.pricePoint} pricing strategy with comparisons.`,
+      targetPlatforms: ['website', 'blog']
+    });
+  }
+
+  if (misalignedAspects.includes('target_audience')) {
+    recommendations.push({
+      priority: 'medium',
+      type: 'audience_content',
+      title: 'Define Target Audience',
+      description: `Create case studies and testimonials featuring ${positioning.targetAudience} customers.`,
+      targetPlatforms: ['website', 'linkedin', 'youtube']
+    });
+  }
+
+  // Add general recommendation if no specific issues
+  if (recommendations.length === 0) {
+    recommendations.push({
+      priority: 'low',
+      type: 'maintenance',
+      title: 'Maintain Consistency',
+      description: `Continue publishing content that reinforces ${brandName}'s ${positioning.primary} positioning across all channels.`,
+      targetPlatforms: ['website', 'social_media', 'pr']
+    });
+  }
+
+  return recommendations;
+}
+
+/**
+ * Analyze the distribution of source types from citations
+ */
+function analyzeSourceDistribution(citations: Citation[]): {
+  totalSources: number;
+  byType: Record<string, { count: number; percentage: number; urls: string[] }>;
+  insights: string[];
+} {
+  const byType: Record<string, { count: number; urls: string[] }> = {};
+
+  for (const citation of citations) {
+    const sourceType = citation.sourceType || categorizeSource(citation.url);
+    if (!byType[sourceType]) {
+      byType[sourceType] = { count: 0, urls: [] };
+    }
+    byType[sourceType].count++;
+    if (!byType[sourceType].urls.includes(citation.url)) {
+      byType[sourceType].urls.push(citation.url);
+    }
+  }
+
+  const totalSources = citations.length;
+  const result: Record<string, { count: number; percentage: number; urls: string[] }> = {};
+
+  for (const [type, data] of Object.entries(byType)) {
+    result[type] = {
+      count: data.count,
+      percentage: totalSources > 0 ? Math.round((data.count / totalSources) * 100) : 0,
+      urls: data.urls.slice(0, 5) // Limit to 5 URLs per type
+    };
+  }
+
+  // Generate insights
+  const insights: string[] = [];
+
+  if (!byType['wikipedia']) {
+    insights.push('No Wikipedia sources found - consider creating or updating your Wikipedia presence');
+  }
+
+  if (byType['reddit'] && byType['reddit'].count > 2) {
+    insights.push('Strong Reddit presence detected - community discussions are influencing LLM perceptions');
+  }
+
+  if (!byType['news'] && !byType['business_media']) {
+    insights.push('Limited news coverage - PR efforts could improve LLM knowledge of your brand');
+  }
+
+  const socialTypes = ['reddit', 'linkedin', 'twitter', 'facebook'];
+  const socialCount = socialTypes.reduce((sum, type) => sum + (byType[type]?.count || 0), 0);
+  if (socialCount === 0) {
+    insights.push('No social media sources detected - increase social presence for better LLM coverage');
+  }
+
+  if (totalSources === 0) {
+    insights.push('No sources found - LLMs may have limited information about your brand');
+  }
+
+  return {
+    totalSources,
+    byType: result,
+    insights
   };
 }
