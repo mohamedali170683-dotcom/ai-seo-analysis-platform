@@ -59,21 +59,21 @@ export const TIER_PRICING: Record<UserTier, TierPricing> = {
     annual: 0,
     annualSavings: 0,
     oneTimeReport: 0,
-    currency: "EUR",
+    currency: "USD",
   },
   professional: {
-    monthly: 600,  // UPDATED: €600/month (high anchor price)
-    annual: 6000,  // 2 months free
-    annualSavings: 1200,
-    oneTimeReport: 199,  // NEW: €199 one-time report option
-    currency: "EUR",
+    monthly: 99,  // $99/month
+    annual: 990,  // 2 months free ($82.50/mo)
+    annualSavings: 198,
+    oneTimeReport: 149,  // One-time report option
+    currency: "USD",
   },
   partner: {
-    monthly: 2990,
-    annual: 32890, // 1 month free (11 months)
-    annualSavings: 2990,
-    oneTimeReport: 0, // Not applicable
-    currency: "EUR",
+    monthly: 499,
+    annual: 4990, // 2 months free
+    annualSavings: 998,
+    oneTimeReport: 0, // Not applicable - custom pricing
+    currency: "USD",
   },
 };
 

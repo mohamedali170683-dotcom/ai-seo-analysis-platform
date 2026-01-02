@@ -13,11 +13,12 @@ import {
   Sparkles,
   BarChart3,
   Users,
-  Eye,
   Zap,
   Globe,
   Lock
 } from 'lucide-react';
+import { PublicNavigation } from '@/components/PublicNavigation';
+import { PublicFooter } from '@/components/PublicFooter';
 
 const features = [
   {
@@ -192,46 +193,7 @@ const tierColors = {
 export default function FeaturesPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/home" className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Velaris</span>
-            </Link>
-
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="/features" className="text-blue-600 font-medium">
-                Features
-              </Link>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Pricing
-              </Link>
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Dashboard
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="hidden sm:inline-flex px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/analyze"
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Try Free
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNavigation />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
@@ -479,22 +441,7 @@ export default function FeaturesPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="py-12 bg-gray-50 border-t border-gray-200 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <Link href="/home" className="inline-flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-lg font-bold text-gray-900">Velaris</span>
-            </Link>
-            <p className="text-sm text-gray-500">
-              © 2024 Velaris. AI Visibility Analysis Platform.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

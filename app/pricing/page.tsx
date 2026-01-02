@@ -1,30 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  Star, 
-  Check, 
-  ArrowRight, 
+import {
+  Star,
+  Check,
+  ArrowRight,
   Calendar,
-  MessageCircle,
   Zap,
   Shield,
-  TrendingUp,
   Users,
   Building
 } from "lucide-react";
 import Link from "next/link";
 import { TIER_PRICING, TIER_NAMES, BOOKING_URLS, TRIAL_DAYS } from "@/lib/tier/types";
 import { useTier } from "@/lib/tier";
+import { PublicNavigation } from "@/components/PublicNavigation";
+import { PublicFooter } from "@/components/PublicFooter";
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
   const { setTier } = useTier();
 
-  const professionalPrice = billingCycle === "monthly" 
-    ? TIER_PRICING.professional.monthly 
+  const professionalPrice = billingCycle === "monthly"
+    ? TIER_PRICING.professional.monthly
     : Math.round(TIER_PRICING.professional.annual / 12);
-    
+
   const partnerPrice = billingCycle === "monthly"
     ? TIER_PRICING.partner.monthly
     : Math.round(TIER_PRICING.partner.annual / 12);
@@ -49,23 +49,7 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-cyan-600 to-cyan-500 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Velaris</span>
-          </Link>
-          <Link 
-            href="/analyze"
-            className="text-gray-600 hover:text-gray-900 font-medium"
-          >
-            Start My Free Analysis
-          </Link>
-        </div>
-      </header>
+      <PublicNavigation />
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Hero Section */}
@@ -99,11 +83,11 @@ export default function PricingPage() {
             >
               Annual
               <span className={`text-xs px-2 py-0.5 rounded-full ${
-                billingCycle === "annual" 
-                  ? "bg-green-400 text-green-900 dark:text-green-100" 
+                billingCycle === "annual"
+                  ? "bg-green-400 text-green-900 dark:text-green-100"
                   : "bg-green-100 text-green-700 dark:text-green-300"
               }`}>
-                Save €{TIER_PRICING.professional.annualSavings}
+                Save ${TIER_PRICING.professional.annualSavings}
               </span>
             </button>
           </div>
@@ -111,7 +95,7 @@ export default function PricingPage() {
           {/* One-Time Report Option */}
           <div className="mt-4">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Or get a <span className="font-semibold text-blue-600">single comprehensive report for €{TIER_PRICING.professional.oneTimeReport}</span> (one-off, no subscription)
+              Or get a <span className="font-semibold text-blue-600">single comprehensive report for ${TIER_PRICING.professional.oneTimeReport}</span> (one-off, no subscription)
             </p>
           </div>
         </div>
@@ -132,12 +116,12 @@ export default function PricingPage() {
             
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€{partnerPrice.toLocaleString()}</span>
+                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">${partnerPrice.toLocaleString()}</span>
                 <span className="text-gray-500 dark:text-gray-400">/month</span>
               </div>
               {billingCycle === "annual" && (
                 <p className="text-sm text-green-600 font-medium mt-1">
-                  Billed €{TIER_PRICING.partner.annual.toLocaleString()}/year (1 month free)
+                  Billed ${TIER_PRICING.partner.annual.toLocaleString()}/year (2 months free)
                 </p>
               )}
             </div>
@@ -195,12 +179,12 @@ export default function PricingPage() {
             
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€{professionalPrice}</span>
+                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">${professionalPrice}</span>
                 <span className="text-gray-500 dark:text-gray-400">/month</span>
               </div>
               {billingCycle === "annual" && (
                 <p className="text-sm text-green-600 font-medium mt-1">
-                  Billed €{TIER_PRICING.professional.annual}/year (2 months free)
+                  Billed ${TIER_PRICING.professional.annual}/year (2 months free)
                 </p>
               )}
             </div>
@@ -269,7 +253,7 @@ export default function PricingPage() {
             
             <div className="text-center mb-6">
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">€0</span>
+                <span className="text-5xl font-bold text-gray-900 dark:text-gray-100">$0</span>
                 <span className="text-gray-500 dark:text-gray-400">/month</span>
               </div>
               <p className="text-sm text-gray-500 mt-1">Free forever</p>
@@ -447,12 +431,7 @@ export default function PricingPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t mt-16">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-          <p>© 2024 Velaris. AI Visibility Analysis Platform.</p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }

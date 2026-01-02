@@ -4,8 +4,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Target,
-  Zap,
-  Search,
   TrendingUp,
   CheckCircle2,
   ArrowRight,
@@ -15,16 +13,14 @@ import {
   Sparkles,
   Bell,
   Calendar,
-  Shield,
-  Play,
   Star,
   Users,
-  Building,
-  Globe,
   ChevronRight,
   Eye,
   FileText
 } from 'lucide-react';
+import { PublicNavigation } from '@/components/PublicNavigation';
+import { PublicFooter } from '@/components/PublicFooter';
 
 export default function HomePage() {
   const router = useRouter();
@@ -106,46 +102,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/home" className="flex items-center gap-2">
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">Velaris</span>
-            </Link>
-
-            <div className="hidden md:flex items-center gap-8">
-              <Link href="/features" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Features
-              </Link>
-              <Link href="/pricing" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Pricing
-              </Link>
-              <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                Dashboard
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Link
-                href="/dashboard"
-                className="hidden sm:inline-flex px-4 py-2 text-gray-600 hover:text-gray-900 font-medium transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/analyze"
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Try Free
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <PublicNavigation />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -462,7 +419,7 @@ export default function HomePage() {
             {/* Partner */}
             <div className="bg-white rounded-2xl border-2 border-gray-200 p-8">
               <h3 className="text-xl font-bold text-gray-900 mb-2">Partner</h3>
-              <div className="text-4xl font-bold text-gray-900 mb-4">Custom</div>
+              <div className="text-4xl font-bold text-gray-900 mb-4">$499<span className="text-lg font-normal text-gray-500">/mo</span></div>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-2 text-sm text-gray-600">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -527,53 +484,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-12 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <Brain className="w-5 h-5 text-white" />
-                </div>
-                <span className="text-lg font-bold text-gray-900">Velaris</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                AI Visibility Analysis Platform. Know how AI talks about your brand.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Product</h4>
-              <ul className="space-y-2">
-                <li><Link href="/features" className="text-sm text-gray-600 hover:text-gray-900">Features</Link></li>
-                <li><Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</Link></li>
-                <li><Link href="/analyze" className="text-sm text-gray-600 hover:text-gray-900">Free Analysis</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Tools</h4>
-              <ul className="space-y-2">
-                <li><Link href="/analyze" className="text-sm text-gray-600 hover:text-gray-900">AI Visibility Analysis</Link></li>
-                <li><Link href="/hallucination-detector" className="text-sm text-gray-600 hover:text-gray-900">Brand Positioning</Link></li>
-                <li><Link href="/automation" className="text-sm text-gray-600 hover:text-gray-900">Automation</Link></li>
-                <li><Link href="/alerts" className="text-sm text-gray-600 hover:text-gray-900">Alerts</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-4">Resources</h4>
-              <ul className="space-y-2">
-                <li><Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">Dashboard</Link></li>
-                <li><Link href="/integrations" className="text-sm text-gray-600 hover:text-gray-900">Integrations</Link></li>
-              </ul>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-gray-200 text-center">
-            <p className="text-sm text-gray-500">
-              © 2024 Velaris. AI Visibility Analysis Platform.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
