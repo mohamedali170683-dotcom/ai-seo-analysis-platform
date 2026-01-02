@@ -472,123 +472,69 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-gray-900 dark:text-gray-100">
-      {/* Header - Apple Style */}
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/dashboard" className="text-gray-500 hover:text-gray-900 flex items-center gap-2 transition-colors">
-            ← Back to Dashboard
-          </Link>
-          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Velaris</h1>
-          <div className="w-32" />
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Phase indicator - Apple Style */}
-        <div className="flex items-center justify-center gap-4 mb-8">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100">
+      {/* Minimal Header */}
+      <div className="max-w-4xl mx-auto px-6 pt-8 pb-4">
+        {/* Phase indicator - Minimal */}
+        <div className="flex items-center justify-center gap-3 mb-6">
           {[
             { num: 1, label: "Setup" },
-            { num: 2, label: "Select Questions" },
-            { num: 3, label: "Analyze" },
+            { num: 2, label: "Questions" },
+            { num: 3, label: "Results" },
           ].map((step, i) => (
             <div key={step.num} className="flex items-center">
               <div className={`flex items-center gap-2 ${phase >= step.num ? "text-blue-600" : "text-gray-400"}`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${
-                  phase >= step.num ? "bg-blue-500" : "bg-gray-300"
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
+                  phase >= step.num ? "bg-blue-600 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"
                 }`}>
                   {phase > step.num ? "✓" : step.num}
                 </div>
-                <span className="hidden sm:inline font-medium">{step.label}</span>
+                <span className="hidden sm:inline text-sm font-medium">{step.label}</span>
               </div>
-              {i < 2 && <div className={`w-8 sm:w-16 h-0.5 mx-2 ${phase > step.num ? "bg-blue-500" : "bg-gray-200"}`} />}
+              {i < 2 && <div className={`w-6 sm:w-12 h-0.5 mx-2 ${phase > step.num ? "bg-blue-500" : "bg-gray-200 dark:bg-gray-700"}`} />}
             </div>
           ))}
         </div>
+      </div>
 
-        {/* Phase 1: Setup */}
+      <div className="max-w-4xl mx-auto px-6 pb-12">
+        {/* Phase 1: Setup - Form-Focused Design */}
         {phase === 1 && (
-          <div className="space-y-8">
-            {/* Tier Badge */}
-            <div className="flex items-center justify-between mb-4">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${
-                tier === "free" 
-                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/30" 
-                  : "bg-gradient-to-r from-amber-500/20 to-yellow-500/20 text-amber-300 border border-amber-500/30"
-              }`}>
-                {tier === "free" ? (
-                  <>🔍 AI Visibility Check (Free)</>
-                ) : (
-                  <><Sparkles className="w-4 h-4" /> Full AI Visibility Audit</>
-                )}
-              </div>
-              {tier === "free" && (
-                <button
-                  onClick={() => openUpgradeModal("funnel_stages")}
-                  className="text-sm text-cyan-400 hover:text-cyan-300 underline"
-                >
-                  Upgrade to Full Audit →
-                </button>
-              )}
-            </div>
-
-            {/* Value Proposition - Apple Style */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg border border-gray-100">
-              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-                {tier === "free" ? "Get Your AI Visibility Check" : "Take Control of Your AI Visibility"}
-              </h2>
-              <p className="text-xl text-gray-600 mb-6">
-                See how AI platforms discuss your brand across ChatGPT, Gemini, Copilot & Perplexity.
+          <div className="space-y-6">
+            {/* Hero Section - Compact */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+                AI Visibility Analysis
+              </h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                See how AI platforms discuss your brand across ChatGPT, Gemini, Copilot & Perplexity
               </p>
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="bg-gray-50 rounded-xl p-5">
-                  <div className="text-3xl mb-3">📊</div>
-                  <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">Real Search Data</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Questions people actually search
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-5">
-                  <div className="text-3xl mb-3">🎯</div>
-                  <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">4 AI Platforms</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    ChatGPT, Gemini, Copilot & Perplexity
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-5">
-                  <div className="text-3xl mb-3">🔬</div>
-                  <h3 className="font-semibold mb-1 text-gray-900 dark:text-gray-100">You Choose</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {tier === "free" 
-                      ? "Up to 3 questions • Awareness stage" 
-                      : "Unlimited questions across the journey"
-                    }
-                  </p>
-                </div>
-              </div>
-              
-              {/* Free tier limitations notice */}
-              {tier === "free" && (
-                <div className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Lock className="w-4 h-4 text-amber-600" />
-                    <span className="font-semibold text-amber-800">Free Tier</span>
-                  </div>
-                  <p className="text-sm text-amber-700">
-                    Full visibility scores included. Upgrade to unlock detailed recommendations & all funnel stages.
-                  </p>
-                </div>
-              )}
             </div>
 
-            {/* Form - Apple Style */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 space-y-6 max-w-xl mx-auto shadow-lg border border-gray-100">
-              <div className="text-center">
-                <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">Enter Your Brand Details</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{ t('form.subtitle')}</p>
+            {/* Main Form Card - THE PROTAGONIST */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+              {/* Form Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-white">Start Your Analysis</h2>
+                    <p className="text-blue-100 text-sm mt-1">Enter your brand details to discover how AI sees you</p>
+                  </div>
+                  {tier === "free" ? (
+                    <span className="px-3 py-1 bg-white/20 text-white text-sm font-medium rounded-full">
+                      Free Tier
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-amber-400 text-amber-900 text-sm font-medium rounded-full flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5" /> Pro
+                    </span>
+                  )}
+                </div>
               </div>
-              
-              <div className="space-y-5">
+
+              {/* Form Body */}
+              <div className="p-8 space-y-6">
+                <div className="space-y-5">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('form.brandName')} *</label>
                   <input
@@ -797,88 +743,69 @@ export default function AnalyzePage() {
                 </div>
               </div>
 
-              <Button
-                onClick={handleDiscoverQuestions}
-                disabled={loading || !brandName || !category}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 text-lg mt-6 font-semibold rounded-xl transition-all hover:scale-[1.02] shadow-lg"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-3">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Discovering Questions...
-                  </span>
-                ) : (
-                  <span>Find My Brand's Questions →</span>
-                )}
-              </Button>
-              <p className="text-center text-xs text-gray-400 mt-3">
-                Takes about 30 seconds
-              </p>
+                <Button
+                  onClick={handleDiscoverQuestions}
+                  disabled={loading || !brandName || !category}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-xl transition-all hover:scale-[1.01] shadow-lg mt-2"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-3">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Discovering Questions...
+                    </span>
+                  ) : (
+                    <span>Start Analysis →</span>
+                  )}
+                </Button>
+              </div>
             </div>
 
-            {/* Discovery Loading Overlay - Apple Style */}
+            {/* Quick Info Strip */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500 dark:text-gray-400">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                4 AI Platforms
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                Real Search Data
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                ~30 seconds to discover
+              </span>
+            </div>
+
+            {/* Discovery Loading Overlay */}
             {loading && (
-              <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center">
-                <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center">
-                  <div className="text-5xl mb-4">{discoveryCountdown <= 0 ? "🤔" : "🔍"}</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {discoveryCountdown <= 0 ? "Still Working..." : "Finding Questions"}
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl text-center">
+                  <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    Finding Questions
                   </h3>
-                  
-                  <p className="text-gray-500 mb-6">
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">
                     Discovering questions for <strong className="text-blue-600">{brandName}</strong>
                   </p>
-                  
-                  {/* Simple Countdown */}
-                  <div className="mb-6">
-                    <div className="text-4xl font-bold text-blue-500 font-mono">
-                      {discoveryCountdown > 0 ? `${discoveryCountdown}s` : "Almost done..."}
-                    </div>
-                  </div>
-
-                  {/* Progress indicator */}
-                  <div className="flex justify-center gap-1.5">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                  <div className="text-3xl font-bold text-blue-600 font-mono">
+                    {discoveryCountdown > 0 ? `${discoveryCountdown}s` : "Almost done..."}
                   </div>
                 </div>
               </div>
             )}
-
-            {/* How it works - Apple Style */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-lg border border-gray-100">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">How It Works</h3>
-              <div className="grid md:grid-cols-4 gap-4">
-                <div className="text-center p-4">
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">1</div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Discover real search questions</p>
-                </div>
-                <div className="text-center p-4">
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">2</div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Select questions to test</p>
-                </div>
-                <div className="text-center p-4">
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">3</div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Test on 4 AI platforms</p>
-                </div>
-                <div className="text-center p-4">
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 font-bold">4</div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Get visibility scores</p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
-        {/* Phase 2: Select Questions - Apple Style */}
+        {/* Phase 2: Select Questions */}
         {phase === 2 && (
           <div className="space-y-6">
             {/* Sticky Header */}
-            <div className="sticky top-16 z-20 bg-[#F5F5F7]/95 backdrop-blur-xl pb-4 pt-2">
+            <div className="sticky top-0 z-20 bg-gradient-to-b from-blue-50 via-white/95 to-white/80 dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900/80 backdrop-blur-xl pb-4 pt-2">
               <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700 shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
@@ -1135,8 +1062,8 @@ export default function AnalyzePage() {
               </div>
             </div>
 
-            {/* Actions - Apple Style Sticky Bottom */}
-            <div className="sticky bottom-0 z-20 bg-gradient-to-t from-[#F5F5F7] via-[#F5F5F7]/95 to-transparent pt-6 pb-4 mt-6">
+            {/* Actions - Sticky Bottom */}
+            <div className="sticky bottom-0 z-20 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 pt-6 pb-4 mt-6">
               <div className="flex gap-4">
                 <Button
                   onClick={() => setPhase(1)}

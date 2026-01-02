@@ -10,16 +10,16 @@ import {
   Bell,
   Webhook,
   Blocks,
-  Sparkles,
   ChevronDown,
   Moon,
   Sun,
-  Languages
+  Languages,
+  TrendingUp,
+  LayoutDashboard
 } from 'lucide-react';
 import { useState } from 'react';
-import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 import { useTheme } from '@/lib/theme-context';
-import { useI18n, UILanguage } from '@/lib/i18n-context';
+import { useI18n } from '@/lib/i18n-context';
 
 export function Navigation() {
   const pathname = usePathname();
@@ -29,21 +29,29 @@ export function Navigation() {
 
   const isActive = (path: string) => pathname === path;
 
-  const featureLinks = [
-    { href: '/features', label: 'All Features', icon: Sparkles },
-    { href: '/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/hallucination-detector', label: 'Brand Positioning', icon: Target },
-    { href: '/automation', label: 'Automation', icon: Zap },
-    { href: '/alerts', label: 'Alerts', icon: Bell },
-    { href: '/webhooks', label: 'Webhooks', icon: Webhook },
-    { href: '/integrations', label: 'Integrations', icon: Blocks },
+  // Primary feature - AI Visibility Analysis
+  const primaryFeature = {
+    href: '/analyze',
+    label: 'AI Visibility Analysis',
+    icon: TrendingUp,
+    description: 'Test your brand across ChatGPT, Gemini, Perplexity & Copilot'
+  };
+
+  // Secondary features grouped
+  const secondaryFeatures = [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'View all your analyses' },
+    { href: '/hallucination-detector', label: 'Brand Positioning', icon: Target, description: 'Check how LLMs represent your brand' },
+    { href: '/automation', label: 'Automation', icon: Zap, description: 'Schedule automated scans' },
+    { href: '/alerts', label: 'Alerts', icon: Bell, description: 'Get notified of changes' },
+    { href: '/webhooks', label: 'Webhooks', icon: Webhook, description: 'Connect to your systems' },
+    { href: '/integrations', label: 'Integrations', icon: Blocks, description: 'Third-party connections' },
   ];
 
   return (
     <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-6">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center">
               <Link href="/home" className="text-xl font-bold text-blue-600 dark:text-blue-400">
@@ -52,51 +60,150 @@ export function Navigation() {
             </div>
 
             {/* Main Navigation */}
-            <div className="hidden sm:flex sm:items-center sm:gap-4">
+            <div className="hidden md:flex md:items-center md:gap-2">
+              {/* Primary CTA - AI Visibility Analysis */}
+              <Link
+                href={primaryFeature.href}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  isActive(primaryFeature.href)
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50'
+                }`}
+              >
+                <TrendingUp className="w-4 h-4" />
+                AI Visibility Analysis
+              </Link>
+
+              {/* Dashboard Quick Link */}
+              <Link
+                href="/dashboard"
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActive('/dashboard')
+                    ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Link>
+
               {/* Features Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setShowFeatures(!showFeatures)}
                   onBlur={() => setTimeout(() => setShowFeatures(false), 200)}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
-                  All Features
-                  <ChevronDown className="w-4 h-4 ml-1" />
+                  More Tools
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showFeatures ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showFeatures && (
-                  <div className="absolute left-0 mt-2 w-64 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                    <div className="py-2">
-                      {featureLinks.map((link) => {
-                        const Icon = link.icon;
-                        return (
-                          <Link
-                            key={link.href}
-                            href={link.href}
-                            className={`flex items-center px-4 py-3 text-sm transition-colors ${
-                              isActive(link.href)
-                                ? 'bg-blue-50 text-blue-700'
-                                : 'text-gray-700 hover:bg-gray-50'
-                            }`}
-                          >
-                            <Icon className="w-4 h-4 mr-3" />
-                            {link.label}
-                          </Link>
-                        );
-                      })}
+                  <div className="absolute left-0 mt-2 w-72 rounded-xl shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 dark:ring-white/10 z-50 overflow-hidden">
+                    <div className="p-2">
+                      {/* Brand Positioning - highlighted */}
+                      <Link
+                        href="/hallucination-detector"
+                        className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
+                          isActive('/hallucination-detector')
+                            ? 'bg-blue-50 dark:bg-blue-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                          <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <span className="block font-medium text-gray-900 dark:text-gray-100">Brand Positioning</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Check how LLMs represent your brand</span>
+                        </div>
+                      </Link>
+
+                      <div className="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+
+                      {/* Automation Tools */}
+                      <div className="px-3 py-1.5">
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Automation</span>
+                      </div>
+
+                      <Link
+                        href="/automation"
+                        className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
+                          isActive('/automation')
+                            ? 'bg-blue-50 dark:bg-blue-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                          <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        <div>
+                          <span className="block font-medium text-gray-900 dark:text-gray-100">Automation</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Schedule automated scans</span>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/alerts"
+                        className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
+                          isActive('/alerts')
+                            ? 'bg-blue-50 dark:bg-blue-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                          <Bell className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        </div>
+                        <div>
+                          <span className="block font-medium text-gray-900 dark:text-gray-100">Alerts</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Get notified of changes</span>
+                        </div>
+                      </Link>
+
+                      <div className="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+
+                      {/* Integrations */}
+                      <div className="px-3 py-1.5">
+                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Integrations</span>
+                      </div>
+
+                      <Link
+                        href="/webhooks"
+                        className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
+                          isActive('/webhooks')
+                            ? 'bg-blue-50 dark:bg-blue-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                          <Webhook className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <div>
+                          <span className="block font-medium text-gray-900 dark:text-gray-100">Webhooks</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Connect to your systems</span>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/integrations"
+                        className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
+                          isActive('/integrations')
+                            ? 'bg-blue-50 dark:bg-blue-900/30'
+                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
+                          <Blocks className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <div>
+                          <span className="block font-medium text-gray-900 dark:text-gray-100">Integrations</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Third-party connections</span>
+                        </div>
+                      </Link>
                     </div>
                   </div>
                 )}
               </div>
-
-              {/* Start New Analysis Button */}
-              <Link
-                href="/analyze"
-                className="inline-flex items-center px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Search className="w-4 h-4 mr-2" />
-                {t('nav.newAnalysis')}
-              </Link>
             </div>
           </div>
 
@@ -129,35 +236,48 @@ export function Navigation() {
       </div>
 
       {/* Mobile menu */}
-      <div className="sm:hidden border-t border-gray-200">
-        <div className="pt-2 pb-3 space-y-1">
-          {/* Start New Analysis - Mobile */}
+      <div className="md:hidden border-t border-gray-200 dark:border-gray-700">
+        <div className="pt-2 pb-3 space-y-1 px-3">
+          {/* Primary CTA - Mobile */}
           <Link
             href="/analyze"
-            className="flex items-center mx-3 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold mb-2"
+            className="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold"
           >
-            <Search className="w-5 h-5 mr-3" />
-            Start New Analysis
+            <TrendingUp className="w-5 h-5" />
+            AI Visibility Analysis
+          </Link>
+
+          {/* Dashboard - Mobile */}
+          <Link
+            href="/dashboard"
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium ${
+              isActive('/dashboard')
+                ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
+                : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+            }`}
+          >
+            <LayoutDashboard className="w-5 h-5" />
+            Dashboard
           </Link>
 
           {/* Features Section - Mobile */}
-          <div className="border-t border-gray-200 pt-2 mt-2">
-            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              All Features
+          <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
+            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              More Tools
             </div>
-            {featureLinks.map((link) => {
+            {secondaryFeatures.slice(1).map((link) => {
               const Icon = link.icon;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center pl-6 pr-4 py-2 border-l-4 text-base font-medium ${
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${
                     isActive(link.href)
-                      ? 'border-blue-500 text-blue-700 bg-blue-50'
-                      : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                      : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
                   }`}
                 >
-                  <Icon className="w-5 h-5 mr-3" />
+                  <Icon className="w-5 h-5" />
                   {link.label}
                 </Link>
               );
