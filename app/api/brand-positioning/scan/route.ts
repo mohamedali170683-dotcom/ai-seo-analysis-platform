@@ -313,7 +313,7 @@ async function queryLLMForPositioning(
             },
             { role: 'user', content: q.question }
           ],
-          temperature: 0.3,
+          temperature: 0.1, // Low temperature for consistent, reproducible results
           max_tokens: 300
         });
         llmAnswer = completion.choices[0]?.message?.content || '';
@@ -335,7 +335,7 @@ async function queryLLMForPositioning(
               }],
               generationConfig: {
                 maxOutputTokens: 300,
-                temperature: 0.3
+                temperature: 0.1 // Low temperature for consistent, reproducible results
               },
               // Enable grounding with Google Search for citations
               tools: [{
@@ -388,7 +388,7 @@ async function queryLLMForPositioning(
                 },
                 { role: 'user', content: q.question }
               ],
-              temperature: 0.3,
+              temperature: 0.1, // Low temperature for consistent, reproducible results
               max_tokens: 300
             })
           });
@@ -424,6 +424,7 @@ async function queryLLMForPositioning(
             body: JSON.stringify({
               model: 'claude-3-5-haiku-20241022',
               max_tokens: 300,
+              temperature: 0.1, // Low temperature for consistent, reproducible results
               messages: [
                 {
                   role: 'user',

@@ -1493,6 +1493,17 @@ export default function HallucinationDetectorPage() {
             {/* Analysis Tab Content */}
             {activeTab === 'analysis' && latestScan ? (
               <>
+                {/* Reliability Note */}
+                <div className="mb-4 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-xs text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>
+                      <strong>Reliable Results:</strong> All LLMs are queried with low temperature (0.1) for consistent, reproducible responses.
+                      Scores should remain stable across multiple checks.
+                    </span>
+                  </p>
+                </div>
+
                 {/* Overall Alignment Score */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -1698,6 +1709,9 @@ export default function HallucinationDetectorPage() {
                     <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                       <FileText className="w-5 h-5 text-blue-600" />
                       Source Analysis
+                      <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                        ({lastScanResult.sourceAnalysis.totalSources} sources found)
+                      </span>
                     </h3>
 
                     {/* Source Insights */}
@@ -1718,7 +1732,7 @@ export default function HallucinationDetectorPage() {
                       </div>
                     )}
 
-                    {/* Source Distribution */}
+                    {/* Source Distribution Summary */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {Object.entries(lastScanResult.sourceAnalysis.byType).map(([type, data]) => (
                         <div key={type} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
@@ -1735,9 +1749,42 @@ export default function HallucinationDetectorPage() {
                       ))}
                     </div>
 
-                    {/* Total Sources */}
-                    <div className="text-center text-gray-500 dark:text-gray-400">
-                      Total sources found: <span className="font-bold">{lastScanResult.sourceAnalysis.totalSources}</span>
+                    {/* Complete Source List by Type */}
+                    <div className="space-y-4">
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">All Sources (Full Transparency)</h4>
+                      {Object.entries(lastScanResult.sourceAnalysis.byType).map(([type, data]) => (
+                        data.urls && data.urls.length > 0 && (
+                          <div key={type} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                            <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase mb-3 flex items-center gap-2">
+                              <span className={`w-2 h-2 rounded-full ${
+                                type === 'wikipedia' ? 'bg-blue-500' :
+                                type === 'news' ? 'bg-green-500' :
+                                type === 'social_media' ? 'bg-purple-500' :
+                                type === 'reddit' ? 'bg-orange-500' :
+                                type === 'review' ? 'bg-yellow-500' :
+                                type === 'official' ? 'bg-teal-500' :
+                                'bg-gray-500'
+                              }`} />
+                              {type.replace('_', ' ')} ({data.count})
+                            </h5>
+                            <ul className="space-y-2">
+                              {data.urls.map((url: string, urlIdx: number) => (
+                                <li key={urlIdx} className="flex items-start gap-2">
+                                  <ExternalLink className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                  <a
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+                                  >
+                                    {url}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )
+                      ))}
                     </div>
                   </div>
                 )}
