@@ -17,10 +17,16 @@ import {
   MessageSquare,
   Webhook as WebhookIcon,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Lock,
+  ArrowRight,
+  Loader,
+  Zap
 } from 'lucide-react';
 import { NewAlertForm, type NewAlertData } from '@/components/Forms';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
+import { useTier } from '@/lib/tier';
+import Link from 'next/link';
 
 type AlertType =
   | 'visibility_drop'
@@ -111,6 +117,11 @@ export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
   const [showNewAlertModal, setShowNewAlertModal] = useState(false);
+  const [editingAlert, setEditingAlert] = useState<AlertConfig | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Tier management
+  const { tier, isProfessionalOrHigher } = useTier();
 
   // Fetch alerts from API
   useEffect(() => {
@@ -177,39 +188,198 @@ export default function AlertsPage() {
     }
   };
 
+  const handleDeleteAlert = async (id: string, name: string) => {
+    if (!confirm(`Delete alert "${name}"? This action cannot be undone.`)) return;
+
+    setDeletingId(id);
+    try {
+      const response = await fetch(`/api/alerts/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        setAlerts(alerts.filter(a => a.id !== id));
+      } else {
+        throw new Error('Failed to delete alert');
+      }
+    } catch (error) {
+      console.error('Error deleting alert:', error);
+      alert('Failed to delete alert. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleEditAlert = (alert: AlertConfig) => {
+    setEditingAlert(alert);
+    setShowNewAlertModal(true);
+  };
+
+  const handleUpdateAlert = async (id: string, alertData: any) => {
+    try {
+      const response = await fetch(`/api/alerts/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(alertData)
+      });
+
+      if (response.ok) {
+        await fetchAlerts(); // Refresh the alert list
+        setEditingAlert(null);
+        setShowNewAlertModal(false);
+      } else {
+        throw new Error('Failed to update alert');
+      }
+    } catch (error) {
+      console.error('Error updating alert:', error);
+      throw error;
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowNewAlertModal(false);
+    setEditingAlert(null);
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <Loader className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600 dark:text-gray-400">Loading alerts...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-              <Bell className="w-8 h-8 text-blue-600" />
-              Alert Management
+  // Free tier - show upgrade prompt
+  if (!isProfessionalOrHigher()) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-10 h-10 text-gray-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+              Alerts is a Premium Feature
             </h1>
-            <p className="text-gray-600 mt-2">
-              Configure intelligent alerts with multi-channel notifications
+            <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-8">
+              Upgrade to Professional or Partner tier to set up intelligent alerts and receive
+              notifications when your AI visibility changes.
             </p>
           </div>
-          <button
-            onClick={() => setShowNewAlertModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            New Alert
-          </button>
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* Professional Tier */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-blue-200 dark:border-blue-800 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                  Professional
+                </span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Smart Monitoring
+              </h3>
+              <ul className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                  Up to 10 active alerts
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                  Email notifications
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                  Visibility drop/spike alerts
+                </li>
+              </ul>
+              <Link href="/pricing" className="block w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center font-medium">
+                Upgrade to Professional
+              </Link>
+            </div>
+
+            {/* Partner Tier */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl border-2 border-purple-200 dark:border-purple-800 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                  Partner
+                </span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Enterprise Alerts
+              </h3>
+              <ul className="space-y-3 text-gray-600 dark:text-gray-400 mb-6">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                  Unlimited alerts
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                  Slack, Discord, Webhook channels
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-purple-600" />
+                  All alert types including hallucination detection
+                </li>
+              </ul>
+              <Link href="/pricing" className="block w-full py-2 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-center font-medium">
+                Upgrade to Partner
+              </Link>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            >
+              <ArrowRight className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Link>
+          </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-950">
+      {/* Modern Header with Gradient */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 dark:from-blue-800 dark:via-blue-900 dark:to-indigo-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                <Bell className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-white">
+                    Alert Management
+                  </h1>
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-white/20 text-white backdrop-blur-sm">
+                    {tier === 'partner' ? 'Partner' : 'Professional'}
+                  </span>
+                </div>
+                <p className="text-blue-100 mt-1">
+                  Configure intelligent alerts with multi-channel notifications
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowNewAlertModal(true)}
+              className="inline-flex items-center px-4 py-2.5 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium shadow-lg"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              New Alert
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {/* Stats Overview - Evidence-Based Design */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
@@ -308,7 +478,27 @@ export default function AlertsPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Configured Alerts</h2>
           </div>
 
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-gray-200 dark:divide-gray-700">
+            {alerts.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Bell className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  No alerts configured
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                  Set up alerts to get notified when your AI visibility changes, competitors gain ground, or hallucinations are detected.
+                </p>
+                <button
+                  onClick={() => setShowNewAlertModal(true)}
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Your First Alert
+                </button>
+              </div>
+            ) : null}
             {alerts.map(alert => {
               const info = getAlertInfo(alert.type);
               const Icon = info.icon;
@@ -362,12 +552,25 @@ export default function AlertsPage() {
                         )}
                       </button>
 
-                      <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
+                      <button
+                        onClick={() => handleEditAlert(alert)}
+                        className="p-2 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                        title="Edit alert"
+                      >
                         <Edit className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                       </button>
 
-                      <button className="p-2 hover:bg-red-100 rounded-lg transition-colors">
-                        <Trash2 className="w-5 h-5 text-red-600" />
+                      <button
+                        onClick={() => handleDeleteAlert(alert.id, alert.name)}
+                        disabled={deletingId === alert.id}
+                        className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors disabled:opacity-50"
+                        title="Delete alert"
+                      >
+                        {deletingId === alert.id ? (
+                          <Loader className="w-5 h-5 text-red-600 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-5 h-5 text-red-600" />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -459,11 +662,13 @@ export default function AlertsPage() {
         </div>
       </div>
 
-      {/* New Alert Modal */}
+      {/* New/Edit Alert Modal */}
       <NewAlertForm
         isOpen={showNewAlertModal}
-        onClose={() => setShowNewAlertModal(false)}
+        onClose={handleCloseModal}
         onSubmit={handleCreateAlert}
+        editingAlert={editingAlert}
+        onUpdate={handleUpdateAlert}
       />
     </div>
   );

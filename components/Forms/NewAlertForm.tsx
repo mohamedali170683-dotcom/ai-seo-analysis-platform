@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 
 interface NewAlertFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (alertData: NewAlertData) => Promise<void>;
+  editingAlert?: {
+    id: string;
+    name: string;
+    type: string;
+    enabled: boolean;
+    conditions: any;
+    channels: any;
+    throttleEnabled?: boolean;
+    throttleWindow?: number;
+    maxAlertsPerWindow?: number;
+  } | null;
+  onUpdate?: (id: string, alertData: NewAlertData) => Promise<void>;
 }
 
 export interface NewAlertData {
@@ -59,44 +71,60 @@ const CHANNEL_TYPES = [
   { value: 'teams', label: 'Microsoft Teams', icon: '👥' },
 ];
 
+const getDefaultFormData = (): NewAlertData => ({
+  name: '',
+  type: 'visibility_drop',
+  enabled: true,
+  conditions: [{ metric: 'overall_visibility', operator: '<', threshold: 50 }],
+  channels: [{ type: 'email', enabled: true }],
+  throttleEnabled: true,
+  throttleWindow: 60,
+  maxAlertsPerWindow: 3
+});
+
 export const NewAlertForm: React.FC<NewAlertFormProps> = ({
   isOpen,
   onClose,
-  onSubmit
+  onSubmit,
+  editingAlert,
+  onUpdate
 }) => {
-  const [formData, setFormData] = useState<NewAlertData>({
-    name: '',
-    type: 'visibility_drop',
-    enabled: true,
-    conditions: [{ metric: 'overall_visibility', operator: '<', threshold: 50 }],
-    channels: [{ type: 'email', enabled: true }],
-    throttleEnabled: true,
-    throttleWindow: 60,
-    maxAlertsPerWindow: 3
-  });
-
+  const [formData, setFormData] = useState<NewAlertData>(getDefaultFormData());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isEditing = !!editingAlert;
+
+  // Populate form when editing an existing alert
+  useEffect(() => {
+    if (editingAlert && isOpen) {
+      setFormData({
+        name: editingAlert.name,
+        type: editingAlert.type,
+        enabled: editingAlert.enabled,
+        conditions: editingAlert.conditions || [{ metric: 'overall_visibility', operator: '<', threshold: 50 }],
+        channels: editingAlert.channels || [{ type: 'email', enabled: true }],
+        throttleEnabled: editingAlert.throttleEnabled ?? true,
+        throttleWindow: editingAlert.throttleWindow ?? 60,
+        maxAlertsPerWindow: editingAlert.maxAlertsPerWindow ?? 3
+      });
+    } else if (!editingAlert && isOpen) {
+      setFormData(getDefaultFormData());
+    }
+  }, [editingAlert, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
-      // Reset form
-      setFormData({
-        name: '',
-        type: 'visibility_drop',
-        enabled: true,
-        conditions: [{ metric: 'overall_visibility', operator: '<', threshold: 50 }],
-        channels: [{ type: 'email', enabled: true }],
-        throttleEnabled: true,
-        throttleWindow: 60,
-        maxAlertsPerWindow: 3
-      });
+      if (isEditing && editingAlert && onUpdate) {
+        await onUpdate(editingAlert.id, formData);
+      } else {
+        await onSubmit(formData);
+      }
+      setFormData(getDefaultFormData());
       onClose();
     } catch (error) {
-      console.error('Error creating alert:', error);
-      alert('Failed to create alert. Please try again.');
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} alert:`, error);
+      alert(`Failed to ${isEditing ? 'update' : 'create'} alert. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,7 +171,7 @@ export const NewAlertForm: React.FC<NewAlertFormProps> = ({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Create New Alert</h2>
+          <h2 className="modal-title">{isEditing ? 'Edit Alert' : 'Create New Alert'}</h2>
           <button onClick={onClose} className="modal-close" aria-label="Close dialog">
             <X className="w-5 h-5" />
           </button>
@@ -322,7 +350,9 @@ export const NewAlertForm: React.FC<NewAlertFormProps> = ({
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create Alert'}
+              {isSubmitting
+                ? (isEditing ? 'Updating...' : 'Creating...')
+                : (isEditing ? 'Update Alert' : 'Create Alert')}
             </button>
           </div>
         </form>
