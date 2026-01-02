@@ -21,11 +21,19 @@ import { useState } from 'react';
 import { useTheme } from '@/lib/theme-context';
 import { useI18n } from '@/lib/i18n-context';
 
+// Public pages that use their own navigation (PublicNavigation)
+const PUBLIC_PAGES = ['/home', '/features', '/pricing', '/login', '/register'];
+
 export function Navigation() {
   const pathname = usePathname();
   const [showFeatures, setShowFeatures] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useI18n();
+
+  // Don't render app navigation on public marketing pages
+  if (PUBLIC_PAGES.includes(pathname)) {
+    return null;
+  }
 
   const isActive = (path: string) => pathname === path;
 
