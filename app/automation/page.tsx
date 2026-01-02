@@ -23,6 +23,7 @@ import {
 import { NewScanForm, type NewScanData } from '@/components/Forms';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 import Link from 'next/link';
+import { useTier } from '@/lib/tier';
 
 type ScanFrequency = 'hourly' | 'daily' | 'weekly' | 'monthly' | 'custom';
 type UserTier = 'free' | 'professional' | 'partner';
@@ -70,8 +71,11 @@ export default function AutomationPage() {
   const [loading, setLoading] = useState(true);
   const [showNewScanModal, setShowNewScanModal] = useState(false);
   const [expandedScan, setExpandedScan] = useState<string | null>(null);
-  const [userTier, setUserTier] = useState<UserTier>('free');
   const [tierLimits, setTierLimits] = useState<TierLimits | null>(null);
+
+  // Use tier from context (connected to tier switcher)
+  const { tier, isProfessionalOrHigher, isPartner } = useTier();
+  const userTier = tier as UserTier;
 
   // Fetch scans from API
   useEffect(() => {
@@ -85,7 +89,7 @@ export default function AutomationPage() {
       const data = await response.json();
       if (data.success) {
         setScans(data.scans);
-        setUserTier(data.tier || 'free');
+        // Note: tier is now from context, not from API
         if (data.limits) {
           setTierLimits(data.limits);
         }
@@ -222,7 +226,7 @@ export default function AutomationPage() {
   }
 
   // Free tier - show upgrade prompt
-  if (userTier === 'free') {
+  if (!isProfessionalOrHigher()) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
