@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw, Trash2, ExternalLink, FileText, Lightbulb, BarChart3, Users, Download, Plus, X } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, XCircle, Search, Loader2, Globe, Sparkles, Edit3, HelpCircle, ChevronDown, ChevronUp, MessageSquare, Eye, Target, Bot, TrendingUp, TrendingDown, Minus, RefreshCw, Trash2, ExternalLink, FileText, Lightbulb, BarChart3, Users, Download, Plus, X, Clock, Calendar } from 'lucide-react';
 import { SEMANTIC_COLORS } from '@/lib/theme/colors';
 
 // Brand positioning types
@@ -195,6 +195,17 @@ export default function HallucinationDetectorPage() {
 
   // Export
   const [isExporting, setIsExporting] = useState(false);
+
+  // Schedule automation
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleFrequency, setScheduleFrequency] = useState<'weekly' | 'monthly'>('weekly');
+  const [scheduleDayOfWeek, setScheduleDayOfWeek] = useState(1); // Monday
+  const [scheduleDayOfMonth, setScheduleDayOfMonth] = useState(1);
+  const [scheduleHour, setScheduleHour] = useState(9); // 9 AM
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const [userTier, setUserTier] = useState<'free' | 'professional' | 'partner'>('free');
+  const [existingSchedule, setExistingSchedule] = useState<any>(null);
 
   useEffect(() => {
     fetchAnalyses();
@@ -611,6 +622,77 @@ export default function HallucinationDetectorPage() {
       setIsExporting(false);
     }
   };
+
+  // Schedule automation function
+  const scheduleAnalysis = async () => {
+    if (!selectedAnalysis) return;
+
+    setIsScheduling(true);
+    setScheduleError(null);
+
+    try {
+      const response = await fetch('/api/automation/scans', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: 'demo-user', // In production, get from auth
+          name: `${selectedAnalysis.brandName} - Brand Positioning Check`,
+          brandOrKeyword: selectedAnalysis.brandName,
+          domain: selectedAnalysis.domain,
+          frequency: scheduleFrequency,
+          hour: scheduleHour,
+          dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDayOfWeek : undefined,
+          dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDayOfMonth : undefined,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          brandGroundTruthId: selectedAnalysis.id,
+          analysisType: 'brand_positioning'
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setExistingSchedule(data.scan);
+        setShowScheduleModal(false);
+        // Show success message
+        alert(`Scheduled! Next run: ${new Date(data.scan.nextRun).toLocaleString()}`);
+      } else {
+        setScheduleError(data.error || 'Failed to schedule analysis');
+        if (data.requiresUpgrade) {
+          setScheduleError(`${data.error} Click here to upgrade.`);
+        }
+      }
+    } catch (error) {
+      console.error('Error scheduling analysis:', error);
+      setScheduleError('Failed to schedule analysis. Please try again.');
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
+  // Check for existing schedule when analysis is selected
+  useEffect(() => {
+    if (selectedAnalysis) {
+      // Check if there's an existing schedule for this brand
+      fetch(`/api/automation/scans?userId=demo-user`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.scans) {
+            const existing = data.scans.find((s: any) => {
+              try {
+                const desc = JSON.parse(s.description || '{}');
+                return desc.brandGroundTruthId === selectedAnalysis.id;
+              } catch {
+                return s.brandOrKeyword === selectedAnalysis.brandName;
+              }
+            });
+            setExistingSchedule(existing || null);
+            setUserTier(data.tier || 'free');
+          }
+        })
+        .catch(console.error);
+    }
+  }, [selectedAnalysis]);
 
   const latestScan = selectedAnalysis?.scans?.[0] || lastScanResult;
 
@@ -1080,13 +1162,24 @@ export default function HallucinationDetectorPage() {
                   {selectedAnalysis.brandName} • {selectedAnalysis.domain}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setShowCompetitorModal(true)}
                   className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2"
                 >
                   <Users className="w-4 h-4" />
                   Compare Competitors
+                </button>
+                <button
+                  onClick={() => setShowScheduleModal(true)}
+                  className={`px-4 py-2 rounded-md flex items-center gap-2 ${
+                    existingSchedule
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-amber-600 text-white hover:bg-amber-700'
+                  }`}
+                >
+                  <Clock className="w-4 h-4" />
+                  {existingSchedule ? 'Scheduled' : 'Schedule'}
                 </button>
                 <button
                   onClick={() => exportReport('html')}
@@ -2020,6 +2113,219 @@ export default function HallucinationDetectorPage() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Schedule Automation Modal */}
+        {showScheduleModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                  Schedule Recurring Check
+                </h3>
+                <button
+                  onClick={() => setShowScheduleModal(false)}
+                  className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Tier Check */}
+              {userTier === 'free' ? (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                    Upgrade to Schedule Checks
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Automated scheduling is available on Professional and Partner tiers.
+                    Get weekly or monthly checks to track how LLMs perceive your brand over time.
+                  </p>
+                  <div className="space-y-2 text-left bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <span className="text-gray-700 dark:text-gray-300">Up to 5 scheduled checks (Professional)</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <span className="text-gray-700 dark:text-gray-300">Weekly or monthly frequency</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <span className="text-gray-700 dark:text-gray-300">Email notifications on score changes</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => window.location.href = '/pricing'}
+                    className="px-6 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700"
+                  >
+                    View Pricing
+                  </button>
+                </div>
+              ) : existingSchedule ? (
+                /* Show existing schedule */
+                <div>
+                  <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800 mb-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <CheckCircle2 className="w-5 h-5 text-green-600" />
+                      <span className="font-medium text-green-800 dark:text-green-200">Scheduled</span>
+                    </div>
+                    <p className="text-sm text-green-700 dark:text-green-300">
+                      This analysis runs {existingSchedule.frequency} at {existingSchedule.hour}:00
+                    </p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      Next run: {new Date(existingSchedule.nextRun).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowScheduleModal(false)}
+                      className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500"
+                    >
+                      Close
+                    </button>
+                    <button
+                      onClick={() => window.location.href = '/automation'}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Manage Schedules
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Create new schedule form */
+                <div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    Automatically run alignment checks for <strong>{selectedAnalysis?.brandName}</strong> on a recurring schedule.
+                  </p>
+
+                  {scheduleError && (
+                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
+                      {scheduleError}
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    {/* Frequency */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Frequency
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setScheduleFrequency('weekly')}
+                          className={`flex-1 px-4 py-2 rounded-md border transition-colors ${
+                            scheduleFrequency === 'weekly'
+                              ? 'bg-amber-600 text-white border-amber-600'
+                              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                          }`}
+                        >
+                          Weekly
+                        </button>
+                        <button
+                          onClick={() => setScheduleFrequency('monthly')}
+                          className={`flex-1 px-4 py-2 rounded-md border transition-colors ${
+                            scheduleFrequency === 'monthly'
+                              ? 'bg-amber-600 text-white border-amber-600'
+                              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600'
+                          }`}
+                        >
+                          Monthly
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Day selection */}
+                    {scheduleFrequency === 'weekly' ? (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Day of Week
+                        </label>
+                        <select
+                          value={scheduleDayOfWeek}
+                          onChange={(e) => setScheduleDayOfWeek(Number(e.target.value))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        >
+                          <option value={0}>Sunday</option>
+                          <option value={1}>Monday</option>
+                          <option value={2}>Tuesday</option>
+                          <option value={3}>Wednesday</option>
+                          <option value={4}>Thursday</option>
+                          <option value={5}>Friday</option>
+                          <option value={6}>Saturday</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Day of Month
+                        </label>
+                        <select
+                          value={scheduleDayOfMonth}
+                          onChange={(e) => setScheduleDayOfMonth(Number(e.target.value))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        >
+                          {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                            <option key={day} value={day}>{day}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Time */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Time (Hour)
+                      </label>
+                      <select
+                        value={scheduleHour}
+                        onChange={(e) => setScheduleHour(Number(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      >
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <option key={i} value={i}>
+                            {i.toString().padStart(2, '0')}:00 ({i < 12 ? `${i || 12} AM` : `${i - 12 || 12} PM`})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-6">
+                    <button
+                      onClick={() => setShowScheduleModal(false)}
+                      className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={scheduleAnalysis}
+                      disabled={isScheduling}
+                      className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:bg-gray-400 flex items-center justify-center gap-2"
+                    >
+                      {isScheduling ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Scheduling...
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-4 h-4" />
+                          Schedule
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

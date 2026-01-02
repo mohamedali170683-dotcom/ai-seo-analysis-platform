@@ -70,6 +70,12 @@ enum Frequency {
   custom
 }
 
+enum UserTier {
+  free
+  professional
+  partner
+}
+
 // ============================================
 // CORE MODELS
 // ============================================
@@ -80,6 +86,13 @@ model User {
   name                String?
   passwordHash        String?
   createdAt           DateTime              @default(now())
+
+  // Subscription tier - determines feature access
+  tier                UserTier              @default(free)
+  tierUpdatedAt       DateTime?
+
+  // Tier limits tracking
+  scheduledScansUsed  Int                   @default(0)
 
   // Relations with cascade delete
   analyses            Analysis[]
