@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, Sparkles, Lock } from "lucide-react";
+import { ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, Sparkles, Lock, BarChart3, MessageSquare, AlertTriangle, Calendar, MoreVertical, Eye, Zap } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -161,6 +161,23 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteAnalysis = async (id: string, brandName: string) => {
+    if (!confirm(`Delete analysis for "${brandName}"? This cannot be undone.`)) return;
+
+    try {
+      const response = await fetch(`/api/analysis/${id}`, { method: "DELETE" });
+      const data = await response.json();
+      if (data.success) {
+        setAnalyses(analyses.filter(a => a.id !== id));
+      } else {
+        alert("Failed to delete analysis: " + data.error);
+      }
+    } catch (error) {
+      console.error("Error deleting analysis:", error);
+      alert("Failed to delete analysis");
+    }
+  };
+
   const loadProjects = async () => {
     try {
       const response = await fetch("/api/projects");
@@ -245,24 +262,26 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white border-b border-gray-200 dark:border-gray-700">
-        <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+      {/* Modern Header Card */}
+      <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <div className="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                <Brain className="w-8 h-8 text-white" />
+              </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Velaris
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">AI Visibility Analysis Platform</p>
+                <h1 className="text-2xl font-bold">Velaris Dashboard</h1>
+                <p className="text-blue-100 text-sm">AI Visibility Analysis Platform</p>
               </div>
               {/* Tier Badge */}
               <div className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
-                tier === "free" 
-                  ? "bg-gray-100 text-gray-700 border border-gray-200 dark:border-gray-700" 
+                tier === "free"
+                  ? "bg-white/20 text-white border border-white/30"
                   : tier === "professional"
-                    ? "bg-gradient-to-r from-cyan-100 to-cyan-50 text-cyan-700 border border-blue-200 dark:border-blue-800"
-                    : "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200 dark:border-amber-800"
+                    ? "bg-gradient-to-r from-cyan-400/30 to-blue-400/30 text-white border border-cyan-300/50"
+                    : "bg-gradient-to-r from-amber-400/30 to-yellow-400/30 text-white border border-amber-300/50"
               }`}>
                 {tier === "free" ? (
                   <>
@@ -285,14 +304,14 @@ export default function DashboardPage() {
             <div className="flex gap-3">
               <Link
                 href="/pricing"
-                className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+                className="px-4 py-2 text-white/80 hover:text-white font-medium transition-colors"
               >
                 Pricing
               </Link>
               {tier === "free" && (
                 <Link
                   href="/pricing"
-                  className="px-6 py-3 min-h-[48px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl flex items-center gap-2 font-semibold transition-all"
+                  className="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-lg flex items-center gap-2 font-semibold transition-all backdrop-blur-sm border border-white/20"
                 >
                   <Sparkles className="w-4 h-4" />
                   Upgrade
@@ -300,142 +319,213 @@ export default function DashboardPage() {
               )}
               <Link
                 href="/analyze"
-                className="px-6 py-3 min-h-[48px] bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center gap-2 font-semibold shadow-lg transition-all hover:scale-[1.02]"
+                className="px-5 py-2.5 bg-white text-blue-600 rounded-lg flex items-center gap-2 font-semibold shadow-lg transition-all hover:shadow-xl hover:scale-[1.02]"
               >
-                <Brain className="w-4 h-4" />
-                Start My Analysis
+                <Plus className="w-4 h-4" />
+                New Analysis
               </Link>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Stats Overview - Evidence-Based Design */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          {/* Primary Metric - Total Analyses */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Visibility Analyses</span>
-              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 dark:text-gray-400">{stats.completedAnalyses} completed</span>
-                {stats.completedAnalyses > 0 && (
-                  <CheckCircle2 className="w-4 h-4" style={{color: SEMANTIC_COLORS.positive}} />
-                )}
+        {/* Stats Overview - Modern Card Design */}
+        <div className="grid md:grid-cols-4 gap-4 mb-8">
+          {/* Total Analyses */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Analyses</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.totalAnalyses}</p>
+              </div>
+              <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-          </div>
-
-          {/* Secondary - Questions (Informational) */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Questions Tested</span>
-              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses * 9}</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">Across all analyses</span>
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">
+                {stats.completedAnalyses} completed
+              </span>
             </div>
           </div>
 
-          {/* Secondary - AI Responses (Informational) */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Responses</span>
-              <span className="text-3xl font-bold text-gray-900 dark:text-gray-100">{stats.totalAnalyses * 81}</span>
-              <span className="text-sm text-gray-500 dark:text-gray-400">3 tests × 4 platforms</span>
+          {/* Questions Tested */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Questions Tested</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.totalAnalyses * 9}</p>
+              </div>
+              <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                <MessageSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
             </div>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">Across all brand analyses</p>
+          </div>
+
+          {/* AI Responses */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">AI Responses</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.totalAnalyses * 81}</p>
+              </div>
+              <div className="p-2.5 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
+                <Brain className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">3 tests × 4 AI platforms</p>
+          </div>
+
+          {/* Running Analyses */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</p>
+                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">
+                  {analyses.filter(a => a.status === "running" || a.status === "pending").length}
+                </p>
+              </div>
+              <div className="p-2.5 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                <Loader className={`w-5 h-5 text-amber-600 dark:text-amber-400 ${analyses.some(a => a.status === "running") ? "animate-spin" : ""}`} />
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">Currently analyzing</p>
           </div>
         </div>
 
-        {/* Quick Actions - Clean Design */}
-        <div className="mb-8 grid md:grid-cols-2 gap-4">
+        {/* Quick Actions - Modern Cards */}
+        <div className="mb-8 grid md:grid-cols-3 gap-4">
           <Link
             href="/analyze"
-            className="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:border-gray-300 transition-colors"
+            className="group block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:border-blue-300 hover:shadow-lg transition-all"
           >
             <div className="flex items-center gap-3 mb-3">
-              <Brain className="w-6 h-6 text-blue-600" />
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Run My Next Audit</h2>
+              <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg group-hover:bg-blue-200 transition-colors">
+                <Brain className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">New AI Analysis</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-3">
-              Test your brand on ChatGPT, Gemini, Copilot, and Perplexity. Get visibility scores and recommendations.
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Test your brand on ChatGPT, Gemini, Copilot, and Perplexity.
             </p>
-            <div className="flex items-center text-sm font-semibold text-blue-600">
-              Start My Analysis
+            <div className="flex items-center text-sm font-semibold text-blue-600 group-hover:translate-x-1 transition-transform">
+              Start Analysis
               <ArrowRight className="ml-2 w-4 h-4" />
             </div>
           </Link>
 
           <Link
             href="/hallucination-detector"
-            className="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:border-gray-300 transition-colors"
+            className="group block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:border-red-300 hover:shadow-lg transition-all"
           >
             <div className="flex items-center gap-3 mb-3">
-              <XCircle className="w-6 h-6" style={{color: SEMANTIC_COLORS.critical}} />
+              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg group-hover:bg-red-200 transition-colors">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Misinformation Detector</h2>
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">New Feature</span>
+                <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-700 rounded font-bold uppercase">New</span>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-3">
-              Detect factual errors, outdated information, and competitor confusion in LLM responses about your brand.
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Detect factual errors and outdated info in AI responses.
             </p>
-            <div className="flex items-center text-sm font-semibold" style={{color: SEMANTIC_COLORS.critical}}>
-              Check Brand Accuracy
+            <div className="flex items-center text-sm font-semibold text-red-600 group-hover:translate-x-1 transition-transform">
+              Check Accuracy
               <ArrowRight className="ml-2 w-4 h-4" />
+            </div>
+          </Link>
+
+          <Link
+            href="/automation"
+            className="group block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:border-green-300 hover:shadow-lg transition-all"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg group-hover:bg-green-200 transition-colors">
+                <Calendar className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Automation</h2>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Schedule recurring analyses to track visibility over time.
+            </p>
+            <div className="flex items-center text-sm font-semibold text-green-600 group-hover:translate-x-1 transition-transform">
+              {tier === "free" ? (
+                <>
+                  <Lock className="mr-1 w-3 h-3" />
+                  Professional Feature
+                </>
+              ) : (
+                <>
+                  Manage Schedules
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
             </div>
           </Link>
         </div>
 
         {/* AI Visibility Analyses */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Brain className="w-6 h-6 text-blue-600" />
-                Your Analyses
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">Track how AI platforms mention your brands</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {analyses.length > 0 && (
-                <button
-                  onClick={() => setShowClearConfirm(true)}
-                  className="text-sm text-red-600 hover:text-red-700 flex items-center gap-1 font-semibold"
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-8">
+          <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                  <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Your Analyses</h2>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Track how AI platforms mention your brands</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {analyses.length > 0 && (
+                  <button
+                    onClick={() => setShowClearConfirm(true)}
+                    className="px-3 py-1.5 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg flex items-center gap-1.5 font-medium transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Clear All
+                  </button>
+                )}
+                <Link
+                  href="/analyze"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-2 font-medium text-sm transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  Clear All
-                </button>
-              )}
-              <Link
-                href="/analyze"
-                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 font-semibold"
-              >
-                <Plus className="w-4 h-4" />
-                Run My Next Audit
-              </Link>
+                  <Plus className="w-4 h-4" />
+                  New Analysis
+                </Link>
+              </div>
             </div>
           </div>
 
           {/* Clear Confirmation Modal */}
           {showClearConfirm && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Clear All Analyses?</h3>
-                <p className="text-gray-600 mb-6">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <Trash2 className="w-5 h-5 text-red-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Clear All Analyses?</h3>
+                </div>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
                   This will permanently delete all {analyses.length} analyses and their data. This action cannot be undone.
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setShowClearConfirm(false)}
                     disabled={clearing}
-                    className="px-4 py-2 text-gray-600 hover:text-gray-800 font-semibold"
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleClearAll}
                     disabled={clearing}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold flex items-center gap-2"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium flex items-center gap-2 transition-colors"
                   >
                     {clearing ? (
                       <>
@@ -454,99 +544,152 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {loading ? (
-            <div className="text-center py-12 text-gray-500 dark:text-gray-400">Loading analyses...</div>
-          ) : analyses.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <Brain className="w-8 h-8 text-blue-600" />
+          <div className="p-6">
+            {loading ? (
+              <div className="text-center py-12">
+                <Loader className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+                <p className="text-gray-500 dark:text-gray-400">Loading your analyses...</p>
               </div>
-              <p className="text-gray-500 mb-4">No analyses yet. Start my first AI visibility analysis!</p>
-              <Link
-                href="/analyze"
-                className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 inline-flex items-center gap-2 font-semibold"
-              >
-                <Brain className="w-5 h-5" />
-                Start My First Analysis
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {analyses.map((analysis) => (
-                <div
-                  key={analysis.id}
-                  className="border border-gray-200 dark:border-gray-700 rounded-xl p-6 hover:border-blue-300 transition-colors"
+            ) : analyses.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
+                  <Brain className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No analyses yet</h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">Start your first AI visibility analysis to see how your brand appears across AI platforms.</p>
+                <Link
+                  href="/analyze"
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg inline-flex items-center gap-2 font-semibold transition-colors"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        {getStatusIcon(analysis.status)}
-                        <h3 className="font-semibold text-lg">{analysis.brandOrKeyword}</h3>
-                        {getStatusBadge(analysis.status)}
-                      </div>
-                      {analysis.domain && (
-                        <p className="text-sm text-gray-600 ml-8">{analysis.domain}</p>
-                      )}
-                      {analysis.status === "running" && (
-                        <div className="ml-8 mt-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden max-w-xs">
-                              <div
-                                className="bg-gradient-to-r from-cyan-500 to-cyan-400 h-2 rounded-full transition-all duration-500"
-                                style={{ width: `${analysis.progress || 0}%` }}
-                              ></div>
-                            </div>
-                            <span className="text-xs text-gray-600 dark:text-gray-400">{analysis.progress || 0}%</span>
-                          </div>
-                          {analysis.currentStep && (
-                            <p className="text-xs text-gray-500 mt-1">{analysis.currentStep}</p>
+                  <Zap className="w-5 h-5" />
+                  Start My First Analysis
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {analyses.map((analysis) => (
+                  <div
+                    key={analysis.id}
+                    className="group border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md transition-all bg-white dark:bg-gray-800"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        {/* Status Icon */}
+                        <div className={`p-2.5 rounded-lg shrink-0 ${
+                          analysis.status === "completed" ? "bg-green-100 dark:bg-green-900/30" :
+                          analysis.status === "running" || analysis.status === "pending" ? "bg-blue-100 dark:bg-blue-900/30" :
+                          "bg-red-100 dark:bg-red-900/30"
+                        }`}>
+                          {analysis.status === "completed" ? (
+                            <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
+                          ) : analysis.status === "running" || analysis.status === "pending" ? (
+                            <Loader className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                          ) : (
+                            <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
                           )}
                         </div>
+
+                        {/* Brand Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{analysis.brandOrKeyword}</h3>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              analysis.status === "completed" ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300" :
+                              analysis.status === "running" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300" :
+                              analysis.status === "pending" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300" :
+                              "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
+                            }`}>
+                              {analysis.status}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                            {analysis.domain && <span>{analysis.domain}</span>}
+                            <span>•</span>
+                            <span>{new Date(analysis.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar for Running */}
+                      {(analysis.status === "running" || analysis.status === "pending") && (
+                        <div className="hidden md:flex items-center gap-3 w-48">
+                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${analysis.progress || 0}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 w-8">{analysis.progress || 0}%</span>
+                        </div>
                       )}
-                    </div>
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="text-center">
-                        <div className="font-semibold">{analysis.questionsCount || 0}</div>
-                        <div className="text-gray-500 text-xs">Questions</div>
+
+                      {/* Stats */}
+                      <div className="hidden lg:flex items-center gap-4 text-sm">
+                        <div className="text-center px-3">
+                          <div className="font-bold text-gray-900 dark:text-gray-100">{analysis.questionsCount || 0}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">Questions</div>
+                        </div>
+                        <div className="text-center px-3 border-l border-gray-200 dark:border-gray-700">
+                          <div className="font-bold text-gray-900 dark:text-gray-100">{analysis.testsCount || 0}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">Tests</div>
+                        </div>
                       </div>
-                      <div className="text-center">
-                        <div className="font-semibold">{analysis.testsCount || 0}</div>
-                        <div className="text-gray-500 text-xs">AI Tests</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="font-semibold">{analysis.insightsCount || 0}</div>
-                        <div className="text-gray-500 text-xs">Insights</div>
-                      </div>
-                      {analysis.status === "completed" ? (
-                        <Link
-                          href={`/results/${analysis.id}`}
-                          className="px-6 py-3 min-h-[48px] bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg hover:from-cyan-700 hover:to-cyan-600 flex items-center gap-1 font-semibold"
-                        >
-                          Show My Report
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      ) : analysis.status === "running" || analysis.status === "pending" ? (
-                        <Link
-                          href={`/results/${analysis.id}`}
-                          className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 flex items-center gap-1"
-                        >
-                          View Progress
-                          <ArrowRight className="w-4 h-4" />
-                        </Link>
-                      ) : (
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        {analysis.status === "completed" ? (
+                          <Link
+                            href={`/results/${analysis.id}`}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1.5 font-medium text-sm transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                            View Report
+                          </Link>
+                        ) : analysis.status === "running" || analysis.status === "pending" ? (
+                          <Link
+                            href={`/results/${analysis.id}`}
+                            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg flex items-center gap-1.5 font-medium text-sm transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Progress
+                          </Link>
+                        ) : (
+                          <span className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-400 rounded-lg text-sm">
+                            Failed
+                          </span>
+                        )}
                         <button
-                          disabled
-                          className="px-4 py-2 bg-gray-100 text-gray-400 rounded-lg cursor-not-allowed"
+                          onClick={() => handleDeleteAnalysis(analysis.id, analysis.brandOrKeyword)}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                          title="Delete analysis"
                         >
-                          Failed
+                          <Trash2 className="w-4 h-4" />
                         </button>
-                      )}
+                      </div>
                     </div>
+
+                    {/* Mobile Progress Bar */}
+                    {(analysis.status === "running" || analysis.status === "pending") && (
+                      <div className="md:hidden mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-500"
+                              style={{ width: `${analysis.progress || 0}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{analysis.progress || 0}%</span>
+                        </div>
+                        {analysis.currentStep && (
+                          <p className="text-xs text-gray-500 mt-1">{analysis.currentStep}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Trust Signals Section */}

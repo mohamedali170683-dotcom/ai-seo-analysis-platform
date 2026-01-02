@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { detectPatterns, generateExecutiveSummary } from "@/lib/services/analysis-insights-engine";
 import { AIResponse } from "@/lib/services/multi-platform-ai-service";
@@ -193,6 +193,52 @@ export async function GET(
     console.error("Error fetching analysis:", error);
     return NextResponse.json(
       { success: false, error: error.message || "Failed to fetch analysis" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Analysis ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if analysis exists
+    const analysis = await prisma.analysis.findUnique({
+      where: { id },
+    });
+
+    if (!analysis) {
+      return NextResponse.json(
+        { success: false, error: "Analysis not found" },
+        { status: 404 }
+      );
+    }
+
+    // Delete the analysis and all related data (cascade delete)
+    await prisma.analysis.delete({
+      where: { id },
+    });
+
+    console.log(`[API] Deleted analysis ${id} (${analysis.brandOrKeyword})`);
+
+    return NextResponse.json({
+      success: true,
+      message: `Analysis "${analysis.brandOrKeyword}" deleted successfully`,
+    });
+  } catch (error: any) {
+    console.error("Error deleting analysis:", error);
+    return NextResponse.json(
+      { success: false, error: error.message || "Failed to delete analysis" },
       { status: 500 }
     );
   }
