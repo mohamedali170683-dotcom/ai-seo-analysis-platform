@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight } from "lucide-react";
+import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X } from "lucide-react";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
@@ -161,6 +161,15 @@ export default function ResultsPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedSchemas, setExpandedSchemas] = useState<string[]>([]);
 
+  // Schedule automation state
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleFrequency, setScheduleFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
+  const [scheduleDay, setScheduleDay] = useState(1); // 1 = Monday for weekly, 1 = 1st for monthly
+  const [scheduleHour, setScheduleHour] = useState(9);
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [existingSchedule, setExistingSchedule] = useState<any>(null);
+  const [userTier, setUserTier] = useState<'free' | 'professional' | 'partner'>('free');
+
   // Helper to show upgrade modal
   const openUpgradeModal = (trigger: UpgradeModalTrigger) => {
     setUpgradeModalTrigger(trigger);
@@ -172,6 +181,78 @@ export default function ResultsPage() {
     setUserEmail(email);
     setHasSubmittedEmail(true);
     setShowEmailGate(false);
+  };
+
+  // Fetch user tier and existing schedules
+  useEffect(() => {
+    const fetchScheduleInfo = async () => {
+      try {
+        const response = await fetch('/api/automation/scans?userId=demo-user');
+        const data = await response.json();
+        if (data.success) {
+          setUserTier(data.tier || 'free');
+          // Check if this analysis is already scheduled
+          const existingScan = data.scans?.find((s: any) =>
+            s.description?.includes(analysisId) || s.brandOrKeyword === reportData?.brandOrKeyword
+          );
+          if (existingScan) {
+            setExistingSchedule(existingScan);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching schedule info:', error);
+      }
+    };
+
+    if (reportData) {
+      fetchScheduleInfo();
+    }
+  }, [reportData, analysisId]);
+
+  // Schedule the analysis
+  const scheduleAnalysis = async () => {
+    if (!reportData) return;
+
+    setIsScheduling(true);
+    try {
+      const response = await fetch('/api/automation/scans?userId=demo-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `${reportData.brandOrKeyword} - AI Visibility Analysis`,
+          brandOrKeyword: reportData.brandOrKeyword,
+          domain: reportData.domain,
+          frequency: scheduleFrequency,
+          hour: scheduleHour,
+          dayOfWeek: scheduleFrequency === 'weekly' ? scheduleDay : undefined,
+          dayOfMonth: scheduleFrequency === 'monthly' ? scheduleDay : undefined,
+          description: JSON.stringify({
+            analysisType: 'ai_visibility',
+            originalAnalysisId: analysisId,
+            personas: reportData.personas || [],
+            competitors: reportData.competitors || []
+          })
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setExistingSchedule(data.scan);
+        setShowScheduleModal(false);
+        alert('Analysis scheduled successfully! View it in the Automation dashboard.');
+      } else {
+        if (data.requiresUpgrade) {
+          alert(data.error || 'Upgrade required to schedule analyses.');
+        } else {
+          alert(data.error || 'Failed to schedule analysis.');
+        }
+      }
+    } catch (error) {
+      console.error('Error scheduling analysis:', error);
+      alert('Failed to schedule analysis. Please try again.');
+    } finally {
+      setIsScheduling(false);
+    }
   };
 
   useEffect(() => {
@@ -486,6 +567,35 @@ export default function ResultsPage() {
                   <Lock className="w-4 h-4" />
                   Export My Report
                   <span className="text-xs bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded">PRO</span>
+                </>
+              )}
+            </button>
+            {/* Schedule Button */}
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+                existingSchedule
+                  ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                  : userTier === 'free'
+                  ? "bg-white/20 text-white/80 cursor-pointer"
+                  : "bg-white text-green-600 hover:bg-green-50"
+              }`}
+            >
+              {existingSchedule ? (
+                <>
+                  <Clock className="w-4 h-4" />
+                  Scheduled
+                </>
+              ) : userTier === 'free' ? (
+                <>
+                  <Lock className="w-4 h-4" />
+                  Schedule
+                  <span className="text-xs bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded">PRO</span>
+                </>
+              ) : (
+                <>
+                  <Calendar className="w-4 h-4" />
+                  Schedule
                 </>
               )}
             </button>
@@ -3036,11 +3146,196 @@ export default function ResultsPage() {
       </div>
 
       {/* Upgrade Modal */}
-      <UpgradeModal 
-        isOpen={showUpgradeModal} 
-        onClose={() => setShowUpgradeModal(false)} 
+      <UpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
         trigger={upgradeModalTrigger}
       />
+
+      {/* Schedule Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Schedule AI Visibility Analysis
+              </h3>
+              <button
+                onClick={() => setShowScheduleModal(false)}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {userTier === 'free' ? (
+                // Free tier - show upgrade prompt
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Lock className="w-8 h-8 text-amber-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Upgrade to Schedule
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Automated scheduling is available on Professional and Partner tiers.
+                    Get regular AI visibility reports delivered automatically.
+                  </p>
+                  <div className="space-y-3">
+                    <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      Upgrade to Professional
+                    </button>
+                    <button
+                      onClick={() => setShowScheduleModal(false)}
+                      className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Maybe Later
+                    </button>
+                  </div>
+                </div>
+              ) : existingSchedule ? (
+                // Already scheduled
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                    Already Scheduled
+                  </h4>
+                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                    This analysis is scheduled to run <span className="font-medium">{existingSchedule.frequency}</span>.
+                  </p>
+                  <p className="text-sm text-gray-500 mb-6">
+                    Next run: {new Date(existingSchedule.nextRun).toLocaleDateString()}
+                  </p>
+                  <div className="space-y-3">
+                    <Link
+                      href="/automation"
+                      className="block w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center"
+                    >
+                      Manage in Automation Dashboard
+                    </Link>
+                    <button
+                      onClick={() => setShowScheduleModal(false)}
+                      className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Schedule form
+                <div>
+                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                    Schedule automated AI visibility checks for <span className="font-medium">{reportData?.brandOrKeyword}</span>
+                    with the same setup as this analysis.
+                  </p>
+
+                  <div className="space-y-4">
+                    {/* Frequency */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Frequency
+                      </label>
+                      <select
+                        value={scheduleFrequency}
+                        onChange={(e) => setScheduleFrequency(e.target.value as 'daily' | 'weekly' | 'monthly')}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      >
+                        {userTier === 'partner' && <option value="daily">Daily</option>}
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+
+                    {/* Day selection */}
+                    {scheduleFrequency === 'weekly' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Day of Week
+                        </label>
+                        <select
+                          value={scheduleDay}
+                          onChange={(e) => setScheduleDay(parseInt(e.target.value))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        >
+                          <option value={1}>Monday</option>
+                          <option value={2}>Tuesday</option>
+                          <option value={3}>Wednesday</option>
+                          <option value={4}>Thursday</option>
+                          <option value={5}>Friday</option>
+                          <option value={6}>Saturday</option>
+                          <option value={0}>Sunday</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {scheduleFrequency === 'monthly' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Day of Month
+                        </label>
+                        <select
+                          value={scheduleDay}
+                          onChange={(e) => setScheduleDay(parseInt(e.target.value))}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        >
+                          {[1, 5, 10, 15, 20, 25].map(day => (
+                            <option key={day} value={day}>{day}{day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Time */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Time (UTC)
+                      </label>
+                      <select
+                        value={scheduleHour}
+                        onChange={(e) => setScheduleHour(parseInt(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      >
+                        {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(hour => (
+                          <option key={hour} value={hour}>{hour}:00</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 space-y-3">
+                    <button
+                      onClick={scheduleAnalysis}
+                      disabled={isScheduling}
+                      className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isScheduling ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Scheduling...
+                        </>
+                      ) : (
+                        <>
+                          <Calendar className="w-4 h-4" />
+                          Schedule Analysis
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowScheduleModal(false)}
+                      className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

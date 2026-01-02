@@ -116,13 +116,16 @@ export default function AutomationPage() {
   const getAnalysisTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       brand_positioning: 'Brand Positioning',
+      ai_visibility: 'AI Visibility',
       seo_analysis: 'SEO Analysis'
     };
     return labels[type] || type;
   };
 
   const getAnalysisTypeIcon = (type: string) => {
-    return type === 'brand_positioning' ? Target : TrendingUp;
+    if (type === 'brand_positioning') return Target;
+    if (type === 'ai_visibility') return TrendingUp;
+    return Target;
   };
 
   const toggleScan = async (id: string) => {
