@@ -51,7 +51,7 @@ const availableEvents = [
   { value: 'analysis.completed', label: 'Analysis Completed', description: 'When an analysis finishes successfully' },
   { value: 'analysis.failed', label: 'Analysis Failed', description: 'When an analysis encounters an error' },
   { value: 'alert.triggered', label: 'Alert Triggered', description: 'When an alert condition is met' },
-  { value: 'hallucination.detected', label: 'Hallucination Detected', description: 'When a hallucination is found' },
+  { value: 'hallucination.detected', label: 'Brand Misrepresentation', description: 'When AI generates inaccurate brand information' },
   { value: 'scan.scheduled', label: 'Scan Scheduled', description: 'When a scheduled scan is queued' },
   { value: '*', label: 'All Events', description: 'Subscribe to all webhook events' }
 ];

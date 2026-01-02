@@ -29,7 +29,7 @@ const ALERT_TYPES = [
   { value: 'visibility_drop', label: 'Visibility Drop', description: 'Alert when visibility score drops' },
   { value: 'visibility_spike', label: 'Visibility Spike', description: 'Alert when visibility increases significantly' },
   { value: 'competitor_takeover', label: 'Competitor Overtake', description: 'Alert when competitors gain advantage' },
-  { value: 'hallucination_detected', label: 'Hallucination Detected', description: 'Alert when false information is found' },
+  { value: 'hallucination_detected', label: 'Brand Misrepresentation', description: 'Alert when AI generates inaccurate brand information' },
   { value: 'citation_lost', label: 'Citation Lost', description: 'Alert when content is no longer cited' },
   { value: 'citation_gained', label: 'Citation Gained', description: 'Alert when new citations appear' },
 ];
@@ -40,7 +40,7 @@ const METRICS = [
   { value: 'competitor_mentions', label: 'Competitor Mention Rate' },
   { value: 'sentiment_score', label: 'Sentiment Score' },
   { value: 'citation_rate', label: 'Citation Rate' },
-  { value: 'hallucination_count', label: 'Hallucination Count' },
+  { value: 'hallucination_count', label: 'Inaccuracy Count' },
 ];
 
 const OPERATORS = [

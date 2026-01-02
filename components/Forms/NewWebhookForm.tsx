@@ -41,8 +41,8 @@ const WEBHOOK_EVENTS = [
   },
   {
     value: 'hallucination.detected',
-    label: 'Hallucination Detected',
-    description: 'When a hallucination is found',
+    label: 'Brand Misrepresentation Detected',
+    description: 'When AI generates inaccurate brand information',
     category: 'Quality'
   },
   {
