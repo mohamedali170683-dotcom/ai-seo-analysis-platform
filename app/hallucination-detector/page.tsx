@@ -1312,7 +1312,186 @@ export default function HallucinationDetectorPage() {
               )}
             </div>
 
-            {latestScan ? (
+            {/* Tab Navigation - Always visible */}
+            <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+              <button
+                onClick={() => setActiveTab('analysis')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'analysis'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                }`}
+              >
+                <Eye className="w-4 h-4 inline mr-2" />
+                Analysis
+              </button>
+              <button
+                onClick={() => setActiveTab('competitors')}
+                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'competitors'
+                    ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                }`}
+              >
+                <Users className="w-4 h-4 inline mr-2" />
+                Competitors
+              </button>
+              {latestScan && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('sources')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'sources'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 inline mr-2" />
+                    Sources
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('recommendations')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'recommendations'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <Lightbulb className="w-4 h-4 inline mr-2" />
+                    Recommendations
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('trends')}
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === 'trends'
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
+                    }`}
+                  >
+                    <BarChart3 className="w-4 h-4 inline mr-2" />
+                    Trends
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Competitors Tab - Always available */}
+            {activeTab === 'competitors' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-purple-600" />
+                    Competitor Analysis
+                  </h3>
+                  <button
+                    onClick={() => setShowCompetitorModal(true)}
+                    className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 flex items-center gap-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Competitors
+                  </button>
+                </div>
+
+                {competitorAnalysis ? (
+                  <>
+                    {/* Overall Insights */}
+                    {competitorAnalysis.overallInsights.length > 0 && (
+                      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                        <h4 className="font-medium text-purple-800 dark:text-purple-200 mb-2">Competitive Insights</h4>
+                        <ul className="space-y-2">
+                          {competitorAnalysis.overallInsights.map((insight, idx) => (
+                            <li key={idx} className="text-sm text-purple-700 dark:text-purple-300 flex items-start gap-2">
+                              <span className="text-purple-500">•</span>
+                              {insight}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Competitor Cards */}
+                    <div className="space-y-4">
+                      {competitorAnalysis.competitors.map((comp, idx) => (
+                        <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                          <div className="bg-gray-50 dark:bg-gray-700 p-4">
+                            <h4 className="font-semibold text-gray-900 dark:text-gray-100">{comp.competitor}</h4>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
+                                {comp.positioning.primary}
+                              </span>
+                              <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded">
+                                {comp.positioning.pricePoint}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="p-4 space-y-4">
+                            {/* Comparison Insights */}
+                            {comp.comparisonInsights.length > 0 && (
+                              <div>
+                                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comparison</h5>
+                                <ul className="space-y-1">
+                                  {comp.comparisonInsights.map((insight, iIdx) => (
+                                    <li key={iIdx} className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
+                                      <span className="text-gray-400">-</span>
+                                      {insight}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Differentiation Opportunities */}
+                            {comp.differentiationOpportunities.length > 0 && (
+                              <div>
+                                <h5 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Differentiation Opportunities</h5>
+                                <ul className="space-y-1">
+                                  {comp.differentiationOpportunities.map((opp, oIdx) => (
+                                    <li key={oIdx} className="text-sm text-green-600 dark:text-green-400 flex items-start gap-2">
+                                      <Lightbulb className="w-4 h-4 mt-0.5" />
+                                      {opp}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* LLM Perceptions */}
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">How LLMs Describe {comp.competitor}</h5>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                {Object.entries(comp.llmPerception).map(([llm, perception]) => (
+                                  <div key={llm} className="p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm">
+                                    <span className="font-medium text-gray-700 dark:text-gray-300 uppercase text-xs">{llm}</span>
+                                    <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs">{perception.slice(0, 150)}...</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <Users className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
+                    <p className="mb-2">No competitor analysis yet</p>
+                    <p className="text-sm mb-4">Click &quot;Add Competitors&quot; to compare your brand positioning against competitors</p>
+                    <button
+                      onClick={() => setShowCompetitorModal(true)}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 flex items-center gap-2 mx-auto"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Competitors
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Analysis Tab Content */}
+            {activeTab === 'analysis' && latestScan ? (
               <>
                 {/* Overall Alignment Score */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -1358,67 +1537,7 @@ export default function HallucinationDetectorPage() {
                   ))}
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-                  <button
-                    onClick={() => setActiveTab('analysis')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'analysis'
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
-                  >
-                    <Eye className="w-4 h-4 inline mr-2" />
-                    Analysis
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('sources')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'sources'
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
-                  >
-                    <FileText className="w-4 h-4 inline mr-2" />
-                    Sources
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('recommendations')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'recommendations'
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
-                  >
-                    <Lightbulb className="w-4 h-4 inline mr-2" />
-                    Recommendations
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('trends')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'trends'
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
-                  >
-                    <BarChart3 className="w-4 h-4 inline mr-2" />
-                    Trends
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('competitors')}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                      activeTab === 'competitors'
-                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400'
-                    }`}
-                  >
-                    <Users className="w-4 h-4 inline mr-2" />
-                    Competitors
-                  </button>
-                </div>
-
-                {/* Analysis Tab */}
-                {activeTab === 'analysis' && (
+                {/* Detailed Comparison */}
                 <div className="space-y-4">
                   <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                     <Eye className="w-5 h-5 text-blue-600" />
@@ -1543,10 +1662,38 @@ export default function HallucinationDetectorPage() {
                     </div>
                   ))}
                 </div>
-                )}
+              </>
+            ) : activeTab === 'analysis' ? (
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                <div className="mb-4">
+                  <Target className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600" />
+                </div>
+                <p className="mb-4 text-lg font-medium">No alignment checks run yet</p>
+                <p className="text-sm mb-6">
+                  Click &quot;Run Alignment Check&quot; to see how LLMs describe your brand compared to your positioning.
+                </p>
+                <div className="text-left max-w-md mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">What we&apos;ll check:</h4>
+                  <ul className="text-sm space-y-2">
+                    <li className="flex items-start gap-2">
+                      <MessageSquare className="w-4 h-4 text-blue-500 mt-0.5" />
+                      <span>Ask LLMs about your brand&apos;s positioning</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Target className="w-4 h-4 text-purple-500 mt-0.5" />
+                      <span>Compare their answers to your defined positioning</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <TrendingUp className="w-4 h-4 text-green-500 mt-0.5" />
+                      <span>Calculate alignment score for each aspect</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            ) : null}
 
-                {/* Sources Tab */}
-                {activeTab === 'sources' && lastScanResult?.sourceAnalysis && (
+            {/* Sources Tab */}
+            {activeTab === 'sources' && lastScanResult?.sourceAnalysis && (
                   <div className="space-y-6">
                     <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
                       <FileText className="w-5 h-5 text-blue-600" />
@@ -1746,143 +1893,6 @@ export default function HallucinationDetectorPage() {
                     )}
                   </div>
                 )}
-
-                {/* Competitors Tab */}
-                {activeTab === 'competitors' && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                        <Users className="w-5 h-5 text-purple-600" />
-                        Competitor Analysis
-                      </h3>
-                      <button
-                        onClick={() => setShowCompetitorModal(true)}
-                        className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 flex items-center gap-1"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add Competitors
-                      </button>
-                    </div>
-
-                    {competitorAnalysis ? (
-                      <>
-                        {/* Overall Insights */}
-                        {competitorAnalysis.overallInsights.length > 0 && (
-                          <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
-                            <h4 className="font-medium text-purple-800 dark:text-purple-200 mb-2">Competitive Insights</h4>
-                            <ul className="space-y-2">
-                              {competitorAnalysis.overallInsights.map((insight, idx) => (
-                                <li key={idx} className="text-sm text-purple-700 dark:text-purple-300 flex items-start gap-2">
-                                  <span className="text-purple-500">•</span>
-                                  {insight}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-
-                        {/* Competitor Cards */}
-                        <div className="space-y-4">
-                          {competitorAnalysis.competitors.map((comp, idx) => (
-                            <div key={idx} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                              <div className="bg-gray-50 dark:bg-gray-700 p-4">
-                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{comp.competitor}</h4>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded">
-                                    {comp.positioning.primary}
-                                  </span>
-                                  <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded">
-                                    {comp.positioning.pricePoint}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="p-4 space-y-4">
-                                {/* Comparison Insights */}
-                                {comp.comparisonInsights.length > 0 && (
-                                  <div>
-                                    <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Comparison</h5>
-                                    <ul className="space-y-1">
-                                      {comp.comparisonInsights.map((insight, iIdx) => (
-                                        <li key={iIdx} className="text-sm text-gray-600 dark:text-gray-400 flex items-start gap-2">
-                                          <span className="text-gray-400">-</span>
-                                          {insight}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-
-                                {/* Differentiation Opportunities */}
-                                {comp.differentiationOpportunities.length > 0 && (
-                                  <div>
-                                    <h5 className="text-sm font-medium text-green-700 dark:text-green-300 mb-2">Differentiation Opportunities</h5>
-                                    <ul className="space-y-1">
-                                      {comp.differentiationOpportunities.map((opp, oIdx) => (
-                                        <li key={oIdx} className="text-sm text-green-600 dark:text-green-400 flex items-start gap-2">
-                                          <Lightbulb className="w-4 h-4 mt-0.5" />
-                                          {opp}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-
-                                {/* LLM Perceptions */}
-                                <div>
-                                  <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">How LLMs Describe {comp.competitor}</h5>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                                    {Object.entries(comp.llmPerception).map(([llm, perception]) => (
-                                      <div key={llm} className="p-2 bg-gray-50 dark:bg-gray-700 rounded text-sm">
-                                        <span className="font-medium text-gray-700 dark:text-gray-300 uppercase text-xs">{llm}</span>
-                                        <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs">{perception.slice(0, 150)}...</p>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                        <Users className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
-                        <p className="mb-2">No competitor analysis yet</p>
-                        <p className="text-sm">Click &quot;Add Competitors&quot; to compare your brand positioning</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                <div className="mb-4">
-                  <Target className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-600" />
-                </div>
-                <p className="mb-4 text-lg font-medium">No alignment checks run yet</p>
-                <p className="text-sm mb-6">
-                  Click &quot;Run Alignment Check&quot; to see how LLMs describe your brand compared to your positioning.
-                </p>
-                <div className="text-left max-w-md mx-auto bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">What we&apos;ll check:</h4>
-                  <ul className="text-sm space-y-2">
-                    <li className="flex items-start gap-2">
-                      <MessageSquare className="w-4 h-4 text-blue-500 mt-0.5" />
-                      <span>Ask LLMs about your brand&apos;s positioning</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Target className="w-4 h-4 text-purple-500 mt-0.5" />
-                      <span>Compare their answers to your defined positioning</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <TrendingUp className="w-4 h-4 text-green-500 mt-0.5" />
-                      <span>Calculate alignment score for each aspect</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
