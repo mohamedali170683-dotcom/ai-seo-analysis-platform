@@ -820,7 +820,19 @@ export class MultiPlatformAIService {
     }
 
     const sentiment = this.analyzeSentiment(response, brandName, brandMentioned);
-    const competitorsMentioned = competitors.filter(c => lowerResponse.includes(c.toLowerCase()));
+
+    // Check for pre-specified competitors
+    let competitorsMentioned = competitors.filter(c => lowerResponse.includes(c.toLowerCase()));
+
+    // Also dynamically detect recommended brands in the response (even if not pre-specified)
+    // This is important for follow-up questions when AI recommends a competitor we didn't know about
+    if (competitorsMentioned.length === 0 && !brandMentioned) {
+      const dynamicCompetitors = this.extractRecommendedBrands(response, brandName);
+      if (dynamicCompetitors.length > 0) {
+        competitorsMentioned = dynamicCompetitors;
+      }
+    }
+
     const citedUrls = response.match(/(https?:\/\/[^\s]+)/g) || [];
 
     return {
@@ -832,6 +844,61 @@ export class MultiPlatformAIService {
       competitorsMentioned,
       citedUrls,
     };
+  }
+
+  /**
+   * Extract brand names that appear to be recommended in the response
+   * This helps detect competitors that weren't pre-specified
+   */
+  private extractRecommendedBrands(response: string, brandToExclude: string): string[] {
+    const brands: string[] = [];
+    const lowerBrand = brandToExclude.toLowerCase();
+
+    // Common cosmetics/skincare brands that might be recommended
+    const knownBrands = [
+      "Weleda", "Dr. Hauschka", "Lavera", "Sante", "Logona", "Alverde",
+      "Natura Siberica", "Urtekram", "Madara", "RMS Beauty", "ILIA",
+      "Kjaer Weis", "Tata Harper", "Drunk Elephant", "The Ordinary",
+      "CeraVe", "La Roche-Posay", "Neutrogena", "Olay", "L'Oreal",
+      "Nivea", "Dove", "Eucerin", "Avene", "Bioderma", "Vichy",
+      "Estee Lauder", "Clinique", "Lancome", "Shiseido", "SK-II",
+      "Herbivore", "Youth to the People", "Pai Skincare", "Neal's Yard"
+    ];
+
+    // Pattern to find capitalized brand-like names (2+ words or single capitalized word followed by recommendation context)
+    const recommendPatterns = [
+      /(?:recommend|suggest|try|consider|best|top|leading|popular|favorite)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi,
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:is|are|stands out|offers|provides|known for)/gi,
+      /brands?\s+(?:like|such as|including)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi,
+    ];
+
+    // Check known brands first
+    for (const brand of knownBrands) {
+      if (response.toLowerCase().includes(brand.toLowerCase()) &&
+          brand.toLowerCase() !== lowerBrand) {
+        brands.push(brand);
+      }
+    }
+
+    // Also try to extract from recommendation patterns
+    for (const pattern of recommendPatterns) {
+      const matches = response.matchAll(pattern);
+      for (const match of matches) {
+        const potentialBrand = match[1]?.trim();
+        if (potentialBrand &&
+            potentialBrand.length >= 3 &&
+            potentialBrand.toLowerCase() !== lowerBrand &&
+            !brands.some(b => b.toLowerCase() === potentialBrand.toLowerCase())) {
+          // Verify it looks like a brand name (capitalized, not common words)
+          const commonWords = ["the", "and", "for", "with", "that", "this", "your", "their", "natural", "organic", "beauty", "skincare"];
+          if (!commonWords.includes(potentialBrand.toLowerCase())) {
+            brands.push(potentialBrand);
+          }
+        }
+      }
+    }
+
+    return brands.slice(0, 3); // Return top 3 detected competitors
   }
 
   private analyzeSentiment(response: string, brandName: string, brandMentioned: boolean): "positive" | "neutral" | "negative" {
