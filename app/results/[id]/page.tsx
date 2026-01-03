@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2 } from "lucide-react";
+import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2, TrendingUp } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
@@ -744,22 +744,57 @@ export default function ResultsPage() {
               </div>
             </div>
 
-            {/* Top Actions */}
+            {/* Top Actions with ROI Scores */}
             {reportData.executiveSummary.topActions && reportData.executiveSummary.topActions.length > 0 && (
               <div>
-                <h3 className="font-semibold text-indigo-100 mb-3">🚀 Priority Actions</h3>
-                <div className="space-y-2">
+                <h3 className="font-semibold text-indigo-100 mb-3">🚀 Priority Actions (Sorted by ROI)</h3>
+                <div className="space-y-3">
                   {reportData.executiveSummary.topActions.slice(0, 3).map((action: any, i: number) => (
-                    <div key={i} className="bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-lg p-3 flex items-start gap-3">
-                      <span className={`text-xs font-bold px-2 py-1 rounded ${
-                        action.priority === 'high' ? 'bg-red-500' :
-                        action.priority === 'medium' ? 'bg-yellow-500 text-yellow-900' : 'bg-green-500'
-                      }`}>
-                        {action.priority?.toUpperCase()}
-                      </span>
-                      <div>
-                        <p className="font-medium">{action.action}</p>
-                        <p className="text-xs text-indigo-200 mt-1">{action.rationale}</p>
+                    <div key={i} className="bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-lg p-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs font-bold px-2 py-1 rounded ${
+                            action.priority === 'high' ? 'bg-red-500' :
+                            action.priority === 'medium' ? 'bg-yellow-500 text-yellow-900' : 'bg-green-500'
+                          }`}>
+                            {action.priority?.toUpperCase()}
+                          </span>
+                          {action.category && (
+                            <span className="text-xs px-2 py-1 bg-white/20 rounded">
+                              {action.category === 'content' ? '📝' :
+                               action.category === 'technical' ? '⚙️' :
+                               action.category === 'reputation' ? '⭐' : '🎯'} {action.category}
+                            </span>
+                          )}
+                        </div>
+                        {action.roiScore !== undefined && (
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <div className="text-xs text-indigo-200">ROI Score</div>
+                              <div className={`text-lg font-bold ${
+                                action.roiScore >= 7 ? 'text-green-300' :
+                                action.roiScore >= 4 ? 'text-yellow-300' : 'text-red-300'
+                              }`}>
+                                {action.roiScore}/10
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <p className="font-medium mb-1">{action.action}</p>
+                      <p className="text-xs text-indigo-200 mb-2">{action.rationale}</p>
+                      <div className="flex items-center gap-4 text-xs text-indigo-300">
+                        {action.effort && (
+                          <span className="flex items-center gap-1">
+                            <span>⚡ Effort:</span>
+                            <span className={`font-medium ${
+                              action.effort === 'low' ? 'text-green-300' :
+                              action.effort === 'medium' ? 'text-yellow-300' : 'text-red-300'
+                            }`}>{action.effort}</span>
+                          </span>
+                        )}
+                        <span>📅 {action.timeline}</span>
+                        <span>📈 {action.expectedImpact}</span>
                       </div>
                     </div>
                   ))}
@@ -856,6 +891,92 @@ export default function ResultsPage() {
                   <span className="ml-1">{expandedSection === "methodology" ? "Hide" : "View"}</span>
                 </span>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* INSIGHTS & REPORTING - Quick Access Cards */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          {/* Journey Stage Analysis Card */}
+          <div
+            onClick={() => {
+              // Expand first journey stage
+              if (journeyStages.length > 0) {
+                setExpandedSection(journeyStages[0]?.stage || 'awareness');
+              }
+            }}
+            className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-blue-300"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100">Journey Stage Analysis</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Performance breakdown by Awareness, Consideration, and Decision stages.
+            </p>
+            <div className="flex items-center gap-2">
+              {journeyStages.slice(0, 3).map((stage: any, idx: number) => (
+                <div key={idx} className="flex-1 text-center">
+                  <div className={`text-lg font-bold ${
+                    (stage?.portrayal?.visibilityScore || 0) >= 70 ? 'text-green-600' :
+                    (stage?.portrayal?.visibilityScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {Math.round(stage?.portrayal?.visibilityScore || 0)}%
+                  </div>
+                  <div className="text-xs text-gray-500">{stage?.stage?.charAt(0).toUpperCase()}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Competitor Intelligence Card */}
+          <div
+            onClick={() => setExpandedSection("competitive")}
+            className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-amber-300"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-amber-100 dark:bg-amber-800 rounded-lg">
+                <Users className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100">Competitor Intelligence</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Side-by-side comparison with competitors across all stages.
+            </p>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Your visibility:</span>
+              <span className={`font-bold ${
+                (reportData.overallScore || 0) >= 70 ? 'text-green-600' :
+                (reportData.overallScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
+              }`}>
+                {reportData.overallScore || 0}%
+              </span>
+            </div>
+          </div>
+
+          {/* Executive Summary Card (scrolls to top) */}
+          <div
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-purple-300"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
+                <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-gray-100">Executive Summary</h3>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+              Key findings, patterns, and ROI-scored action items.
+            </p>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Priority actions:</span>
+              <span className="font-bold text-purple-600">
+                {reportData.executiveSummary?.topActions?.length || 0} items
+              </span>
             </div>
           </div>
         </div>
@@ -3016,39 +3137,166 @@ export default function ResultsPage() {
             </div>
 
             {/* Competitive Insights */}
-            <div className="mt-8 bg-gray-50 rounded-xl p-8">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">💡 Key Competitive Insights</h3>
-              <div className="grid md:grid-cols-2 gap-4">
+            <div className="mt-8 bg-gray-50 dark:bg-gray-900/50 rounded-xl p-8">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">💡 Key Competitive Insights</h3>
+              <div className="grid md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">Your Strongest Stage</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Your Strongest Stage</h4>
                   {(() => {
-                    const sorted = [...journeyStages].sort((a: any, b: any) => 
+                    const sorted = [...journeyStages].sort((a: any, b: any) =>
                       (b?.portrayal?.mentionRate || 0) - (a?.portrayal?.mentionRate || 0)
                     );
                     const best = sorted[0];
                     return (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="font-bold text-green-600">{best?.stageLabel || "N/A"}</span> with {Math.round(best?.portrayal?.mentionRate || 0)}% mention rate. 
+                        <span className="font-bold text-green-600">{best?.stageLabel || "N/A"}</span> with {Math.round(best?.portrayal?.mentionRate || 0)}% mention rate.
                         Focus on maintaining this lead while improving weaker stages.
                       </p>
                     );
                   })()}
                 </div>
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2">Biggest Opportunity</h4>
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Biggest Opportunity</h4>
                   {(() => {
-                    const sorted = [...journeyStages].sort((a: any, b: any) => 
+                    const sorted = [...journeyStages].sort((a: any, b: any) =>
                       (a?.portrayal?.mentionRate || 0) - (b?.portrayal?.mentionRate || 0)
                     );
                     const weakest = sorted[0];
                     return (
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        <span className="font-bold text-amber-600">{weakest?.stageLabel || "N/A"}</span> shows only {Math.round(weakest?.portrayal?.mentionRate || 0)}% visibility. 
+                        <span className="font-bold text-amber-600">{weakest?.stageLabel || "N/A"}</span> shows only {Math.round(weakest?.portrayal?.mentionRate || 0)}% visibility.
                         Improving this stage could significantly boost your overall AI presence.
                       </p>
                     );
                   })()}
                 </div>
+              </div>
+
+              {/* Sentiment Comparison */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-4">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">📊 Sentiment Comparison</h4>
+                <div className="space-y-3">
+                  {/* Your Brand Sentiment */}
+                  <div>
+                    <div className="flex items-center justify-between text-sm mb-1">
+                      <span className="font-medium text-pink-700 dark:text-pink-300">{reportData.brandOrKeyword || "Your Brand"}</span>
+                      <span className="text-xs text-gray-500">
+                        {(() => {
+                          const allResponses = reportData.aiTestResults || [];
+                          const brandResponses = allResponses.filter((r: any) => r.brandMentioned);
+                          const positive = brandResponses.filter((r: any) => r.sentiment === 'positive').length;
+                          const total = brandResponses.length || 1;
+                          return `${Math.round((positive / total) * 100)}% positive`;
+                        })()}
+                      </span>
+                    </div>
+                    {(() => {
+                      const allResponses = reportData.aiTestResults || [];
+                      const brandResponses = allResponses.filter((r: any) => r.brandMentioned);
+                      const positive = brandResponses.filter((r: any) => r.sentiment === 'positive').length;
+                      const neutral = brandResponses.filter((r: any) => r.sentiment === 'neutral').length;
+                      const negative = brandResponses.filter((r: any) => r.sentiment === 'negative').length;
+                      const total = positive + neutral + negative || 1;
+                      return (
+                        <div className="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                          <div className="bg-green-500" style={{ width: `${(positive / total) * 100}%` }} />
+                          <div className="bg-gray-400" style={{ width: `${(neutral / total) * 100}%` }} />
+                          <div className="bg-red-500" style={{ width: `${(negative / total) * 100}%` }} />
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Top Competitor Sentiment (if available) */}
+                  {(() => {
+                    const allResponses = reportData.aiTestResults || [];
+                    const competitors = reportData.competitors || [];
+                    if (competitors.length === 0) return null;
+
+                    const topCompetitor = competitors[0];
+                    const compResponses = allResponses.filter((r: any) =>
+                      r.competitorsMentioned?.includes(topCompetitor)
+                    );
+
+                    if (compResponses.length === 0) return null;
+
+                    const positive = compResponses.filter((r: any) => r.sentiment === 'positive').length;
+                    const neutral = compResponses.filter((r: any) => r.sentiment === 'neutral').length;
+                    const negative = compResponses.filter((r: any) => r.sentiment === 'negative').length;
+                    const total = positive + neutral + negative || 1;
+
+                    return (
+                      <div>
+                        <div className="flex items-center justify-between text-sm mb-1">
+                          <span className="font-medium text-gray-600 dark:text-gray-400">{topCompetitor}</span>
+                          <span className="text-xs text-gray-500">
+                            {Math.round((positive / total) * 100)}% positive
+                          </span>
+                        </div>
+                        <div className="flex h-3 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-700">
+                          <div className="bg-green-400" style={{ width: `${(positive / total) * 100}%` }} />
+                          <div className="bg-gray-300" style={{ width: `${(neutral / total) * 100}%` }} />
+                          <div className="bg-red-400" style={{ width: `${(negative / total) * 100}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-full" /> Positive</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 bg-gray-400 rounded-full" /> Neutral</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-full" /> Negative</span>
+                </div>
+              </div>
+
+              {/* Position Ranking Analysis */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">🏆 Position Ranking</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  How often your brand appears in different positions when mentioned by AI platforms.
+                </p>
+                {(() => {
+                  const allResponses = reportData.aiTestResults || [];
+                  const brandResponses = allResponses.filter((r: any) => r.brandMentioned && r.position);
+
+                  if (brandResponses.length === 0) {
+                    return <p className="text-sm text-gray-500 italic">No position data available</p>;
+                  }
+
+                  const positionCounts: Record<number, number> = {};
+                  brandResponses.forEach((r: any) => {
+                    positionCounts[r.position] = (positionCounts[r.position] || 0) + 1;
+                  });
+
+                  const total = brandResponses.length;
+                  const topPositions = Object.entries(positionCounts)
+                    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                    .slice(0, 5);
+
+                  return (
+                    <div className="flex items-end gap-2 h-24">
+                      {topPositions.map(([pos, count]) => {
+                        const percentage = (count / total) * 100;
+                        return (
+                          <div key={pos} className="flex-1 flex flex-col items-center">
+                            <div
+                              className={`w-full rounded-t transition-all ${
+                                pos === '1' ? 'bg-green-500' :
+                                pos === '2' ? 'bg-blue-500' :
+                                pos === '3' ? 'bg-amber-500' : 'bg-gray-400'
+                              }`}
+                              style={{ height: `${Math.max(percentage, 10)}%` }}
+                            />
+                            <div className="text-xs font-bold mt-1">
+                              {pos === '1' ? '🥇' : pos === '2' ? '🥈' : pos === '3' ? '🥉' : `#${pos}`}
+                            </div>
+                            <div className="text-xs text-gray-500">{Math.round(percentage)}%</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

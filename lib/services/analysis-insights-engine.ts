@@ -22,6 +22,9 @@ export interface ActionItem {
   rationale: string;
   expectedImpact: string;
   timeline: string;
+  roiScore: number; // 1-10 scale based on effort vs impact
+  effort: 'low' | 'medium' | 'high';
+  category: 'content' | 'technical' | 'reputation' | 'competitive';
 }
 
 export interface ExecutiveSummary {
@@ -331,7 +334,10 @@ function getDecisionInsight(score: number, responses: AIResponse[]): string {
 }
 
 /**
- * Generate action items based on analysis
+ * Generate action items based on analysis with ROI scoring
+ * ROI Score = (Impact Score × Stage Weight) / Effort Score
+ * Impact: 1-10 based on expected improvement
+ * Effort: low=2, medium=5, high=8
  */
 function generateActionItems(
   brandName: string,
@@ -340,46 +346,68 @@ function generateActionItems(
 ): ActionItem[] {
   const actions: ActionItem[] = [];
 
+  // Calculate ROI score helper
+  const calculateROI = (impactScore: number, effort: 'low' | 'medium' | 'high', stageWeight: number = 1): number => {
+    const effortScores = { low: 2, medium: 5, high: 8 };
+    return Math.round((impactScore * stageWeight * 10) / effortScores[effort]);
+  };
+
   // Priority 1: Address weakest stage
   if (stageScores.awareness < 40) {
+    const impact = Math.min(10, Math.round((40 - stageScores.awareness) / 4) + 5);
     actions.push({
       priority: 'high',
       action: 'Create authoritative educational content',
       rationale: `Awareness stage score is ${stageScores.awareness}%. LLMs are not citing your content as a source.`,
       expectedImpact: 'Increase content citations by 50%+ in 90 days',
       timeline: '30-60 days for content creation',
+      roiScore: calculateROI(impact, 'medium', 0.2), // Awareness weight: 20%
+      effort: 'medium',
+      category: 'content',
     });
   }
 
   if (stageScores.consideration < 40) {
+    const impact = Math.min(10, Math.round((40 - stageScores.consideration) / 4) + 6);
     actions.push({
       priority: 'high',
       action: 'Build comparison and review content',
       rationale: `Consideration stage score is ${stageScores.consideration}%. Brand missing from "best of" queries.`,
       expectedImpact: 'Appear in 50%+ of comparison queries',
       timeline: '60-90 days',
+      roiScore: calculateROI(impact, 'medium', 0.35), // Consideration weight: 35%
+      effort: 'medium',
+      category: 'content',
     });
   }
 
   if (stageScores.decision < 40) {
+    const impact = Math.min(10, Math.round((40 - stageScores.decision) / 4) + 7);
     actions.push({
       priority: 'high',
       action: 'Address reputation and boost social proof',
       rationale: `Decision stage score is ${stageScores.decision}%. Weak recommendation signals.`,
       expectedImpact: 'Improve positive sentiment to 60%+',
       timeline: '90-120 days',
+      roiScore: calculateROI(impact, 'high', 0.45), // Decision weight: 45%
+      effort: 'high',
+      category: 'reputation',
     });
   }
 
   // Address competitor preference
   if (patterns.competitorPreferences.length > 0) {
     const topCompetitor = patterns.competitorPreferences[0];
+    const impact = Math.min(10, topCompetitor.frequency + 3);
     actions.push({
       priority: 'medium',
       action: `Create competitive positioning content vs ${topCompetitor.competitor}`,
       rationale: `${topCompetitor.competitor} recommended ${topCompetitor.frequency} times when ${brandName} was not.`,
       expectedImpact: 'Reduce competitor preference by 30%',
       timeline: '45-60 days',
+      roiScore: calculateROI(impact, 'medium', 0.35),
+      effort: 'medium',
+      category: 'competitive',
     });
   }
 
@@ -392,13 +420,46 @@ function generateActionItems(
         rationale: `${bias.llm} shows ${bias.bias}.`,
         expectedImpact: `Improve ${bias.llm} mention rate by 40%`,
         timeline: '30-45 days',
+        roiScore: calculateROI(7, 'low', 0.33), // Platform-specific optimization is usually quick
+        effort: 'low',
+        category: 'technical',
       });
     }
   }
 
-  // Sort by priority
-  const priorityOrder = { high: 0, medium: 1, low: 2 };
-  actions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  // Add low-hanging fruit recommendations based on scores
+  if (stageScores.awareness >= 40 && stageScores.awareness < 70) {
+    actions.push({
+      priority: 'low',
+      action: 'Add structured data and schema markup',
+      rationale: 'Technical optimization can improve LLM understanding of your content.',
+      expectedImpact: 'Increase content structure recognition by 25%',
+      timeline: '7-14 days',
+      roiScore: calculateROI(6, 'low', 0.2),
+      effort: 'low',
+      category: 'technical',
+    });
+  }
+
+  if (stageScores.consideration >= 40 && stageScores.consideration < 70) {
+    actions.push({
+      priority: 'low',
+      action: 'Create FAQ content addressing common questions',
+      rationale: 'FAQ-style content is highly cited by LLMs in comparison queries.',
+      expectedImpact: 'Improve consideration stage visibility by 20%',
+      timeline: '14-21 days',
+      roiScore: calculateROI(5, 'low', 0.35),
+      effort: 'low',
+      category: 'content',
+    });
+  }
+
+  // Sort by ROI score (highest first), then by priority
+  actions.sort((a, b) => {
+    if (b.roiScore !== a.roiScore) return b.roiScore - a.roiScore;
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return priorityOrder[a.priority] - priorityOrder[b.priority];
+  });
 
   return actions.slice(0, 5); // Top 5 actions
 }
