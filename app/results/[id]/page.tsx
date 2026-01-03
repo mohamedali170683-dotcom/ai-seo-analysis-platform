@@ -107,18 +107,30 @@ function generateStrategicInsight(
   const sentiment = response.sentiment || 'neutral';
   const sources = [...(response.sources || []), ...(response.citations || [])];
 
+  // Extract a meaningful snippet from the response (first 2 sentences or 150 chars)
+  const extractMeaningfulSnippet = (text: string, maxLen: number = 120): string => {
+    if (!text) return '';
+    const clean = text.replace(/\*\*/g, '').replace(/\*/g, '').trim();
+    const sentences = clean.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    if (sentences.length > 0) {
+      const snippet = sentences[0].trim();
+      return snippet.length > maxLen ? snippet.substring(0, maxLen) + '...' : snippet;
+    }
+    return clean.substring(0, maxLen) + (clean.length > maxLen ? '...' : '');
+  };
+
   // Extract key phrases from response that explain WHY
   const whyPatterns = [
     /known for ([^.]+)/i,
     /stands out (because|for|due to) ([^.]+)/i,
     /popular (because|for|due to) ([^.]+)/i,
     /recommended (because|for|due to) ([^.]+)/i,
-    /offers ([^.]+)/i,
-    /provides ([^.]+)/i,
     /excels (at|in) ([^.]+)/i,
     /specializes in ([^.]+)/i,
     /leader in ([^.]+)/i,
     /best for ([^.]+)/i,
+    /known as ([^.]+)/i,
+    /recognized for ([^.]+)/i,
   ];
 
   let keyReason = '';
@@ -139,46 +151,50 @@ function generateStrategicInsight(
     } catch { return null; }
   }).filter(Boolean);
 
+  // Get a unique snippet from this response
+  const responseSnippet = extractMeaningfulSnippet(fullResponse);
+
   if (isCompetitorWin) {
     // Competitor was mentioned instead of brand
     if (competitors.length > 0) {
       const competitorList = competitors.slice(0, 2).join(' and ');
       const sourceNote = sourceDomains.length > 0
-        ? ` The AI cited ${sourceDomains.slice(0, 2).join(', ')} as sources.`
+        ? ` Sources: ${sourceDomains.slice(0, 2).join(', ')}.`
         : '';
 
       if (keyReason) {
         return {
-          insight: `When asked about ${category}, ${response.platform} recommended ${competitorList} instead of ${brandName}, specifically highlighting "${keyReason}".${sourceNote}`,
-          recommendation: `Create authoritative content that demonstrates your brand's ${keyReason.toLowerCase().includes('quality') ? 'quality standards' : keyReason.toLowerCase().includes('price') || keyReason.toLowerCase().includes('value') ? 'value proposition' : keyReason.toLowerCase().includes('sustain') || keyReason.toLowerCase().includes('eco') ? 'sustainability credentials' : 'competitive advantages'}.`
+          insight: `${response.platform} recommended ${competitorList} for "${question.substring(0, 50)}...", highlighting "${keyReason}".${sourceNote}`,
+          recommendation: `Create content demonstrating your ${keyReason.toLowerCase().includes('quality') ? 'quality standards' : keyReason.toLowerCase().includes('price') || keyReason.toLowerCase().includes('value') ? 'value proposition' : keyReason.toLowerCase().includes('sustain') || keyReason.toLowerCase().includes('eco') ? 'sustainability credentials' : 'competitive advantages'}.`
         };
       }
+      // Use snippet when no key reason found
       return {
-        insight: `${response.platform} chose to recommend ${competitorList} for this query, indicating they have stronger AI visibility for ${category} topics.${sourceNote}`,
-        recommendation: `Analyze ${competitorList}'s content strategy and create similar authoritative resources to improve your AI presence.`
+        insight: `${response.platform} recommended ${competitorList}: "${responseSnippet}"${sourceNote}`,
+        recommendation: `Research why ${competitorList} ranks higher and create comparable authoritative content.`
       };
     }
-    // Brand not mentioned, no specific competitors found
+    // Brand not mentioned, no specific competitors found - use snippet
     return {
-      insight: `${response.platform} provided recommendations without mentioning ${brandName}. This suggests a gap in AI training data for your brand in the ${category} space.`,
-      recommendation: `Build topical authority by creating comprehensive, expert content that directly addresses queries like this.`
+      insight: `${response.platform} answered without mentioning ${brandName}: "${responseSnippet}"`,
+      recommendation: `Create expert content addressing this query type to improve visibility.`
     };
   } else {
     // Brand was mentioned (positive case)
-    const positionText = response.position === 1 ? 'as the #1 recommendation' :
-                         response.position === 2 ? 'as a top contender (#2)' :
-                         response.position <= 3 ? `in position #${response.position}` : '';
-    const sentimentEmoji = sentiment === 'positive' ? '👍' : sentiment === 'negative' ? '⚠️' : '';
+    const positionText = response.position === 1 ? '#1' :
+                         response.position === 2 ? '#2' :
+                         response.position <= 3 ? `#${response.position}` : '';
 
     if (keyReason) {
       return {
-        insight: `${sentimentEmoji} ${response.platform} recommended ${brandName} ${positionText}, highlighting "${keyReason}".`,
-        recommendation: `Continue emphasizing this strength in your content to maintain AI visibility.`
+        insight: `${response.platform} ranked ${brandName} ${positionText} for "${question.substring(0, 40)}...", noting "${keyReason}".`,
+        recommendation: `Continue emphasizing this strength in your content strategy.`
       };
     }
+    // Use snippet for context
     return {
-      insight: `${sentimentEmoji} ${response.platform} included ${brandName} ${positionText} for this ${category} query${sentiment === 'positive' ? ' with positive framing' : ''}.`,
-      recommendation: `Maintain and expand content that answers similar questions to sustain visibility.`
+      insight: `${response.platform} included ${brandName} ${positionText}: "${responseSnippet}"`,
+      recommendation: `Maintain content presence for similar queries.`
     };
   }
 }
@@ -3456,13 +3472,13 @@ export default function ResultsPage() {
                                 </div>
                               )}
 
-                              {/* Supporting snippet - collapsible */}
+                              {/* View full AI response - collapsible */}
                               <details className="group mt-3">
                                 <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                                  View original AI response →
+                                  View full AI response →
                                 </summary>
-                                <div className="mt-2 bg-gray-50 dark:bg-gray-900 rounded p-3 text-xs text-gray-600 dark:text-gray-400 italic">
-                                  &quot;{extractSmartSnippet(response.fullResponse, 300)}&quot;
+                                <div className="mt-2 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed max-h-64 overflow-y-auto">
+                                  {response.fullResponse}
                                 </div>
                               </details>
 
@@ -3596,26 +3612,27 @@ export default function ResultsPage() {
                                 <span className="font-medium">Query:</span> &quot;{response.question}&quot;
                               </p>
 
-                              {/* Strategic Insight with supporting snippet */}
+                              {/* Strategic Insight */}
                               <div className={`bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 ${
                                 isPositive ? 'border-green-400' : 'border-blue-400'
                               }`}>
                                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                                  {insight.insight}
+                                  🔍 {insight.insight}
                                 </p>
-
-                                {/* Supporting snippet */}
-                                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                                  <p className="text-xs text-gray-500 mb-1">Supporting evidence:</p>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                    &quot;{extractSmartSnippet(response.fullResponse, 250, brandName)}&quot;
-                                  </p>
-                                </div>
-
-                                <p className="text-xs text-green-700 dark:text-green-300 italic mt-3">
+                                <p className={`text-xs italic ${isPositive ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'}`}>
                                   💡 {insight.recommendation}
                                 </p>
                               </div>
+
+                              {/* View full AI response - collapsible */}
+                              <details className="group mt-3">
+                                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                                  View full AI response →
+                                </summary>
+                                <div className="mt-2 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed max-h-64 overflow-y-auto">
+                                  {response.fullResponse}
+                                </div>
+                              </details>
 
                               {/* Sources */}
                               {(response.sources?.length > 0 || response.citations?.length > 0) && (

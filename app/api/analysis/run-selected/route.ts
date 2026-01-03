@@ -467,6 +467,10 @@ async function executeSelectedAnalysis(
               sources: (response.sources || []) as any,
               hasGrounding: response.hasGrounding || false,
               isRealAPI: response.isRealAPI || false,
+              // Follow-up question data for competitive analysis
+              followUpQuestion: response.followUpQuestion || null,
+              followUpResponse: response.followUpResponse || null,
+              followUpSources: response.followUpSources ? (response.followUpSources as any) : null,
             },
           });
           savedResponses++;
