@@ -3207,21 +3207,81 @@ export default function ResultsPage() {
               {(() => {
                 const allResponses = reportData.aiTestResults || [];
                 const competitors = reportData.competitors || [];
+                const brandName = (reportData.brandOrKeyword || '').toLowerCase();
 
-                // Find responses where brand was NOT mentioned but competitors were
-                const competitorWins = allResponses.filter((r: any) =>
-                  !r.brandMentioned &&
-                  r.competitorsMentioned &&
-                  r.competitorsMentioned.length > 0
-                ).slice(0, 4);
+                // Helper to find competitors mentioned in response text
+                const findCompetitorsInText = (text: string): string[] => {
+                  if (!text || competitors.length === 0) return [];
+                  const lowerText = text.toLowerCase();
+                  return competitors.filter((comp: string) =>
+                    lowerText.includes(comp.toLowerCase())
+                  );
+                };
+
+                // Find responses where brand was NOT mentioned but response has content
+                // and either mentions competitors or brand isn't there
+                const competitorWins = allResponses
+                  .filter((r: any) => !r.brandMentioned && r.fullResponse)
+                  .map((r: any) => ({
+                    ...r,
+                    foundCompetitors: findCompetitorsInText(r.fullResponse)
+                  }))
+                  .filter((r: any) => r.foundCompetitors.length > 0 || r.fullResponse.length > 100)
+                  .slice(0, 4);
 
                 if (competitorWins.length === 0) {
+                  // Show responses where brand wasn't mentioned even if no known competitors
+                  const missedOpportunities = allResponses
+                    .filter((r: any) => !r.brandMentioned && r.fullResponse && r.fullResponse.length > 50)
+                    .slice(0, 3);
+
+                  if (missedOpportunities.length === 0) {
+                    return (
+                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 text-center">
+                        <span className="text-4xl mb-3 block">🎉</span>
+                        <p className="text-green-800 dark:text-green-200 font-medium">
+                          Great news! Your brand was mentioned in all AI responses.
+                        </p>
+                      </div>
+                    );
+                  }
+
                   return (
-                    <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 text-center">
-                      <span className="text-4xl mb-3 block">🎉</span>
-                      <p className="text-green-800 dark:text-green-200 font-medium">
-                        Great news! We didn&apos;t find cases where competitors were recommended over you.
+                    <div className="space-y-4">
+                      <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+                        These AI responses didn&apos;t mention your brand - potential visibility gaps:
                       </p>
+                      {missedOpportunities.map((response: any, idx: number) => (
+                        <div key={idx} className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-800">
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-800 flex items-center justify-center">
+                                <span className="text-amber-600 dark:text-amber-300 font-bold text-sm">
+                                  {response.platform?.substring(0, 2).toUpperCase() || 'AI'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800 px-2 py-0.5 rounded">
+                                  {response.platform || 'AI Platform'}
+                                </span>
+                                <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
+                                  Brand not mentioned
+                                </span>
+                              </div>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+                                <span className="text-gray-500">Question:</span> &quot;{response.question}&quot;
+                              </p>
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                  {extractSmartSnippet(response.fullResponse, 400)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   );
                 }
@@ -3243,49 +3303,63 @@ export default function ResultsPage() {
                               <span className="text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-800 px-2 py-0.5 rounded">
                                 {response.platform || 'AI Platform'}
                               </span>
-                              <span className="text-xs text-gray-500">
-                                {response.competitorsMentioned?.length || 0} competitor{(response.competitorsMentioned?.length || 0) !== 1 ? 's' : ''} mentioned
-                              </span>
+                              {response.foundCompetitors?.length > 0 && (
+                                <span className="text-xs text-red-600 dark:text-red-400 font-medium">
+                                  {response.foundCompetitors.length} competitor{response.foundCompetitors.length !== 1 ? 's' : ''} mentioned instead
+                                </span>
+                              )}
                             </div>
 
                             {/* The question asked */}
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
                               <span className="text-gray-500">Question:</span> &quot;{response.question}&quot;
                             </p>
 
                             {/* Competitors mentioned */}
-                            <div className="flex flex-wrap gap-1 mb-3">
-                              {response.competitorsMentioned?.slice(0, 5).map((comp: string, cIdx: number) => (
-                                <span key={cIdx} className="text-xs bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-full">
-                                  {comp}
-                                </span>
-                              ))}
-                            </div>
-
-                            {/* Response snippet */}
-                            {response.responseText && (
-                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                                <p className="text-sm text-gray-600 dark:text-gray-400 italic line-clamp-3">
-                                  &quot;{extractSmartSnippet(response.responseText, 300)}&quot;
-                                </p>
+                            {response.foundCompetitors?.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mb-3">
+                                <span className="text-xs text-gray-500">Mentioned:</span>
+                                {response.foundCompetitors.slice(0, 5).map((comp: string, cIdx: number) => (
+                                  <span key={cIdx} className="text-xs bg-red-100 dark:bg-red-800 text-red-700 dark:text-red-200 px-2 py-0.5 rounded-full font-medium">
+                                    {comp}
+                                  </span>
+                                ))}
                               </div>
                             )}
 
+                            {/* Response snippet - THE ACTUAL AI RESPONSE */}
+                            <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Response:</span>
+                              </div>
+                              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                {extractSmartSnippet(response.fullResponse, 400)}
+                              </p>
+                            </div>
+
                             {/* Sources if available */}
                             {(response.sources?.length > 0 || response.citations?.length > 0) && (
-                              <div className="mt-2">
-                                <span className="text-xs text-gray-500">Sources cited: </span>
-                                {[...(response.sources || []), ...(response.citations || [])].slice(0, 2).map((src: any, sIdx: number) => (
-                                  <a
-                                    key={sIdx}
-                                    href={typeof src === 'string' ? src : src.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 hover:underline ml-1"
-                                  >
-                                    {typeof src === 'string' ? new URL(src).hostname : src.title || new URL(src.url).hostname}
-                                  </a>
-                                ))}
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
+                                <span className="text-xs text-gray-500">Sources:</span>
+                                {[...(response.sources || []), ...(response.citations || [])].slice(0, 3).map((src: any, sIdx: number) => {
+                                  try {
+                                    const url = typeof src === 'string' ? src : src.url;
+                                    const title = typeof src === 'object' && src.title ? src.title : new URL(url).hostname;
+                                    return (
+                                      <a
+                                        key={sIdx}
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:underline px-2 py-1 rounded"
+                                      >
+                                        {title}
+                                      </a>
+                                    );
+                                  } catch {
+                                    return null;
+                                  }
+                                })}
                               </div>
                             )}
                           </div>
@@ -3305,114 +3379,140 @@ export default function ResultsPage() {
               </p>
               {(() => {
                 const allResponses = reportData.aiTestResults || [];
+                const brandName = reportData.brandOrKeyword || '';
 
-                // Find responses where brand WAS mentioned positively
-                const brandWins = allResponses.filter((r: any) =>
-                  r.brandMentioned &&
-                  (r.sentiment === 'positive' || r.position <= 2)
-                ).slice(0, 3);
+                // Find responses where brand WAS mentioned - prioritize those with fullResponse
+                const brandWins = allResponses
+                  .filter((r: any) => r.brandMentioned && r.fullResponse)
+                  .sort((a: any, b: any) => {
+                    // Sort by sentiment (positive first), then by position
+                    if (a.sentiment === 'positive' && b.sentiment !== 'positive') return -1;
+                    if (b.sentiment === 'positive' && a.sentiment !== 'positive') return 1;
+                    return (a.position || 99) - (b.position || 99);
+                  })
+                  .slice(0, 4);
 
                 if (brandWins.length === 0) {
+                  // Try to find any mentions even without fullResponse
                   const anyMentions = allResponses.filter((r: any) => r.brandMentioned).slice(0, 3);
                   if (anyMentions.length === 0) {
                     return (
                       <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 text-center">
                         <span className="text-4xl mb-3 block">⚠️</span>
                         <p className="text-amber-800 dark:text-amber-200 font-medium">
-                          We couldn&apos;t find strong positive mentions of your brand in AI responses.
+                          We couldn&apos;t find mentions of your brand in AI responses.
                         </p>
                         <p className="text-sm text-amber-600 dark:text-amber-300 mt-2">
-                          This is an opportunity to improve your AI visibility.
+                          This is a significant opportunity to improve your AI visibility.
                         </p>
                       </div>
                     );
                   }
-                  // Show neutral mentions instead
-                  return renderBrandMentions(anyMentions, 'neutral');
-                }
-
-                return renderBrandMentions(brandWins, 'positive');
-
-                function renderBrandMentions(mentions: any[], type: string) {
+                  // Show what we have
                   return (
                     <div className="space-y-4">
-                      {mentions.map((response: any, idx: number) => (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        Your brand was mentioned {anyMentions.length} time{anyMentions.length !== 1 ? 's' : ''}, but response details were not captured.
+                      </p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="space-y-4">
+                    {brandWins.map((response: any, idx: number) => {
+                      const isPositive = response.sentiment === 'positive';
+                      const isTopPosition = response.position && response.position <= 2;
+
+                      return (
                         <div key={idx} className={`rounded-xl p-5 border ${
-                          type === 'positive'
+                          isPositive
                             ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                            : 'bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700'
+                            : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
                         }`}>
                           <div className="flex items-start gap-4">
                             <div className="flex-shrink-0">
                               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                type === 'positive'
+                                isPositive
                                   ? 'bg-green-100 dark:bg-green-800'
-                                  : 'bg-gray-100 dark:bg-gray-700'
+                                  : 'bg-blue-100 dark:bg-blue-800'
                               }`}>
                                 <span className={`font-bold text-sm ${
-                                  type === 'positive'
+                                  isPositive
                                     ? 'text-green-600 dark:text-green-300'
-                                    : 'text-gray-600 dark:text-gray-300'
+                                    : 'text-blue-600 dark:text-blue-300'
                                 }`}>
                                   {response.platform?.substring(0, 2).toUpperCase() || 'AI'}
                                 </span>
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
                                 <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                                  type === 'positive'
+                                  isPositive
                                     ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-800'
-                                    : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
+                                    : 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-800'
                                 }`}>
                                   {response.platform || 'AI Platform'}
                                 </span>
                                 {response.position && (
-                                  <span className="text-xs text-gray-500">
-                                    Position #{response.position}
+                                  <span className={`text-xs px-2 py-0.5 rounded ${
+                                    isTopPosition ? 'bg-yellow-100 text-yellow-700 font-medium' : 'bg-gray-100 text-gray-600'
+                                  }`}>
+                                    {isTopPosition ? '🏆' : ''} Position #{response.position}
                                   </span>
                                 )}
                                 {response.sentiment && (
-                                  <span className={`text-xs px-2 py-0.5 rounded ${
+                                  <span className={`text-xs px-2 py-0.5 rounded font-medium ${
                                     response.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
                                     response.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
-                                    'bg-gray-100 text-gray-700'
+                                    'bg-gray-100 text-gray-600'
                                   }`}>
-                                    {response.sentiment}
+                                    {response.sentiment === 'positive' ? '👍' : response.sentiment === 'negative' ? '👎' : '➖'} {response.sentiment}
                                   </span>
                                 )}
                               </div>
 
                               {/* The question asked */}
-                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
                                 <span className="text-gray-500">Question:</span> &quot;{response.question}&quot;
                               </p>
 
-                              {/* Response snippet */}
-                              {response.responseText && (
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 italic line-clamp-3">
-                                    &quot;{extractSmartSnippet(response.responseText, 300)}&quot;
-                                  </p>
+                              {/* Response snippet - THE ACTUAL AI RESPONSE */}
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">AI Response:</span>
+                                </div>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                                  {extractSmartSnippet(response.fullResponse, 400, brandName)}
+                                </p>
+                              </div>
+
+                              {/* Context extract if different from fullResponse */}
+                              {response.context && response.context !== response.fullResponse && (
+                                <div className="mt-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-3 border border-yellow-200 dark:border-yellow-800">
+                                  <span className="text-xs font-medium text-yellow-700 dark:text-yellow-300">Key mention: </span>
+                                  <span className="text-sm text-yellow-800 dark:text-yellow-200 italic">&quot;{response.context}&quot;</span>
                                 </div>
                               )}
 
                               {/* Sources if available */}
                               {(response.sources?.length > 0 || response.citations?.length > 0) && (
-                                <div className="mt-2">
-                                  <span className="text-xs text-gray-500">Sources: </span>
-                                  {[...(response.sources || []), ...(response.citations || [])].slice(0, 2).map((src: any, sIdx: number) => {
+                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                  <span className="text-xs text-gray-500">Sources:</span>
+                                  {[...(response.sources || []), ...(response.citations || [])].slice(0, 3).map((src: any, sIdx: number) => {
                                     try {
                                       const url = typeof src === 'string' ? src : src.url;
+                                      const title = typeof src === 'object' && src.title ? src.title : new URL(url).hostname;
                                       return (
                                         <a
                                           key={sIdx}
                                           href={url}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-xs text-blue-600 hover:underline ml-1"
+                                          className="text-xs bg-gray-100 dark:bg-gray-700 text-blue-600 dark:text-blue-400 hover:underline px-2 py-1 rounded"
                                         >
-                                          {new URL(url).hostname}
+                                          {title}
                                         </a>
                                       );
                                     } catch {
@@ -3424,10 +3524,10 @@ export default function ResultsPage() {
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  );
-                }
+                      );
+                    })}
+                  </div>
+                );
               })()}
             </div>
 
@@ -3436,11 +3536,13 @@ export default function ResultsPage() {
               <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📊 Analysis Summary</h3>
               {(() => {
                 const allResponses = reportData.aiTestResults || [];
+                const competitors = reportData.competitors || [];
                 const totalResponses = allResponses.length;
                 const brandMentions = allResponses.filter((r: any) => r.brandMentioned).length;
-                const competitorMentions = allResponses.filter((r: any) =>
-                  !r.brandMentioned && r.competitorsMentioned?.length > 0
-                ).length;
+
+                // Calculate missed opportunities (brand not mentioned when response exists)
+                const missedOpportunities = allResponses.filter((r: any) => !r.brandMentioned && r.fullResponse).length;
+
                 const positiveMentions = allResponses.filter((r: any) =>
                   r.brandMentioned && r.sentiment === 'positive'
                 ).length;
@@ -3448,23 +3550,42 @@ export default function ResultsPage() {
                   r.brandMentioned && r.position === 1
                 ).length;
 
+                // Calculate mention rate
+                const mentionRate = totalResponses > 0 ? Math.round((brandMentions / totalResponses) * 100) : 0;
+
                 return (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                      <div className="text-3xl font-bold text-indigo-600">{totalResponses}</div>
-                      <div className="text-xs text-gray-500 mt-1">Total AI Responses</div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                        <div className="text-3xl font-bold text-indigo-600">{totalResponses}</div>
+                        <div className="text-xs text-gray-500 mt-1">AI Responses Analyzed</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                        <div className="text-3xl font-bold text-green-600">{brandMentions}</div>
+                        <div className="text-xs text-gray-500 mt-1">Brand Mentions</div>
+                        <div className="text-xs text-green-600 font-medium mt-1">{mentionRate}% rate</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                        <div className="text-3xl font-bold text-amber-600">{missedOpportunities}</div>
+                        <div className="text-xs text-gray-500 mt-1">Missed Opportunities</div>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                        <div className="text-3xl font-bold text-blue-600">{positiveMentions}</div>
+                        <div className="text-xs text-gray-500 mt-1">Positive Mentions</div>
+                      </div>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                      <div className="text-3xl font-bold text-green-600">{brandMentions}</div>
-                      <div className="text-xs text-gray-500 mt-1">Your Brand Mentioned</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                      <div className="text-3xl font-bold text-amber-600">{competitorMentions}</div>
-                      <div className="text-xs text-gray-500 mt-1">Competitor Wins</div>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                      <div className="text-3xl font-bold text-blue-600">{firstPositions}</div>
-                      <div className="text-xs text-gray-500 mt-1">First Position</div>
+
+                    {/* Quick insight */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {mentionRate >= 70 ? (
+                          <>🎯 <strong>Strong visibility!</strong> Your brand appears in {mentionRate}% of AI responses.</>
+                        ) : mentionRate >= 40 ? (
+                          <>📈 <strong>Room for growth.</strong> Your brand appears in {mentionRate}% of responses. Target: 70%+</>
+                        ) : (
+                          <>⚠️ <strong>Visibility gap detected.</strong> Only {mentionRate}% mention rate. AI platforms are recommending alternatives.</>
+                        )}
+                      </p>
                     </div>
                   </div>
                 );
