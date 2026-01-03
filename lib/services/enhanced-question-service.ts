@@ -162,13 +162,17 @@ export class EnhancedQuestionService {
     // Sort by search volume (highest first)
     allQuestions.sort((a, b) => b.searchVolume - a.searchVolume);
 
+    // CRITICAL: Ensure key "best brand" questions are always present
+    // These are essential for competitive analysis
+    const withKeyQuestions = this.ensureKeyQuestions(allQuestions, category);
+
     // Balance across stages
-    const balanced = this.balanceAcrossStages(allQuestions, maxQuestionsPerStage);
+    const balanced = this.balanceAcrossStages(withKeyQuestions, maxQuestionsPerStage);
 
     console.log(`✅ [QUESTIONS] Final: ${balanced.length} questions in ${Date.now() - startTime}ms`);
     console.log(`   📊 Sources: ${[...new Set(balanced.map(q => q.source))].join(', ')}`);
     console.log(`   📊 Volumes: ${balanced.map(q => q.searchVolume).join(', ')}`);
-    
+
     return balanced;
   }
 
@@ -229,15 +233,77 @@ export class EnhancedQuestionService {
       { question: `${brandName} subscription plans`, searchVolume: 2800, difficulty: 30, intent: "commercial", category: "decision", questionType: "brand", score: 70, source: "generated" },
     );
 
-    // Category questions (if provided)
+    // Category questions (if provided) - CRITICAL for competitive analysis
     if (category) {
       questions.push(
+        // Awareness - what is the category
         { question: `Best ${category}?`, searchVolume: 12000, difficulty: 50, intent: "commercial", category: "awareness", questionType: "category", score: 90, source: "generated" },
-        { question: `Top ${category} ${new Date().getFullYear()}`, searchVolume: 8000, difficulty: 45, intent: "commercial", category: "consideration", questionType: "category", score: 85, source: "generated" },
+
+        // CONSIDERATION - KEY QUESTIONS for competitive analysis
+        { question: `What is the best brand for ${category}?`, searchVolume: 15000, difficulty: 45, intent: "commercial", category: "consideration", questionType: "category", score: 95, source: "generated" },
+        { question: `Top ${category} brands ${new Date().getFullYear()}`, searchVolume: 10000, difficulty: 45, intent: "commercial", category: "consideration", questionType: "category", score: 88, source: "generated" },
         { question: `${category} comparison`, searchVolume: 5000, difficulty: 40, intent: "commercial", category: "consideration", questionType: "category", score: 75, source: "generated" },
-        { question: `Best free ${category}?`, searchVolume: 6000, difficulty: 35, intent: "commercial", category: "decision", questionType: "category", score: 78, source: "generated" },
-        { question: `${category} pricing comparison`, searchVolume: 4000, difficulty: 38, intent: "commercial", category: "decision", questionType: "category", score: 72, source: "generated" },
+
+        // DECISION - KEY QUESTIONS for competitive analysis
+        { question: `What brand do you recommend for ${category}?`, searchVolume: 12000, difficulty: 35, intent: "commercial", category: "decision", questionType: "category", score: 92, source: "generated" },
+        { question: `Which ${category} brand should I buy?`, searchVolume: 9000, difficulty: 38, intent: "commercial", category: "decision", questionType: "category", score: 88, source: "generated" },
+        { question: `Best ${category} to buy right now?`, searchVolume: 8000, difficulty: 35, intent: "commercial", category: "decision", questionType: "category", score: 85, source: "generated" },
       );
+    }
+
+    return questions;
+  }
+
+  /**
+   * Ensure critical "best brand" questions are ALWAYS included
+   * These questions are essential for competitive analysis
+   */
+  private ensureKeyQuestions(questions: DiscoveredQuestion[], category?: string): DiscoveredQuestion[] {
+    if (!category) return questions;
+
+    const existing = new Set(questions.map(q => q.question.toLowerCase()));
+
+    // Required questions for competitive analysis
+    const requiredQuestions: DiscoveredQuestion[] = [
+      // Consideration stage - must ask what's the best brand
+      {
+        question: `What is the best brand for ${category}?`,
+        searchVolume: 15000,
+        difficulty: 40,
+        intent: "commercial",
+        category: "consideration",
+        questionType: "category",
+        score: 98, // Very high score to ensure inclusion
+        source: "generated",
+      },
+      // Decision stage - must ask what brand to recommend/buy
+      {
+        question: `What brand do you recommend for ${category}?`,
+        searchVolume: 12000,
+        difficulty: 35,
+        intent: "commercial",
+        category: "decision",
+        questionType: "category",
+        score: 97,
+        source: "generated",
+      },
+    ];
+
+    // Add required questions if not already present
+    for (const req of requiredQuestions) {
+      // Check for similar questions (not just exact match)
+      const hasSimilar = questions.some(q => {
+        const lowerQ = q.question.toLowerCase();
+        const lowerReq = req.question.toLowerCase();
+        return lowerQ.includes('best brand') ||
+               lowerQ.includes('recommend') ||
+               lowerQ === lowerReq;
+      });
+
+      if (!hasSimilar && !existing.has(req.question.toLowerCase())) {
+        questions.push(req);
+        console.log(`➕ [QUESTIONS] Added required question: "${req.question}"`);
+      }
     }
 
     return questions;
