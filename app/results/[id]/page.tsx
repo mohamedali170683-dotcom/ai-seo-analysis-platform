@@ -3431,10 +3431,35 @@ export default function ResultsPage() {
                                 </p>
                               </div>
 
+                              {/* Follow-up Question & Response - WHY wasn't brand mentioned */}
+                              {response.followUpQuestion && response.followUpResponse && (
+                                <div className="mt-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <span className="text-purple-600 dark:text-purple-400">🤔</span>
+                                    <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                                      We asked: &quot;{response.followUpQuestion}&quot;
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-purple-800 dark:text-purple-200 leading-relaxed">
+                                    {extractSmartSnippet(response.followUpResponse, 350)}
+                                  </p>
+                                  {response.followUpSources && (response.followUpSources as any[]).length > 0 && (
+                                    <div className="mt-2 flex flex-wrap items-center gap-1">
+                                      <span className="text-xs text-purple-600">Sources:</span>
+                                      {(response.followUpSources as any[]).slice(0, 2).map((src: any, sIdx: number) => (
+                                        <span key={sIdx} className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                          {src.domain || 'source'}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
                               {/* Supporting snippet - collapsible */}
-                              <details className="group">
+                              <details className="group mt-3">
                                 <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                                  View AI response snippet →
+                                  View original AI response →
                                 </summary>
                                 <div className="mt-2 bg-gray-50 dark:bg-gray-900 rounded p-3 text-xs text-gray-600 dark:text-gray-400 italic">
                                   &quot;{extractSmartSnippet(response.fullResponse, 300)}&quot;

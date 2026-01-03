@@ -28,6 +28,10 @@ export interface AIResponse {
   isRealAPI: boolean;
   hasGrounding: boolean; // Whether response has verifiable sources
   citationAnalysis?: CitationAnalysis; // Citation analysis for awareness scoring
+  // Follow-up question data (for competitive analysis)
+  followUpQuestion?: string;
+  followUpResponse?: string;
+  followUpSources?: SourceCitation[];
 }
 
 export interface PlatformStats {
@@ -914,5 +918,89 @@ export class MultiPlatformAIService {
       competitorMentions,
       platformBreakdown,
     };
+  }
+
+  /**
+   * Ask a follow-up question to understand WHY brand wasn't mentioned
+   * This is critical for competitive analysis
+   */
+  async askFollowUpQuestion(
+    originalQuestion: string,
+    originalResponse: AIResponse,
+    brandName: string,
+    competitors: string[]
+  ): Promise<{ question: string; response: string; sources: SourceCitation[] } | null> {
+    // Generate the follow-up question based on what happened
+    let followUpQuestion: string;
+
+    if (!originalResponse.brandMentioned) {
+      // Brand wasn't mentioned at all
+      if (originalResponse.competitorsMentioned.length > 0) {
+        // Competitor was mentioned instead
+        const competitor = originalResponse.competitorsMentioned[0];
+        followUpQuestion = `Why did you recommend ${competitor} and not ${brandName}? What makes ${competitor} better for this use case?`;
+      } else {
+        // No brand mentioned at all
+        followUpQuestion = `Why didn't you mention ${brandName}? Is ${brandName} not a good option for this?`;
+      }
+    } else if (originalResponse.brandPosition && originalResponse.brandPosition > 1 && originalResponse.competitorsMentioned.length > 0) {
+      // Brand mentioned but not first - competitor was first
+      const firstCompetitor = originalResponse.competitorsMentioned[0];
+      followUpQuestion = `Why did you rank ${firstCompetitor} higher than ${brandName}? What specific advantages does ${firstCompetitor} have?`;
+    } else {
+      // Brand was mentioned first - no follow-up needed
+      return null;
+    }
+
+    console.log(`  🔄 [Follow-up] Asking: "${followUpQuestion.substring(0, 60)}..."`);
+
+    try {
+      // Use the same platform for context continuity
+      const platform = originalResponse.platform;
+
+      // Create a conversation context
+      const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+        { role: "user", content: originalQuestion },
+        { role: "assistant", content: originalResponse.fullResponse.substring(0, 1500) }, // Truncate for context
+        { role: "user", content: followUpQuestion },
+      ];
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const completion = await this.openaiClient.chat.completions.create(
+        {
+          model: "gpt-4o-mini",
+          messages,
+          max_tokens: 1024,
+          temperature: 0.5, // Lower for more consistent responses
+        },
+        { signal: controller.signal }
+      );
+
+      clearTimeout(timeoutId);
+      const response = completion?.choices?.[0]?.message?.content || "";
+
+      if (response) {
+        // Extract any sources from the follow-up response
+        const urls = this.extractUrlsFromText(response);
+        const sources: SourceCitation[] = urls.map(url => ({
+          url,
+          domain: this.extractDomain(url),
+        }));
+
+        console.log(`  ✓ [Follow-up] Got response (${response.length} chars)`);
+
+        return {
+          question: followUpQuestion,
+          response,
+          sources,
+        };
+      }
+    } catch (error: any) {
+      console.error(`  ❌ [Follow-up] Failed: ${error.message}`);
+    }
+
+    return null;
   }
 }

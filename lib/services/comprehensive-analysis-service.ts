@@ -196,21 +196,52 @@ export class ComprehensiveAnalysisService {
       
       try {
         console.log(`🔍 [ANALYSIS] Testing question ${i + 1}/${questions.length}: "${question.question.substring(0, 40)}..." (${testsPerPlatform}x tests)`);
-        
+
         const analysis = await this.aiTestingService.testQuestion(
           question.question,
           this.config.brandName,
           this.config.competitors || [],
           testsPerPlatform
         );
-        
+
         analysis.searchVolume = question.searchVolume;
         analysis.category = question.category;
+
+        // FOLLOW-UP QUESTIONS: For consideration/decision stages, ask why brand wasn't mentioned
+        // This is critical for competitive analysis understanding
+        if (question.category !== 'awareness') {
+          for (const response of analysis.responses) {
+            // Only ask follow-up if brand wasn't mentioned OR competitor mentioned first
+            const shouldAskFollowUp = !response.brandMentioned ||
+              (response.brandPosition && response.brandPosition > 1 && response.competitorsMentioned.length > 0);
+
+            if (shouldAskFollowUp) {
+              try {
+                const followUp = await this.aiTestingService.askFollowUpQuestion(
+                  question.question,
+                  response,
+                  this.config.brandName,
+                  this.config.competitors || []
+                );
+
+                if (followUp) {
+                  response.followUpQuestion = followUp.question;
+                  response.followUpResponse = followUp.response;
+                  response.followUpSources = followUp.sources;
+                  console.log(`  🔄 [ANALYSIS] Got follow-up insight for ${response.platform}`);
+                }
+              } catch (followUpError: any) {
+                console.warn(`  ⚠️ [ANALYSIS] Follow-up failed: ${followUpError.message}`);
+              }
+            }
+          }
+        }
+
         analyses.push(analysis);
-        
+
         // Collect responses for pattern detection
         allResponses.push(...analysis.responses);
-        
+
         console.log(`✅ [ANALYSIS] Question ${i + 1} done: ${analysis.aggregated.mentionRate}% mention rate`);
       } catch (error: any) {
         console.error(`⚠️ [ANALYSIS] Question ${i + 1} failed: ${error.message}`);
