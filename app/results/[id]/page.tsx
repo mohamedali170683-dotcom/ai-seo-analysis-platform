@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2, TrendingUp } from "lucide-react";
+import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2, TrendingUp, HelpCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
@@ -775,6 +775,18 @@ export default function ResultsPage() {
                 </>
               )}
             </button>
+            {/* Methodology Button */}
+            <button
+              onClick={() => toggleSection("methodology")}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+                expandedSection === "methodology"
+                  ? "bg-teal-100 text-teal-700"
+                  : "bg-white bg-opacity-20 hover:bg-opacity-30 text-white"
+              }`}
+            >
+              <HelpCircle className="w-4 h-4" />
+              Methodology
+            </button>
             <Link
               href="/dashboard"
               className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
@@ -794,85 +806,6 @@ export default function ResultsPage() {
 
       {/* Main Content */}
       <div className="container mx-auto max-w-6xl px-4 py-8">
-
-        {/* Executive Summary Section - ENHANCED WITH PLATFORM & COMPETITIVE DATA */}
-        {reportData.executiveSummary && (
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-lg p-8 mb-8 text-white">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-2xl">📋</span>
-                  <h2 className="text-2xl font-bold">Executive Summary</h2>
-                </div>
-                <p className="text-indigo-200">{reportData.executiveSummary.headline}</p>
-              </div>
-              <div className="text-right">
-                <div className="text-5xl font-bold">{reportData.executiveSummary.overallScore}%</div>
-                <div className="text-indigo-200 text-sm">Overall Visibility Score</div>
-              </div>
-            </div>
-
-            {/* Key Finding */}
-            <div className="bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-xl p-4 mb-6">
-              <h3 className="font-semibold text-indigo-100 mb-2">🎯 Key Finding</h3>
-              <p className="text-white">{reportData.executiveSummary.keyFinding}</p>
-            </div>
-
-            {/* Platform Performance & Competitive Position */}
-            <div className="grid md:grid-cols-2 gap-4 mb-6">
-              {/* Mention Rate */}
-              <div className="bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-xl p-4">
-                <h3 className="font-semibold text-indigo-100 mb-3">📊 Brand Mention Rate</h3>
-                <div className="flex items-baseline gap-2 mb-2">
-                  <span className="text-4xl font-bold">{Math.round(reportData.scoringMethodology?.mentionRate?.yourScore || 0)}%</span>
-                  <span className="text-sm text-indigo-200">across all platforms</span>
-                </div>
-                <p className="text-xs text-indigo-200">Your brand mentioned in {Math.round(reportData.scoringMethodology?.mentionRate?.yourScore || 0)}% of AI responses</p>
-              </div>
-
-              {/* Visibility Share by Platform */}
-              <div className="bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-xl p-4">
-                <h3 className="font-semibold text-indigo-100 mb-3">🤖 Visibility by AI Platform</h3>
-                <div className="space-y-2">
-                  {reportData.platformBreakdown && Object.entries(reportData.platformBreakdown).map(([platform, data]: [string, any]) => (
-                    data.totalTests > 0 && (
-                      <div key={platform} className="flex items-center justify-between text-sm">
-                        <span className="text-indigo-100">{platform}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-white font-semibold">{Math.round(data.mentionRate)}%</span>
-                          <span className="text-xs text-indigo-200">({Math.round(data.visibilityShare)}% share)</span>
-                        </div>
-                      </div>
-                    )
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Top Actions */}
-            {reportData.executiveSummary.topActions && reportData.executiveSummary.topActions.length > 0 && (
-              <div>
-                <h3 className="font-semibold text-indigo-100 mb-3">🚀 Priority Actions</h3>
-                <div className="space-y-2">
-                  {reportData.executiveSummary.topActions.slice(0, 3).map((action: any, i: number) => (
-                    <div key={i} className="bg-white/10 dark:bg-gray-800/10 backdrop-blur-sm rounded-lg p-3 flex items-start gap-3">
-                      <span className={`text-xs font-bold px-2 py-1 rounded flex-shrink-0 ${
-                        action.priority === 'high' ? 'bg-red-500' :
-                        action.priority === 'medium' ? 'bg-yellow-500 text-yellow-900' : 'bg-green-500'
-                      }`}>
-                        {action.priority?.toUpperCase()}
-                      </span>
-                      <div>
-                        <p className="font-medium">{action.action}</p>
-                        <p className="text-xs text-indigo-200 mt-1">{action.rationale}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* MAIN LAYOUT: Overall Score + Funnel Stage Cards */}
@@ -911,7 +844,7 @@ export default function ResultsPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* METHODOLOGY & TECHNICAL AUDIT */}
+        {/* TECHNICAL AUDIT & COMPETITOR INTELLIGENCE */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Technical Audit - Collapsible */}
@@ -942,111 +875,31 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* Methodology - Collapsible */}
+          {/* Competitor Intelligence - Collapsible */}
           <div
-            onClick={() => toggleSection("methodology")}
+            onClick={() => setExpandedSection("competitive")}
             className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
-              expandedSection === "methodology" ? "ring-2 ring-teal-500" : ""
+              expandedSection === "competitive" ? "ring-2 ring-amber-500" : ""
             }`}
           >
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
-                <div className="text-2xl">❓</div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Methodology</h3>
+                <div className="text-2xl">🏆</div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Competitor Intelligence</h3>
               </div>
-              <p className="text-sm text-gray-500 mb-3">How we calculate your scores</p>
-              <div className="flex items-center justify-end">
-                <span className="flex items-center gap-1 text-teal-600 font-medium text-sm">
-                  {expandedSection === "methodology" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  <span className="ml-1">{expandedSection === "methodology" ? "Hide" : "View"}</span>
+              <p className="text-sm text-gray-500 mb-3">Side-by-side comparison with competitors</p>
+              <div className="flex items-center justify-between">
+                <div className={`text-3xl font-bold ${
+                  (reportData.overallScore || 0) >= 70 ? "text-green-600" :
+                  (reportData.overallScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
+                }`}>
+                  {reportData.overallScore || 0}%<span className="text-base text-gray-400 ml-1">your visibility</span>
+                </div>
+                <span className="flex items-center gap-1 text-amber-600 font-medium text-sm">
+                  {expandedSection === "competitive" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="ml-1">{expandedSection === "competitive" ? "Hide" : "View"}</span>
                 </span>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        {/* INSIGHTS & REPORTING - Quick Access Cards */}
-        {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          {/* Journey Stage Analysis Card */}
-          <div
-            onClick={() => {
-              // Expand first journey stage
-              if (journeyStages.length > 0) {
-                setExpandedSection(journeyStages[0]?.stage || 'awareness');
-              }
-            }}
-            className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-blue-300"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-blue-100 dark:bg-blue-800 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-gray-100">Journey Stage Analysis</h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Performance breakdown by Awareness, Consideration, and Decision stages.
-            </p>
-            <div className="flex items-center gap-2">
-              {journeyStages.slice(0, 3).map((stage: any, idx: number) => (
-                <div key={idx} className="flex-1 text-center">
-                  <div className={`text-lg font-bold ${
-                    (stage?.portrayal?.visibilityScore || 0) >= 70 ? 'text-green-600' :
-                    (stage?.portrayal?.visibilityScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
-                  }`}>
-                    {Math.round(stage?.portrayal?.visibilityScore || 0)}%
-                  </div>
-                  <div className="text-xs text-gray-500">{stage?.stage?.charAt(0).toUpperCase()}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Competitor Intelligence Card */}
-          <div
-            onClick={() => setExpandedSection("competitive")}
-            className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-amber-300"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-amber-100 dark:bg-amber-800 rounded-lg">
-                <Users className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-gray-100">Competitor Intelligence</h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Side-by-side comparison with competitors across all stages.
-            </p>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Your visibility:</span>
-              <span className={`font-bold ${
-                (reportData.overallScore || 0) >= 70 ? 'text-green-600' :
-                (reportData.overallScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
-              }`}>
-                {reportData.overallScore || 0}%
-              </span>
-            </div>
-          </div>
-
-          {/* Executive Summary Card (scrolls to top) */}
-          <div
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl p-5 cursor-pointer hover:shadow-lg transition-all border-2 border-transparent hover:border-purple-300"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="p-2 bg-purple-100 dark:bg-purple-800 rounded-lg">
-                <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <h3 className="font-bold text-gray-900 dark:text-gray-100">Executive Summary</h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-              Key findings, patterns, and ROI-scored action items.
-            </p>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Priority actions:</span>
-              <span className="font-bold text-purple-600">
-                {reportData.executiveSummary?.topActions?.length || 0} items
-              </span>
             </div>
           </div>
         </div>

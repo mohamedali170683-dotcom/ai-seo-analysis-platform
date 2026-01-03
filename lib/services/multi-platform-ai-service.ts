@@ -931,22 +931,23 @@ export class MultiPlatformAIService {
     competitors: string[]
   ): Promise<{ question: string; response: string; sources: SourceCitation[] } | null> {
     // Generate the follow-up question based on what happened
+    // IMPORTANT: Keep questions neutral - don't lead the AI towards positive/negative answers
     let followUpQuestion: string;
 
     if (!originalResponse.brandMentioned) {
       // Brand wasn't mentioned at all
       if (originalResponse.competitorsMentioned.length > 0) {
-        // Competitor was mentioned instead
+        // Competitor was mentioned instead - ask WHY that competitor, not brand
         const competitor = originalResponse.competitorsMentioned[0];
-        followUpQuestion = `Why did you recommend ${competitor} and not ${brandName}? What makes ${competitor} better for this use case?`;
+        followUpQuestion = `Why did you recommend ${competitor} instead of ${brandName}?`;
       } else {
-        // No brand mentioned at all
-        followUpQuestion = `Why didn't you mention ${brandName}? Is ${brandName} not a good option for this?`;
+        // No brand mentioned at all - simple direct question
+        followUpQuestion = `Why didn't you mention ${brandName}?`;
       }
     } else if (originalResponse.brandPosition && originalResponse.brandPosition > 1 && originalResponse.competitorsMentioned.length > 0) {
       // Brand mentioned but not first - competitor was first
       const firstCompetitor = originalResponse.competitorsMentioned[0];
-      followUpQuestion = `Why did you rank ${firstCompetitor} higher than ${brandName}? What specific advantages does ${firstCompetitor} have?`;
+      followUpQuestion = `Why did you recommend ${firstCompetitor} over ${brandName}?`;
     } else {
       // Brand was mentioned first - no follow-up needed
       return null;
