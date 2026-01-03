@@ -3198,85 +3198,277 @@ export default function ResultsPage() {
               </div>
             </div>
 
-            {/* Why Competitors Win - Actionable Insights */}
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">💡 Why Competitors Get Recommended</h3>
+            {/* Evidence: When Competitors Get Recommended Instead */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📝 Evidence: When AI Recommends Competitors Over You</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Based on our analysis, here&apos;s why AI platforms may recommend competitors over your brand:
+                Real examples from AI responses where competitors were mentioned instead of your brand.
               </p>
-              <div className="grid md:grid-cols-2 gap-4">
-                {(() => {
-                  const insights = [];
+              {(() => {
+                const allResponses = reportData.aiTestResults || [];
+                const competitors = reportData.competitors || [];
 
-                  // Check awareness stage
-                  const awarenessStage = journeyStages.find((s: any) => s?.stage === 'awareness');
-                  if (awarenessStage && (awarenessStage?.portrayal?.mentionRate || 0) < 50) {
-                    insights.push({
-                      icon: '📚',
-                      title: 'Content Authority Gap',
-                      description: 'Your brand may lack authoritative, educational content that AI can cite as a source.',
-                      action: 'Create comprehensive guides, whitepapers, and educational content in your industry.'
-                    });
-                  }
+                // Find responses where brand was NOT mentioned but competitors were
+                const competitorWins = allResponses.filter((r: any) =>
+                  !r.brandMentioned &&
+                  r.competitorsMentioned &&
+                  r.competitorsMentioned.length > 0
+                ).slice(0, 4);
 
-                  // Check consideration stage
-                  const considerationStage = journeyStages.find((s: any) => s?.stage === 'consideration');
-                  if (considerationStage && (considerationStage?.portrayal?.mentionRate || 0) < 50) {
-                    insights.push({
-                      icon: '⚖️',
-                      title: 'Missing from Comparisons',
-                      description: 'When users ask "which is best", your brand isn\'t being mentioned.',
-                      action: 'Create comparison content, case studies, and feature matrices that highlight your strengths.'
-                    });
-                  }
+                if (competitorWins.length === 0) {
+                  return (
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 text-center">
+                      <span className="text-4xl mb-3 block">🎉</span>
+                      <p className="text-green-800 dark:text-green-200 font-medium">
+                        Great news! We didn&apos;t find cases where competitors were recommended over you.
+                      </p>
+                    </div>
+                  );
+                }
 
-                  // Check decision stage
-                  const decisionStage = journeyStages.find((s: any) => s?.stage === 'decision');
-                  if (decisionStage && (decisionStage?.portrayal?.mentionRate || 0) < 50) {
-                    insights.push({
-                      icon: '⭐',
-                      title: 'Weak Social Proof',
-                      description: 'AI platforms may not find enough reviews, testimonials, or endorsements.',
-                      action: 'Build a stronger review presence and gather customer testimonials across platforms.'
-                    });
-                  }
+                return (
+                  <div className="space-y-4">
+                    {competitorWins.map((response: any, idx: number) => (
+                      <div key={idx} className="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center">
+                              <span className="text-red-600 dark:text-red-300 font-bold text-sm">
+                                {response.platform?.substring(0, 2).toUpperCase() || 'AI'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-800 px-2 py-0.5 rounded">
+                                {response.platform || 'AI Platform'}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                {response.competitorsMentioned?.length || 0} competitor{(response.competitorsMentioned?.length || 0) !== 1 ? 's' : ''} mentioned
+                              </span>
+                            </div>
 
-                  // Check overall sentiment
-                  const allResponses = reportData.aiTestResults || [];
-                  const brandResponses = allResponses.filter((r: any) => r.brandMentioned);
-                  const negativeCount = brandResponses.filter((r: any) => r.sentiment === 'negative').length;
-                  if (brandResponses.length > 0 && negativeCount / brandResponses.length > 0.2) {
-                    insights.push({
-                      icon: '😟',
-                      title: 'Negative Perception',
-                      description: `${Math.round((negativeCount / brandResponses.length) * 100)}% of mentions have negative sentiment.`,
-                      action: 'Address negative reviews and concerns publicly. Update messaging to counter negative narratives.'
-                    });
-                  }
+                            {/* The question asked */}
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                              <span className="text-gray-500">Question:</span> &quot;{response.question}&quot;
+                            </p>
 
-                  if (insights.length === 0) {
-                    insights.push({
-                      icon: '🎯',
-                      title: 'Keep Optimizing',
-                      description: 'Your brand is performing well, but there\'s always room for improvement.',
-                      action: 'Continue creating fresh content and maintaining your online presence across all channels.'
-                    });
-                  }
+                            {/* Competitors mentioned */}
+                            <div className="flex flex-wrap gap-1 mb-3">
+                              {response.competitorsMentioned?.slice(0, 5).map((comp: string, cIdx: number) => (
+                                <span key={cIdx} className="text-xs bg-amber-100 dark:bg-amber-800 text-amber-800 dark:text-amber-200 px-2 py-0.5 rounded-full">
+                                  {comp}
+                                </span>
+                              ))}
+                            </div>
 
-                  return insights.map((insight, idx) => (
-                    <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{insight.icon}</span>
-                        <div>
-                          <h4 className="font-bold text-gray-900 dark:text-gray-100">{insight.title}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{insight.description}</p>
-                          <p className="text-sm text-indigo-600 dark:text-indigo-400 mt-2 font-medium">→ {insight.action}</p>
+                            {/* Response snippet */}
+                            {response.responseText && (
+                              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                <p className="text-sm text-gray-600 dark:text-gray-400 italic line-clamp-3">
+                                  &quot;{extractSmartSnippet(response.responseText, 300)}&quot;
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Sources if available */}
+                            {(response.sources?.length > 0 || response.citations?.length > 0) && (
+                              <div className="mt-2">
+                                <span className="text-xs text-gray-500">Sources cited: </span>
+                                {[...(response.sources || []), ...(response.citations || [])].slice(0, 2).map((src: any, sIdx: number) => (
+                                  <a
+                                    key={sIdx}
+                                    href={typeof src === 'string' ? src : src.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-blue-600 hover:underline ml-1"
+                                  >
+                                    {typeof src === 'string' ? new URL(src).hostname : src.title || new URL(src.url).hostname}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Evidence: Where Your Brand Wins */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✅ Evidence: Where Your Brand Gets Recommended</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Real examples where AI platforms recommended your brand.
+              </p>
+              {(() => {
+                const allResponses = reportData.aiTestResults || [];
+
+                // Find responses where brand WAS mentioned positively
+                const brandWins = allResponses.filter((r: any) =>
+                  r.brandMentioned &&
+                  (r.sentiment === 'positive' || r.position <= 2)
+                ).slice(0, 3);
+
+                if (brandWins.length === 0) {
+                  const anyMentions = allResponses.filter((r: any) => r.brandMentioned).slice(0, 3);
+                  if (anyMentions.length === 0) {
+                    return (
+                      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 text-center">
+                        <span className="text-4xl mb-3 block">⚠️</span>
+                        <p className="text-amber-800 dark:text-amber-200 font-medium">
+                          We couldn&apos;t find strong positive mentions of your brand in AI responses.
+                        </p>
+                        <p className="text-sm text-amber-600 dark:text-amber-300 mt-2">
+                          This is an opportunity to improve your AI visibility.
+                        </p>
+                      </div>
+                    );
+                  }
+                  // Show neutral mentions instead
+                  return renderBrandMentions(anyMentions, 'neutral');
+                }
+
+                return renderBrandMentions(brandWins, 'positive');
+
+                function renderBrandMentions(mentions: any[], type: string) {
+                  return (
+                    <div className="space-y-4">
+                      {mentions.map((response: any, idx: number) => (
+                        <div key={idx} className={`rounded-xl p-5 border ${
+                          type === 'positive'
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                            : 'bg-gray-50 dark:bg-gray-900/20 border-gray-200 dark:border-gray-700'
+                        }`}>
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                type === 'positive'
+                                  ? 'bg-green-100 dark:bg-green-800'
+                                  : 'bg-gray-100 dark:bg-gray-700'
+                              }`}>
+                                <span className={`font-bold text-sm ${
+                                  type === 'positive'
+                                    ? 'text-green-600 dark:text-green-300'
+                                    : 'text-gray-600 dark:text-gray-300'
+                                }`}>
+                                  {response.platform?.substring(0, 2).toUpperCase() || 'AI'}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                                  type === 'positive'
+                                    ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-800'
+                                    : 'text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700'
+                                }`}>
+                                  {response.platform || 'AI Platform'}
+                                </span>
+                                {response.position && (
+                                  <span className="text-xs text-gray-500">
+                                    Position #{response.position}
+                                  </span>
+                                )}
+                                {response.sentiment && (
+                                  <span className={`text-xs px-2 py-0.5 rounded ${
+                                    response.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
+                                    response.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {response.sentiment}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* The question asked */}
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+                                <span className="text-gray-500">Question:</span> &quot;{response.question}&quot;
+                              </p>
+
+                              {/* Response snippet */}
+                              {response.responseText && (
+                                <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                  <p className="text-sm text-gray-600 dark:text-gray-400 italic line-clamp-3">
+                                    &quot;{extractSmartSnippet(response.responseText, 300)}&quot;
+                                  </p>
+                                </div>
+                              )}
+
+                              {/* Sources if available */}
+                              {(response.sources?.length > 0 || response.citations?.length > 0) && (
+                                <div className="mt-2">
+                                  <span className="text-xs text-gray-500">Sources: </span>
+                                  {[...(response.sources || []), ...(response.citations || [])].slice(0, 2).map((src: any, sIdx: number) => {
+                                    try {
+                                      const url = typeof src === 'string' ? src : src.url;
+                                      return (
+                                        <a
+                                          key={sIdx}
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-xs text-blue-600 hover:underline ml-1"
+                                        >
+                                          {new URL(url).hostname}
+                                        </a>
+                                      );
+                                    } catch {
+                                      return null;
+                                    }
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ));
-                })()}
-              </div>
+                  );
+                }
+              })()}
+            </div>
+
+            {/* Summary Stats */}
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📊 Analysis Summary</h3>
+              {(() => {
+                const allResponses = reportData.aiTestResults || [];
+                const totalResponses = allResponses.length;
+                const brandMentions = allResponses.filter((r: any) => r.brandMentioned).length;
+                const competitorMentions = allResponses.filter((r: any) =>
+                  !r.brandMentioned && r.competitorsMentioned?.length > 0
+                ).length;
+                const positiveMentions = allResponses.filter((r: any) =>
+                  r.brandMentioned && r.sentiment === 'positive'
+                ).length;
+                const firstPositions = allResponses.filter((r: any) =>
+                  r.brandMentioned && r.position === 1
+                ).length;
+
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-indigo-600">{totalResponses}</div>
+                      <div className="text-xs text-gray-500 mt-1">Total AI Responses</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-green-600">{brandMentions}</div>
+                      <div className="text-xs text-gray-500 mt-1">Your Brand Mentioned</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-amber-600">{competitorMentions}</div>
+                      <div className="text-xs text-gray-500 mt-1">Competitor Wins</div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-blue-600">{firstPositions}</div>
+                      <div className="text-xs text-gray-500 mt-1">First Position</div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
