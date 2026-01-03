@@ -376,6 +376,35 @@ async function executeSelectedAnalysis(
           targetCountry
         );
 
+        // Ask follow-up questions for consideration/decision stages when brand not mentioned
+        // This helps understand WHY competitors are recommended over the brand
+        if (question.category !== 'awareness' && analysis.responses) {
+          for (const response of analysis.responses) {
+            const shouldAskFollowUp = !response.brandMentioned ||
+              (response.brandPosition && response.brandPosition > 1 && response.competitorsMentioned.length > 0);
+
+            if (shouldAskFollowUp) {
+              try {
+                const followUp = await aiService.askFollowUpQuestion(
+                  question.question,
+                  response,
+                  brandName,
+                  competitors
+                );
+
+                if (followUp) {
+                  response.followUpQuestion = followUp.question;
+                  response.followUpResponse = followUp.response;
+                  response.followUpSources = followUp.sources;
+                  console.log(`  🔄 [EXEC] Got follow-up insight for ${response.platform}`);
+                }
+              } catch (followUpError: any) {
+                console.warn(`  ⚠️ [EXEC] Follow-up failed: ${followUpError.message}`);
+              }
+            }
+          }
+        }
+
         allResults.push({
           questionText: question.question,
           questionSearchVolume: question.searchVolume,

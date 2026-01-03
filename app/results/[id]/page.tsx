@@ -3324,17 +3324,74 @@ export default function ResultsPage() {
                   );
                 };
 
-                // Find responses where brand was NOT mentioned but response has content
-                const competitorWins = allResponses
-                  .filter((r: any) => !r.brandMentioned && r.fullResponse)
-                  .map((r: any) => ({
-                    ...r,
-                    foundCompetitors: findCompetitorsInText(r.fullResponse)
-                  }))
-                  .filter((r: any) => r.foundCompetitors.length > 0 || r.fullResponse.length > 100)
+                // AGGREGATE by question+platform to avoid showing duplicate evidence
+                // For each question, show ONE representative response per platform
+                const questionPlatformGroups: Record<string, { responses: any[], brandMentionCount: number, totalCount: number }> = {};
+
+                allResponses.forEach((r: any) => {
+                  const key = `${r.question}|||${r.platform}`;
+                  if (!questionPlatformGroups[key]) {
+                    questionPlatformGroups[key] = { responses: [], brandMentionCount: 0, totalCount: 0 };
+                  }
+                  questionPlatformGroups[key].responses.push(r);
+                  questionPlatformGroups[key].totalCount++;
+                  if (r.brandMentioned) questionPlatformGroups[key].brandMentionCount++;
+                });
+
+                // Find question+platform combos where brand was NOT mentioned in majority (< 50%)
+                // Pick the best representative response (one with competitors mentioned, or longest)
+                const competitorWins: any[] = [];
+
+                Object.entries(questionPlatformGroups).forEach(([key, data]) => {
+                  const mentionRate = data.brandMentionCount / data.totalCount;
+                  // Only show if brand was NOT mentioned in majority of responses for this question
+                  if (mentionRate < 0.5) {
+                    // Pick best representative: prefer one with competitors, then with follow-up
+                    const bestResponse = data.responses
+                      .filter((r: any) => !r.brandMentioned && r.fullResponse)
+                      .map((r: any) => ({
+                        ...r,
+                        foundCompetitors: findCompetitorsInText(r.fullResponse),
+                        hasFollowUp: !!(r.followUpQuestion && r.followUpResponse)
+                      }))
+                      .sort((a: any, b: any) => {
+                        // Prefer responses with follow-ups
+                        if (a.hasFollowUp && !b.hasFollowUp) return -1;
+                        if (b.hasFollowUp && !a.hasFollowUp) return 1;
+                        // Then prefer those with competitors
+                        if (a.foundCompetitors.length > b.foundCompetitors.length) return -1;
+                        if (b.foundCompetitors.length > a.foundCompetitors.length) return 1;
+                        // Then by response length
+                        return (b.fullResponse?.length || 0) - (a.fullResponse?.length || 0);
+                      })[0];
+
+                    if (bestResponse && (bestResponse.foundCompetitors.length > 0 || bestResponse.fullResponse.length > 100)) {
+                      bestResponse._aggregateStats = {
+                        testedCount: data.totalCount,
+                        brandMentionCount: data.brandMentionCount
+                      };
+                      competitorWins.push(bestResponse);
+                    }
+                  }
+                });
+
+                // Deduplicate by question (show only one platform per question for cleaner display)
+                const seenQuestions = new Set<string>();
+                const uniqueCompetitorWins = competitorWins
+                  .sort((a: any, b: any) => {
+                    // Prefer those with follow-ups first
+                    if (a.hasFollowUp && !b.hasFollowUp) return -1;
+                    if (b.hasFollowUp && !a.hasFollowUp) return 1;
+                    return b.foundCompetitors.length - a.foundCompetitors.length;
+                  })
+                  .filter((r: any) => {
+                    if (seenQuestions.has(r.question)) return false;
+                    seenQuestions.add(r.question);
+                    return true;
+                  })
                   .slice(0, 4);
 
-                if (competitorWins.length === 0) {
+                if (uniqueCompetitorWins.length === 0) {
                   const missedOpportunities = allResponses
                     .filter((r: any) => !r.brandMentioned && r.fullResponse && r.fullResponse.length > 50)
                     .slice(0, 3);
@@ -3405,8 +3462,9 @@ export default function ResultsPage() {
 
                 return (
                   <div className="space-y-4">
-                    {competitorWins.map((response: any, idx: number) => {
+                    {uniqueCompetitorWins.map((response: any, idx: number) => {
                       const insight = generateStrategicInsight(response, brandName, category, true);
+                      const stats = response._aggregateStats;
                       return (
                         <div key={idx} className="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
                           <div className="flex items-start gap-4">
@@ -3418,10 +3476,15 @@ export default function ResultsPage() {
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
                                 <span className="text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-800 px-2 py-0.5 rounded">
                                   {response.platform || 'AI Platform'}
                                 </span>
+                                {stats && (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    (missed {stats.testedCount - stats.brandMentionCount}/{stats.testedCount} tests)
+                                  </span>
+                                )}
                                 {response.foundCompetitors?.length > 0 && (
                                   <div className="flex flex-wrap gap-1">
                                     {response.foundCompetitors.slice(0, 3).map((comp: string, cIdx: number) => (
@@ -3528,17 +3591,62 @@ export default function ResultsPage() {
                 const brandName = reportData.brandOrKeyword || '';
                 const category = reportData.category || reportData.subcategory || 'this category';
 
-                // Find responses where brand WAS mentioned - prioritize those with fullResponse
-                const brandWins = allResponses
-                  .filter((r: any) => r.brandMentioned && r.fullResponse)
+                // AGGREGATE by question+platform - show questions where brand was mentioned in majority (>= 50%)
+                const questionPlatformGroups: Record<string, { responses: any[], brandMentionCount: number, totalCount: number }> = {};
+
+                allResponses.forEach((r: any) => {
+                  const key = `${r.question}|||${r.platform}`;
+                  if (!questionPlatformGroups[key]) {
+                    questionPlatformGroups[key] = { responses: [], brandMentionCount: 0, totalCount: 0 };
+                  }
+                  questionPlatformGroups[key].responses.push(r);
+                  questionPlatformGroups[key].totalCount++;
+                  if (r.brandMentioned) questionPlatformGroups[key].brandMentionCount++;
+                });
+
+                // Find question+platform combos where brand WAS mentioned in majority (>= 50%)
+                const brandWins: any[] = [];
+
+                Object.entries(questionPlatformGroups).forEach(([key, data]) => {
+                  const mentionRate = data.brandMentionCount / data.totalCount;
+                  // Only show if brand was mentioned in majority of responses for this question
+                  if (mentionRate >= 0.5 && data.brandMentionCount > 0) {
+                    // Pick best representative: prefer positive sentiment, best position
+                    const bestResponse = data.responses
+                      .filter((r: any) => r.brandMentioned && r.fullResponse)
+                      .sort((a: any, b: any) => {
+                        if (a.sentiment === 'positive' && b.sentiment !== 'positive') return -1;
+                        if (b.sentiment === 'positive' && a.sentiment !== 'positive') return 1;
+                        return (a.position || 99) - (b.position || 99);
+                      })[0];
+
+                    if (bestResponse) {
+                      bestResponse._aggregateStats = {
+                        testedCount: data.totalCount,
+                        brandMentionCount: data.brandMentionCount
+                      };
+                      brandWins.push(bestResponse);
+                    }
+                  }
+                });
+
+                // Deduplicate by question (show only one platform per question for cleaner display)
+                const seenQuestions = new Set<string>();
+                const uniqueBrandWins = brandWins
                   .sort((a: any, b: any) => {
+                    // Prefer positive sentiment first
                     if (a.sentiment === 'positive' && b.sentiment !== 'positive') return -1;
                     if (b.sentiment === 'positive' && a.sentiment !== 'positive') return 1;
                     return (a.position || 99) - (b.position || 99);
                   })
+                  .filter((r: any) => {
+                    if (seenQuestions.has(r.question)) return false;
+                    seenQuestions.add(r.question);
+                    return true;
+                  })
                   .slice(0, 4);
 
-                if (brandWins.length === 0) {
+                if (uniqueBrandWins.length === 0) {
                   const anyMentions = allResponses.filter((r: any) => r.brandMentioned).slice(0, 3);
                   if (anyMentions.length === 0) {
                     return (
@@ -3564,10 +3672,11 @@ export default function ResultsPage() {
 
                 return (
                   <div className="space-y-4">
-                    {brandWins.map((response: any, idx: number) => {
+                    {uniqueBrandWins.map((response: any, idx: number) => {
                       const isPositive = response.sentiment === 'positive';
                       const isTopPosition = response.position && response.position <= 2;
                       const insight = generateStrategicInsight(response, brandName, category, false);
+                      const stats = response._aggregateStats;
 
                       return (
                         <div key={idx} className={`rounded-xl p-5 border ${
@@ -3596,6 +3705,11 @@ export default function ResultsPage() {
                                 }`}>
                                   {response.platform || 'AI Platform'}
                                 </span>
+                                {stats && (
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    (mentioned {stats.brandMentionCount}/{stats.testedCount} tests)
+                                  </span>
+                                )}
                                 {isTopPosition && (
                                   <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-medium">
                                     🏆 #{response.position}
