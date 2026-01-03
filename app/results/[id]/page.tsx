@@ -2930,6 +2930,28 @@ export default function ResultsPage() {
               </button>
             </div>
 
+            {/* Scoring Methodology Explanation */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 mb-8 border border-blue-200 dark:border-blue-800">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">📊</span>
+                <div>
+                  <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-2">How Scores Are Calculated</h4>
+                  <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+                    <p><strong>AI Visibility Score</strong> = Weighted average of your mention rate across all journey stages</p>
+                    <ul className="list-disc list-inside ml-2 space-y-1 text-blue-700 dark:text-blue-300">
+                      <li><strong>Awareness</strong> (20% weight): How often AI mentions you for informational queries</li>
+                      <li><strong>Consideration</strong> (35% weight): How often AI includes you in comparison queries</li>
+                      <li><strong>Decision</strong> (45% weight): How often AI recommends you for purchase queries</li>
+                    </ul>
+                    <p className="mt-3"><strong>Where Competitors Beat You</strong> = Stages where competitors have higher mention rate than you</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 italic">
+                      Example: If your Decision stage is 96% but awareness is 16%, the overall weighted score accounts for decision being more valuable (45% vs 20% weight).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Quick Status Banner */}
             {(() => {
               const yourScore = reportData.overallScore || 0;
@@ -3368,17 +3390,17 @@ export default function ResultsPage() {
                                 <div className="mt-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
                                   <div className="flex items-center gap-2 mb-2">
                                     <span className="text-purple-600 dark:text-purple-400">🤔</span>
-                                    <span className="text-xs font-medium text-purple-700 dark:text-purple-300">
+                                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
                                       We asked: &quot;{response.followUpQuestion}&quot;
                                     </span>
                                   </div>
-                                  <p className="text-sm text-purple-800 dark:text-purple-200 leading-relaxed">
-                                    {extractSmartSnippet(response.followUpResponse, 350)}
-                                  </p>
+                                  <div className="text-sm text-purple-800 dark:text-purple-200 leading-relaxed whitespace-pre-wrap">
+                                    {response.followUpResponse}
+                                  </div>
                                   {response.followUpSources && (response.followUpSources as any[]).length > 0 && (
-                                    <div className="mt-2 flex flex-wrap items-center gap-1">
-                                      <span className="text-xs text-purple-600">Sources:</span>
-                                      {(response.followUpSources as any[]).slice(0, 2).map((src: any, sIdx: number) => (
+                                    <div className="mt-3 flex flex-wrap items-center gap-1">
+                                      <span className="text-xs text-purple-600">Sources cited:</span>
+                                      {(response.followUpSources as any[]).slice(0, 3).map((src: any, sIdx: number) => (
                                         <span key={sIdx} className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
                                           {src.domain || 'source'}
                                         </span>
