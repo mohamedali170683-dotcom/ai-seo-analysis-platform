@@ -103,9 +103,35 @@ function generateStrategicInsight(
 ): { insight: string; recommendation: string } {
   const question = response.question || '';
   const fullResponse = response.fullResponse || '';
-  const competitors = response.foundCompetitors || [];
+  let competitors = response.foundCompetitors || [];
   const sentiment = response.sentiment || 'neutral';
   const sources = [...(response.sources || []), ...(response.citations || [])];
+
+  // Also check the follow-up question for competitor names (in case dynamic detection found one)
+  if (competitors.length === 0 && response.followUpQuestion) {
+    const followUpMatch = response.followUpQuestion.match(/recommend\s+([A-Z][a-zA-Z\s]+?)\s+instead/i);
+    if (followUpMatch && followUpMatch[1]) {
+      competitors = [followUpMatch[1].trim()];
+    }
+  }
+
+  // Also try to extract competitor from response if none found yet
+  if (competitors.length === 0 && fullResponse) {
+    const brandPatterns = [
+      /(?:recommend|suggest|top choice is|stands out is|best (?:option|choice|brand) is)\s+\*?\*?([A-Z][a-zA-Z\s]+?)(?:\*?\*?)(?:\s+(?:because|for|due|as|,|\.))/i,
+      /\*?\*?([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)\*?\*?\s+(?:stands out|is the top|is (?:the )?best|is recommended)/i,
+    ];
+    for (const pattern of brandPatterns) {
+      const match = fullResponse.match(pattern);
+      if (match && match[1] && match[1].toLowerCase() !== brandName.toLowerCase()) {
+        const extracted = match[1].trim().replace(/\*\*/g, '');
+        if (extracted.length > 2 && extracted.length < 30) {
+          competitors = [extracted];
+          break;
+        }
+      }
+    }
+  }
 
   // Extract a meaningful snippet from the response (first 2 sentences or 150 chars)
   const extractMeaningfulSnippet = (text: string, maxLen: number = 120): string => {
@@ -3027,17 +3053,25 @@ export default function ResultsPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">📊 AI Visibility Leaderboard</h3>
-                <details className="text-xs">
+                <details className="text-xs relative">
                   <summary className="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                    How is this ranked?
+                    What does the % mean?
                   </summary>
-                  <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 border border-gray-200 dark:border-gray-700 z-10">
-                    <p className="text-gray-600 dark:text-gray-300 mb-2">
-                      <strong>Ranking = Average mention rate across stages</strong>
+                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border border-gray-200 dark:border-gray-700 z-10">
+                    <p className="text-gray-700 dark:text-gray-200 font-medium mb-2">
+                      📊 The percentage = AI mention rate
                     </p>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Each brand&apos;s score is the average of how often AI mentions them across Awareness, Consideration, and Decision queries. Higher mention rate = higher rank.
+                    <p className="text-gray-600 dark:text-gray-300 text-xs mb-3">
+                      This shows how often each brand is mentioned when users ask AI platforms buying-related questions.
                     </p>
+                    <div className="bg-gray-50 dark:bg-gray-900 rounded p-3 text-xs space-y-2">
+                      <p className="text-gray-600 dark:text-gray-400">
+                        <strong>Example:</strong> A score of <span className="font-bold text-blue-600">57%</span> means that when we tested multiple AI platforms with buyer questions, this brand was mentioned in 57% of responses.
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Higher % = more AI visibility = more likely to be discovered by potential customers.
+                      </p>
+                    </div>
                   </div>
                 </details>
               </div>
@@ -3142,74 +3176,6 @@ export default function ResultsPage() {
               </div>
             </div>
 
-            {/* Where Are You Losing? */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">🎯 Where Competitors Beat You</h3>
-              <div className="grid md:grid-cols-3 gap-4">
-                {journeyStages.map((stage: any, stageIdx: number) => {
-                  const yourRate = stage?.portrayal?.mentionRate || 0;
-                  const competitors = stage?.portrayal?.competitorComparison || [];
-                  const beatingYou = competitors.filter((c: any) => (c.mentionRate || 0) > yourRate);
-                  const winningCount = competitors.length - beatingYou.length;
-
-                  return (
-                    <div
-                      key={stageIdx}
-                      className={`rounded-xl p-5 border-2 ${
-                        beatingYou.length === 0
-                          ? 'bg-green-50 border-green-200'
-                          : beatingYou.length >= competitors.length / 2
-                          ? 'bg-red-50 border-red-200'
-                          : 'bg-yellow-50 border-yellow-200'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">
-                            {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
-                          </span>
-                          <span className="font-bold text-gray-900">{stage?.stageLabel}</span>
-                        </div>
-                        <span className={`text-2xl font-bold ${
-                          beatingYou.length === 0 ? 'text-green-600' :
-                          beatingYou.length >= competitors.length / 2 ? 'text-red-600' : 'text-yellow-600'
-                        }`}>
-                          {Math.round(yourRate)}%
-                        </span>
-                      </div>
-
-                      {competitors.length > 0 ? (
-                        <>
-                          <div className={`text-sm font-medium mb-3 ${
-                            beatingYou.length === 0 ? 'text-green-700' :
-                            beatingYou.length >= competitors.length / 2 ? 'text-red-700' : 'text-yellow-700'
-                          }`}>
-                            {beatingYou.length === 0
-                              ? `✓ Leading all ${competitors.length} competitors`
-                              : `${beatingYou.length} competitor${beatingYou.length > 1 ? 's' : ''} ahead of you`
-                            }
-                          </div>
-
-                          {beatingYou.length > 0 && (
-                            <div className="space-y-2">
-                              {beatingYou.slice(0, 2).map((comp: any, idx: number) => (
-                                <div key={idx} className="flex items-center justify-between text-sm bg-white/60 rounded-lg px-3 py-2">
-                                  <span className="text-gray-700 truncate">{comp.competitorName || comp.competitor || comp.name}</span>
-                                  <span className="font-bold text-red-600">+{Math.round((comp.mentionRate || 0) - yourRate)}%</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <p className="text-sm text-gray-500 italic">No competitor data</p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Evidence: When Competitors Get Recommended Instead */}
             <div className="mb-8">
               <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📝 Evidence: When AI Recommends Competitors Over You</h3>
@@ -3221,6 +3187,18 @@ export default function ResultsPage() {
                 const competitors = reportData.competitors || [];
                 const brandName = reportData.brandOrKeyword || '';
                 const category = reportData.category || reportData.subcategory || 'this category';
+                const discoveredQuestions = reportData.discoveredQuestions || [];
+
+                // Helper to find the funnel stage for a question
+                const getQuestionStage = (questionText: string): { stage: string; label: string; icon: string } | null => {
+                  const questionObj = discoveredQuestions.find((q: any) => q.question === questionText);
+                  if (!questionObj) return null;
+                  const cat = questionObj.category?.toLowerCase() || '';
+                  if (cat.includes('awareness')) return { stage: 'awareness', label: 'Awareness', icon: '🔍' };
+                  if (cat.includes('consideration')) return { stage: 'consideration', label: 'Consideration', icon: '⚖️' };
+                  if (cat.includes('decision')) return { stage: 'decision', label: 'Decision', icon: '✅' };
+                  return null;
+                };
 
                 // Helper to find competitors mentioned in response text
                 const findCompetitorsInText = (text: string): string[] => {
@@ -3319,6 +3297,7 @@ export default function ResultsPage() {
                     <div className="space-y-4">
                       {missedOpportunities.map((response: any, idx: number) => {
                         const insight = generateStrategicInsight(response, brandName, category, true);
+                        const questionStage = getQuestionStage(response.question);
                         return (
                           <div key={idx} className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-800">
                             <div className="flex items-start gap-4">
@@ -3330,10 +3309,21 @@ export default function ResultsPage() {
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="flex items-center gap-2 mb-2 flex-wrap">
                                   <span className="text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800 px-2 py-0.5 rounded">
                                     {response.platform || 'AI Platform'}
                                   </span>
+                                  {/* Funnel Stage Badge */}
+                                  {questionStage && (
+                                    <span className={`text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1 ${
+                                      questionStage.stage === 'awareness' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
+                                      questionStage.stage === 'consideration' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' :
+                                      'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                    }`}>
+                                      <span>{questionStage.icon}</span>
+                                      <span>{questionStage.label}</span>
+                                    </span>
+                                  )}
                                 </div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                                   <span className="font-medium">Query:</span> &quot;{response.question}&quot;
@@ -3372,6 +3362,7 @@ export default function ResultsPage() {
                     {uniqueCompetitorWins.map((response: any, idx: number) => {
                       const insight = generateStrategicInsight(response, brandName, category, true);
                       const stats = response._aggregateStats;
+                      const questionStage = getQuestionStage(response.question);
                       return (
                         <div key={idx} className="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
                           <div className="flex items-start gap-4">
@@ -3387,6 +3378,17 @@ export default function ResultsPage() {
                                 <span className="text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-800 px-2 py-0.5 rounded">
                                   {response.platform || 'AI Platform'}
                                 </span>
+                                {/* Funnel Stage Badge */}
+                                {questionStage && (
+                                  <span className={`text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1 ${
+                                    questionStage.stage === 'awareness' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
+                                    questionStage.stage === 'consideration' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' :
+                                    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                  }`}>
+                                    <span>{questionStage.icon}</span>
+                                    <span>{questionStage.label}</span>
+                                  </span>
+                                )}
                                 {stats && (
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
                                     (missed {stats.testedCount - stats.brandMentionCount}/{stats.testedCount} tests)
