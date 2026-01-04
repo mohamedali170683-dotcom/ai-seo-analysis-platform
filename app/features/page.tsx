@@ -25,11 +25,11 @@ const currentFeatures = [
   {
     name: 'AI Visibility Analysis',
     icon: Brain,
-    description: 'Test your brand across 4 AI platforms with transparent visibility scoring.',
+    description: 'Test your brand across 3 AI platforms with transparent visibility scoring.',
     link: '/analyze',
     tier: 'free',
     highlights: [
-      'ChatGPT, Gemini, Copilot, Perplexity testing',
+      'ChatGPT, Gemini & Perplexity testing',
       'Visibility score based on mention rate across platforms',
       'Journey stage breakdown (Awareness, Consideration, Decision)',
       'Real AI responses with proof quotes',
@@ -94,6 +94,19 @@ const currentFeatures = [
 ];
 
 const comingSoonFeatures = [
+  {
+    name: 'More AI Platforms',
+    icon: Brain,
+    description: 'Expand your visibility testing across more AI and social platforms.',
+    tier: 'free',
+    expectedCapabilities: [
+      'Microsoft Copilot integration',
+      'Claude (Anthropic) testing',
+      'Grok (X/Twitter) visibility',
+      'Meta AI analysis',
+      'Mistral AI support'
+    ]
+  },
   {
     name: 'Webhooks',
     icon: Webhook,
@@ -325,7 +338,7 @@ export default function FeaturesPage() {
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  All 4 AI platforms
+                  3 AI platforms
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />

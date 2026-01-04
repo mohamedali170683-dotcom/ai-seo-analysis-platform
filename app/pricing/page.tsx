@@ -156,7 +156,7 @@ export default function PricingPage() {
             <ul className="space-y-3 mb-8">
               {[
                 "1 full analysis per month",
-                "All 4 AI platforms tested",
+                "3 AI platforms (ChatGPT, Gemini, Perplexity)",
                 "Full funnel analysis",
                 "Up to 3 competitors",
                 "Basic PDF report",
@@ -234,7 +234,7 @@ export default function PricingPage() {
             <ul className="space-y-3 mb-8">
               {[
                 "Unlimited analyses",
-                "All 4 AI platforms + future additions",
+                "3 AI platforms + future additions (Copilot, Claude, Grok)",
                 "Up to 10 competitors tracked",
                 "3 brands monitored",
                 "Weekly automated scans",
@@ -534,7 +534,7 @@ export default function PricingPage() {
               },
               {
                 q: "What AI platforms do you test?",
-                a: "We test ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. All tiers include all four platforms - so you see the full picture of your AI visibility."
+                a: "We currently test ChatGPT (OpenAI), Google Gemini, and Perplexity. We're adding Microsoft Copilot, Claude, Grok, Meta AI, and Mistral soon. All tiers include all platforms - so you see the full picture of your AI visibility."
               },
               {
                 q: "How is this different from SEO tools?",

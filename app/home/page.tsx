@@ -78,7 +78,7 @@ export default function HomePage() {
               </span>
               <span className="flex items-center gap-1">
                 <Brain className="w-4 h-4 text-purple-500" />
-                4 AI platforms tested
+                3 AI platforms tested
               </span>
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function HomePage() {
               We Test What AI Says About Your Brand
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Velaris queries ChatGPT, Gemini, Perplexity & Copilot with questions your customers ask - then shows you who gets recommended.
+              Velaris queries ChatGPT, Gemini & Perplexity with questions your customers ask - then shows you who gets recommended.
             </p>
           </div>
 
@@ -227,6 +227,29 @@ export default function HomePage() {
               See all features & coming soon →
             </Link>
           </div>
+
+          {/* Coming Soon - AI Integrations */}
+          <div className="mt-12 bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-6 border border-purple-200">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                Coming Soon
+              </span>
+            </div>
+            <h3 className="font-bold text-gray-900 mb-2">More AI Platforms on the Way</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              We're adding support for additional AI platforms to give you complete visibility:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['Copilot', 'Claude', 'Grok', 'Meta AI', 'Mistral'].map((platform) => (
+                <span
+                  key={platform}
+                  className="inline-flex items-center px-3 py-1 bg-white border border-gray-200 rounded-full text-sm text-gray-600"
+                >
+                  {platform}
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -252,7 +275,7 @@ export default function HomePage() {
               <ul className="space-y-2 mb-6">
                 {[
                   '1 analysis/month',
-                  'All 4 AI platforms',
+                  '3 AI platforms',
                   '3 competitors',
                   'Basic PDF report',
                 ].map((item, i) => (
