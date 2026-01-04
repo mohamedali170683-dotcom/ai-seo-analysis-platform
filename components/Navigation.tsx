@@ -3,13 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Home,
-  Search,
   Target,
   Zap,
   Bell,
-  Webhook,
-  Blocks,
   ChevronDown,
   Moon,
   Sun,
@@ -51,8 +47,6 @@ export function Navigation() {
     { href: '/hallucination-detector', label: 'Brand Positioning', icon: Target, description: 'Check how LLMs represent your brand' },
     { href: '/automation', label: 'Automation', icon: Zap, description: 'Schedule automated scans' },
     { href: '/alerts', label: 'Alerts', icon: Bell, description: 'Get notified of changes' },
-    { href: '/webhooks', label: 'Webhooks', icon: Webhook, description: 'Connect to your systems' },
-    { href: '/integrations', label: 'Integrations', icon: Blocks, description: 'Third-party connections' },
   ];
 
   return (
@@ -168,46 +162,6 @@ export function Navigation() {
                         </div>
                       </Link>
 
-                      <div className="border-t border-gray-100 dark:border-gray-700 my-2"></div>
-
-                      {/* Integrations */}
-                      <div className="px-3 py-1.5">
-                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Integrations</span>
-                      </div>
-
-                      <Link
-                        href="/webhooks"
-                        className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                          isActive('/webhooks')
-                            ? 'bg-blue-50 dark:bg-blue-900/30'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                          <Webhook className="w-4 h-4 text-green-600 dark:text-green-400" />
-                        </div>
-                        <div>
-                          <span className="block font-medium text-gray-900 dark:text-gray-100">Webhooks</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Connect to your systems</span>
-                        </div>
-                      </Link>
-
-                      <Link
-                        href="/integrations"
-                        className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
-                          isActive('/integrations')
-                            ? 'bg-blue-50 dark:bg-blue-900/30'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-                          <Blocks className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                        </div>
-                        <div>
-                          <span className="block font-medium text-gray-900 dark:text-gray-100">Integrations</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Third-party connections</span>
-                        </div>
-                      </Link>
                     </div>
                   </div>
                 )}

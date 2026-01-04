@@ -5,189 +5,126 @@ import {
   Target,
   Bell,
   Calendar,
-  FileDown,
   Brain,
-  TrendingUp,
   CheckCircle2,
   ArrowRight,
   Sparkles,
   BarChart3,
-  Users,
   Zap,
   Globe,
-  Lock
+  Lock,
+  Clock,
+  Webhook,
+  Blocks,
+  Users
 } from 'lucide-react';
 import { PublicNavigation } from '@/components/PublicNavigation';
 import { PublicFooter } from '@/components/PublicFooter';
 
-const features = [
+const currentFeatures = [
   {
-    category: 'Core Analysis Tools',
-    description: 'Comprehensive brand monitoring across major AI platforms',
-    items: [
-      {
-        name: 'AI Visibility Analysis',
-        icon: Brain,
-        description: 'Test your brand across 4 AI platforms with transparent visibility scoring.',
-        status: 'live',
-        link: '/analyze',
-        tier: 'free',
-        highlights: [
-          'ChatGPT, Gemini, Copilot, Perplexity testing',
-          'Visibility score (mention rate, position, sentiment)',
-          'Journey stage breakdown (Awareness, Consideration, Decision)',
-          'Real AI responses with proof quotes',
-          'Competitor comparison',
-          'Export to PDF, CSV, Excel'
-        ]
-      },
-      {
-        name: 'Brand Positioning Check',
-        icon: Target,
-        description: 'Compare how AI perceives your brand vs. your intended positioning.',
-        status: 'live',
-        link: '/hallucination-detector',
-        tier: 'free',
-        highlights: [
-          'Auto-fetch positioning from your website',
-          'Define positioning attributes (premium, innovative, affordable, etc.)',
-          'AI perception vs intended positioning comparison',
-          'Alignment scoring per platform',
-          'Detect brand misrepresentation',
-          'Track positioning over time'
-        ]
-      }
+    name: 'AI Visibility Analysis',
+    icon: Brain,
+    description: 'Test your brand across 4 AI platforms with transparent visibility scoring.',
+    link: '/analyze',
+    tier: 'free',
+    highlights: [
+      'ChatGPT, Gemini, Copilot, Perplexity testing',
+      'Visibility score based on mention rate across platforms',
+      'Journey stage breakdown (Awareness, Consideration, Decision)',
+      'Real AI responses with proof quotes',
+      'Competitor comparison with leaderboard',
+      'Follow-up questions to understand AI reasoning'
     ]
   },
   {
-    category: 'Monitoring & Alerts',
-    description: 'Automated tracking and intelligent notifications',
-    items: [
-      {
-        name: 'Automation Dashboard',
-        icon: Calendar,
-        description: 'Schedule recurring analyses to track visibility trends over time.',
-        status: 'live',
-        link: '/automation',
-        tier: 'professional',
-        highlights: [
-          'Cron-based scheduling (daily, weekly, monthly)',
-          'Automated scan execution',
-          'Execution history tracking',
-          'Error handling & retry logic',
-          'Brand positioning scheduled checks'
-        ]
-      },
-      {
-        name: 'Alert Management',
-        icon: Bell,
-        description: 'Set up intelligent alerts with multi-channel delivery.',
-        status: 'live',
-        link: '/alerts',
-        tier: 'professional',
-        highlights: [
-          '9 alert types (visibility drop, competitor surge, etc.)',
-          'Configurable thresholds and conditions',
-          'Multi-channel delivery (Email, Slack, Discord, Teams)',
-          'Intelligent throttling to prevent alert fatigue',
-          'Alert history and trigger tracking'
-        ]
-      }
+    name: 'Brand Positioning Check',
+    icon: Target,
+    description: 'Compare how AI perceives your brand vs. your intended positioning.',
+    link: '/hallucination-detector',
+    tier: 'free',
+    highlights: [
+      'Auto-fetch positioning from your website',
+      'Define positioning attributes (premium, innovative, affordable, etc.)',
+      'AI perception vs intended positioning comparison',
+      'Alignment scoring per platform',
+      'Detect brand misrepresentation'
     ]
   },
   {
-    category: 'Insights & Reporting',
-    description: 'Deep analysis and actionable recommendations',
-    items: [
-      {
-        name: 'Executive Summary',
-        icon: Sparkles,
-        description: 'AI-generated executive summaries with key findings and recommendations.',
-        status: 'live',
-        link: '/results',
-        tier: 'professional',
-        highlights: [
-          'Auto-generated executive summary',
-          'Pattern recognition across AI responses',
-          'Actionable recommendations',
-          'ROI-scored priority suggestions',
-          'Trend analysis over time'
-        ]
-      },
-      {
-        name: 'Journey Stage Analysis',
-        icon: TrendingUp,
-        description: 'Understand performance at each stage of the customer journey.',
-        status: 'live',
-        link: '/results',
-        tier: 'free',
-        highlights: [
-          'Awareness stage visibility',
-          'Consideration stage positioning',
-          'Decision stage recommendations',
-          'Stage-weighted overall score',
-          'Competitor performance by stage'
-        ]
-      },
-      {
-        name: 'Competitor Intelligence',
-        icon: Users,
-        description: 'Track how competitors appear in AI responses vs. your brand.',
-        status: 'live',
-        link: '/results',
-        tier: 'free',
-        highlights: [
-          'Side-by-side competitor comparison',
-          'Mention frequency tracking',
-          'Sentiment comparison',
-          'Position ranking analysis',
-          'Competitor visibility trends'
-        ]
-      }
+    name: 'Dashboard',
+    icon: BarChart3,
+    description: 'Central hub for all your analyses and insights.',
+    link: '/dashboard',
+    tier: 'free',
+    highlights: [
+      'Analysis history and management',
+      'Quick stats overview',
+      'Recent activity tracking',
+      'Export to PDF, CSV, Excel',
+      'Individual analysis deletion'
     ]
   },
   {
-    category: 'Export & Integration',
-    description: 'Get your data where you need it',
-    items: [
-      {
-        name: 'Data Export',
-        icon: FileDown,
-        description: 'Export analysis results in multiple formats.',
-        status: 'live',
-        link: null,
-        tier: 'professional',
-        highlights: [
-          'PDF reports with branding',
-          'CSV export for spreadsheets',
-          'Excel (XLSX) with formatting',
-          'JSON for developers',
-          'Filtered export by date/brand'
-        ]
-      },
-      {
-        name: 'Dashboard',
-        icon: BarChart3,
-        description: 'Central hub for all your analyses and insights.',
-        status: 'live',
-        link: '/dashboard',
-        tier: 'free',
-        highlights: [
-          'Analysis history and management',
-          'Quick stats overview',
-          'Recent activity tracking',
-          'Quick actions for common tasks',
-          'Individual analysis deletion'
-        ]
-      }
+    name: 'Automation Dashboard',
+    icon: Calendar,
+    description: 'Schedule recurring analyses to track visibility trends over time.',
+    link: '/automation',
+    tier: 'professional',
+    highlights: [
+      'Cron-based scheduling (daily, weekly, monthly)',
+      'Automated scan execution',
+      'Execution history tracking',
+      'Error handling & retry logic'
+    ]
+  },
+  {
+    name: 'Alert Management',
+    icon: Bell,
+    description: 'Set up intelligent alerts with multi-channel delivery.',
+    link: '/alerts',
+    tier: 'professional',
+    highlights: [
+      '9 alert types (visibility drop, competitor surge, etc.)',
+      'Configurable thresholds and conditions',
+      'Email notifications',
+      'Alert history and trigger tracking'
+    ]
+  }
+];
+
+const comingSoonFeatures = [
+  {
+    name: 'Webhooks',
+    icon: Webhook,
+    description: 'Connect Velaris to your existing systems and workflows.',
+    tier: 'professional',
+    expectedCapabilities: [
+      'Real-time event notifications',
+      'Custom payload formatting',
+      'Retry logic for failed deliveries',
+      'Event filtering by type',
+      'Webhook logs and debugging'
+    ]
+  },
+  {
+    name: 'Integrations',
+    icon: Blocks,
+    description: 'Third-party connections to popular tools and platforms.',
+    tier: 'professional',
+    expectedCapabilities: [
+      'Slack notifications',
+      'Discord alerts',
+      'Microsoft Teams integration',
+      'Zapier connection',
+      'API access for custom integrations'
     ]
   }
 ];
 
 const tierColors = {
   free: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Free' },
-  professional: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Professional' },
-  partner: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Partner' }
+  professional: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Professional' }
 };
 
 export default function FeaturesPage() {
@@ -210,79 +147,154 @@ export default function FeaturesPage() {
           </p>
         </div>
 
-        {/* Feature Categories */}
-        <div className="space-y-20">
-          {features.map((category, categoryIndex) => (
-            <div key={categoryIndex}>
-              {/* Category Header */}
-              <div className="mb-10">
-                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-                  {category.category}
-                </h2>
-                <p className="text-lg text-gray-600">{category.description}</p>
+        {/* Current Features Section */}
+        <div className="mb-20">
+          <div className="mb-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle2 className="w-6 h-6 text-green-600" />
               </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Current Features
+              </h2>
+            </div>
+            <p className="text-lg text-gray-600 ml-14">
+              Available now - start using these tools today
+            </p>
+          </div>
 
-              {/* Features Grid */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {category.items.map((feature, featureIndex) => {
-                  const Icon = feature.icon;
-                  const tierStyle = tierColors[feature.tier as keyof typeof tierColors];
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {currentFeatures.map((feature, featureIndex) => {
+              const Icon = feature.icon;
+              const tierStyle = tierColors[feature.tier as keyof typeof tierColors];
 
-                  return (
-                    <div
-                      key={featureIndex}
-                      className="bg-white rounded-2xl border-2 border-gray-200 hover:border-blue-300 transition-all p-6 hover:shadow-xl group"
+              return (
+                <div
+                  key={featureIndex}
+                  className="bg-white rounded-2xl border-2 border-gray-200 hover:border-blue-300 transition-all p-6 hover:shadow-xl group"
+                >
+                  {/* Feature Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
+                      <Icon className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tierStyle.bg} ${tierStyle.text}`}>
+                        {tierStyle.label}
+                      </span>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Live
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Title & Description */}
+                  <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                    {feature.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {feature.description}
+                  </p>
+
+                  {/* Highlights */}
+                  <ul className="space-y-2 mb-6">
+                    {feature.highlights.map((highlight, idx) => (
+                      <li key={idx} className="flex items-start text-sm text-gray-700">
+                        <CheckCircle2 className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>{highlight}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* Action Link */}
+                  {feature.link && (
+                    <Link
+                      href={feature.link}
+                      className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 group-hover:translate-x-1 transition-transform"
                     >
-                      {/* Feature Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
-                          <Icon className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tierStyle.bg} ${tierStyle.text}`}>
-                            {tierStyle.label}
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            Live
-                          </span>
-                        </div>
-                      </div>
+                      Try it now
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
-                      {/* Title & Description */}
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+        {/* Coming Soon Section */}
+        <div className="mb-20">
+          <div className="mb-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Clock className="w-6 h-6 text-amber-600" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Coming Soon
+              </h2>
+            </div>
+            <p className="text-lg text-gray-600 ml-14">
+              Features we&apos;re actively building - stay tuned!
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {comingSoonFeatures.map((feature, featureIndex) => {
+              const Icon = feature.icon;
+              const tierStyle = tierColors[feature.tier as keyof typeof tierColors];
+
+              return (
+                <div
+                  key={featureIndex}
+                  className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-gray-300 p-6 relative overflow-hidden"
+                >
+                  {/* Coming Soon Badge */}
+                  <div className="absolute top-4 right-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                      <Clock className="w-3 h-3 mr-1" />
+                      Coming Soon
+                    </span>
+                  </div>
+
+                  {/* Feature Header */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="p-3 bg-gray-200 rounded-xl">
+                      <Icon className="w-6 h-6 text-gray-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-700 mb-1">
                         {feature.name}
                       </h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {feature.description}
-                      </p>
-
-                      {/* Highlights */}
-                      <ul className="space-y-2 mb-6">
-                        {feature.highlights.map((highlight, idx) => (
-                          <li key={idx} className="flex items-start text-sm text-gray-700">
-                            <CheckCircle2 className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <span>{highlight}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      {/* Action Link */}
-                      {feature.link && (
-                        <Link
-                          href={feature.link}
-                          className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700 group-hover:translate-x-1 transition-transform"
-                        >
-                          Try it now
-                          <ArrowRight className="w-4 h-4 ml-1" />
-                        </Link>
-                      )}
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${tierStyle.bg} ${tierStyle.text}`}>
+                        {tierStyle.label}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-sm text-gray-600 mb-4">
+                    {feature.description}
+                  </p>
+
+                  {/* Expected Capabilities */}
+                  <div className="mb-4">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      Expected Capabilities
+                    </p>
+                    <ul className="space-y-2">
+                      {feature.expectedCapabilities.map((capability, idx) => (
+                        <li key={idx} className="flex items-start text-sm text-gray-500">
+                          <div className="w-4 h-4 rounded-full border-2 border-gray-300 mr-2 mt-0.5 flex-shrink-0" />
+                          <span>{capability}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Tier Comparison Quick View */}
@@ -314,15 +326,11 @@ export default function FeaturesPage() {
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Journey Stage Analysis
+                  Dashboard & Exports
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
                   Competitor Comparison
-                </li>
-                <li className="flex items-center gap-2 text-gray-700">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Dashboard
                 </li>
                 <li className="flex items-center gap-2 text-gray-400">
                   <Lock className="w-4 h-4" />
@@ -356,15 +364,15 @@ export default function FeaturesPage() {
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Executive Summary
-                </li>
-                <li className="flex items-center gap-2 text-gray-700">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  PDF/Excel Export
-                </li>
-                <li className="flex items-center gap-2 text-gray-700">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
                   Unlimited Analyses
+                </li>
+                <li className="flex items-center gap-2 text-gray-400">
+                  <Clock className="w-4 h-4" />
+                  Webhooks (coming soon)
+                </li>
+                <li className="flex items-center gap-2 text-gray-400">
+                  <Clock className="w-4 h-4" />
+                  Integrations (coming soon)
                 </li>
               </ul>
             </div>
