@@ -3055,21 +3055,22 @@ export default function ResultsPage() {
                 <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">📊 AI Visibility Leaderboard</h3>
                 <details className="text-xs relative">
                   <summary className="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                    What does the % mean?
+                    How to read this?
                   </summary>
                   <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border border-gray-200 dark:border-gray-700 z-10">
                     <p className="text-gray-700 dark:text-gray-200 font-medium mb-2">
-                      📊 The percentage = AI mention rate
+                      📊 Mentions = Times AI recommended the brand
                     </p>
                     <p className="text-gray-600 dark:text-gray-300 text-xs mb-3">
-                      This shows how often each brand is mentioned when users ask AI platforms buying-related questions.
+                      We tested multiple AI platforms with buyer questions. This shows how many times each brand was mentioned.
                     </p>
                     <div className="bg-gray-50 dark:bg-gray-900 rounded p-3 text-xs space-y-2">
                       <p className="text-gray-600 dark:text-gray-400">
-                        <strong>Example:</strong> A score of <span className="font-bold text-blue-600">57%</span> means that when we tested multiple AI platforms with buyer questions, this brand was mentioned in 57% of responses.
+                        <strong>Example:</strong> <span className="font-bold text-blue-600">5/9 mentions</span> means the brand was recommended in 5 out of 9 AI responses.
                       </p>
                       <p className="text-gray-500 dark:text-gray-400">
-                        Higher % = more AI visibility = more likely to be discovered by potential customers.
+                        <span className="text-green-600 font-medium">You: +2</span> = You were mentioned 2 more times<br/>
+                        <span className="text-red-600 font-medium">They: +1</span> = Competitor mentioned 1 more time
                       </p>
                     </div>
                   </div>
@@ -3078,6 +3079,7 @@ export default function ResultsPage() {
               <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl overflow-hidden">
                 {(() => {
                   const yourScore = reportData.overallScore || 0;
+                  const totalTests = reportData.aiTestResults?.length || 9; // Total AI queries tested
                   const allCompetitors = new Map();
                   journeyStages.forEach((stage: any) => {
                     if (stage?.portrayal?.competitorComparison) {
@@ -3096,23 +3098,32 @@ export default function ResultsPage() {
                     }
                   });
 
+                  // Calculate mention counts from percentage
+                  const getMentionCount = (score: number) => Math.round((score / 100) * totalTests);
+                  const yourMentions = getMentionCount(yourScore);
+
                   // Build leaderboard with you included
                   const leaderboard = [
                     {
                       name: reportData.brandOrKeyword || 'Your Brand',
                       score: yourScore,
+                      mentions: yourMentions,
                       isYou: true,
                       stages: journeyStages.reduce((acc: any, s: any) => {
                         acc[s?.stage] = s?.portrayal?.mentionRate || 0;
                         return acc;
                       }, {})
                     },
-                    ...Array.from(allCompetitors.entries()).map(([name, data]: [string, any]) => ({
-                      name,
-                      score: Math.round(data.total / data.count),
-                      isYou: false,
-                      stages: data.stages
-                    }))
+                    ...Array.from(allCompetitors.entries()).map(([name, data]: [string, any]) => {
+                      const score = Math.round(data.total / data.count);
+                      return {
+                        name,
+                        score,
+                        mentions: getMentionCount(score),
+                        isYou: false,
+                        stages: data.stages
+                      };
+                    })
                   ].sort((a, b) => b.score - a.score);
 
                   if (leaderboard.length <= 1) {
@@ -3154,23 +3165,24 @@ export default function ResultsPage() {
                                   style={{ width: `${entry.score}%` }}
                                 />
                               </div>
-                              <span className={`text-sm font-bold ${entry.isYou ? 'text-blue-600' : 'text-gray-600'}`}>
-                                {entry.score}%
+                              <span className={`text-sm ${entry.isYou ? 'text-blue-600' : 'text-gray-600'}`}>
+                                <span className="font-bold">{entry.mentions}</span>
+                                <span className="text-xs text-gray-500">/{totalTests} mentions</span>
                               </span>
                             </div>
                           </div>
                           {!entry.isYou && (
-                            <div className={`text-xs font-medium px-2 py-1 rounded-full ${
-                              yourScore > entry.score
+                            <div className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${
+                              yourMentions > entry.mentions
                                 ? 'bg-green-100 text-green-700'
-                                : yourScore < entry.score
+                                : yourMentions < entry.mentions
                                 ? 'bg-red-100 text-red-700'
                                 : 'bg-gray-100 text-gray-600'
                             }`}>
-                              {yourScore > entry.score
-                                ? `You're ${yourScore - entry.score}% ahead`
-                                : yourScore < entry.score
-                                ? `${entry.score - yourScore}% ahead of you`
+                              {yourMentions > entry.mentions
+                                ? `You: +${yourMentions - entry.mentions}`
+                                : yourMentions < entry.mentions
+                                ? `They: +${entry.mentions - yourMentions}`
                                 : 'Tied'}
                             </div>
                           )}
