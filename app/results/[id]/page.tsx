@@ -3160,12 +3160,18 @@ export default function ResultsPage() {
                             </div>
                           </div>
                           {!entry.isYou && (
-                            <div className={`text-sm font-medium px-3 py-1 rounded-full ${
+                            <div className={`text-xs font-medium px-2 py-1 rounded-full ${
                               yourScore > entry.score
                                 ? 'bg-green-100 text-green-700'
-                                : 'bg-red-100 text-red-700'
+                                : yourScore < entry.score
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-gray-100 text-gray-600'
                             }`}>
-                              {yourScore > entry.score ? `+${yourScore - entry.score}%` : `${yourScore - entry.score}%`}
+                              {yourScore > entry.score
+                                ? `You're ${yourScore - entry.score}% ahead`
+                                : yourScore < entry.score
+                                ? `${entry.score - yourScore}% ahead of you`
+                                : 'Tied'}
                             </div>
                           )}
                         </div>
