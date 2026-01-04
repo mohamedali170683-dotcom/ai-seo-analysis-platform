@@ -72,25 +72,6 @@ export default function PricingPage() {
             are they finding you - or your competitors?
           </p>
 
-          {/* Social Proof - Authority */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-gray-500 mb-8">
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {[1,2,3,4,5].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
-                    {String.fromCharCode(64 + i)}
-                  </div>
-                ))}
-              </div>
-              <span>Used by 200+ brands</span>
-            </div>
-            <div className="flex items-center gap-1">
-              {[1,2,3,4,5].map(i => (
-                <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              ))}
-              <span className="ml-1">4.9/5 rating</span>
-            </div>
-          </div>
         </div>
 
         {/* Billing Toggle with Anchoring - Default to Annual */}
@@ -221,14 +202,6 @@ export default function PricingPage() {
                   Billed ${TIER_PRICING.professional.annual}/year
                 </p>
               )}
-            </div>
-
-            {/* Urgency + Social Proof */}
-            <div className="bg-blue-100 rounded-lg p-3 mb-6 text-center">
-              <p className="text-sm text-blue-800 font-medium flex items-center justify-center gap-2">
-                <Users className="w-4 h-4" />
-                73% of customers choose this plan
-              </p>
             </div>
 
             <ul className="space-y-3 mb-8">
@@ -585,7 +558,7 @@ export default function PricingPage() {
             </button>
           </div>
           <p className="text-white/70 text-sm mt-4">
-            Join 200+ brands already improving their AI visibility
+            No credit card required to start
           </p>
         </div>
       </main>
