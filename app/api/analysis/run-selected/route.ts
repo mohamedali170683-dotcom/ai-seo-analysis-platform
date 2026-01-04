@@ -376,10 +376,14 @@ async function executeSelectedAnalysis(
           targetCountry
         );
 
-        // Ask follow-up questions for consideration/decision stages when brand not mentioned
+        // Ask follow-up questions when brand not mentioned or competitor recommended over brand
         // This helps understand WHY competitors are recommended over the brand
-        if (question.category !== 'awareness' && analysis.responses) {
+        // Note: We ask follow-ups for ALL stages, not just consideration/decision
+        if (analysis.responses) {
           for (const response of analysis.responses) {
+            // Ask follow-up if:
+            // 1. Brand was NOT mentioned at all, OR
+            // 2. Brand was mentioned but ranked below a competitor
             const shouldAskFollowUp = !response.brandMentioned ||
               (response.brandPosition && response.brandPosition > 1 && response.competitorsMentioned.length > 0);
 
@@ -396,10 +400,12 @@ async function executeSelectedAnalysis(
                   response.followUpQuestion = followUp.question;
                   response.followUpResponse = followUp.response;
                   response.followUpSources = followUp.sources;
-                  console.log(`  🔄 [EXEC] Got follow-up insight for ${response.platform}`);
+                  console.log(`  🔄 [EXEC] Got follow-up for ${response.platform}: "${followUp.question.substring(0, 40)}..."`);
+                } else {
+                  console.log(`  ℹ️ [EXEC] No follow-up needed for ${response.platform} (brand mentioned first)`);
                 }
               } catch (followUpError: any) {
-                console.warn(`  ⚠️ [EXEC] Follow-up failed: ${followUpError.message}`);
+                console.warn(`  ⚠️ [EXEC] Follow-up failed for ${response.platform}: ${followUpError.message}`);
               }
             }
           }

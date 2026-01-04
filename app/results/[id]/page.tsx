@@ -876,32 +876,71 @@ export default function ResultsPage() {
           </div>
 
           {/* Competitor Intelligence - Collapsible */}
-          <div
-            onClick={() => setExpandedSection("competitive")}
-            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
-              expandedSection === "competitive" ? "ring-2 ring-amber-500" : ""
-            }`}
-          >
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="text-2xl">🏆</div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Competitor Intelligence</h3>
-              </div>
-              <p className="text-sm text-gray-500 mb-3">Side-by-side comparison with competitors</p>
-              <div className="flex items-center justify-between">
-                <div className={`text-3xl font-bold ${
-                  (reportData.overallScore || 0) >= 70 ? "text-green-600" :
-                  (reportData.overallScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
-                }`}>
-                  {reportData.overallScore || 0}%<span className="text-base text-gray-400 ml-1">your visibility</span>
+          {(() => {
+            // Calculate outperforming count
+            const yourScore = reportData.overallScore || 0;
+            const allCompetitors = new Map();
+            journeyStages.forEach((stage: any) => {
+              if (stage?.portrayal?.competitorComparison) {
+                stage.portrayal.competitorComparison.forEach((comp: any) => {
+                  const name = comp.competitorName || comp.competitor || comp.name;
+                  if (name && name !== reportData.brandOrKeyword) {
+                    if (!allCompetitors.has(name)) {
+                      allCompetitors.set(name, { total: 0, count: 0 });
+                    }
+                    allCompetitors.get(name).total += (comp.mentionRate || 0);
+                    allCompetitors.get(name).count += 1;
+                  }
+                });
+              }
+            });
+            const competitorScores = Array.from(allCompetitors.entries()).map(([name, data]: [string, any]) => ({
+              name,
+              score: Math.round(data.total / data.count)
+            }));
+            const beatingCount = competitorScores.filter(c => yourScore > c.score).length;
+            const totalCompetitors = competitorScores.length;
+            const isWinning = totalCompetitors > 0 && beatingCount >= totalCompetitors / 2;
+
+            return (
+              <div
+                onClick={() => setExpandedSection("competitive")}
+                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
+                  expandedSection === "competitive" ? "ring-2 ring-amber-500" : ""
+                }`}
+              >
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="text-2xl">🏆</div>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Competitor Intelligence</h3>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-3">Side-by-side comparison with competitors</p>
+                  <div className="flex items-center justify-between">
+                    {totalCompetitors > 0 ? (
+                      <div className={`flex items-center gap-2 ${isWinning ? "text-green-600" : "text-amber-600"}`}>
+                        <span className="text-2xl">{isWinning ? "🏆" : "⚠️"}</span>
+                        <div>
+                          <div className="text-lg font-bold">
+                            {isWinning
+                              ? `Outperforming ${beatingCount}/${totalCompetitors}`
+                              : `Behind ${totalCompetitors - beatingCount}/${totalCompetitors}`
+                            }
+                          </div>
+                          <div className="text-xs text-gray-500">competitors</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 text-sm">No competitor data</div>
+                    )}
+                    <span className="flex items-center gap-1 text-amber-600 font-medium text-sm">
+                      {expandedSection === "competitive" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                      <span className="ml-1">{expandedSection === "competitive" ? "Hide" : "View"}</span>
+                    </span>
+                  </div>
                 </div>
-                <span className="flex items-center gap-1 text-amber-600 font-medium text-sm">
-                  {expandedSection === "competitive" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                  <span className="ml-1">{expandedSection === "competitive" ? "Hide" : "View"}</span>
-                </span>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -2930,28 +2969,6 @@ export default function ResultsPage() {
               </button>
             </div>
 
-            {/* Scoring Methodology Explanation */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-5 mb-8 border border-blue-200 dark:border-blue-800">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">📊</span>
-                <div>
-                  <h4 className="font-bold text-blue-900 dark:text-blue-100 mb-2">How Scores Are Calculated</h4>
-                  <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                    <p><strong>AI Visibility Score</strong> = Weighted average of your mention rate across all journey stages</p>
-                    <ul className="list-disc list-inside ml-2 space-y-1 text-blue-700 dark:text-blue-300">
-                      <li><strong>Awareness</strong> (20% weight): How often AI mentions you for informational queries</li>
-                      <li><strong>Consideration</strong> (35% weight): How often AI includes you in comparison queries</li>
-                      <li><strong>Decision</strong> (45% weight): How often AI recommends you for purchase queries</li>
-                    </ul>
-                    <p className="mt-3"><strong>Where Competitors Beat You</strong> = Stages where competitors have higher mention rate than you</p>
-                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 italic">
-                      Example: If your Decision stage is 96% but awareness is 16%, the overall weighted score accounts for decision being more valuable (45% vs 20% weight).
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Quick Status Banner */}
             {(() => {
               const yourScore = reportData.overallScore || 0;
@@ -3008,7 +3025,22 @@ export default function ResultsPage() {
 
             {/* Leaderboard - Who's Winning? */}
             <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📊 AI Visibility Leaderboard</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">📊 AI Visibility Leaderboard</h3>
+                <details className="text-xs">
+                  <summary className="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                    How is this ranked?
+                  </summary>
+                  <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 border border-gray-200 dark:border-gray-700 z-10">
+                    <p className="text-gray-600 dark:text-gray-300 mb-2">
+                      <strong>Ranking = Average mention rate across stages</strong>
+                    </p>
+                    <p className="text-gray-500 dark:text-gray-400">
+                      Each brand&apos;s score is the average of how often AI mentions them across Awareness, Consideration, and Decision queries. Higher mention rate = higher rank.
+                    </p>
+                  </div>
+                </details>
+              </div>
               <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl overflow-hidden">
                 {(() => {
                   const yourScore = reportData.overallScore || 0;
@@ -3435,213 +3467,6 @@ export default function ResultsPage() {
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:underline px-2 py-1 rounded"
-                                        >
-                                          {hostname}
-                                        </a>
-                                      );
-                                    } catch {
-                                      return null;
-                                    }
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Evidence: Where Your Brand Wins */}
-            <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">✅ Evidence: Where Your Brand Gets Recommended</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Strategic analysis of AI responses where your brand was recommended.
-              </p>
-              {(() => {
-                const allResponses = reportData.aiTestResults || [];
-                const brandName = reportData.brandOrKeyword || '';
-                const category = reportData.category || reportData.subcategory || 'this category';
-
-                // AGGREGATE by question+platform - show questions where brand was mentioned in majority (>= 50%)
-                const questionPlatformGroups: Record<string, { responses: any[], brandMentionCount: number, totalCount: number }> = {};
-
-                allResponses.forEach((r: any) => {
-                  const key = `${r.question}|||${r.platform}`;
-                  if (!questionPlatformGroups[key]) {
-                    questionPlatformGroups[key] = { responses: [], brandMentionCount: 0, totalCount: 0 };
-                  }
-                  questionPlatformGroups[key].responses.push(r);
-                  questionPlatformGroups[key].totalCount++;
-                  if (r.brandMentioned) questionPlatformGroups[key].brandMentionCount++;
-                });
-
-                // Find question+platform combos where brand WAS mentioned in majority (>= 50%)
-                const brandWins: any[] = [];
-
-                Object.entries(questionPlatformGroups).forEach(([key, data]) => {
-                  const mentionRate = data.brandMentionCount / data.totalCount;
-                  // Only show if brand was mentioned in majority of responses for this question
-                  if (mentionRate >= 0.5 && data.brandMentionCount > 0) {
-                    // Pick best representative: prefer positive sentiment, best position
-                    const bestResponse = data.responses
-                      .filter((r: any) => r.brandMentioned && r.fullResponse)
-                      .sort((a: any, b: any) => {
-                        if (a.sentiment === 'positive' && b.sentiment !== 'positive') return -1;
-                        if (b.sentiment === 'positive' && a.sentiment !== 'positive') return 1;
-                        return (a.position || 99) - (b.position || 99);
-                      })[0];
-
-                    if (bestResponse) {
-                      bestResponse._aggregateStats = {
-                        testedCount: data.totalCount,
-                        brandMentionCount: data.brandMentionCount
-                      };
-                      brandWins.push(bestResponse);
-                    }
-                  }
-                });
-
-                // Deduplicate by question (show only one platform per question for cleaner display)
-                const seenQuestions = new Set<string>();
-                const uniqueBrandWins = brandWins
-                  .sort((a: any, b: any) => {
-                    // Prefer positive sentiment first
-                    if (a.sentiment === 'positive' && b.sentiment !== 'positive') return -1;
-                    if (b.sentiment === 'positive' && a.sentiment !== 'positive') return 1;
-                    return (a.position || 99) - (b.position || 99);
-                  })
-                  .filter((r: any) => {
-                    if (seenQuestions.has(r.question)) return false;
-                    seenQuestions.add(r.question);
-                    return true;
-                  })
-                  .slice(0, 4);
-
-                if (uniqueBrandWins.length === 0) {
-                  const anyMentions = allResponses.filter((r: any) => r.brandMentioned).slice(0, 3);
-                  if (anyMentions.length === 0) {
-                    return (
-                      <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-6 text-center">
-                        <span className="text-4xl mb-3 block">⚠️</span>
-                        <p className="text-amber-800 dark:text-amber-200 font-medium">
-                          We couldn&apos;t find mentions of your brand in AI responses.
-                        </p>
-                        <p className="text-sm text-amber-600 dark:text-amber-300 mt-2">
-                          This represents a significant opportunity to improve your AI visibility.
-                        </p>
-                      </div>
-                    );
-                  }
-                  return (
-                    <div className="space-y-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                        Your brand was mentioned {anyMentions.length} time{anyMentions.length !== 1 ? 's' : ''}, but detailed responses were not captured.
-                      </p>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div className="space-y-4">
-                    {uniqueBrandWins.map((response: any, idx: number) => {
-                      const isPositive = response.sentiment === 'positive';
-                      const isTopPosition = response.position && response.position <= 2;
-                      const insight = generateStrategicInsight(response, brandName, category, false);
-                      const stats = response._aggregateStats;
-
-                      return (
-                        <div key={idx} className={`rounded-xl p-5 border ${
-                          isPositive
-                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
-                            : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
-                        }`}>
-                          <div className="flex items-start gap-4">
-                            <div className="flex-shrink-0">
-                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                isPositive ? 'bg-green-100 dark:bg-green-800' : 'bg-blue-100 dark:bg-blue-800'
-                              }`}>
-                                <span className={`font-bold text-sm ${
-                                  isPositive ? 'text-green-600 dark:text-green-300' : 'text-blue-600 dark:text-blue-300'
-                                }`}>
-                                  {response.platform?.substring(0, 2).toUpperCase() || 'AI'}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className={`text-xs font-medium px-2 py-0.5 rounded ${
-                                  isPositive
-                                    ? 'text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-800'
-                                    : 'text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-800'
-                                }`}>
-                                  {response.platform || 'AI Platform'}
-                                </span>
-                                {stats && (
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                                    (mentioned {stats.brandMentionCount}/{stats.testedCount} tests)
-                                  </span>
-                                )}
-                                {isTopPosition && (
-                                  <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-medium">
-                                    🏆 #{response.position}
-                                  </span>
-                                )}
-                                {response.sentiment === 'positive' && (
-                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
-                                    👍 positive
-                                  </span>
-                                )}
-                              </div>
-
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                                <span className="font-medium">Query:</span> &quot;{response.question}&quot;
-                              </p>
-
-                              {/* Strategic Insight */}
-                              <div className={`bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 ${
-                                isPositive ? 'border-green-400' : 'border-blue-400'
-                              }`}>
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
-                                  🔍 {insight.insight}
-                                </p>
-                                <p className={`text-xs italic ${isPositive ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'}`}>
-                                  💡 {insight.recommendation}
-                                </p>
-                              </div>
-
-                              {/* View full AI response - collapsible */}
-                              <details className="group mt-3">
-                                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
-                                  View full AI response →
-                                </summary>
-                                <div className="mt-2 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed max-h-64 overflow-y-auto">
-                                  {response.fullResponse}
-                                </div>
-                              </details>
-
-                              {/* Sources */}
-                              {(response.sources?.length > 0 || response.citations?.length > 0) && (
-                                <div className="mt-3 flex flex-wrap items-center gap-2">
-                                  <span className="text-xs text-gray-500">🔗 Sources:</span>
-                                  {[...(response.sources || []), ...(response.citations || [])].slice(0, 3).map((src: any, sIdx: number) => {
-                                    try {
-                                      const url = typeof src === 'string' ? src : src.url;
-                                      const hostname = new URL(url).hostname.replace('www.', '');
-                                      return (
-                                        <a
-                                          key={sIdx}
-                                          href={url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className={`text-xs px-2 py-1 rounded hover:underline ${
-                                            isPositive
-                                              ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                                              : 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                                          }`}
                                         >
                                           {hostname}
                                         </a>
