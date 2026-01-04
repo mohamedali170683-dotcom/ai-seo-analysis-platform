@@ -123,8 +123,8 @@ const comingSoonFeatures = [
 ];
 
 const tierColors = {
-  free: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Free' },
-  professional: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Professional' }
+  free: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Starter' },
+  professional: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Growth' }
 };
 
 export default function FeaturesPage() {
@@ -304,109 +304,118 @@ export default function FeaturesPage() {
               Feature Availability by Plan
             </h2>
             <p className="text-gray-600">
-              All core features available on Free. Unlock automation and alerts with Professional.
+              Start free to see where you stand. Upgrade to Growth for continuous monitoring.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {/* Free */}
+            {/* Starter */}
             <div className="bg-white rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-5 h-5 text-gray-600" />
-                <h3 className="font-bold text-gray-900">Free</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-gray-600" />
+                  <h3 className="font-bold text-gray-900">Starter</h3>
+                </div>
+                <span className="text-sm font-bold text-gray-900">$0</span>
               </div>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  AI Visibility Analysis
+                  1 analysis/month
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Brand Positioning Check
+                  All 4 AI platforms
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Dashboard & Exports
+                  3 competitors
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Competitor Comparison
+                  Basic PDF report
                 </li>
                 <li className="flex items-center gap-2 text-gray-400">
                   <Lock className="w-4 h-4" />
-                  Automation (locked)
+                  Automation
                 </li>
                 <li className="flex items-center gap-2 text-gray-400">
                   <Lock className="w-4 h-4" />
-                  Alerts (locked)
+                  Alerts
                 </li>
               </ul>
             </div>
 
-            {/* Professional */}
+            {/* Growth */}
             <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border-2 border-blue-500 shadow-lg scale-105">
-              <div className="flex items-center gap-2 mb-4">
-                <Globe className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-gray-900">Professional</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-bold text-gray-900">Growth</h3>
+                </div>
+                <span className="text-sm font-bold text-blue-600">$149/mo</span>
               </div>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Everything in Free
+                  Unlimited analyses
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Automation Dashboard
+                  10 competitors
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Alert Management
+                  3 brands monitored
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Unlimited Analyses
+                  Weekly automated scans
                 </li>
-                <li className="flex items-center gap-2 text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  Webhooks (coming soon)
+                <li className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Email alerts
                 </li>
-                <li className="flex items-center gap-2 text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  Integrations (coming soon)
+                <li className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Historical trends
                 </li>
               </ul>
             </div>
 
-            {/* Partner */}
+            {/* Agency */}
             <div className="bg-white rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-5 h-5 text-amber-600" />
-                <h3 className="font-bold text-gray-900">Partner</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-amber-600" />
+                  <h3 className="font-bold text-gray-900">Agency</h3>
+                </div>
+                <span className="text-sm font-bold text-amber-600">$349/mo</span>
               </div>
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Everything in Professional
+                  15 brands
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  API Access
+                  Unlimited competitors
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  White-label Reports
+                  Daily automated scans
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Team Access (10 users)
+                  White-label reports
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Dedicated Support
+                  API access
                 </li>
                 <li className="flex items-center gap-2 text-gray-700">
                   <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  Strategy Calls
+                  5 team members
                 </li>
               </ul>
             </div>

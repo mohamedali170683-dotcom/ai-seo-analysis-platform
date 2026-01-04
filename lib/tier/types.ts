@@ -62,16 +62,16 @@ export const TIER_PRICING: Record<UserTier, TierPricing> = {
     currency: "USD",
   },
   professional: {
-    monthly: 99,  // $99/month
-    annual: 990,  // 2 months free ($82.50/mo)
-    annualSavings: 198,
-    oneTimeReport: 149,  // One-time report option
+    monthly: 149,  // $149/month - Growth tier
+    annual: 1428,  // 20% off ($119/mo)
+    annualSavings: 360,
+    oneTimeReport: 199,  // One-time report option
     currency: "USD",
   },
   partner: {
-    monthly: 499,
-    annual: 4990, // 2 months free
-    annualSavings: 998,
+    monthly: 349,  // $349/month - Agency tier
+    annual: 3348,  // 20% off ($279/mo)
+    annualSavings: 840,
     oneTimeReport: 0, // Not applicable - custom pricing
     currency: "USD",
   },
@@ -158,17 +158,17 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
 
 export const TIER_NAMES: Record<UserTier, { name: string; tagline: string; badge?: string }> = {
   free: {
-    name: "AI Visibility Check",
-    tagline: "See if you have a problem",
+    name: "Starter",
+    tagline: "See where you stand",
   },
   professional: {
-    name: "Full AI Visibility Platform",
-    tagline: "The smart choice for serious brands",
+    name: "Growth",
+    tagline: "Monitor and improve continuously",
     badge: "Most Popular",
   },
   partner: {
-    name: "AI Visibility Partner",
-    tagline: "For teams who want results, not just data",
+    name: "Agency",
+    tagline: "Scale across multiple brands",
   },
 };
 
