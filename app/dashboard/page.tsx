@@ -330,73 +330,8 @@ export default function DashboardPage() {
       </div>
 
       <main className="container mx-auto px-4 py-8">
-        {/* Stats Overview - Modern Card Design */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
-          {/* Total Analyses */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Analyses</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.totalAnalyses}</p>
-              </div>
-              <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-2">
-              <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">
-                {stats.completedAnalyses} completed
-              </span>
-            </div>
-          </div>
-
-          {/* Questions Tested */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Questions Tested</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.totalAnalyses * 9}</p>
-              </div>
-              <div className="p-2.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                <MessageSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
-            </div>
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">Across all brand analyses</p>
-          </div>
-
-          {/* AI Responses */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">AI Responses</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">{stats.totalAnalyses * 81}</p>
-              </div>
-              <div className="p-2.5 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-                <Brain className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-              </div>
-            </div>
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">3 tests × 4 AI platforms</p>
-          </div>
-
-          {/* Running Analyses */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                  {analyses.filter(a => a.status === "running" || a.status === "pending").length}
-                </p>
-              </div>
-              <div className="p-2.5 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                <Loader className={`w-5 h-5 text-amber-600 dark:text-amber-400 ${analyses.some(a => a.status === "running") ? "animate-spin" : ""}`} />
-              </div>
-            </div>
-            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">Currently analyzing</p>
-          </div>
-        </div>
-
-        {/* Quick Actions - Modern Cards */}
-        <div className="mb-8 grid md:grid-cols-3 gap-4">
+        {/* Feature Cards - 4 columns */}
+        <div className="mb-8 grid md:grid-cols-4 gap-4">
           <Link
             href="/analyze"
             className="group block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:border-blue-300 hover:shadow-lg transition-all"
@@ -460,6 +395,34 @@ export default function DashboardPage() {
               ) : (
                 <>
                   Manage Schedules
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </>
+              )}
+            </div>
+          </Link>
+
+          <Link
+            href="/integrations"
+            className="group block bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 hover:border-purple-300 hover:shadow-lg transition-all"
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg group-hover:bg-purple-200 transition-colors">
+                <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Integrations</h2>
+            </div>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Connect with Slack, webhooks, and external tools.
+            </p>
+            <div className="flex items-center text-sm font-semibold text-purple-600 group-hover:translate-x-1 transition-transform">
+              {tier === "free" ? (
+                <>
+                  <Lock className="mr-1 w-3 h-3" />
+                  Professional Feature
+                </>
+              ) : (
+                <>
+                  Manage Integrations
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </>
               )}
@@ -691,30 +654,6 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-
-        {/* Trust Signals Section */}
-        <section className="bg-slate-50 rounded-xl p-8 mb-8 border border-slate-200">
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-semibold text-slate-600 mb-4">Trusted by Marketing Teams At:</h3>
-            <div className="flex flex-wrap justify-center items-center gap-8 text-slate-500 font-medium">
-              <span className="text-lg">Deutsche Telekom</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-lg">Nestlé</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-lg">Purina</span>
-              <span className="text-slate-300">•</span>
-              <span className="text-lg">Henkel</span>
-            </div>
-          </div>
-          <div className="max-w-2xl mx-auto text-center">
-            <blockquote className="text-xl italic text-slate-700 mb-3">
-              "Velaris helped us increase AI visibility by 34% in 90 days"
-            </blockquote>
-            <cite className="text-base text-slate-500 not-italic">
-              — CMO, Fortune 500 Brand
-            </cite>
-          </div>
-        </section>
 
         {/* FAQ Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
