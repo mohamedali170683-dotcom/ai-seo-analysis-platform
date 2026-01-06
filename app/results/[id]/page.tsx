@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2, TrendingUp, HelpCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { useTier } from "@/lib/tier";
-import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
+import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
 // EmailGate removed - users go straight to results
 import { LoginGate, InlineLoginPrompt } from "@/components/LoginGate";
@@ -3837,8 +3837,6 @@ export default function ResultsPage() {
           </div>
         )}
 
-        {/* Agency CTA */}
-        <AgencyCTA />
       </div>
 
       {/* Upgrade Modal */}

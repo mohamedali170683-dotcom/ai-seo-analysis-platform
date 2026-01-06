@@ -7,15 +7,10 @@ import {
   Zap,
   Bell,
   ChevronDown,
-  Moon,
-  Sun,
-  Languages,
   TrendingUp,
   LayoutDashboard
 } from 'lucide-react';
 import { useState } from 'react';
-import { useTheme } from '@/lib/theme-context';
-import { useI18n } from '@/lib/i18n-context';
 
 // Public pages that use their own navigation (PublicNavigation)
 const PUBLIC_PAGES = ['/home', '/features', '/pricing', '/login', '/register'];
@@ -23,8 +18,6 @@ const PUBLIC_PAGES = ['/home', '/features', '/pricing', '/login', '/register'];
 export function Navigation() {
   const pathname = usePathname();
   const [showFeatures, setShowFeatures] = useState(false);
-  const { theme, toggleTheme } = useTheme();
-  const { language, setLanguage, t } = useI18n();
 
   // Don't render app navigation on public marketing pages
   if (PUBLIC_PAGES.includes(pathname)) {
@@ -169,31 +162,6 @@ export function Navigation() {
             </div>
           </div>
 
-          {/* Right side controls */}
-          <div className="flex items-center gap-2">
-            {/* Language Switcher */}
-            <button
-              onClick={() => setLanguage(language === 'en' ? 'de' : 'en')}
-              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              title="Switch Language"
-            >
-              <Languages className="w-4 h-4" />
-              <span className="hidden sm:inline">{language === 'en' ? 'EN' : 'DE'}</span>
-            </button>
-
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5" />
-              ) : (
-                <Sun className="w-5 h-5" />
-              )}
-            </button>
-          </div>
         </div>
       </div>
 
