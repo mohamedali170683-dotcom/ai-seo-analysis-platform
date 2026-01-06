@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n-context";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
-import { EmailGate } from "@/components/EmailGate";
+// EmailGate removed - users go straight to results
 import { LoginGate, InlineLoginPrompt } from "@/components/LoginGate";
 import { DashboardHero, SummaryCard, SummaryCardsGrid } from "@/components/Dashboard";
 import { BulletGraph, SentimentBar } from "@/components/Charts";
@@ -354,9 +354,7 @@ export default function ResultsPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeModalTrigger, setUpgradeModalTrigger] = useState<UpgradeModalTrigger>("funnel_stages");
   
-  // Email gate for free tier
-  const [showEmailGate, setShowEmailGate] = useState(false);
-  const [hasSubmittedEmail, setHasSubmittedEmail] = useState(false);
+  // Email gate removed - users go straight to results
 
   // Login state for gating full results
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -367,6 +365,8 @@ export default function ResultsPage() {
   const [reportData, setReportData] = useState<any>(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("pending");
+  const [countdown, setCountdown] = useState(180); // 3 minutes countdown
+  const [currentStep, setCurrentStep] = useState<string>("Initializing...");
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedSchemas, setExpandedSchemas] = useState<string[]>([]);
 
@@ -384,13 +384,6 @@ export default function ResultsPage() {
     setShowUpgradeModal(true);
   };
   
-  // Handle email submission
-  const handleEmailSubmit = (email: string) => {
-    setUserEmail(email);
-    setHasSubmittedEmail(true);
-    setShowEmailGate(false);
-  };
-
   // Check login status on mount
   useEffect(() => {
     const checkLoginStatus = async () => {
@@ -500,6 +493,17 @@ export default function ResultsPage() {
     }
   };
 
+  // Countdown timer for loading state
+  useEffect(() => {
+    if (!loading) return;
+
+    const countdownInterval = setInterval(() => {
+      setCountdown(prev => Math.max(0, prev - 1));
+    }, 1000);
+
+    return () => clearInterval(countdownInterval);
+  }, [loading]);
+
   useEffect(() => {
     if (!analysisId) {
       setError("No analysis ID provided");
@@ -516,22 +520,20 @@ export default function ResultsPage() {
         }
 
         const data = await response.json();
-        
+
         // API returns data nested under 'analysis' key
         const analysis = data.analysis || data;
-        
+
         setProgress(analysis.progress || 0);
         setStatus(analysis.status);
+        if (analysis.currentStep) {
+          setCurrentStep(analysis.currentStep);
+        }
 
         if (analysis.status === "completed") {
           clearInterval(pollInterval);
           setReportData(transformAnalysisData(data));
           setLoading(false);
-          
-          // Show email gate for free tier users who haven't submitted email
-          if (tier === "free" && !userEmail && !hasSubmittedEmail) {
-            setShowEmailGate(true);
-          }
         } else if (analysis.status === "failed") {
           clearInterval(pollInterval);
           setError(data.error || analysis.currentStep || "Analysis failed");
@@ -549,42 +551,86 @@ export default function ResultsPage() {
   }, [analysisId]);
 
   if (loading) {
+    const minutes = Math.floor(countdown / 60);
+    const seconds = countdown % 60;
+
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-12 max-w-2xl w-full mx-4">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 max-w-2xl w-full">
           <div className="text-center">
-            <div className="mb-8">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-full mb-6 animate-pulse">
-                <Brain className="w-12 h-12 text-white" />
-              </div>
+            {/* Animated Icon */}
+            <div className="relative inline-block mb-6">
+              <div className="text-6xl animate-pulse">🔬</div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              {status === "running" ? "Analyzing Your Brand..." : "Preparing Analysis..."}
+
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+              Analysis Running
             </h2>
-            <p className="text-gray-600 mb-8">
-              {status === "running"
-                ? "Testing your brand across AI platforms and user journey stages"
-                : "Setting up your analysis..."}
-            </p>
-            <div className="mb-6">
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-cyan-500 to-cyan-600 h-4 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${progress}%` }}
-                ></div>
+            <p className="text-gray-500 mb-8">Testing your brand on AI platforms...</p>
+
+            {/* Countdown Timer */}
+            <div className="mb-8">
+              <div className="text-5xl font-bold text-blue-500 font-mono mb-2">
+                {minutes}:{seconds.toString().padStart(2, '0')}
               </div>
-              <p className="text-sm text-gray-600 mt-2">{progress}% Complete</p>
+              <p className="text-sm text-gray-400">estimated time remaining</p>
             </div>
-            <div className="grid grid-cols-3 gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className={progress >= 10 ? "text-green-600 font-semibold" : ""}>
-                ✓ Questions Generated
+
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-500">Progress</span>
+                <span className="text-blue-500 font-bold">{progress}%</span>
               </div>
-              <div className={progress >= 50 ? "text-green-600 font-semibold" : ""}>
-                ✓ AI Testing
+              <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-blue-500 h-3 rounded-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
-              <div className={progress >= 90 ? "text-green-600 font-semibold" : ""}>
-                ✓ Analysis Complete
+            </div>
+
+            {/* Current Step */}
+            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-sm text-gray-600">{currentStep}</span>
               </div>
+            </div>
+
+            {/* Step-by-Step Progress */}
+            <div className="space-y-2 text-left">
+              {[
+                { step: "Initialize", icon: "⚡", threshold: 5 },
+                { step: "Testing Awareness Questions", icon: "🧠", threshold: 35 },
+                { step: "Testing Consideration Questions", icon: "⚖️", threshold: 60 },
+                { step: "Testing Decision Questions", icon: "✅", threshold: 85 },
+                { step: "Generating Report", icon: "📊", threshold: 95 },
+              ].map((item, index) => {
+                const isComplete = progress >= item.threshold;
+                const isCurrent = progress >= (index > 0 ? [5, 35, 60, 85, 95][index - 1] : 0) && progress < item.threshold;
+
+                return (
+                  <div key={item.step} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                    isCurrent ? "bg-blue-50 border border-blue-200" :
+                    isComplete ? "" : "opacity-40"
+                  }`}>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm ${
+                      isComplete ? "bg-green-100 text-green-600" :
+                      isCurrent ? "bg-blue-100 text-blue-600" : "bg-gray-100"
+                    }`}>
+                      {isComplete ? "✓" : item.icon}
+                    </div>
+                    <span className={`flex-1 text-sm ${isCurrent ? "text-gray-900 font-medium" : "text-gray-600"}`}>
+                      {item.step}
+                    </span>
+                    {isCurrent && (
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -622,21 +668,6 @@ export default function ResultsPage() {
     );
   }
   
-  // Show email gate for free tier
-  if (showEmailGate) {
-    return (
-      <EmailGate
-        brandName={reportData.brandOrKeyword || "Your Brand"}
-        competitorName={reportData.competitors?.[0]}
-        onEmailSubmit={handleEmailSubmit}
-        onSkip={() => {
-          setHasSubmittedEmail(true);
-          setShowEmailGate(false);
-        }}
-      />
-    );
-  }
-
   const toggleSection = (section: string) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
