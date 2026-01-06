@@ -64,9 +64,20 @@ const PROTECTED_API_ROUTES = [
 
 // Check if the path starts with any public route
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some(route =>
+  // Check static public routes
+  const isStaticPublic = PUBLIC_ROUTES.some(route =>
     pathname === route || pathname.startsWith(route + '/')
   );
+  if (isStaticPublic) return true;
+
+  // Allow fetching individual analysis results: /api/analysis/[id]
+  // This is needed for the public results page to fetch data
+  // Pattern: /api/analysis/{cuid} where cuid is ~25 chars alphanumeric
+  if (pathname.match(/^\/api\/analysis\/[a-zA-Z0-9]{20,30}$/)) {
+    return true;
+  }
+
+  return false;
 }
 
 // Check if the path is a protected API route
