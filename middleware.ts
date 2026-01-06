@@ -40,6 +40,7 @@ const PUBLIC_ROUTES = [
   // API routes needed for public analysis flow
   '/api/analysis/run',
   '/api/analysis/run-sync',
+  '/api/analysis/run-selected',
   '/api/analysis/discover',
   '/api/analysis/suggest-personas',
   '/api/wpp-demo',
