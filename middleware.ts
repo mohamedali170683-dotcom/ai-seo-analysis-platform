@@ -11,18 +11,46 @@ const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 // Routes that don't require authentication
 const PUBLIC_ROUTES = [
-  '/wpp-demo',
+  // Auth routes
   '/login',
   '/register',
   '/api/auth/login',
   '/api/auth/register',
   '/api/auth/logout',
+  '/api/auth/me',
   '/api/health',
+
+  // Public marketing pages
+  '/home',
+  '/pricing',
+  '/features',
+  '/promo',
+  '/book-demo',
+  '/book-strategy-call',
+
+  // Demo pages
+  '/wpp-demo',
+  '/demo',
+  '/demoui',
+
+  // Core flow - allow without login (partial results gating handled in page)
+  '/analyze',
+  '/results',
+
+  // API routes needed for public analysis flow
+  '/api/analysis/run',
+  '/api/analysis/run-sync',
+  '/api/analysis/discover',
+  '/api/analysis/suggest-personas',
+  '/api/wpp-demo',
 ];
 
 // API routes that require authentication
 const PROTECTED_API_ROUTES = [
-  '/api/analysis',
+  // Note: /api/analysis/[id] is public for fetching results
+  // Only these specific analysis endpoints need auth:
+  '/api/analysis/list',    // User's saved analyses
+  '/api/analysis/clear',   // Clear analyses
   '/api/brand-positioning',
   '/api/ground-truth',
   '/api/hallucination-detection',
