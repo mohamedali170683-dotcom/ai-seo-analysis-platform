@@ -8,7 +8,7 @@ interface UserSubscription {
   billingCycle: BillingCycle | null;
   trialEndsAt: Date | null;
   isTrialing: boolean;
-  analysesUsedThisMonth: number;
+  analysesUsedThisWeek: number;
   analysesResetAt: Date | null;
 }
 
@@ -69,12 +69,13 @@ export function TierProvider({ children }: { children: ReactNode }) {
     const storedReset = localStorage.getItem(ANALYSES_RESET_KEY);
     if (storedReset) {
       const resetDate = new Date(storedReset);
-      // Check if we need to reset the counter (new month)
+      // Check if we need to reset the counter (new week)
       if (new Date() > resetDate) {
         setAnalysesUsed(0);
         const nextReset = new Date();
-        nextReset.setMonth(nextReset.getMonth() + 1);
-        nextReset.setDate(1);
+        // Set to next Monday
+        const daysUntilMonday = (8 - nextReset.getDay()) % 7 || 7;
+        nextReset.setDate(nextReset.getDate() + daysUntilMonday);
         nextReset.setHours(0, 0, 0, 0);
         setAnalysesResetAt(nextReset);
         localStorage.setItem(ANALYSES_STORAGE_KEY, "0");
@@ -83,10 +84,10 @@ export function TierProvider({ children }: { children: ReactNode }) {
         setAnalysesResetAt(resetDate);
       }
     } else {
-      // Initialize reset date
+      // Initialize reset date to next Monday
       const nextReset = new Date();
-      nextReset.setMonth(nextReset.getMonth() + 1);
-      nextReset.setDate(1);
+      const daysUntilMonday = (8 - nextReset.getDay()) % 7 || 7;
+      nextReset.setDate(nextReset.getDate() + daysUntilMonday);
       nextReset.setHours(0, 0, 0, 0);
       setAnalysesResetAt(nextReset);
       localStorage.setItem(ANALYSES_RESET_KEY, nextReset.toISOString());
@@ -116,7 +117,7 @@ export function TierProvider({ children }: { children: ReactNode }) {
     billingCycle: tier === "free" ? null : "monthly", // Default assumption
     trialEndsAt: null, // Would come from backend
     isTrialing: false,
-    analysesUsedThisMonth: analysesUsed,
+    analysesUsedThisWeek: analysesUsed,
     analysesResetAt,
   };
 
@@ -137,13 +138,13 @@ export function TierProvider({ children }: { children: ReactNode }) {
   };
 
   const canRunAnalysis = (): boolean => {
-    if (limits.analysesPerMonth === Infinity) return true;
-    return analysesUsed < limits.analysesPerMonth;
+    if (limits.analysesPerWeek === Infinity) return true;
+    return analysesUsed < limits.analysesPerWeek;
   };
 
   const getRemainingAnalyses = (): number => {
-    if (limits.analysesPerMonth === Infinity) return Infinity;
-    return Math.max(0, limits.analysesPerMonth - analysesUsed);
+    if (limits.analysesPerWeek === Infinity) return Infinity;
+    return Math.max(0, limits.analysesPerWeek - analysesUsed);
   };
 
   const isProfessionalOrHigher = (): boolean => {

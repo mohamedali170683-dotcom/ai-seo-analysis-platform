@@ -16,7 +16,7 @@ export interface TierLimits {
   allowedStages: ("awareness" | "consideration" | "decision")[];
   testsPerQuestion: number;
   maxCompetitors: number;
-  analysesPerMonth: number;
+  analysesPerWeek: number;
   maxBrands: number;
   
   // Feature flags - THE KEY GATES (Blur Strategy)
@@ -86,7 +86,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     allowedStages: ["awareness", "consideration", "decision"],  // FULL FUNNEL
     testsPerQuestion: 1,
     maxCompetitors: 1,
-    analysesPerMonth: 3,  // Allow a few analyses to build habit
+    analysesPerWeek: 1,  // 1 analysis per week for free tier
     maxBrands: 1,
     // THE KEY GATES - see problem, NOT solution (Blur Strategy)
     useRealSearchData: true,  // YES - show real pain points
@@ -112,7 +112,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,
     maxCompetitors: 10,  // Up to 10 competitors
-    analysesPerMonth: Infinity,  // UNLIMITED
+    analysesPerWeek: Infinity,  // UNLIMITED
     maxBrands: 3,
     useRealSearchData: true,
     showDetailedRecommendations: true,  // UNLOCKED
@@ -136,7 +136,7 @@ export const TIER_LIMITS: Record<UserTier, TierLimits> = {
     allowedStages: ["awareness", "consideration", "decision"],
     testsPerQuestion: 3,
     maxCompetitors: Infinity,
-    analysesPerMonth: Infinity,
+    analysesPerWeek: Infinity,
     maxBrands: Infinity,
     useRealSearchData: true,
     showDetailedRecommendations: true,

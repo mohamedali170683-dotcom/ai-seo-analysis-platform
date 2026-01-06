@@ -9,6 +9,7 @@ import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert, AgencyCTA } from "@/components/UpgradeModal";
 import { UpgradeModalTrigger } from "@/lib/tier/types";
 import { EmailGate } from "@/components/EmailGate";
+import { LoginGate, InlineLoginPrompt } from "@/components/LoginGate";
 import { DashboardHero, SummaryCard, SummaryCardsGrid } from "@/components/Dashboard";
 import { BulletGraph, SentimentBar } from "@/components/Charts";
 import ReactMarkdown from "react-markdown";
@@ -357,6 +358,10 @@ export default function ResultsPage() {
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [hasSubmittedEmail, setHasSubmittedEmail] = useState(false);
 
+  // Login state for gating full results
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showLoginGate, setShowLoginGate] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reportData, setReportData] = useState<any>(null);
@@ -384,6 +389,44 @@ export default function ResultsPage() {
     setUserEmail(email);
     setHasSubmittedEmail(true);
     setShowEmailGate(false);
+  };
+
+  // Check login status on mount
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      try {
+        const response = await fetch('/api/auth/me');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            setIsLoggedIn(true);
+          }
+        }
+      } catch (err) {
+        // Not logged in
+      }
+    };
+    checkLoginStatus();
+  }, []);
+
+  // Handle login from gate
+  const handleLogin = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email, password }),
+      });
+
+      if (response.ok) {
+        setIsLoggedIn(true);
+        setShowLoginGate(false);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      return false;
+    }
   };
 
   // Fetch existing schedules
@@ -870,15 +913,33 @@ export default function ResultsPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════ */}
+        {/* LOGIN GATE - Show prompt if not logged in */}
+        {/* ═══════════════════════════════════════════════════════════════ */}
+        {!isLoggedIn && (
+          <div className="mb-8">
+            <InlineLoginPrompt onLogin={() => setShowLoginGate(true)} />
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════ */}
         {/* TECHNICAL AUDIT & COMPETITOR INTELLIGENCE */}
         {/* ═══════════════════════════════════════════════════════════════ */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className={`grid md:grid-cols-2 gap-6 mb-8 ${!isLoggedIn ? 'relative' : ''}`}>
+          {/* Blur overlay for non-logged-in users */}
+          {!isLoggedIn && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 rounded-2xl flex items-center justify-center">
+              <div className="text-center p-6">
+                <Lock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-600 font-medium">Login to view detailed audit</p>
+              </div>
+            </div>
+          )}
           {/* Technical Audit - Collapsible */}
           <div
-            onClick={() => toggleSection("technical")}
-            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
-              expandedSection === "technical" ? "ring-2 ring-cyan-500" : ""
-            }`}
+            onClick={() => isLoggedIn && toggleSection("technical")}
+            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-all ${
+              isLoggedIn ? 'cursor-pointer hover:shadow-xl' : 'opacity-70'
+            } ${expandedSection === "technical" ? "ring-2 ring-cyan-500" : ""}`}
           >
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
@@ -930,10 +991,10 @@ export default function ResultsPage() {
 
             return (
               <div
-                onClick={() => setExpandedSection("competitive")}
-                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg cursor-pointer transition-all hover:shadow-xl ${
-                  expandedSection === "competitive" ? "ring-2 ring-amber-500" : ""
-                }`}
+                onClick={() => isLoggedIn && setExpandedSection("competitive")}
+                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-all ${
+                  isLoggedIn ? 'cursor-pointer hover:shadow-xl' : 'opacity-70'
+                } ${expandedSection === "competitive" ? "ring-2 ring-amber-500" : ""}`}
               >
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-2">
@@ -971,7 +1032,7 @@ export default function ResultsPage() {
 
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* JOURNEY STAGES DETAILED VIEW - PROGRESSIVE DISCLOSURE */}
-        {/* Only shows when a stage card is clicked */}
+        {/* Only shows when a stage card is clicked AND user is logged in */}
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="mb-8">
           {/* Journey Stages Detailed View - PROGRESSIVE DISCLOSURE */}
@@ -980,8 +1041,27 @@ export default function ResultsPage() {
               <p className="text-gray-500 text-center py-8">No journey stage data available</p>
             )}
             {journeyStages.map((stage: any, index: number) => {
-              // Only show detailed view if this stage is expanded
+              // Only show detailed view if this stage is expanded AND user is logged in
               if (expandedSection !== stage?.stage) return null;
+
+              // If not logged in, show login prompt instead of detailed view
+              if (!isLoggedIn) {
+                return (
+                  <div key={stage?.stage || index} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm">
+                    <div className="text-center py-8">
+                      <Lock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Login Required</h3>
+                      <p className="text-gray-500 mb-4">Create a free account to view detailed stage analysis</p>
+                      <button
+                        onClick={() => setShowLoginGate(true)}
+                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
+                      >
+                        Login / Sign Up Free
+                      </button>
+                    </div>
+                  </div>
+                );
+              }
 
               // Get recommendation for this stage
               const stageRec = allRecommendations.find((r: any) => r.stage === stage?.stageLabel);
@@ -3736,6 +3816,18 @@ export default function ResultsPage() {
         onClose={() => setShowUpgradeModal(false)}
         trigger={upgradeModalTrigger}
       />
+
+      {/* Login Gate Modal */}
+      {showLoginGate && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <LoginGate
+            brandName={reportData?.brandOrKeyword || "Your Brand"}
+            overallScore={reportData?.overallScore || 0}
+            onLogin={handleLogin}
+            onSkip={() => setShowLoginGate(false)}
+          />
+        </div>
+      )}
 
       {/* Schedule Modal */}
       {showScheduleModal && (
