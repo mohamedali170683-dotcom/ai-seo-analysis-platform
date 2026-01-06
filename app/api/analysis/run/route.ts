@@ -59,19 +59,35 @@ export async function POST(request: Request) {
 
     // Step 3: Database operations
     console.log(`💾 [API] Step 3: Creating database records...`);
-    
+
+    // Check for authenticated user from headers (set by middleware)
+    const authUserId = request.headers.get('x-user-id');
+    const authUsername = request.headers.get('x-username');
+
     let user;
     try {
-      user = await prisma.user.upsert({
-        where: { email: "demo@example.com" },
-        update: {},
-        create: { email: "demo@example.com" },
-      });
+      if (authUserId && authUsername) {
+        // Authenticated user - find or create by email
+        console.log(`👤 [API] Authenticated user: ${authUsername}`);
+        user = await prisma.user.upsert({
+          where: { email: authUsername },
+          update: {},
+          create: { email: authUsername },
+        });
+      } else {
+        // Anonymous user - create unique anonymous account per analysis
+        // Use timestamp + random to ensure uniqueness (avoids unique constraint)
+        const anonymousEmail = `anon_${Date.now()}_${Math.random().toString(36).substring(7)}@anonymous.velaris.io`;
+        console.log(`👤 [API] Anonymous user: ${anonymousEmail}`);
+        user = await prisma.user.create({
+          data: { email: anonymousEmail },
+        });
+      }
       console.log(`✅ [API] User ready: ${user.id}`);
     } catch (userError: any) {
       console.error(`❌ [API] Failed to create/find user:`, userError.message);
-      return NextResponse.json({ 
-        success: false, 
+      return NextResponse.json({
+        success: false,
         error: `Database error (user): ${userError.message}`,
         hint: "Check POSTGRES_PRISMA_URL and run prisma db push"
       }, { status: 500 });
