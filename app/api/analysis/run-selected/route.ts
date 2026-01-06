@@ -183,11 +183,27 @@ export async function POST(request: Request) {
     console.log(`   Total AI calls: ${totalCalls}`);
 
     // Get or create user for analysis
-    const user = await prisma.user.upsert({
-      where: { email: "demo@example.com" },
-      update: {},
-      create: { email: "demo@example.com" },
-    });
+    // Check for authenticated user from headers (set by middleware)
+    const authUserId = request.headers.get('x-user-id');
+    const authUsername = request.headers.get('x-username');
+
+    let user;
+    if (authUserId && authUsername) {
+      // Authenticated user - find or create by email
+      console.log(`👤 [RUN-SELECTED] Authenticated user: ${authUsername}`);
+      user = await prisma.user.upsert({
+        where: { email: authUsername },
+        update: {},
+        create: { email: authUsername },
+      });
+    } else {
+      // Anonymous user - create unique anonymous account per analysis
+      const anonymousEmail = `anon_${Date.now()}_${Math.random().toString(36).substring(7)}@anonymous.velaris.io`;
+      console.log(`👤 [RUN-SELECTED] Anonymous user: ${anonymousEmail}`);
+      user = await prisma.user.create({
+        data: { email: anonymousEmail },
+      });
+    }
     
     // Create analysis record
     const analysis = await prisma.analysis.create({
