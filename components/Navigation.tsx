@@ -43,13 +43,13 @@ export function Navigation() {
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors">
+    <nav className="bg-white border-b border-[#E5E5E5] sticky top-0 z-50 backdrop-blur-sm transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center gap-6">
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/home" className="text-xl font-bold text-blue-600 dark:text-blue-400">
+              <Link href="/home" className="text-xl font-headline font-bold text-[#173D32]">
                 Velaris
               </Link>
             </div>
@@ -61,8 +61,8 @@ export function Navigation() {
                 href={primaryFeature.href}
                 className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                   isActive(primaryFeature.href)
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50'
+                    ? 'bg-[#173D32] text-white shadow-md'
+                    : 'bg-[#ACD3C8]/20 text-[#173D32] hover:bg-[#ACD3C8]/40'
                 }`}
               >
                 <TrendingUp className="w-4 h-4" />
@@ -74,8 +74,8 @@ export function Navigation() {
                 href="/dashboard"
                 className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive('/dashboard')
-                    ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800'
+                    ? 'bg-off-white text-off-black'
+                    : 'text-[#4A5F5F] hover:text-off-black hover:bg-off-white'
                 }`}
               >
                 <LayoutDashboard className="w-4 h-4" />
@@ -87,54 +87,54 @@ export function Navigation() {
                 <button
                   onClick={() => setShowFeatures(!showFeatures)}
                   onBlur={() => setTimeout(() => setShowFeatures(false), 200)}
-                  className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-[#4A5F5F] hover:text-off-black hover:bg-off-white rounded-lg transition-colors"
                 >
                   More Tools
                   <ChevronDown className={`w-4 h-4 transition-transform ${showFeatures ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showFeatures && (
-                  <div className="absolute left-0 mt-2 w-72 rounded-xl shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black/5 dark:ring-white/10 z-50 overflow-hidden">
+                  <div className="absolute left-0 mt-2 w-72 rounded-xl shadow-lg bg-white border-2 border-[#E5E5E5] z-50 overflow-hidden">
                     <div className="p-2">
                       {/* Brand Positioning - highlighted */}
                       <Link
                         href="/hallucination-detector"
                         className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
                           isActive('/hallucination-detector')
-                            ? 'bg-blue-50 dark:bg-blue-900/30'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? 'bg-[#D0DBF9]/30'
+                            : 'hover:bg-off-white'
                         }`}
                       >
-                        <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                          <Target className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <div className="p-2 bg-[#D0DBF9]/30 rounded-lg">
+                          <Target className="w-4 h-4 text-[#396FFA]" />
                         </div>
                         <div>
-                          <span className="block font-medium text-gray-900 dark:text-gray-100">Brand Positioning</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Check how LLMs represent your brand</span>
+                          <span className="block font-medium text-off-black">Brand Positioning</span>
+                          <span className="text-xs text-off-grey">Check how LLMs represent your brand</span>
                         </div>
                       </Link>
 
-                      <div className="border-t border-gray-100 dark:border-gray-700 my-2"></div>
+                      <div className="border-t border-[#E5E5E5] my-2"></div>
 
                       {/* Automation Tools */}
                       <div className="px-3 py-1.5">
-                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Automation</span>
+                        <span className="text-xs font-semibold text-off-grey uppercase tracking-wider">Automation</span>
                       </div>
 
                       <Link
                         href="/automation"
                         className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
                           isActive('/automation')
-                            ? 'bg-blue-50 dark:bg-blue-900/30'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? 'bg-[#D0DBF9]/30'
+                            : 'hover:bg-off-white'
                         }`}
                       >
-                        <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                          <Zap className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        <div className="p-2 bg-[#E3B5A3]/20 rounded-lg">
+                          <Zap className="w-4 h-4 text-[#EB4200]" />
                         </div>
                         <div>
-                          <span className="block font-medium text-gray-900 dark:text-gray-100">Automation</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Schedule automated scans</span>
+                          <span className="block font-medium text-off-black">Automation</span>
+                          <span className="text-xs text-off-grey">Schedule automated scans</span>
                         </div>
                       </Link>
 
@@ -142,16 +142,16 @@ export function Navigation() {
                         href="/alerts"
                         className={`flex items-start gap-3 p-3 rounded-lg transition-colors ${
                           isActive('/alerts')
-                            ? 'bg-blue-50 dark:bg-blue-900/30'
-                            : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? 'bg-[#D0DBF9]/30'
+                            : 'hover:bg-off-white'
                         }`}
                       >
-                        <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                          <Bell className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        <div className="p-2 bg-red-100 rounded-lg">
+                          <Bell className="w-4 h-4 text-red-600" />
                         </div>
                         <div>
-                          <span className="block font-medium text-gray-900 dark:text-gray-100">Alerts</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Get notified of changes</span>
+                          <span className="block font-medium text-off-black">Alerts</span>
+                          <span className="text-xs text-off-grey">Get notified of changes</span>
                         </div>
                       </Link>
 
@@ -166,12 +166,12 @@ export function Navigation() {
       </div>
 
       {/* Mobile menu */}
-      <div className="md:hidden border-t border-gray-200 dark:border-gray-700">
+      <div className="md:hidden border-t border-[#E5E5E5]">
         <div className="pt-2 pb-3 space-y-1 px-3">
           {/* Primary CTA - Mobile */}
           <Link
             href="/analyze"
-            className="flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold"
+            className="flex items-center gap-3 px-4 py-3 bg-[#173D32] text-white rounded-xl font-semibold"
           >
             <TrendingUp className="w-5 h-5" />
             AI Visibility Analysis
@@ -182,8 +182,8 @@ export function Navigation() {
             href="/dashboard"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium ${
               isActive('/dashboard')
-                ? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
-                : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+                ? 'bg-off-white text-off-black'
+                : 'text-[#4A5F5F] hover:bg-off-white'
             }`}
           >
             <LayoutDashboard className="w-5 h-5" />
@@ -191,8 +191,8 @@ export function Navigation() {
           </Link>
 
           {/* Features Section - Mobile */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
-            <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="border-t border-[#E5E5E5] pt-2 mt-2">
+            <div className="px-4 py-2 text-xs font-semibold text-off-grey uppercase tracking-wider">
               More Tools
             </div>
             {secondaryFeatures.slice(1).map((link) => {
@@ -203,8 +203,8 @@ export function Navigation() {
                   href={link.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium ${
                     isActive(link.href)
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800'
+                      ? 'bg-[#ACD3C8]/20 text-[#173D32]'
+                      : 'text-[#4A5F5F] hover:bg-off-white'
                   }`}
                 >
                   <Icon className="w-5 h-5" />

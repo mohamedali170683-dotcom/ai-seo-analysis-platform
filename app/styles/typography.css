@@ -1,32 +1,29 @@
 /**
- * Typography System - Behavioral Science Optimized
- * 
- * Font choices based on readability research:
- * - IBM Plex Sans: Headlines (high legibility, professional)
- * - Inter: Body text (optimized for screens)
- * - JetBrains Mono: Data/scores (tabular nums, monospace for alignment)
+ * Typography — Stratum UI
+ *
+ * Headlines: Work Sans (700, also 600/800)
+ * Body/UI: Rubik (400–700)
+ * Data: JetBrains Mono
  */
 
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
-/* Headlines - IBM Plex Sans */
+/* Headlines — Work Sans */
 h1, h2, h3, h4, h5, h6, .headline {
   font-family: var(--font-headline);
   font-weight: var(--font-bold);
   line-height: 1.2;
-  color: var(--color-navy-900);
+  color: var(--stratum-off-black);
 }
 
-h1 { font-size: var(--text-5xl); letter-spacing: -0.02em; }
-h2 { font-size: var(--text-4xl); letter-spacing: -0.01em; }
-h3 { font-size: var(--text-3xl); }
+h1 { font-size: clamp(2rem, 5vw, 3.5rem); letter-spacing: -0.02em; }
+h2 { font-size: clamp(1.5rem, 4vw, 2.5rem); letter-spacing: -0.01em; }
+h3 { font-size: clamp(1.25rem, 3vw, 1.875rem); }
 h4 { font-size: var(--text-2xl); }
 h5 { font-size: var(--text-xl); }
 h6 { font-size: var(--text-lg); }
 
-/* Data Display - JetBrains Mono */
+/* Data Display — JetBrains Mono */
 .score, .metric-value, .data-display {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -41,23 +38,3 @@ h6 { font-size: var(--text-lg); }
   line-height: 1;
   letter-spacing: -0.02em;
 }
-
-/* Body text utility classes */
-.text-xs { font-size: var(--text-xs); }
-.text-sm { font-size: var(--text-sm); }
-.text-base { font-size: var(--text-base); }
-.text-lg { font-size: var(--text-lg); }
-.text-xl { font-size: var(--text-xl); }
-.text-2xl { font-size: var(--text-2xl); }
-.text-3xl { font-size: var(--text-3xl); }
-
-/* Weight utilities */
-.font-normal { font-weight: var(--font-normal); }
-.font-medium { font-weight: var(--font-medium); }
-.font-semibold { font-weight: var(--font-semibold); }
-.font-bold { font-weight: var(--font-bold); }
-
-/* Color utilities */
-.text-primary { color: var(--color-text-primary); }
-.text-secondary { color: var(--color-text-secondary); }
-.text-tertiary { color: var(--color-text-tertiary); }

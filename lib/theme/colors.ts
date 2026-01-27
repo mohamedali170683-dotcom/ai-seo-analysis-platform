@@ -1,51 +1,43 @@
 /**
- * Evidence-Based Dashboard Color System
- * Based on research from Stephen Few, Edward Tufte, and Nielsen Norman Group
+ * Stratum UI Dashboard Color System
  *
- * Key Principles:
- * - Use color sparingly for data that requires attention
- * - Gray for secondary/non-actionable information
- * - Semantic colors for status (good/warning/critical)
- * - Brand colors ONLY for navigation, NOT data visualization
+ * Brand: Petrol #173D32, Orange #EB4200, Blue #396FFA
+ * Canvas: Off-white #FBF9F5, Surface: #FFFFFF
  */
 
 export const DASHBOARD_COLORS = {
-  // Primary data colors (use sparingly)
-  positive: '#16a34a',      // Green - above target, good performance
-  warning: '#d97706',       // Amber - approaching limit, needs monitoring
-  critical: '#dc2626',      // Red - needs immediate attention
-  neutral: '#6366f1',       // Indigo - informational, no action needed
+  // Status colors
+  positive: '#16a34a',
+  warning: '#d97706',
+  critical: '#dc2626',
+  neutral: '#396FFA',        // Stratum blue
 
-  // Secondary/de-emphasis (use for non-critical data)
-  muted: '#9ca3af',         // Gray-400 - de-emphasized data
-  mutedLight: '#d1d5db',    // Gray-300 - very low emphasis
-  mutedDark: '#6b7280',     // Gray-500 - slightly more emphasis
+  // Muted
+  muted: '#B0B0B0',          // Stratum off-grey
+  mutedLight: '#E5E5E5',     // Stratum border
+  mutedDark: '#4A5F5F',
 
   // Backgrounds
-  bgPrimary: '#ffffff',     // White - main content background
-  bgSecondary: '#f9fafb',   // Gray-50 - secondary sections
-  bgTertiary: '#f3f4f6',    // Gray-100 - tertiary elements
+  bgPrimary: '#FFFFFF',
+  bgSecondary: '#FBF9F5',    // Stratum off-white
+  bgTertiary: '#F5F3EF',
 
   // Text
-  textPrimary: '#111827',   // Gray-900 - primary text, headlines
-  textSecondary: '#4b5563', // Gray-600 - secondary text, labels
-  textMuted: '#9ca3af',     // Gray-400 - metadata, timestamps
+  textPrimary: '#062121',    // Stratum off-black
+  textSecondary: '#4A5F5F',
+  textMuted: '#B0B0B0',
 
-  // Brand (use ONLY for navigation/UI, NOT data)
-  brand: '#7c3aed',         // Purple - navigation, buttons
-  brandLight: '#ede9fe',    // Purple-100 - brand backgrounds
-  brandDark: '#5b21b6',     // Purple-800 - brand hover states
+  // Brand (Stratum petrol for nav, blue for interactive)
+  brand: '#173D32',           // Stratum petrol
+  brandLight: '#ACD3C8',     // Stratum petrol lighter
+  brandDark: '#1D5142',      // Stratum petrol light
 
   // Borders
-  borderLight: '#e5e7eb',   // Gray-200 - subtle borders
-  borderMedium: '#d1d5db',  // Gray-300 - card borders
-  borderStrong: '#9ca3af',  // Gray-400 - emphasized borders
+  borderLight: '#E5E5E5',
+  borderMedium: '#CCCCCC',
+  borderStrong: '#B0B0B0',
 } as const;
 
-/**
- * Status-based color mapping
- * Maps semantic states to their corresponding colors
- */
 export const STATUS_COLORS = {
   good: DASHBOARD_COLORS.positive,
   ok: DASHBOARD_COLORS.neutral,
@@ -54,13 +46,6 @@ export const STATUS_COLORS = {
   inactive: DASHBOARD_COLORS.muted,
 } as const;
 
-/**
- * Get status color based on score thresholds
- * @param score - Numeric score (0-100)
- * @param goodThreshold - Score above this is considered good (default: 70)
- * @param warningThreshold - Score above this is considered warning (default: 40)
- * @returns Hex color code
- */
 export function getStatusColor(
   score: number,
   goodThreshold: number = 70,
@@ -71,13 +56,6 @@ export function getStatusColor(
   return STATUS_COLORS.critical;
 }
 
-/**
- * Get status label based on score thresholds
- * @param score - Numeric score (0-100)
- * @param goodThreshold - Score above this is considered good (default: 70)
- * @param warningThreshold - Score above this is considered warning (default: 40)
- * @returns Status label
- */
 export function getStatusLabel(
   score: number,
   goodThreshold: number = 70,
@@ -88,26 +66,16 @@ export function getStatusLabel(
   return 'critical';
 }
 
-/**
- * Sentiment colors for visualization
- */
 export const SENTIMENT_COLORS = {
-  positive: '#86efac',    // Light green - positive sentiment
-  neutral: '#d1d5db',     // Gray - neutral sentiment
-  negative: '#fca5a5',    // Light red - negative sentiment
+  positive: '#86efac',
+  neutral: '#E5E5E5',
+  negative: '#fca5a5',
 } as const;
 
-/**
- * Bullet graph qualitative range colors
- */
 export const BULLET_RANGE_COLORS = {
-  poor: '#fee2e2',        // Light red
-  ok: '#fef3c7',          // Light yellow
-  good: '#d1fae5',        // Light green
+  poor: '#fee2e2',
+  ok: '#fef3c7',
+  good: '#d1fae5',
 } as const;
 
-/**
- * Alias for backwards compatibility with design-system.ts
- * SEMANTIC_COLORS is the same as DASHBOARD_COLORS
- */
 export const SEMANTIC_COLORS = DASHBOARD_COLORS;

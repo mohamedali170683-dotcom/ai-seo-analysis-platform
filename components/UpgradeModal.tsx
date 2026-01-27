@@ -2,9 +2,9 @@
 
 import React, { useState } from "react";
 import { X, Lock, Sparkles, Calendar, ArrowRight, Check, Star, Mail } from "lucide-react";
-import { 
-  UpgradeModalTrigger, 
-  UPGRADE_MODAL_CONTENT, 
+import {
+  UpgradeModalTrigger,
+  UPGRADE_MODAL_CONTENT,
   BOOKING_URLS,
   TIER_PRICING,
   TIER_NAMES,
@@ -18,17 +18,16 @@ interface UpgradeModalProps {
 
 export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
-  
+
   if (!isOpen) return null;
 
   const content = UPGRADE_MODAL_CONTENT[trigger];
-  const professionalPrice = billingCycle === "monthly" 
-    ? TIER_PRICING.professional.monthly 
+  const professionalPrice = billingCycle === "monthly"
+    ? TIER_PRICING.professional.monthly
     : Math.round(TIER_PRICING.professional.annual / 12);
   const partnerPrice = TIER_PRICING.partner.monthly;
 
   const handleStartTrial = () => {
-    // In production, this would redirect to Stripe checkout
     window.location.href = `${BOOKING_URLS.checkout}?tier=professional&billing=${billingCycle}`;
   };
 
@@ -43,40 +42,40 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden">
+      <div className="relative bg-white rounded-xl border-2 border-[#E5E5E5] shadow-xl max-w-4xl w-full overflow-hidden">
         {/* Close button */}
-        <button 
+        <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors z-10"
+          className="absolute top-4 right-4 text-off-grey hover:text-[#4A5F5F] transition-colors z-10"
         >
           <X className="w-6 h-6" />
         </button>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-slate-800 via-slate-700 to-cyan-700 p-6 text-white text-center">
+        <div className="bg-[#173D32] p-6 text-white text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Sparkles className="w-5 h-5" />
             <span className="text-sm font-medium opacity-90">Unlock Full AI Visibility Analysis</span>
           </div>
-          <h2 className="text-2xl font-bold mb-2">{content.headline}</h2>
+          <h2 className="text-2xl font-headline font-bold mb-2">{content.headline}</h2>
           <p className="text-white/90">{content.description}</p>
         </div>
 
         {/* Billing toggle */}
-        <div className="flex justify-center py-4 bg-gray-50 border-b">
-          <div className="inline-flex items-center bg-white rounded-full p-1 shadow-sm border">
+        <div className="flex justify-center py-4 bg-off-white border-b border-[#E5E5E5]">
+          <div className="inline-flex items-center bg-white rounded-full p-1 shadow-sm border border-[#E5E5E5]">
             <button
               onClick={() => setBillingCycle("monthly")}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                billingCycle === "monthly" 
-                  ? "bg-blue-600 text-white" 
-                  : "text-gray-600 hover:text-gray-900"
+                billingCycle === "monthly"
+                  ? "bg-[#173D32] text-white"
+                  : "text-[#4A5F5F] hover:text-off-black"
               }`}
             >
               Monthly
@@ -84,15 +83,15 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
             <button
               onClick={() => setBillingCycle("annual")}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-                billingCycle === "annual" 
-                  ? "bg-blue-600 text-white" 
-                  : "text-gray-600 hover:text-gray-900"
+                billingCycle === "annual"
+                  ? "bg-[#173D32] text-white"
+                  : "text-[#4A5F5F] hover:text-off-black"
               }`}
             >
               Annual
               <span className={`text-xs px-2 py-0.5 rounded-full ${
-                billingCycle === "annual" 
-                  ? "bg-green-400 text-green-900" 
+                billingCycle === "annual"
+                  ? "bg-green-400 text-green-900"
                   : "bg-green-100 text-green-700"
               }`}>
                 Save €{TIER_PRICING.professional.annualSavings}
@@ -104,25 +103,25 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
         {/* Two tier comparison */}
         <div className="p-6">
           <div className="grid md:grid-cols-2 gap-6">
-            
+
             {/* Professional Tier - TARGET (highlighted) */}
-            <div className="relative border-2 border-blue-500 rounded-2xl p-8 bg-blue-50/30">
+            <div className="relative border-2 border-[#396FFA] rounded-xl p-8 bg-[#D0DBF9]/10">
               {/* Most Popular Badge */}
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                <span className="bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
+                <span className="bg-[#396FFA] text-white text-xs font-bold px-4 py-1 rounded-full flex items-center gap-1">
                   <Star className="w-3 h-3" /> Most Popular
                 </span>
               </div>
-              
+
               <div className="text-center mb-4 pt-2">
-                <h3 className="text-lg font-bold text-gray-900">{TIER_NAMES.professional.name}</h3>
-                <p className="text-sm text-gray-500">{TIER_NAMES.professional.tagline}</p>
+                <h3 className="text-lg font-headline font-bold text-off-black">{TIER_NAMES.professional.name}</h3>
+                <p className="text-sm text-off-grey">{TIER_NAMES.professional.tagline}</p>
               </div>
-              
+
               <div className="text-center mb-6">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold text-gray-900">€{professionalPrice}</span>
-                  <span className="text-gray-500">/month</span>
+                  <span className="text-4xl font-bold text-off-black">€{professionalPrice}</span>
+                  <span className="text-off-grey">/month</span>
                 </div>
                 {billingCycle === "annual" && (
                   <p className="text-sm text-green-600 font-medium mt-1">
@@ -144,62 +143,62 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
                     <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
+                    <span className="text-[#4A5F5F]">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <button
                 onClick={handleStartTrial}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#EB4200] hover:opacity-90 text-white font-semibold py-3 px-6 min-h-[48px] rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 Start My 14-Day Free Trial
                 <ArrowRight className="w-4 h-4" />
               </button>
-              
-              <p className="text-center text-xs text-gray-500 mt-3">
+
+              <p className="text-center text-xs text-off-grey mt-3">
                 30-day money-back guarantee. Cancel anytime.
               </p>
-              
+
               {/* One-Time Report Option */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="mt-4 pt-4 border-t border-[#E5E5E5]">
                 <button
                   onClick={() => window.location.href = `${BOOKING_URLS.checkout}?tier=professional&type=one_time`}
-                  className="w-full bg-white border-2 border-blue-500 text-blue-600 font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-2"
+                  className="w-full bg-white border-2 border-[#396FFA] text-[#396FFA] font-semibold py-3 px-6 min-h-[48px] rounded-lg transition-all hover:bg-[#D0DBF9]/20 flex items-center justify-center gap-2"
                 >
                   Single Report — €{TIER_PRICING.professional.oneTimeReport}
                 </button>
-                <p className="text-center text-xs text-gray-500 mt-2">
+                <p className="text-center text-xs text-off-grey mt-2">
                   One-off payment, no subscription
                 </p>
               </div>
-              
+
               <button
                 onClick={handleBookDemo}
-                className="w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium mt-3"
+                className="w-full text-center text-sm text-[#396FFA] hover:text-[#192F80] font-medium mt-3"
               >
                 or Book My Demo →
               </button>
             </div>
 
             {/* Partner Tier - ANCHOR */}
-            <div className="border border-gray-200 rounded-2xl p-8 bg-gradient-to-br from-amber-50/50 to-yellow-50/50">
+            <div className="border-2 border-[#E5E5E5] rounded-xl p-8 bg-[#E3B5A3]/10">
               <div className="text-center mb-4">
-                <h3 className="text-lg font-bold text-gray-900">{TIER_NAMES.partner.name}</h3>
-                <p className="text-sm text-gray-500">{TIER_NAMES.partner.tagline}</p>
+                <h3 className="text-lg font-headline font-bold text-off-black">{TIER_NAMES.partner.name}</h3>
+                <p className="text-sm text-off-grey">{TIER_NAMES.partner.tagline}</p>
               </div>
-              
+
               <div className="text-center mb-6">
                 <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold text-gray-900">€{partnerPrice.toLocaleString()}</span>
-                  <span className="text-gray-500">/month</span>
+                  <span className="text-4xl font-bold text-off-black">€{partnerPrice.toLocaleString()}</span>
+                  <span className="text-off-grey">/month</span>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-off-grey mt-1">
                   or €{TIER_PRICING.partner.annual.toLocaleString()}/year (1 month free)
                 </p>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4 text-center font-medium">
+              <p className="text-sm text-[#4A5F5F] mb-4 text-center font-medium">
                 Everything in Professional, plus:
               </p>
 
@@ -217,21 +216,21 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
                   "Private Slack channel",
                 ].map((feature, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
-                    <Check className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
+                    <Check className="w-5 h-5 text-[#EB4200] flex-shrink-0" />
+                    <span className="text-[#4A5F5F]">{feature}</span>
                   </li>
                 ))}
               </ul>
 
               <button
                 onClick={handleBookStrategyCall}
-                className="w-full bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#173D32] hover:bg-[#1D5142] text-white font-semibold py-3 px-6 min-h-[48px] rounded-lg transition-all flex items-center justify-center gap-2"
               >
                 <Calendar className="w-4 h-4" />
                 Book Strategy Call
               </button>
-              
-              <p className="text-center text-xs text-gray-500 mt-3">
+
+              <p className="text-center text-xs text-off-grey mt-3">
                 Let&apos;s discuss your AI visibility goals
               </p>
             </div>
@@ -242,7 +241,7 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
         <div className="text-center pb-6">
           <button
             onClick={onClose}
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="text-sm text-off-grey hover:text-[#4A5F5F]"
           >
             Stay on Free
           </button>
@@ -253,24 +252,24 @@ export function UpgradeModal({ isOpen, onClose, trigger }: UpgradeModalProps) {
 }
 
 // Premium Badge Component
-export function PremiumBadge({ 
+export function PremiumBadge({
   size = "sm",
   tier = "professional",
-  className = "" 
-}: { 
-  size?: "sm" | "md"; 
+  className = ""
+}: {
+  size?: "sm" | "md";
   tier?: "professional" | "partner";
   className?: string;
 }) {
-  const colors = tier === "professional" 
-    ? "from-cyan-100 to-cyan-50 text-cyan-700 border-blue-200"
-    : "from-amber-100 to-yellow-100 text-amber-700 border-amber-200";
-  
+  const colors = tier === "professional"
+    ? "bg-[#D0DBF9]/30 text-[#192F80] border-[#D0DBF9]"
+    : "bg-[#E3B5A3]/20 text-[#EB4200] border-[#E3B5A3]";
+
   return (
     <span className={`
-      inline-flex items-center gap-1 
+      inline-flex items-center gap-1
       ${size === "sm" ? "text-xs px-2 py-0.5" : "text-sm px-3 py-1"}
-      bg-gradient-to-r ${colors}
+      ${colors}
       font-medium rounded-full border
       ${className}
     `}>
@@ -281,30 +280,30 @@ export function PremiumBadge({
 }
 
 // Lock Overlay Component
-export function LockOverlay({ 
+export function LockOverlay({
   onClick,
   message = "Included in Professional",
   showTeaser,
   teaserValue
-}: { 
+}: {
   onClick: () => void;
   message?: string;
   showTeaser?: boolean;
   teaserValue?: string;
 }) {
   return (
-    <div 
-      className="absolute inset-0 bg-gray-100/80 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer z-10 rounded-lg"
+    <div
+      className="absolute inset-0 bg-off-white/80 backdrop-blur-[2px] flex flex-col items-center justify-center cursor-pointer z-10 rounded-lg"
       onClick={onClick}
     >
       {showTeaser && teaserValue && (
-        <div className="text-2xl font-bold text-gray-400 mb-2">{teaserValue}</div>
+        <div className="text-2xl font-bold text-off-grey mb-2">{teaserValue}</div>
       )}
       <div className="bg-white rounded-full p-3 shadow-lg mb-2">
-        <Lock className="w-6 h-6 text-gray-400" />
+        <Lock className="w-6 h-6 text-off-grey" />
       </div>
-      <span className="text-sm font-medium text-gray-600">{message}</span>
-      <span className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+      <span className="text-sm font-medium text-[#4A5F5F]">{message}</span>
+      <span className="text-xs text-[#396FFA] mt-1 flex items-center gap-1">
         <Sparkles className="w-3 h-3" /> Click to unlock
       </span>
     </div>
@@ -312,14 +311,14 @@ export function LockOverlay({
 }
 
 // Blurred Content Wrapper
-export function BlurredContent({ 
-  children, 
+export function BlurredContent({
+  children,
   isLocked,
   onClick,
   message,
   showTeaser,
   teaserValue
-}: { 
+}: {
   children: React.ReactNode;
   isLocked: boolean;
   onClick: () => void;
@@ -328,7 +327,7 @@ export function BlurredContent({
   teaserValue?: string;
 }) {
   if (!isLocked) return <>{children}</>;
-  
+
   return (
     <div className="relative">
       <div className="blur-sm pointer-events-none select-none">
@@ -359,12 +358,12 @@ export function VisibilityGapAlert({
   const missingPercent = 100 - brandScore;
 
   return (
-    <div className="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6 my-6">
+    <div className="bg-[#E3B5A3]/15 border-2 border-[#EB4200]/30 rounded-xl p-6 my-6">
       <div className="flex items-start gap-3 mb-4">
         <span className="text-2xl">⚠️</span>
         <div>
-          <h3 className="text-lg font-bold text-gray-900">AI Visibility Gap Detected</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-lg font-headline font-bold text-off-black">AI Visibility Gap Detected</h3>
+          <p className="text-sm text-[#4A5F5F]">
             Your brand is <strong>missing from {missingPercent}%</strong> of AI purchase recommendations
           </p>
         </div>
@@ -374,25 +373,25 @@ export function VisibilityGapAlert({
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div>
           <div className="flex justify-between text-sm mb-1">
-            <span className="font-medium text-gray-900">{brandName}</span>
+            <span className="font-medium text-off-black">{brandName}</span>
             <span className="font-bold text-red-600">{brandScore}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-4">
-            <div 
+          <div className="w-full bg-[#E5E5E5] rounded-full h-4">
+            <div
               className="bg-red-500 h-4 rounded-full transition-all"
               style={{ width: `${brandScore}%` }}
             />
           </div>
         </div>
-        
+
         {competitorName && competitorScore && (
           <div>
             <div className="flex justify-between text-sm mb-1">
-              <span className="font-medium text-gray-900">{competitorName}</span>
+              <span className="font-medium text-off-black">{competitorName}</span>
               <span className="font-bold text-green-600">{competitorScore}%</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-4">
-              <div 
+            <div className="w-full bg-[#E5E5E5] rounded-full h-4">
+              <div
                 className="bg-green-500 h-4 rounded-full transition-all"
                 style={{ width: `${competitorScore}%` }}
               />
@@ -402,7 +401,7 @@ export function VisibilityGapAlert({
       </div>
 
       {issuesFound && (
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm text-[#4A5F5F] mb-4">
           We identified <strong>{issuesFound} optimization opportunities</strong> to improve your visibility.
         </p>
       )}
@@ -410,14 +409,14 @@ export function VisibilityGapAlert({
       <div className="flex flex-col sm:flex-row gap-3">
         <button
           onClick={onUpgrade}
-          className="flex-1 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-700 hover:to-cyan-600 text-white font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all flex items-center justify-center gap-2"
+          className="flex-1 bg-[#EB4200] hover:opacity-90 text-white font-semibold py-3 px-6 min-h-[48px] rounded-lg transition-all flex items-center justify-center gap-2"
         >
           Get My Fix Recommendations
           <ArrowRight className="w-4 h-4" />
         </button>
         <button
           onClick={onUpgrade}
-          className="flex-1 bg-white border-2 border-blue-500 text-blue-600 font-semibold py-3 px-6 min-h-[48px] rounded-xl transition-all hover:bg-blue-50 flex items-center justify-center gap-2"
+          className="flex-1 bg-white border-2 border-[#396FFA] text-[#396FFA] font-semibold py-3 px-6 min-h-[48px] rounded-lg transition-all hover:bg-[#D0DBF9]/20 flex items-center justify-center gap-2"
         >
           One Report — €199
         </button>
@@ -426,7 +425,7 @@ export function VisibilityGapAlert({
   );
 }
 
-// Lead Magnet Unlock Component - Exchange email for one detail reveal
+// Lead Magnet Unlock Component
 export function LeadMagnetUnlock({
   title = "Unlock Top 10 Missed Questions",
   description = "Enter your email to reveal the top questions where competitors are beating you.",
@@ -440,7 +439,7 @@ export function LeadMagnetUnlock({
 }) {
   const [email, setEmail] = React.useState("");
   const [error, setError] = React.useState("");
-  
+
   const validateEmail = (email: string) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);
@@ -457,14 +456,14 @@ export function LeadMagnetUnlock({
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl p-6 my-4">
+    <div className="bg-[#D0DBF9]/20 border-2 border-[#ACD3C8] rounded-xl p-6 my-4">
       <div className="flex items-start gap-3 mb-4">
-        <div className="bg-blue-100 p-2 rounded-lg">
-          <Mail className="w-5 h-5 text-blue-600" />
+        <div className="bg-[#D0DBF9]/30 p-2 rounded-lg">
+          <Mail className="w-5 h-5 text-[#396FFA]" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-600">{description}</p>
+          <h3 className="text-lg font-headline font-bold text-off-black">{title}</h3>
+          <p className="text-sm text-[#4A5F5F]">{description}</p>
         </div>
       </div>
 
@@ -475,8 +474,8 @@ export function LeadMagnetUnlock({
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
-            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              error ? "border-red-500" : "border-gray-300"
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[#396FFA] focus:border-[#396FFA] ${
+              error ? "border-red-500" : "border-[#E5E5E5]"
             }`}
           />
           {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
@@ -484,7 +483,7 @@ export function LeadMagnetUnlock({
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 min-w-[140px]"
+          className="bg-[#EB4200] hover:opacity-90 text-white font-semibold py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-70 min-w-[140px]"
         >
           {isLoading ? (
             <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
@@ -500,7 +499,7 @@ export function LeadMagnetUnlock({
         </button>
       </form>
 
-      <p className="text-xs text-gray-400 mt-3 flex items-center gap-1">
+      <p className="text-xs text-off-grey mt-3 flex items-center gap-1">
         <Lock className="w-3 h-3" />
         We respect your privacy. No spam, ever.
       </p>
@@ -519,19 +518,19 @@ export function AgencyCTA({ onContact }: { onContact?: () => void }) {
   };
 
   return (
-    <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-6 text-white my-6">
+    <div className="bg-[#173D32] rounded-xl p-6 text-white my-6">
       <div className="flex items-start gap-4">
         <span className="text-3xl">💡</span>
         <div className="flex-1">
-          <h3 className="text-lg font-bold mb-2">
+          <h3 className="text-lg font-headline font-bold mb-2">
             Need help implementing these optimizations?
           </h3>
-          <p className="text-slate-300 text-sm mb-4">
+          <p className="text-[#ACD3C8] text-sm mb-4">
             Our team has helped 50+ brands improve their AI visibility by an average of 34% in 90 days.
           </p>
           <button
             onClick={handleContact}
-            className="bg-white text-slate-900 font-semibold py-2 px-4 rounded-lg hover:bg-slate-100 transition-all flex items-center gap-2"
+            className="bg-white text-[#173D32] font-semibold py-2 px-4 rounded-lg hover:bg-off-white transition-all flex items-center gap-2"
           >
             Talk to Your Team
             <ArrowRight className="w-4 h-4" />

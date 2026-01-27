@@ -84,8 +84,9 @@ export const DashboardHero: React.FC<DashboardHeroProps> = ({
           justify-content: space-between;
           padding: 32px;
           background: ${SEMANTIC_COLORS.bgPrimary};
-          border-radius: 12px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+          border: 2px solid #E5E5E5;
+          border-radius: 16px;
+          box-shadow: 0 8px 32px rgba(6, 33, 33, 0.10), 0 4px 8px rgba(6, 33, 33, 0.06);
           margin-bottom: 24px;
           flex-wrap: wrap;
           gap: 24px;

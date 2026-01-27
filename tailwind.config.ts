@@ -9,7 +9,31 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        headline: ['var(--font-work-sans)', 'Work Sans', 'sans-serif'],
+        body: ['var(--font-rubik)', 'Rubik', 'sans-serif'],
+      },
       colors: {
+        // Stratum brand
+        petrol: {
+          DEFAULT: '#173D32',
+          light: '#1D5142',
+          lighter: '#ACD3C8',
+        },
+        'stratum-orange': {
+          DEFAULT: '#EB4200',
+          lighter: '#E3B5A3',
+        },
+        'stratum-blue': {
+          DEFAULT: '#396FFA',
+          lighter: '#D0DBF9',
+          darker: '#192F80',
+        },
+        // Stratum neutrals
+        'off-black': '#062121',
+        'off-white': '#FBF9F5',
+        'off-grey': '#B0B0B0',
+        // Semantic tokens (mapped to Stratum)
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

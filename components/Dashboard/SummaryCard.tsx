@@ -63,17 +63,17 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           flex-direction: column;
           padding: 16px;
           background: ${DASHBOARD_COLORS.bgPrimary};
-          border: 1px solid ${DASHBOARD_COLORS.borderLight};
-          border-radius: 8px;
+          border: 2px solid ${DASHBOARD_COLORS.borderLight};
+          border-radius: 16px;
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: all 150ms ease-out;
           text-align: left;
           width: 100%;
         }
 
         .summary-card:hover {
-          border-color: ${DASHBOARD_COLORS.brand};
-          box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+          border-color: ${DASHBOARD_COLORS.brandLight};
+          box-shadow: 0 8px 32px rgba(6, 33, 33, 0.10), 0 4px 8px rgba(6, 33, 33, 0.06);
           transform: translateY(-1px);
         }
 
@@ -83,7 +83,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
         }
 
         .summary-card:focus-visible {
-          outline: 2px solid ${DASHBOARD_COLORS.brand};
+          outline: 2px solid #396FFA;
           outline-offset: 2px;
         }
 
@@ -138,10 +138,10 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           font-size: 13px;
           font-weight: 600;
           color: ${DASHBOARD_COLORS.brand};
-          background: rgba(99, 102, 241, 0.1);
-          border-radius: 6px;
+          background: rgba(23, 61, 50, 0.08);
+          border-radius: 10px;
           text-align: center;
-          transition: all 0.15s ease;
+          transition: all 150ms ease-out;
         }
 
         .expand-icon {

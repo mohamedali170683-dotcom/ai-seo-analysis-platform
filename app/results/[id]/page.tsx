@@ -319,13 +319,13 @@ function TranslatableContent({ content, targetLang, className = '' }: Translatab
 
   return (
     <div className={className}>
-      <div className="text-sm text-gray-600 prose prose-sm max-w-none dark:prose-invert">
+      <div className="text-sm text-[#4A5F5F] prose prose-sm max-w-none">
         <ReactMarkdown>{displayContent || 'No response recorded'}</ReactMarkdown>
       </div>
       <button
         onClick={handleTranslate}
         disabled={isTranslating}
-        className="mt-2 inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+        className="mt-2 inline-flex items-center gap-1.5 text-xs text-[#396FFA] hover:text-[#192F80] transition-colors"
       >
         {isTranslating ? (
           <>
@@ -555,8 +555,8 @@ export default function ResultsPage() {
     const seconds = countdown % 60;
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12 max-w-2xl w-full">
+      <div className="min-h-screen bg-off-white flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg p-8 md:p-12 max-w-2xl w-full">
           <div className="text-center">
             {/* Animated Icon */}
             <div className="relative inline-block mb-6">
@@ -564,38 +564,38 @@ export default function ResultsPage() {
               <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-ping"></div>
             </div>
 
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl md:text-3xl font-bold font-headline text-off-black mb-2">
               Analysis Running
             </h2>
-            <p className="text-gray-500 mb-8">Testing your brand on AI platforms...</p>
+            <p className="text-off-grey mb-8">Testing your brand on AI platforms...</p>
 
             {/* Countdown Timer */}
             <div className="mb-8">
-              <div className="text-5xl font-bold text-blue-500 font-mono mb-2">
+              <div className="text-5xl font-bold text-[#EB4200] font-mono mb-2">
                 {minutes}:{seconds.toString().padStart(2, '0')}
               </div>
-              <p className="text-sm text-gray-400">estimated time remaining</p>
+              <p className="text-sm text-off-grey">estimated time remaining</p>
             </div>
 
             {/* Progress Bar */}
             <div className="mb-6">
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-500">Progress</span>
-                <span className="text-blue-500 font-bold">{progress}%</span>
+                <span className="text-off-grey">Progress</span>
+                <span className="text-[#EB4200] font-bold">{progress}%</span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+              <div className="w-full bg-off-white rounded-full h-3 overflow-hidden">
                 <div
-                  className="bg-blue-500 h-3 rounded-full transition-all duration-500"
+                  className="bg-[#EB4200] h-3 rounded-full transition-all duration-500"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
 
             {/* Current Step */}
-            <div className="bg-gray-50 rounded-xl p-4 mb-6">
+            <div className="bg-off-white rounded-xl p-4 mb-6">
               <div className="flex items-center justify-center gap-3">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-sm text-gray-600">{currentStep}</span>
+                <span className="text-sm text-[#4A5F5F]">{currentStep}</span>
               </div>
             </div>
 
@@ -613,20 +613,20 @@ export default function ResultsPage() {
 
                 return (
                   <div key={item.step} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
-                    isCurrent ? "bg-blue-50 border border-blue-200" :
+                    isCurrent ? "bg-[#D0DBF9]/30 border border-[#ACD3C8]" :
                     isComplete ? "" : "opacity-40"
                   }`}>
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-sm ${
                       isComplete ? "bg-green-100 text-green-600" :
-                      isCurrent ? "bg-blue-100 text-blue-600" : "bg-gray-100"
+                      isCurrent ? "bg-[#D0DBF9]/30 text-[#396FFA]" : "bg-off-white"
                     }`}>
                       {isComplete ? "✓" : item.icon}
                     </div>
-                    <span className={`flex-1 text-sm ${isCurrent ? "text-gray-900 font-medium" : "text-gray-600"}`}>
+                    <span className={`flex-1 text-sm ${isCurrent ? "text-off-black font-medium" : "text-[#4A5F5F]"}`}>
                       {item.step}
                     </span>
                     {isCurrent && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-[#396FFA] rounded-full animate-pulse"></div>
                     )}
                   </div>
                 );
@@ -640,15 +640,15 @@ export default function ResultsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-12 max-w-2xl w-full mx-4">
+      <div className="min-h-screen bg-off-white flex items-center justify-center">
+        <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg p-12 max-w-2xl w-full mx-4">
           <div className="text-center">
             <div className="text-6xl mb-4">❌</div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Analysis Failed</h2>
-            <p className="text-gray-600 mb-8">{error}</p>
+            <h2 className="text-3xl font-bold font-headline text-off-black mb-4">Analysis Failed</h2>
+            <p className="text-[#4A5F5F] mb-8">{error}</p>
             <button
               onClick={() => router.push("/")}
-              className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white rounded-lg font-semibold hover:from-cyan-700 hover:to-cyan-600"
+              className="px-6 py-3 bg-[#EB4200] hover:opacity-90 text-white rounded-lg font-semibold"
             >
               Start My New Analysis
             </button>
@@ -660,9 +660,9 @@ export default function ResultsPage() {
 
   if (!reportData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-off-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 dark:text-gray-400">No data available</p>
+          <p className="text-[#4A5F5F]">No data available</p>
         </div>
       </div>
     );
@@ -810,15 +810,15 @@ export default function ResultsPage() {
   console.log('[Debug] journeyStages count:', journeyStages.length);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-off-white">
       {/* Analysis Complete Banner */}
-      <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-4">
+      <div className="bg-petrol text-white py-4 px-4">
         <div className="container mx-auto max-w-6xl flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">✅</span>
             <div>
               <span className="font-bold text-lg">{reportData.brandOrKeyword} - Velaris Report</span>
-              <div className="text-sm text-green-100">
+              <div className="text-sm text-white/80">
                 {reportData.totalTests} AI responses analyzed across 4 platforms
               </div>
             </div>
@@ -828,8 +828,8 @@ export default function ResultsPage() {
             <button
               onClick={() => limits.allowPdfExport ? alert("PDF export coming soon!") : openUpgradeModal("pdf_export")}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
-                limits.allowPdfExport 
-                  ? "bg-white text-green-600 hover:bg-green-50 dark:bg-green-900/20" 
+                limits.allowPdfExport
+                  ? "bg-white text-petrol hover:bg-off-white"
                   : "bg-white/20 text-white/80 cursor-pointer"
               }`}
             >
@@ -851,10 +851,10 @@ export default function ResultsPage() {
               onClick={() => setShowScheduleModal(true)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
                 existingSchedule
-                  ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                  ? "bg-[#ACD3C8] text-petrol hover:bg-[#ACD3C8]/80"
                   : !isProfessionalOrHigher()
                   ? "bg-white/20 text-white/80 cursor-pointer"
-                  : "bg-white text-green-600 hover:bg-green-50"
+                  : "bg-white text-petrol hover:bg-off-white"
               }`}
             >
               {existingSchedule ? (
@@ -881,7 +881,7 @@ export default function ResultsPage() {
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
                 expandedSection === "methodology"
                   ? "bg-teal-100 text-teal-700"
-                  : "bg-white bg-opacity-20 hover:bg-opacity-30 text-white"
+                  : "bg-white/20 hover:bg-white/30 text-white"
               }`}
             >
               <HelpCircle className="w-4 h-4" />
@@ -889,14 +889,14 @@ export default function ResultsPage() {
             </button>
             <Link
               href="/dashboard"
-              className="px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
               Dashboard
             </Link>
             <Link
               href="/analyze"
-              className="px-4 py-2 bg-white text-green-600 rounded-lg text-sm font-semibold hover:bg-green-50 transition-all"
+              className="px-4 py-2 bg-white text-petrol rounded-lg text-sm font-semibold hover:bg-off-white transition-all"
             >
               Run My Next Audit
             </Link>
@@ -912,15 +912,15 @@ export default function ResultsPage() {
         {/* ═══════════════════════════════════════════════════════════════ */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           {/* Overall Visibility Score - LEFT SIDE (1 column) */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-2 border-indigo-200 flex flex-col justify-center">
-            <h2 className="text-sm font-semibold text-gray-600 mb-3 text-center">Overall AI Visibility</h2>
+          <div className="bg-white rounded-xl border-2 border-[#ACD3C8] shadow-lg p-6 flex flex-col justify-center">
+            <h2 className="text-sm font-semibold text-[#4A5F5F] mb-3 text-center">Overall AI Visibility</h2>
             <div className={`text-6xl font-bold text-center mb-2 ${
               (reportData.overallScore || 0) >= 70 ? 'text-green-600' :
               (reportData.overallScore || 0) >= 40 ? 'text-yellow-600' : 'text-red-600'
             }`}>
               {reportData.overallScore || 0}%
             </div>
-            <p className="text-xs text-gray-500 text-center">
+            <p className="text-xs text-off-grey text-center">
               Your visibility across all AI platforms
             </p>
           </div>
@@ -960,32 +960,32 @@ export default function ResultsPage() {
           {!isLoggedIn && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-sm z-10 rounded-2xl flex items-center justify-center">
               <div className="text-center p-6">
-                <Lock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-600 font-medium">Login to view detailed audit</p>
+                <Lock className="w-8 h-8 text-off-grey mx-auto mb-2" />
+                <p className="text-[#4A5F5F] font-medium">Login to view detailed audit</p>
               </div>
             </div>
           )}
           {/* Technical Audit - Collapsible */}
           <div
             onClick={() => isLoggedIn && toggleSection("technical")}
-            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-all ${
+            className={`bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg transition-all ${
               isLoggedIn ? 'cursor-pointer hover:shadow-xl' : 'opacity-70'
-            } ${expandedSection === "technical" ? "ring-2 ring-cyan-500" : ""}`}
+            } ${expandedSection === "technical" ? "ring-2 ring-[#396FFA]" : ""}`}
           >
             <div className="p-6">
               <div className="flex items-center gap-2 mb-2">
                 <div className="text-2xl">🔧</div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Technical Audit</h3>
+                <h3 className="text-lg font-bold text-off-black">Technical Audit</h3>
               </div>
-              <p className="text-sm text-gray-500 mb-3">Website optimization for AI crawlers</p>
+              <p className="text-sm text-off-grey mb-3">Website optimization for AI crawlers</p>
               <div className="flex items-center justify-between">
                 <div className={`text-3xl font-bold ${
                   (reportData.websiteAudit?.technicalScore || 0) >= 70 ? "text-green-600" :
                   (reportData.websiteAudit?.technicalScore || 0) >= 40 ? "text-yellow-600" : "text-red-600"
                 }`}>
-                  {reportData.websiteAudit?.technicalScore || "N/A"}<span className="text-base text-gray-400">{reportData.websiteAudit ? "/100" : ""}</span>
+                  {reportData.websiteAudit?.technicalScore || "N/A"}<span className="text-base text-off-grey">{reportData.websiteAudit ? "/100" : ""}</span>
                 </div>
-                <span className="flex items-center gap-1 text-cyan-600 font-medium text-sm">
+                <span className="flex items-center gap-1 text-[#396FFA] font-medium text-sm">
                   {expandedSection === "technical" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   <span className="ml-1">{expandedSection === "technical" ? "Hide" : "View"}</span>
                 </span>
@@ -1023,16 +1023,16 @@ export default function ResultsPage() {
             return (
               <div
                 onClick={() => isLoggedIn && setExpandedSection("competitive")}
-                className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg transition-all ${
+                className={`bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg transition-all ${
                   isLoggedIn ? 'cursor-pointer hover:shadow-xl' : 'opacity-70'
-                } ${expandedSection === "competitive" ? "ring-2 ring-amber-500" : ""}`}
+                } ${expandedSection === "competitive" ? "ring-2 ring-[#EB4200]" : ""}`}
               >
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="text-2xl">🏆</div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">Competitor Intelligence</h3>
+                    <h3 className="text-lg font-bold text-off-black">Competitor Intelligence</h3>
                   </div>
-                  <p className="text-sm text-gray-500 mb-3">Side-by-side comparison with competitors</p>
+                  <p className="text-sm text-off-grey mb-3">Side-by-side comparison with competitors</p>
                   <div className="flex items-center justify-between">
                     {totalCompetitors > 0 ? (
                       <div className={`flex items-center gap-2 ${isWinning ? "text-green-600" : "text-amber-600"}`}>
@@ -1044,11 +1044,11 @@ export default function ResultsPage() {
                               : `Behind ${totalCompetitors - beatingCount}/${totalCompetitors}`
                             }
                           </div>
-                          <div className="text-xs text-gray-500">competitors</div>
+                          <div className="text-xs text-off-grey">competitors</div>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-gray-500 text-sm">No competitor data</div>
+                      <div className="text-off-grey text-sm">No competitor data</div>
                     )}
                     <span className="flex items-center gap-1 text-amber-600 font-medium text-sm">
                       {expandedSection === "competitive" ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -1069,7 +1069,7 @@ export default function ResultsPage() {
           {/* Journey Stages Detailed View - PROGRESSIVE DISCLOSURE */}
           <div className="space-y-8">
             {journeyStages.length === 0 && (
-              <p className="text-gray-500 text-center py-8">No journey stage data available</p>
+              <p className="text-off-grey text-center py-8">No journey stage data available</p>
             )}
             {journeyStages.map((stage: any, index: number) => {
               // Only show detailed view if this stage is expanded AND user is logged in
@@ -1078,14 +1078,14 @@ export default function ResultsPage() {
               // If not logged in, show login prompt instead of detailed view
               if (!isLoggedIn) {
                 return (
-                  <div key={stage?.stage || index} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm">
+                  <div key={stage?.stage || index} className="border border-[#E5E5E5] bg-white rounded-xl p-8 shadow-sm">
                     <div className="text-center py-8">
-                      <Lock className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Login Required</h3>
-                      <p className="text-gray-500 mb-4">Create a free account to view detailed stage analysis</p>
+                      <Lock className="w-12 h-12 text-off-grey mx-auto mb-4" />
+                      <h3 className="text-xl font-bold font-headline text-off-black mb-2">Login Required</h3>
+                      <p className="text-off-grey mb-4">Create a free account to view detailed stage analysis</p>
                       <button
                         onClick={() => setShowLoginGate(true)}
-                        className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
+                        className="px-6 py-2.5 bg-[#396FFA] hover:opacity-90 text-white font-semibold rounded-lg transition-all"
                       >
                         Login / Sign Up Free
                       </button>
@@ -1102,29 +1102,29 @@ export default function ResultsPage() {
               console.log(`[Recommendations Debug] Has recommendation:`, stageRec?.recommendation ? 'YES' : 'NO');
 
               return (
-                <div key={stage?.stage || index} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl p-8 shadow-sm">
+                <div key={stage?.stage || index} className="border border-[#E5E5E5] bg-white rounded-xl p-8 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">
                         {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
                       </span>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{stage?.stageLabel || "Unknown Stage"}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{stage?.stageDescription || ""}</p>
+                        <h3 className="text-xl font-bold font-headline text-off-black">{stage?.stageLabel || "Unknown Stage"}</h3>
+                        <p className="text-sm text-off-grey">{stage?.stageDescription || ""}</p>
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <div className={`text-center px-4 py-2 rounded-xl ${
-                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100 dark:bg-green-900/30" :
-                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-red-100 dark:bg-red-900/30"
+                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
+                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
                       }`}>
                         <div className={`text-3xl font-bold ${
-                          (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700 dark:text-green-300" :
-                          (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700 dark:text-red-300"
+                          (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
+                          (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
                         }`}>
                           {Math.round(stage?.portrayal?.visibilityScore || 0)}%
                         </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">Visibility</div>
+                        <div className="text-xs text-[#4A5F5F]">Visibility</div>
                       </div>
 
                       {/* How is it calculated button - RIGHT NEXT TO SCORE */}
@@ -1134,7 +1134,7 @@ export default function ResultsPage() {
                             ? prev.filter(s => s !== `scoring-${stage?.stage}`)
                             : [...prev, `scoring-${stage?.stage}`]
                         )}
-                        className="text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors flex items-center gap-1 whitespace-nowrap"
+                        className="text-xs px-3 py-1.5 bg-[#D0DBF9] hover:bg-[#D0DBF9]/40 text-[#192F80] rounded-lg transition-colors flex items-center gap-1 whitespace-nowrap"
                       >
                         📊 How calculated?
                       </button>
@@ -1143,33 +1143,33 @@ export default function ResultsPage() {
 
                   {/* Visibility Score Breakdown - SHOWS WHEN BUTTON CLICKED */}
                   {expandedSchemas.includes(`scoring-${stage?.stage}`) && (
-                    <div className="mb-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4 border-2 border-purple-200 dark:border-purple-800">
+                    <div className="mb-4 bg-[#D0DBF9]/20 rounded-lg p-4 border-2 border-[#ACD3C8]">
                       <div className="space-y-3 text-sm">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-3">
-                          <p className="font-medium text-gray-900 mb-2">Visibility Score Formula:</p>
-                          <div className="bg-purple-50 rounded p-2 font-mono text-xs mb-2">
+                        <div className="bg-white rounded-lg p-3">
+                          <p className="font-medium text-off-black mb-2">Visibility Score Formula:</p>
+                          <div className="bg-[#D0DBF9]/30 rounded p-2 font-mono text-xs mb-2">
                             Visibility = (Mention Rate × 50%) + (Position Score × 30%) + (Sentiment Score × 20%)
                           </div>
                           <div className="space-y-2">
                             <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Mention Rate (50% weight):</span>
+                              <span className="text-[#4A5F5F]">Mention Rate (50% weight):</span>
                               <span className="font-bold">{Math.round(stage?.portrayal?.mentionRate || 0)}% × 0.5 = {Math.round((stage?.portrayal?.mentionRate || 0) * 0.5)}pts</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Position Score (30% weight):</span>
+                              <span className="text-[#4A5F5F]">Position Score (30% weight):</span>
                               <span className="font-bold">{Math.round(stage?.portrayal?.positionScore || 50)}% × 0.3 = {Math.round((stage?.portrayal?.positionScore || 50) * 0.3)}pts</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-gray-600 dark:text-gray-400">Sentiment Score (20% weight):</span>
+                              <span className="text-[#4A5F5F]">Sentiment Score (20% weight):</span>
                               <span className="font-bold">{Math.round(stage?.portrayal?.sentimentScore || 50)}% × 0.2 = {Math.round((stage?.portrayal?.sentimentScore || 50) * 0.2)}pts</span>
                             </div>
                             <div className="border-t pt-2 flex justify-between font-bold text-lg">
-                              <span className="text-purple-900">Total Visibility:</span>
-                              <span className="text-purple-600">{Math.round(stage?.portrayal?.visibilityScore || 0)}%</span>
+                              <span className="text-[#192F80]">Total Visibility:</span>
+                              <span className="text-[#192F80]">{Math.round(stage?.portrayal?.visibilityScore || 0)}%</span>
                             </div>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-600 italic">
+                        <p className="text-xs text-[#4A5F5F] italic">
                           💡 This formula weights brand mentions most heavily (50%), followed by position in responses (30%), and sentiment (20%).
                         </p>
                       </div>
@@ -1178,17 +1178,17 @@ export default function ResultsPage() {
 
                   {/* Questions Analyzed for this Stage */}
                   {stage?.questions && stage.questions.length > 0 && (
-                    <div className="mb-6 bg-blue-50 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                      <h4 className="font-semibold text-gray-900 mb-3">❓ Questions Analyzed ({stage.questions.length})</h4>
+                    <div className="mb-6 bg-[#D0DBF9]/30 rounded-lg p-4 border border-[#ACD3C8]">
+                      <h4 className="font-semibold text-off-black mb-3">❓ Questions Analyzed ({stage.questions.length})</h4>
                       <div className="space-y-2">
                         {stage.questions.map((q: any, idx: number) => (
                           <div key={idx} className="flex items-start gap-2 text-sm">
-                            <span className="text-blue-600 font-bold flex-shrink-0">{idx + 1}.</span>
-                            <span className="text-gray-700 dark:text-gray-300">{q.question || q}</span>
+                            <span className="text-[#396FFA] font-bold flex-shrink-0">{idx + 1}.</span>
+                            <span className="text-[#4A5F5F]">{q.question || q}</span>
                           </div>
                         ))}
                       </div>
-                      <p className="text-xs text-gray-600 mt-3 italic">
+                      <p className="text-xs text-[#4A5F5F] mt-3 italic">
                         💡 These questions represent typical {stage?.stageLabel || 'customer'} queries that AI platforms answer.
                       </p>
                     </div>
@@ -1197,8 +1197,8 @@ export default function ResultsPage() {
                   {/* Stage Metrics - 3 Main Cards */}
                   <div className="grid md:grid-cols-3 gap-4 mb-6">
                     {/* Card 1: Mention Rate */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <h4 className="font-semibold text-gray-900 mb-3">📢 Mention Rate</h4>
+                    <div className="bg-white rounded-lg p-4 border border-[#E5E5E5]">
+                      <h4 className="font-semibold text-off-black mb-3">📢 Mention Rate</h4>
                       <div className="text-center">
                         <div className={`text-5xl font-bold mb-2 ${
                           (stage?.portrayal?.mentionRate || 0) >= 70 ? 'text-green-600' :
@@ -1207,7 +1207,7 @@ export default function ResultsPage() {
                         }`}>
                           {Math.round(stage?.portrayal?.mentionRate || 0)}%
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <p className="text-sm text-[#4A5F5F]">
                           {Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)} of {stage?.portrayal?.totalTests || 0} responses
                         </p>
                       </div>
@@ -1227,8 +1227,8 @@ export default function ResultsPage() {
                     </div>
 
                     {/* Card 2: Position */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <h4 className="font-semibold text-gray-900 mb-3">📊 Position</h4>
+                    <div className="bg-white rounded-lg p-4 border border-[#E5E5E5]">
+                      <h4 className="font-semibold text-off-black mb-3">📊 Position</h4>
                       {(() => {
                         const stageResponses = reportData.aiTestResults?.filter((r: any) => {
                           const questionObj = reportData.discoveredQuestions?.find((q: any) => q.question === r.question);
@@ -1237,7 +1237,7 @@ export default function ResultsPage() {
 
                         if (stageResponses.length === 0) {
                           return (
-                            <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                            <div className="text-center py-6 text-off-grey">
                               <p className="text-sm">No position data</p>
                             </div>
                           );
@@ -1265,9 +1265,9 @@ export default function ResultsPage() {
                               <div key={item.position} className="flex items-center gap-2">
                                 <span className={`text-sm font-bold w-12 flex-shrink-0 ${
                                   item.position === 1 ? 'text-green-700' :
-                                  item.position === 2 ? 'text-blue-700' :
+                                  item.position === 2 ? 'text-[#396FFA]' :
                                   item.position === 3 ? 'text-amber-700' :
-                                  'text-gray-600'
+                                  'text-[#4A5F5F]'
                                 }`}>
                                   {item.position === 1 ? '🥇 1st' :
                                    item.position === 2 ? '🥈 2nd' :
@@ -1275,13 +1275,13 @@ export default function ResultsPage() {
                                    `#${item.position}`}
                                 </span>
                                 <div className="flex-1">
-                                  <div className="bg-gray-200 rounded-full h-5 overflow-hidden">
+                                  <div className="bg-[#E5E5E5] rounded-full h-5 overflow-hidden">
                                     <div
                                       className={`h-5 rounded-full flex items-center justify-end pr-2 ${
                                         item.position === 1 ? 'bg-green-500' :
-                                        item.position === 2 ? 'bg-blue-500' :
+                                        item.position === 2 ? 'bg-[#D0DBF9]/30' :
                                         item.position === 3 ? 'bg-amber-500' :
-                                        'bg-gray-400'
+                                        'bg-off-grey'
                                       }`}
                                       style={{ width: `${item.percentage}%` }}
                                     >
@@ -1294,7 +1294,7 @@ export default function ResultsPage() {
                                   </div>
                                 </div>
                                 {item.percentage < 20 && (
-                                  <span className="text-xs font-bold text-gray-600 w-10 text-right">
+                                  <span className="text-xs font-bold text-[#4A5F5F] w-10 text-right">
                                     {Math.round(item.percentage)}%
                                   </span>
                                 )}
@@ -1306,29 +1306,29 @@ export default function ResultsPage() {
                     </div>
 
                     {/* Card 3: Tone/Sentiment */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                      <h4 className="font-semibold text-gray-900 mb-3">💭 Tone</h4>
+                    <div className="bg-white rounded-lg p-4 border border-[#E5E5E5]">
+                      <h4 className="font-semibold text-off-black mb-3">💭 Tone</h4>
                       <div className="text-center mb-3">
                         <span className={`inline-block text-lg font-bold px-4 py-2 rounded-lg ${
-                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700 dark:text-green-300" :
-                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700 dark:text-red-300" :
-                          "bg-gray-100 text-gray-700 dark:text-gray-300"
+                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
+                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" :
+                          "bg-off-white text-[#4A5F5F]"
                         }`}>
                           {stage?.portrayal?.sentiment?.dominant || "neutral"}
                         </span>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">😊 Positive</span>
-                          <span className="font-bold text-green-700 dark:text-green-300">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
+                          <span className="text-[#4A5F5F]">😊 Positive</span>
+                          <span className="font-bold text-green-700">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">😐 Neutral</span>
-                          <span className="font-bold text-gray-700 dark:text-gray-300">{Math.round(stage?.portrayal?.sentiment?.neutral || 0)}%</span>
+                          <span className="text-[#4A5F5F]">😐 Neutral</span>
+                          <span className="font-bold text-[#4A5F5F]">{Math.round(stage?.portrayal?.sentiment?.neutral || 0)}%</span>
                         </div>
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">😞 Negative</span>
-                          <span className="font-bold text-red-700 dark:text-red-300">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
+                          <span className="text-[#4A5F5F]">😞 Negative</span>
+                          <span className="font-bold text-red-700">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
                         </div>
                       </div>
                       <div className="mt-3">
@@ -1342,9 +1342,9 @@ export default function ResultsPage() {
                   </div>
 
                   {/* Platform-by-Platform Summary */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg p-5 border border-gray-200 dark:border-gray-700 mb-6">
+                  <div className="bg-white rounded-lg p-5 border border-[#E5E5E5] mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h4 className="font-semibold text-gray-900 dark:text-gray-100">🤖 Platform-by-Platform Summary</h4>
+                      <h4 className="font-semibold text-off-black">🤖 Platform-by-Platform Summary</h4>
                       <button
                         onClick={() => {
                           // Expand the All AI Responses section for this stage
@@ -1360,7 +1360,7 @@ export default function ResultsPage() {
                             }
                           }, 100);
                         }}
-                        className="text-xs px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg transition-colors flex items-center gap-1"
+                        className="text-xs px-3 py-1.5 bg-[#D0DBF9] hover:bg-[#D0DBF9]/40 text-[#192F80] rounded-lg transition-colors flex items-center gap-1"
                       >
                         👁️ View All AI Responses
                       </button>
@@ -1412,15 +1412,15 @@ export default function ResultsPage() {
                             return (
                               <div
                                 key={platform}
-                                className="bg-gradient-to-br from-white to-gray-50 border border-gray-200 dark:border-gray-700 rounded-xl p-4"
+                                className="bg-white border border-[#E5E5E5] rounded-xl p-4"
                               >
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="flex items-center gap-2">
                                     <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
                                       platform === 'chatgpt' ? 'bg-green-100 text-green-700' :
-                                      platform === 'gemini' ? 'bg-blue-100 text-blue-700' :
-                                      platform === 'perplexity' ? 'bg-purple-100 text-purple-700' :
-                                      'bg-cyan-100 text-cyan-700'
+                                      platform === 'gemini' ? 'bg-[#D0DBF9]/30 text-[#396FFA]' :
+                                      platform === 'perplexity' ? 'bg-[#D0DBF9] text-[#192F80]' :
+                                      'bg-[#ACD3C8]/30 text-[#396FFA]'
                                     }`}>
                                       {platform.toUpperCase()}
                                     </span>
@@ -1428,14 +1428,14 @@ export default function ResultsPage() {
                                 </div>
 
                                 {responses.length === 0 ? (
-                                  <div className="bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 text-center">
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  <div className="bg-off-white border border-[#E5E5E5] rounded-lg p-3 text-center">
+                                    <p className="text-sm text-[#4A5F5F]">
                                       ℹ️ No {platform.toUpperCase()} responses available for this stage.
                                     </p>
                                   </div>
                                 ) : brandMentions.length > 0 ? (
-                                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                                    <p className="text-sm text-gray-800 leading-relaxed">
+                                  <div className="bg-[#D0DBF9]/30 border border-[#ACD3C8] rounded-lg p-3">
+                                    <p className="text-sm text-off-black leading-relaxed">
                                       {(() => {
                                         const platformName = platform.toUpperCase();
                                         const mentionPhrase = brandMentions.length === 1 ? "1 answer" : `${brandMentions.length} answers`;
@@ -1514,17 +1514,17 @@ export default function ResultsPage() {
                                       const snippet = extractSmartSnippet(firstResponse, 500);
 
                                       return (
-                                        <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                                        <div className="space-y-2 text-sm text-[#4A5F5F]">
                                           {mentionedCompetitors.length > 0 && (
-                                            <div className="bg-white dark:bg-gray-800 rounded p-2 border border-orange-200 dark:border-orange-800">
-                                              <span className="font-semibold text-orange-800 dark:text-orange-200">🎯 Competitors mentioned instead:</span>{' '}
-                                              <span className="text-gray-800">{mentionedCompetitors.join(', ')}</span>
+                                            <div className="bg-white rounded p-2 border border-orange-200">
+                                              <span className="font-semibold text-orange-800">🎯 Competitors mentioned instead:</span>{' '}
+                                              <span className="text-off-black">{mentionedCompetitors.join(', ')}</span>
                                             </div>
                                           )}
                                           {snippet && (
-                                            <div className="bg-white dark:bg-gray-800 rounded p-2 border border-orange-200 dark:border-orange-800">
-                                              <span className="font-semibold text-orange-800 dark:text-orange-200">📝 What they said:</span>{' '}
-                                              <span className="text-gray-700 italic">"{snippet}..."</span>
+                                            <div className="bg-white rounded p-2 border border-orange-200">
+                                              <span className="font-semibold text-orange-800">📝 What they said:</span>{' '}
+                                              <span className="text-[#4A5F5F] italic">"{snippet}..."</span>
                                             </div>
                                           )}
                                           <div className="text-xs text-orange-700 mt-2">
@@ -1553,8 +1553,8 @@ export default function ResultsPage() {
                             : [...prev, `rec-${stage?.stage}`]
                         )}
                         className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
-                          stage?.stage === "awareness" ? 'bg-blue-100 hover:bg-blue-200 text-blue-900' :
-                          stage?.stage === "consideration" ? 'bg-cyan-100 hover:bg-cyan-200 text-cyan-900' :
+                          stage?.stage === "awareness" ? 'bg-[#D0DBF9]/30 hover:bg-[#D0DBF9]/40 text-[#192F80]' :
+                          stage?.stage === "consideration" ? 'bg-[#ACD3C8]/30 hover:bg-[#ACD3C8]/40 text-petrol' :
                           'bg-green-100 hover:bg-green-200 text-green-900'
                         }`}
                       >
@@ -1570,36 +1570,36 @@ export default function ResultsPage() {
                       </button>
 
                       {expandedSchemas.includes(`rec-${stage?.stage}`) && (
-                        <div className="mt-4 bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-amber-200 dark:border-amber-800">
+                        <div className="mt-4 bg-white rounded-xl p-6 border-2 border-amber-200">
                           <div className="space-y-4">
                             {/* Pattern Insight */}
                             {stage.recommendation.commonPattern && (
-                              <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-                                <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                              <div className="border-b border-[#E5E5E5] pb-4">
+                                <h5 className="font-semibold text-off-black mb-2 flex items-center gap-2">
                                   <span>🔍</span> Key Pattern Detected
                                 </h5>
-                                <p className="text-sm text-gray-700 mb-3">{stage.recommendation.commonPattern}</p>
+                                <p className="text-sm text-[#4A5F5F] mb-3">{stage.recommendation.commonPattern}</p>
                               </div>
                             )}
 
                             {/* Content Type Recommendation */}
                             {stage.recommendation.contentType && (
-                              <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-                                <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                              <div className="border-b border-[#E5E5E5] pb-4">
+                                <h5 className="font-semibold text-off-black mb-2 flex items-center gap-2">
                                   <span>📝</span> Recommended Content Type
                                 </h5>
-                                <p className="text-sm text-gray-700 mb-3">{stage.recommendation.contentType}</p>
+                                <p className="text-sm text-[#4A5F5F] mb-3">{stage.recommendation.contentType}</p>
                               </div>
                             )}
 
                             {/* Focused Action */}
                             {stage.recommendation.focusedAction && (
                               <div>
-                                <h5 className="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                                <h5 className="font-semibold text-off-black mb-2 flex items-center gap-2">
                                   <span>🎯</span> Priority Action
                                 </h5>
                                 <div className="bg-amber-50 border-l-4 border-amber-400 p-3 rounded">
-                                  <p className="text-sm text-gray-900 font-medium">{stage.recommendation.focusedAction}</p>
+                                  <p className="text-sm text-off-black font-medium">{stage.recommendation.focusedAction}</p>
                                 </div>
                               </div>
                             )}
@@ -1608,14 +1608,14 @@ export default function ResultsPage() {
                             {stage.recommendation.insights && stage.recommendation.insights.length > 0 && (
                               <div className="space-y-4 mt-4">
                                 {stage.recommendation.insights.map((insight: any, idx: number) => (
-                                  <div key={idx} className="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-4 last:pb-0">
-                                    <h5 className="font-semibold text-gray-900 mb-2">{insight.insight || insight.title || `Insight ${idx + 1}`}</h5>
-                                    <p className="text-sm text-gray-700 mb-3">{insight.explanation || insight.description || ''}</p>
+                                  <div key={idx} className="border-b border-[#E5E5E5] last:border-0 pb-4 last:pb-0">
+                                    <h5 className="font-semibold text-off-black mb-2">{insight.insight || insight.title || `Insight ${idx + 1}`}</h5>
+                                    <p className="text-sm text-[#4A5F5F] mb-3">{insight.explanation || insight.description || ''}</p>
                                     {insight.actions && insight.actions.length > 0 && (
                                       <div className="space-y-2">
-                                        <p className="text-xs font-semibold text-gray-600 uppercase">Action Items:</p>
+                                        <p className="text-xs font-semibold text-[#4A5F5F] uppercase">Action Items:</p>
                                         {insight.actions.map((action: string, aIdx: number) => (
-                                          <div key={aIdx} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                          <div key={aIdx} className="flex items-start gap-2 text-sm text-[#4A5F5F]">
                                             <span className="text-green-600 mt-0.5">✓</span>
                                             <span>{action}</span>
                                           </div>
@@ -1630,7 +1630,7 @@ export default function ResultsPage() {
                             {/* Fallback if no recommendation data */}
                             {!stage.recommendation.commonPattern && !stage.recommendation.contentType && !stage.recommendation.focusedAction && (
                               <div className="text-center py-4">
-                                <p className="text-sm text-gray-500 dark:text-gray-400">No recommendations available for this stage yet.</p>
+                                <p className="text-sm text-off-grey">No recommendations available for this stage yet.</p>
                               </div>
                             )}
                           </div>
@@ -1645,21 +1645,21 @@ export default function ResultsPage() {
         </div>
 
         {/* Full Answers Section - Gated by tier */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg mb-8">
-          <div className="p-6 border-b border-gray-100">
+        <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg mb-8">
+          <div className="p-6 border-b border-[#E5E5E5]">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">💬</span>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">All AI Responses</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Full answers from each AI platform per question</p>
+                  <h2 className="text-xl font-bold font-headline text-off-black">All AI Responses</h2>
+                  <p className="text-sm text-off-grey">Full answers from each AI platform per question</p>
                 </div>
               </div>
               {(tier === 'partner' || tier === 'professional') ? (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => handleExportPDF()}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#396FFA] text-white rounded-lg hover:opacity-90 transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     Export PDF
@@ -1721,34 +1721,34 @@ export default function ResultsPage() {
                           : [...prev, `answers-${stageName}`]
                       )}
                       className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
-                        stageColor === 'blue' ? 'bg-blue-50 hover:bg-blue-100' :
+                        stageColor === 'blue' ? 'bg-[#D0DBF9]/30 hover:bg-[#D0DBF9]/30' :
                         stageColor === 'yellow' ? 'bg-yellow-50 hover:bg-yellow-100' :
                         'bg-green-50 hover:bg-green-100'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-xl">{stageIcon}</span>
-                        <span className="font-semibold text-gray-900 capitalize">{stageName} Stage</span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">({totalAnswers} answers from {questionCount} questions)</span>
+                        <span className="font-semibold text-off-black capitalize">{stageName} Stage</span>
+                        <span className="text-sm text-off-grey">({totalAnswers} answers from {questionCount} questions)</span>
                       </div>
                       {expandedSchemas.includes(`answers-${stageName}`) ? (
-                        <ChevronUp className="w-5 h-5 text-gray-400" />
+                        <ChevronUp className="w-5 h-5 text-off-grey" />
                       ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                        <ChevronDown className="w-5 h-5 text-off-grey" />
                       )}
                     </button>
                     
                     {/* Expanded answers */}
                     {expandedSchemas.includes(`answers-${stageName}`) && (
-                      <div className="mt-4 space-y-4 pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+                      <div className="mt-4 space-y-4 pl-4 border-l-2 border-[#E5E5E5]">
                         {Object.entries(answersByQuestion).length === 0 ? (
-                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                          <div className="text-center py-8 text-off-grey">
                             <p>No AI responses recorded for this stage yet.</p>
                             <p className="text-sm mt-2">Run an analysis to see AI responses here.</p>
                           </div>
                         ) : Object.entries(answersByQuestion).map(([question, answers]) => (
-                          <div key={question} className="bg-gray-50 rounded-xl p-4">
-                            <h4 className="font-medium text-gray-900 mb-3">{question}</h4>
+                          <div key={question} className="bg-off-white rounded-xl p-4">
+                            <h4 className="font-medium text-off-black mb-3">{question}</h4>
                             <div className="space-y-3">
                               {/* Show one answer per platform in UI */}
                               {['ChatGPT', 'Gemini', 'Perplexity'].map(platform => {
@@ -1756,9 +1756,9 @@ export default function ResultsPage() {
                                 if (!platformAnswer) return null;
                                 
                                 return (
-                                  <div key={platform} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                  <div key={platform} className="bg-white rounded-lg p-3 border border-[#E5E5E5]">
                                     <div className="flex items-center justify-between mb-2">
-                                      <span className="font-medium text-gray-700 dark:text-gray-300">{platform}</span>
+                                      <span className="font-medium text-[#4A5F5F]">{platform}</span>
                                       <div className="flex items-center gap-2">
                                         {platformAnswer.brandMentioned && (
                                           <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Mentioned</span>
@@ -1766,7 +1766,7 @@ export default function ResultsPage() {
                                         <span className={`text-xs px-2 py-0.5 rounded ${
                                           platformAnswer.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
                                           platformAnswer.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
-                                          'bg-gray-100 text-gray-700'
+                                          'bg-off-white text-[#4A5F5F]'
                                         }`}>
                                           {platformAnswer.sentiment}
                                         </span>
@@ -1779,9 +1779,9 @@ export default function ResultsPage() {
                                     {/* Show citations if available */}
                                     {((platformAnswer.citations && platformAnswer.citations.length > 0) || 
                                       (platformAnswer.sources && platformAnswer.sources.length > 0)) && (
-                                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                      <div className="mt-3 pt-3 border-t border-[#E5E5E5]">
                                         <div className="flex items-center gap-2 mb-2">
-                                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">🔗 Sources Cited:</span>
+                                          <span className="text-xs font-medium text-off-grey">🔗 Sources Cited:</span>
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                           {[...(platformAnswer.citations || []), ...(platformAnswer.sources || []).map((s: any) => s.url || s)]
@@ -1793,7 +1793,7 @@ export default function ResultsPage() {
                                                 href={url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                                                className="inline-flex items-center gap-1 text-xs bg-[#D0DBF9]/30 text-[#396FFA] px-2 py-1 rounded hover:bg-[#D0DBF9]/30 transition-colors"
                                               >
                                                 <span>🔗</span>
                                                 <span className="max-w-32 truncate">
@@ -1818,7 +1818,7 @@ export default function ResultsPage() {
               
               {/* Show message if no AI test results at all */}
               {(!reportData.aiTestResults || reportData.aiTestResults.length === 0) && (
-                <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl">
+                <div className="text-center py-8 text-off-grey bg-off-white rounded-xl">
                   <p className="font-medium">No AI responses recorded yet</p>
                   <p className="text-sm mt-2">Run an analysis to see AI responses from ChatGPT, Gemini, Copilot, and Perplexity.</p>
                 </div>
@@ -1826,15 +1826,15 @@ export default function ResultsPage() {
             </div>
           ) : (
             <div className="p-8 text-center">
-              <div className="bg-gray-50 rounded-2xl p-8">
-                <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Full Answers Available in Partner/Professional Tier</h3>
-                <p className="text-gray-500 mb-4">
+              <div className="bg-off-white rounded-2xl p-8">
+                <Lock className="w-12 h-12 text-off-grey mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-off-black mb-2">Full Answers Available in Partner/Professional Tier</h3>
+                <p className="text-off-grey mb-4">
                   Upgrade to see all {reportData.aiTestResults?.length || 0} AI responses across all platforms and export them as PDF.
                 </p>
                 <button
                   onClick={() => openUpgradeModal("funnel_stages")}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:opacity-90 transition-opacity"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#EB4200] text-white rounded-xl hover:opacity-90 transition-opacity"
                 >
                   <Sparkles className="w-4 h-4" />
                   Upgrade Now
@@ -1846,43 +1846,43 @@ export default function ResultsPage() {
 
         {/* Expanded Section: AI Visibility Details */}
         {expandedSection === "visibility" && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
+          <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">📊 AI Visibility by Funnel Stage</h2>
-              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-400">
+              <h2 className="text-2xl font-bold font-headline text-off-black">📊 AI Visibility by Funnel Stage</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-off-grey hover:text-[#4A5F5F]">
                 <ChevronUp className="w-6 h-6" />
               </button>
             </div>
 
             {/* Scoring Methodology */}
-            <div className="bg-blue-50 rounded-xl p-4 mb-6">
-              <h4 className="font-semibold text-blue-900 mb-3">How We Calculate Your Score</h4>
+            <div className="bg-[#D0DBF9]/30 rounded-xl p-4 mb-6">
+              <h4 className="font-semibold text-[#192F80] mb-3">How We Calculate Your Score</h4>
               
               {/* Overall Stage Weights */}
               <div className="mb-4 p-3 bg-white/50 rounded-lg">
-                <p className="text-sm text-blue-800 font-medium mb-2">Stage Weights (Overall Score)</p>
+                <p className="text-sm text-[#192F80] font-medium mb-2">Stage Weights (Overall Score)</p>
                 <div className="flex gap-4 text-sm">
-                  <span className="bg-blue-100 px-2 py-1 rounded">🔍 Awareness: <strong>20%</strong></span>
+                  <span className="bg-[#D0DBF9]/30 px-2 py-1 rounded">🔍 Awareness: <strong>20%</strong></span>
                   <span className="bg-yellow-100 px-2 py-1 rounded">⚖️ Consideration: <strong>35%</strong></span>
                   <span className="bg-green-100 px-2 py-1 rounded">✅ Decision: <strong>45%</strong></span>
                 </div>
               </div>
 
               {/* Awareness Stage - Citation Based */}
-              <div className="mb-4 p-3 bg-blue-100/50 rounded-lg border-l-4 border-blue-400">
-                <p className="text-sm text-blue-800 font-medium mb-2">🔍 Awareness Stage (Citation-Based)</p>
+              <div className="mb-4 p-3 bg-[#D0DBF9]/30 rounded-lg border-l-4 border-[#396FFA]">
+                <p className="text-sm text-[#192F80] font-medium mb-2">🔍 Awareness Stage (Citation-Based)</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
-                    <span className="font-bold text-blue-700 dark:text-blue-300">60%</span> Citation Rate
-                    <p className="text-blue-600 text-xs">Is your content cited as a source?</p>
+                    <span className="font-bold text-[#396FFA]">60%</span> Citation Rate
+                    <p className="text-[#396FFA] text-xs">Is your content cited as a source?</p>
                   </div>
                   <div>
-                    <span className="font-bold text-blue-700 dark:text-blue-300">25%</span> Mention Rate
-                    <p className="text-blue-600 text-xs">Is your brand mentioned?</p>
+                    <span className="font-bold text-[#396FFA]">25%</span> Mention Rate
+                    <p className="text-[#396FFA] text-xs">Is your brand mentioned?</p>
                   </div>
                   <div>
-                    <span className="font-bold text-blue-700 dark:text-blue-300">15%</span> Sentiment
-                    <p className="text-blue-600 text-xs">How positively portrayed?</p>
+                    <span className="font-bold text-[#396FFA]">15%</span> Sentiment
+                    <p className="text-[#396FFA] text-xs">How positively portrayed?</p>
                   </div>
                 </div>
               </div>
@@ -1892,15 +1892,15 @@ export default function ResultsPage() {
                 <p className="text-sm text-green-800 font-medium mb-2">⚖️✅ Consideration & Decision Stages (Standard)</p>
                 <div className="grid grid-cols-3 gap-2 text-sm">
                   <div>
-                    <span className="font-bold text-green-700 dark:text-green-300">50%</span> Mention Rate
+                    <span className="font-bold text-green-700">50%</span> Mention Rate
                     <p className="text-green-600 text-xs">How often AI mentions you</p>
                   </div>
                   <div>
-                    <span className="font-bold text-green-700 dark:text-green-300">30%</span> Position
+                    <span className="font-bold text-green-700">30%</span> Position
                     <p className="text-green-600 text-xs">Where you appear (1st = best)</p>
                   </div>
                   <div>
-                    <span className="font-bold text-green-700 dark:text-green-300">20%</span> Sentiment
+                    <span className="font-bold text-green-700">20%</span> Sentiment
                     <p className="text-green-600 text-xs">How positively portrayed?</p>
                   </div>
                 </div>
@@ -1910,7 +1910,7 @@ export default function ResultsPage() {
             {/* Platform Performance Breakdown */}
             {reportData.platformBreakdown && (
               <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-off-black mb-4 flex items-center gap-2">
                   <span>🤖</span> Visibility Across AI Platforms
                 </h3>
                 <div className="grid md:grid-cols-4 gap-4">
@@ -1928,13 +1928,13 @@ export default function ResultsPage() {
                     };
                     const hasNoData = data.totalTests === 0;
                     const colorClasses = {
-                      green: "border-green-200 bg-green-50 dark:bg-green-900/20",
-                      blue: "border-blue-200 bg-blue-50 dark:bg-blue-900/20",
-                      cyan: "border-cyan-200 bg-cyan-50",
-                      purple: "border-purple-200 bg-purple-50 dark:bg-purple-900/20",
+                      green: "border-green-200 bg-green-50",
+                      blue: "border-[#ACD3C8] bg-[#D0DBF9]/30",
+                      cyan: "border-[#ACD3C8] bg-[#ACD3C8]/30",
+                      purple: "border-[#ACD3C8] bg-[#D0DBF9]/30",
                     };
                     return (
-                      <div key={platform.name} className={`rounded-xl p-4 border-2 ${hasNoData ? 'border-gray-200 dark:border-gray-700 bg-gray-50' : colorClasses[platform.color as keyof typeof colorClasses]} relative`}>
+                      <div key={platform.name} className={`rounded-xl p-4 border-2 ${hasNoData ? 'border-[#E5E5E5] bg-off-white' : colorClasses[platform.color as keyof typeof colorClasses]} relative`}>
                         {/* Warning badge if no data */}
                         {hasNoData && (
                           <div className="absolute -top-2 -right-2 bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">
@@ -1944,13 +1944,13 @@ export default function ResultsPage() {
                         <div className="flex items-center gap-2 mb-3">
                           <span className="text-2xl">{platform.icon}</span>
                           <div>
-                            <span className="font-semibold text-gray-900 dark:text-gray-100">{platform.name}</span>
-                            <span className="text-xs text-gray-400 ml-1">({data.totalTests} tests)</span>
+                            <span className="font-semibold text-off-black">{platform.name}</span>
+                            <span className="text-xs text-off-grey ml-1">({data.totalTests} tests)</span>
                           </div>
                         </div>
                         {hasNoData ? (
                           <div className="text-center py-2">
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className="text-xs text-off-grey">
                               No responses received.
                               {platform.name === "Gemini" && " (Check GEMINI_API_KEY)"}
                               {platform.name === "Perplexity" && " (PERPLEXITY_API_KEY not configured)"}
@@ -1959,32 +1959,32 @@ export default function ResultsPage() {
                         ) : (
                           <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                              <span className="text-xs text-gray-500 dark:text-gray-400">Mention Rate</span>
+                              <span className="text-xs text-off-grey">Mention Rate</span>
                               <span className={`font-bold ${data.mentionRate >= 50 ? "text-green-600" : data.mentionRate >= 25 ? "text-yellow-600" : "text-red-600"}`}>
                                 {Math.round(data.mentionRate)}%
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-[#E5E5E5] rounded-full h-2">
                               <div 
                                 className={`h-2 rounded-full ${data.mentionRate >= 50 ? "bg-green-500" : data.mentionRate >= 25 ? "bg-yellow-500" : "bg-red-500"}`}
                                 style={{ width: `${Math.min(100, data.mentionRate)}%` }}
                               />
                             </div>
                             <div className="flex justify-between items-center text-xs">
-                              <span className="text-gray-500 dark:text-gray-400">Mentioned</span>
-                              <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              <span className="text-off-grey">Mentioned</span>
+                              <span className="font-semibold text-[#4A5F5F]">
                                 {data.mentions || 0} / {data.totalTests}
                               </span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
-                              <span className="text-gray-500 dark:text-gray-400">Avg Position</span>
-                              <span className="font-semibold text-gray-700 dark:text-gray-300">
+                              <span className="text-off-grey">Avg Position</span>
+                              <span className="font-semibold text-[#4A5F5F]">
                                 {data.avgPosition > 0 ? `#${data.avgPosition.toFixed(1)}` : "—"}
                               </span>
                             </div>
                             <div className="flex justify-between items-center text-xs">
-                              <span className="text-gray-500 dark:text-gray-400">Visibility Share</span>
-                              <span className="font-semibold text-gray-700 dark:text-gray-300">{Math.round(data.visibilityShare)}%</span>
+                              <span className="text-off-grey">Visibility Share</span>
+                              <span className="font-semibold text-[#4A5F5F]">{Math.round(data.visibilityShare)}%</span>
                             </div>
                           </div>
                         )}
@@ -1994,31 +1994,31 @@ export default function ResultsPage() {
                 </div>
                 
                 {/* Overall Platform Summary */}
-                <div className="mt-4 bg-gray-50 rounded-xl p-4">
+                <div className="mt-4 bg-off-white rounded-xl p-4">
                   <div className="grid md:grid-cols-3 gap-6 text-center">
                     <div>
-                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div className="text-2xl font-bold font-headline text-off-black">
                         {Math.round(
                           Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.mentionRate || 0), 0) / 
                           Math.max(Object.keys(reportData.platformBreakdown || {}).length, 1)
                         )}%
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Avg Mention Rate</div>
+                      <div className="text-sm text-off-grey">Avg Mention Rate</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div className="text-2xl font-bold font-headline text-off-black">
                         #{(
                           Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.avgPosition || 0), 0) / 
                           Math.max(Object.values(reportData.platformBreakdown || {}).filter((p: any) => p.avgPosition > 0).length, 1)
                         ).toFixed(1)}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Avg Position</div>
+                      <div className="text-sm text-off-grey">Avg Position</div>
                     </div>
                     <div>
-                      <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      <div className="text-2xl font-bold font-headline text-off-black">
                         {Object.values(reportData.platformBreakdown || {}).reduce((sum: number, p: any) => sum + (p.totalTests || 0), 0)}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Total AI Responses</div>
+                      <div className="text-sm text-off-grey">Total AI Responses</div>
                     </div>
                   </div>
                 </div>
@@ -2028,12 +2028,12 @@ export default function ResultsPage() {
             {/* Journey Stages */}
             <div className="space-y-8">
               {journeyStages.length === 0 && (
-                <p className="text-gray-500 text-center py-8">No journey stage data available</p>
+                <p className="text-off-grey text-center py-8">No journey stage data available</p>
               )}
               {journeyStages.map((stage: any, index: number) => (
                 <div key={stage?.stage || index} className={`border-2 rounded-xl p-8 ${
-                  stage?.stage === "awareness" ? "border-blue-200 bg-blue-50/30" :
-                  stage?.stage === "consideration" ? "border-cyan-200 bg-cyan-50/30" : "border-green-200 bg-green-50/30"
+                  stage?.stage === "awareness" ? "border-[#ACD3C8] bg-[#D0DBF9]/30/30" :
+                  stage?.stage === "consideration" ? "border-[#ACD3C8] bg-[#ACD3C8]/30/30" : "border-green-200 bg-green-50/30"
                 }`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -2041,38 +2041,38 @@ export default function ResultsPage() {
                         {stage?.stage === "awareness" ? "🔍" : stage?.stage === "consideration" ? "⚖️" : "✅"}
                       </span>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{stage?.stageLabel || "Unknown Stage"}</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{stage?.stageDescription || ""}</p>
+                        <h3 className="text-xl font-bold font-headline text-off-black">{stage?.stageLabel || "Unknown Stage"}</h3>
+                        <p className="text-sm text-off-grey">{stage?.stageDescription || ""}</p>
                       </div>
                     </div>
                     <div className={`text-center px-4 py-2 rounded-xl ${
-                      (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100 dark:bg-green-900/30" :
-                      (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100 dark:bg-yellow-900/30" : "bg-red-100 dark:bg-red-900/30"
+                      (stage?.portrayal?.visibilityScore || 0) >= 70 ? "bg-green-100" :
+                      (stage?.portrayal?.visibilityScore || 0) >= 40 ? "bg-yellow-100" : "bg-red-100"
                     }`}>
                       <div className={`text-3xl font-bold ${
-                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700 dark:text-green-300" :
-                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700 dark:text-red-300"
+                        (stage?.portrayal?.visibilityScore || 0) >= 70 ? "text-green-700" :
+                        (stage?.portrayal?.visibilityScore || 0) >= 40 ? "text-yellow-700" : "text-red-700"
                       }`}>
                         {Math.round(stage?.portrayal?.visibilityScore || 0)}%
                       </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">Visibility</div>
+                      <div className="text-xs text-[#4A5F5F]">Visibility</div>
                     </div>
                   </div>
 
                   {/* Questions Analyzed Section */}
                   {stage?.questions && stage.questions.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <h4 className="font-semibold text-off-black mb-3 flex items-center gap-2">
                         <span>❓</span> Questions Analyzed ({stage.questions.length})
                       </h4>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2">
+                      <div className="bg-white rounded-lg p-4 space-y-2">
                         {stage.questions.slice(0, 6).map((q: any, qIdx: number) => (
                           <div key={qIdx} className="flex items-start gap-2 text-sm">
                             <span className={`text-xs px-2 py-0.5 rounded-full mt-0.5 ${
-                              stage?.stage === "awareness" ? "bg-blue-100 text-blue-700 dark:text-blue-300" :
-                              stage?.stage === "consideration" ? "bg-cyan-100 text-cyan-700 dark:text-cyan-300" : "bg-green-100 text-green-700 dark:text-green-300"
+                              stage?.stage === "awareness" ? "bg-[#D0DBF9]/30 text-[#396FFA]" :
+                              stage?.stage === "consideration" ? "bg-[#ACD3C8]/30 text-[#396FFA]" : "bg-green-100 text-green-700"
                             }`}>Q{qIdx + 1}</span>
-                            <span className="text-gray-700 dark:text-gray-300">{typeof q === 'string' ? q : q.question || q.text || 'Question'}</span>
+                            <span className="text-[#4A5F5F]">{typeof q === 'string' ? q : q.question || q.text || 'Question'}</span>
                           </div>
                         ))}
                       </div>
@@ -2083,26 +2083,26 @@ export default function ResultsPage() {
                   <div className="grid md:grid-cols-2 gap-4 mb-6">
                     {/* For Awareness Stage: Citation-focused metrics */}
                     {stage?.stage === 'awareness' ? (
-                      <div className="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-400">
+                      <div className="bg-[#D0DBF9]/30 rounded-lg p-4 border-l-4 border-[#396FFA]">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-blue-900 dark:text-blue-100">📚 Content Citation Analysis</h4>
+                          <h4 className="font-semibold text-[#192F80]">📚 Content Citation Analysis</h4>
                           <span className={`text-2xl font-bold ${
                             (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 ? "text-green-600" :
                             (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 25 ? "text-yellow-600" : "text-red-600"
                           }`}>{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
                         </div>
-                        <div className="bg-blue-100 rounded-lg p-3 mb-3">
-                          <p className="text-sm font-medium text-blue-900 mb-1">Is your brand/content used as a source?</p>
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                        <div className="bg-[#D0DBF9]/30 rounded-lg p-3 mb-3">
+                          <p className="text-sm font-medium text-[#192F80] mb-1">Is your brand/content used as a source?</p>
+                          <p className="text-xs text-[#396FFA]">
                             When users ask AI for awareness-level information, does the AI cite your content, website, or brand as an authoritative source?
                           </p>
                         </div>
                         <div className="space-y-2 mb-3">
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-blue-700 dark:text-blue-300">Citation Rate (60% weight)</span>
-                            <span className="font-bold text-blue-800">{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
+                            <span className="text-[#396FFA]">Citation Rate (60% weight)</span>
+                            <span className="font-bold text-[#192F80]">{Math.round(stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0)}%</span>
                           </div>
-                          <div className="w-full bg-blue-200 rounded-full h-2">
+                          <div className="w-full bg-[#D0DBF9] rounded-full h-2">
                             <div 
                               className={`h-2 rounded-full ${
                                 (stage?.portrayal?.citationRate || stage?.portrayal?.mentionRate || 0) >= 50 ? "bg-green-500" :
@@ -2112,18 +2112,18 @@ export default function ResultsPage() {
                             />
                           </div>
                           <div className="flex items-center justify-between text-sm">
-                            <span className="text-blue-700 dark:text-blue-300">Mention Rate (25% weight)</span>
-                            <span className="font-bold text-blue-800">{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
+                            <span className="text-[#396FFA]">Mention Rate (25% weight)</span>
+                            <span className="font-bold text-[#192F80]">{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
                           </div>
-                          <div className="w-full bg-blue-200 rounded-full h-2">
+                          <div className="w-full bg-[#D0DBF9] rounded-full h-2">
                             <div 
-                              className={`h-2 rounded-full bg-blue-500`}
+                              className={`h-2 rounded-full bg-[#D0DBF9]/30`}
                               style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
                             />
                           </div>
                         </div>
                         <div className="bg-white/60 rounded p-2">
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                          <p className="text-xs text-[#396FFA]">
                             {(() => {
                               const citedSources = stage?.portrayal?.citedSources || [];
                               if (citedSources.length > 0) {
@@ -2146,18 +2146,18 @@ export default function ResultsPage() {
                       </div>
                     ) : (
                       /* For Consideration/Decision: Standard Mention Rate */
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                      <div className="bg-white rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-gray-900 dark:text-gray-100">📢 Mention Rate</h4>
+                          <h4 className="font-semibold text-off-black">📢 Mention Rate</h4>
                           <span className={`text-2xl font-bold ${
                             (stage?.portrayal?.mentionRate || 0) >= 70 ? "text-green-600" :
                             (stage?.portrayal?.mentionRate || 0) >= 40 ? "text-yellow-600" : "text-red-600"
                           }`}>{Math.round(stage?.portrayal?.mentionRate || 0)}%</span>
                         </div>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-sm text-[#4A5F5F] mb-2">
                           Out of {stage?.portrayal?.totalTests || 0} tests across all AI platforms, your brand was mentioned in {Math.round((stage?.portrayal?.mentionRate || 0) * (stage?.portrayal?.totalTests || 0) / 100)} responses.
                         </p>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-[#E5E5E5] rounded-full h-2">
                           <div 
                             className={`h-2 rounded-full ${
                               (stage?.portrayal?.mentionRate || 0) >= 70 ? "bg-green-500" :
@@ -2166,7 +2166,7 @@ export default function ResultsPage() {
                             style={{ width: `${stage?.portrayal?.mentionRate || 0}%` }}
                           />
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-off-grey mt-1">
                           {(stage?.portrayal?.mentionRate || 0) >= 70 ? "✅ Strong presence - AI consistently mentions your brand" :
                            (stage?.portrayal?.mentionRate || 0) >= 40 ? "⚠️ Moderate presence - Room for improvement" : "❌ Low presence - Significant opportunity to improve"}
                         </p>
@@ -2174,38 +2174,38 @@ export default function ResultsPage() {
                     )}
 
                     {/* Audience Sentiment Explained */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                    <div className="bg-white rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">💭 Audience Sentiment</h4>
+                        <h4 className="font-semibold text-off-black">💭 Audience Sentiment</h4>
                         <span className={`text-sm font-bold px-2 py-1 rounded ${
-                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700 dark:text-green-300" :
-                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700 dark:text-red-300" : "bg-gray-100 text-gray-700 dark:text-gray-300"
+                          stage?.portrayal?.sentiment?.dominant === "positive" ? "bg-green-100 text-green-700" :
+                          stage?.portrayal?.sentiment?.dominant === "negative" ? "bg-red-100 text-red-700" : "bg-off-white text-[#4A5F5F]"
                         }`}>{stage?.portrayal?.sentiment?.dominant || "Neutral"}</span>
                       </div>
                       <div className="space-y-2 mb-2">
                         <div className="flex items-center gap-2">
                           <span className="text-xs w-16">Positive</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div className="flex-1 bg-[#E5E5E5] rounded-full h-2">
                             <div className="h-2 rounded-full bg-green-500" style={{ width: `${stage?.portrayal?.sentiment?.positive || 0}%` }} />
                           </div>
                           <span className="text-xs w-10 text-right">{Math.round(stage?.portrayal?.sentiment?.positive || 0)}%</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs w-16">Neutral</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div className="h-2 rounded-full bg-gray-400" style={{ width: `${stage?.portrayal?.sentiment?.neutral || 0}%` }} />
+                          <div className="flex-1 bg-[#E5E5E5] rounded-full h-2">
+                            <div className="h-2 rounded-full bg-off-grey" style={{ width: `${stage?.portrayal?.sentiment?.neutral || 0}%` }} />
                           </div>
                           <span className="text-xs w-10 text-right">{Math.round(stage?.portrayal?.sentiment?.neutral || 0)}%</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs w-16">Negative</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
+                          <div className="flex-1 bg-[#E5E5E5] rounded-full h-2">
                             <div className="h-2 rounded-full bg-red-500" style={{ width: `${stage?.portrayal?.sentiment?.negative || 0}%` }} />
                           </div>
                           <span className="text-xs w-10 text-right">{Math.round(stage?.portrayal?.sentiment?.negative || 0)}%</span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-off-grey">
                         {stage?.portrayal?.sentiment?.dominant === "positive" ? "AI platforms speak favorably about your brand in this stage." :
                          stage?.portrayal?.sentiment?.dominant === "negative" ? "Attention needed - Some responses portray your brand negatively." : "AI responses are factual without strong positive or negative bias."}
                       </p>
@@ -2258,17 +2258,17 @@ export default function ResultsPage() {
                     
                     return (
                       <div className="mb-6">
-                        <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <h4 className="font-semibold text-off-black mb-3 flex items-center gap-2">
                           <span>🔗</span> Sources Cited by AI Platforms
                         </h4>
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-200 dark:border-blue-800">
+                        <div className="bg-[#D0DBF9]/20 rounded-xl p-4 border border-[#ACD3C8]">
                           {/* Brand Citations */}
                           <div className="mb-4">
                             <div className="flex items-center gap-2 mb-2">
                               <span className={`text-lg ${brandCitations.length > 0 ? '✅' : '⚠️'}`}>
                                 {brandCitations.length > 0 ? '✅' : '⚠️'}
                               </span>
-                              <span className="font-medium text-blue-900 dark:text-blue-100">
+                              <span className="font-medium text-[#192F80]">
                                 Your Content as Source: {brandCitations.length > 0 ? `Cited ${brandCitations.length} time(s)` : 'Not cited'}
                               </span>
                             </div>
@@ -2278,19 +2278,19 @@ export default function ResultsPage() {
                                   <div key={idx} className="flex items-center gap-2 text-sm">
                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                                       citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
-                                      citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
-                                      citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
-                                      'bg-cyan-100 text-cyan-700'
+                                      citation.platform === 'Gemini' ? 'bg-[#D0DBF9]/30 text-[#396FFA]' :
+                                      citation.platform === 'Perplexity' ? 'bg-[#D0DBF9] text-[#192F80]' :
+                                      'bg-[#ACD3C8]/30 text-[#396FFA]'
                                     }`}>{citation.platform}</span>
                                     <a href={citation.url} target="_blank" rel="noopener noreferrer" 
-                                       className="text-blue-600 hover:underline truncate max-w-md">
+                                       className="text-[#396FFA] hover:underline truncate max-w-md">
                                       {citation.title || citation.domain}
                                     </a>
                                   </div>
                                 ))}
                               </div>
                             ) : (
-                              <p className="text-sm text-blue-700 ml-7">
+                              <p className="text-sm text-[#396FFA] ml-7">
                                 AI platforms did not cite your website as a source for awareness-level questions. 
                                 Consider creating more authoritative, citable content.
                               </p>
@@ -2302,7 +2302,7 @@ export default function ResultsPage() {
                             <div>
                               <div className="flex items-center gap-2 mb-2">
                                 <span className="text-lg">📚</span>
-                                <span className="font-medium text-gray-700 dark:text-gray-300">
+                                <span className="font-medium text-[#4A5F5F]">
                                   Other Sources Cited ({otherCitations.length})
                                 </span>
                               </div>
@@ -2311,18 +2311,18 @@ export default function ResultsPage() {
                                   <div key={idx} className="flex items-center gap-2 text-sm">
                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                                       citation.platform === 'ChatGPT' ? 'bg-green-100 text-green-700' :
-                                      citation.platform === 'Gemini' ? 'bg-blue-100 text-blue-700' :
-                                      citation.platform === 'Perplexity' ? 'bg-purple-100 text-purple-700' :
-                                      'bg-cyan-100 text-cyan-700'
+                                      citation.platform === 'Gemini' ? 'bg-[#D0DBF9]/30 text-[#396FFA]' :
+                                      citation.platform === 'Perplexity' ? 'bg-[#D0DBF9] text-[#192F80]' :
+                                      'bg-[#ACD3C8]/30 text-[#396FFA]'
                                     }`}>{citation.platform}</span>
-                                    <span className="text-gray-600 dark:text-gray-400">{citation.domain}</span>
+                                    <span className="text-[#4A5F5F]">{citation.domain}</span>
                                     {citation.title && (
-                                      <span className="text-gray-400 truncate max-w-xs">- {citation.title}</span>
+                                      <span className="text-off-grey truncate max-w-xs">- {citation.title}</span>
                                     )}
                                   </div>
                                 ))}
                                 {otherCitations.length > 10 && (
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">+{otherCitations.length - 10} more sources</p>
+                                  <p className="text-xs text-off-grey">+{otherCitations.length - 10} more sources</p>
                                 )}
                               </div>
                             </div>
@@ -2330,10 +2330,10 @@ export default function ResultsPage() {
                           
                           {allCitations.length === 0 && (
                             <div className="text-center py-4">
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <p className="text-sm text-[#4A5F5F]">
                                 No source citations detected in AI responses for this stage.
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-xs text-off-grey mt-1">
                                 Note: ChatGPT typically doesn&apos;t cite sources. Perplexity and Gemini with grounding do.
                               </p>
                             </div>
@@ -2346,25 +2346,25 @@ export default function ResultsPage() {
                   {/* Competitor Comparison (if available) */}
                   {stage?.portrayal?.competitorComparison && stage.portrayal.competitorComparison.length > 0 && (
                     <div className="mb-6">
-                      <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <h4 className="font-semibold text-off-black mb-3 flex items-center gap-2">
                         <span>🏆</span> Competitor Mentions in This Stage
                       </h4>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                      <div className="bg-white rounded-lg p-4">
                         <div className="space-y-3">
                           {stage.portrayal.competitorComparison.map((comp: any, compIdx: number) => (
                             <div key={compIdx} className="flex items-center gap-3">
-                              <span className="font-medium text-gray-900 w-32 truncate">{comp.competitorName || comp.competitor || comp.name || `Competitor ${compIdx + 1}`}</span>
-                              <div className="flex-1 bg-gray-200 rounded-full h-3">
+                              <span className="font-medium text-off-black w-32 truncate">{comp.competitorName || comp.competitor || comp.name || `Competitor ${compIdx + 1}`}</span>
+                              <div className="flex-1 bg-[#E5E5E5] rounded-full h-3">
                                 <div 
-                                  className={`h-3 rounded-full ${compIdx === 0 ? "bg-pink-500" : "bg-gray-400"}`}
+                                  className={`h-3 rounded-full ${compIdx === 0 ? "bg-pink-500" : "bg-off-grey"}`}
                                   style={{ width: `${comp.mentionRate || 0}%` }}
                                 />
                               </div>
-                              <span className="text-sm font-bold text-gray-700 w-12 text-right">{Math.round(comp.mentionRate || 0)}%</span>
+                              <span className="text-sm font-bold text-[#4A5F5F] w-12 text-right">{Math.round(comp.mentionRate || 0)}%</span>
                             </div>
                           ))}
                         </div>
-                        <p className="text-xs text-gray-500 mt-3">
+                        <p className="text-xs text-off-grey mt-3">
                           Shows how often competitors are mentioned by AI when answering {stage?.stageLabel || "this stage"} questions.
                         </p>
                       </div>
@@ -2395,8 +2395,8 @@ export default function ResultsPage() {
                           }}
                           className={`w-full flex items-center justify-between p-4 rounded-xl transition-colors ${
                             tier === 'partner' || tier === 'professional'
-                              ? 'bg-blue-50 hover:bg-blue-100 text-blue-700'
-                              : 'bg-gray-100 text-gray-500'
+                              ? 'bg-[#D0DBF9]/30 hover:bg-[#D0DBF9]/30 text-[#396FFA]'
+                              : 'bg-off-white text-off-grey'
                           }`}
                         >
                           <div className="flex items-center gap-2">
@@ -2421,7 +2421,7 @@ export default function ResultsPage() {
                         
                         {/* Expanded answers for this stage */}
                         {expandedSchemas.includes(`stage-answers-${stage?.stage}`) && (tier === 'partner' || tier === 'professional') && (
-                          <div className="mt-4 space-y-4 border-l-2 border-blue-200 pl-4">
+                          <div className="mt-4 space-y-4 border-l-2 border-[#ACD3C8] pl-4">
                             {(() => {
                               // Group by question
                               const byQuestion: Record<string, any[]> = {};
@@ -2431,21 +2431,21 @@ export default function ResultsPage() {
                               });
                               
                               return Object.entries(byQuestion).map(([question, answers]) => (
-                                <div key={question} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm">
-                                  <h5 className="font-medium text-gray-900 mb-3">{question}</h5>
+                                <div key={question} className="bg-white rounded-xl p-4 shadow-sm">
+                                  <h5 className="font-medium text-off-black mb-3">{question}</h5>
                                   <div className="space-y-3">
                                     {['ChatGPT', 'Gemini', 'Perplexity'].map(platform => {
                                       const platformAnswer = answers.find((a: any) => a.platform === platform);
                                       if (!platformAnswer) return null;
                                       
                                       return (
-                                        <div key={platform} className="bg-gray-50 rounded-lg p-3">
+                                        <div key={platform} className="bg-off-white rounded-lg p-3">
                                           <div className="flex items-center justify-between mb-2">
                                             <span className={`text-xs px-2 py-0.5 rounded font-medium ${
-                                              platform === "ChatGPT" ? "bg-green-100 text-green-700 dark:text-green-300" :
-                                              platform === "Gemini" ? "bg-blue-100 text-blue-700 dark:text-blue-300" :
-                                              platform === "Perplexity" ? "bg-purple-100 text-purple-700 dark:text-purple-300" : 
-                                              "bg-cyan-100 text-cyan-700 dark:text-cyan-300"
+                                              platform === "ChatGPT" ? "bg-green-100 text-green-700" :
+                                              platform === "Gemini" ? "bg-[#D0DBF9]/30 text-[#396FFA]" :
+                                              platform === "Perplexity" ? "bg-[#D0DBF9] text-[#192F80]" : 
+                                              "bg-[#ACD3C8]/30 text-[#396FFA]"
                                             }`}>{platform}</span>
                                             <div className="flex items-center gap-2">
                                               {platformAnswer.brandMentioned && (
@@ -2454,7 +2454,7 @@ export default function ResultsPage() {
                                               <span className={`text-xs px-2 py-0.5 rounded ${
                                                 platformAnswer.sentiment === 'positive' ? 'bg-green-100 text-green-700' :
                                                 platformAnswer.sentiment === 'negative' ? 'bg-red-100 text-red-700' :
-                                                'bg-gray-200 text-gray-600'
+                                                'bg-[#E5E5E5] text-[#4A5F5F]'
                                               }`}>{platformAnswer.sentiment}</span>
                                             </div>
                                           </div>
@@ -2465,9 +2465,9 @@ export default function ResultsPage() {
                                           {/* Show citations if available */}
                                           {((platformAnswer.citations && platformAnswer.citations.length > 0) || 
                                             (platformAnswer.sources && platformAnswer.sources.length > 0)) && (
-                                            <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                            <div className="mt-3 pt-3 border-t border-[#E5E5E5]">
                                               <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400">🔗 Sources Cited:</span>
+                                                <span className="text-xs font-medium text-off-grey">🔗 Sources Cited:</span>
                                               </div>
                                               <div className="flex flex-wrap gap-2">
                                                 {[...(platformAnswer.citations || []), ...(platformAnswer.sources || []).map((s: any) => s.url || s)]
@@ -2478,7 +2478,7 @@ export default function ResultsPage() {
                                                       href={url}
                                                       target="_blank"
                                                       rel="noopener noreferrer"
-                                                      className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                                                      className="inline-flex items-center gap-1 text-xs bg-[#D0DBF9]/30 text-[#396FFA] px-2 py-1 rounded hover:bg-[#D0DBF9]/30 transition-colors"
                                                     >
                                                       <span>🔗</span>
                                                       <span className="max-w-48 truncate">
@@ -2509,10 +2509,10 @@ export default function ResultsPage() {
 
         {/* Expanded Section: Technical Audit */}
         {expandedSection === "technical" && reportData.websiteAudit && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
+          <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🔧 Website Technical Audit</h2>
-              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-400">
+              <h2 className="text-2xl font-bold font-headline text-off-black">🔧 Website Technical Audit</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-off-grey hover:text-[#4A5F5F]">
                 <ChevronUp className="w-6 h-6" />
               </button>
             </div>
@@ -2522,8 +2522,8 @@ export default function ResultsPage() {
             {/* ═══════════════════════════════════════════════════════════════ */}
             <div className="mb-10">
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold text-sm">1</div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Status Quo: What We Analyzed</h3>
+                <div className="w-8 h-8 bg-[#D0DBF9]/30 rounded-full flex items-center justify-center text-[#396FFA] font-bold text-sm">1</div>
+                <h3 className="text-xl font-bold font-headline text-off-black">Status Quo: What We Analyzed</h3>
               </div>
 
               {/* Crawl Overview Cards */}
@@ -2540,28 +2540,28 @@ export default function ResultsPage() {
                   <div className="space-y-6">
                     {/* Summary Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{pages.length}</div>
-                        <div className="text-sm text-blue-600 font-medium">Pages Crawled</div>
+                      <div className="bg-[#D0DBF9]/20 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-[#396FFA]">{pages.length}</div>
+                        <div className="text-sm text-[#396FFA] font-medium">Pages Crawled</div>
                       </div>
-                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">{productPages.length}</div>
-                        <div className="text-sm text-purple-600 font-medium">Product Pages</div>
+                      <div className="bg-[#D0DBF9]/30 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-[#192F80]">{productPages.length}</div>
+                        <div className="text-sm text-[#192F80] font-medium">Product Pages</div>
                       </div>
-                      <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-cyan-700 dark:text-cyan-300">{faqPages.length}</div>
-                        <div className="text-sm text-cyan-600 font-medium">FAQ Pages</div>
+                      <div className="bg-[#ACD3C8]/20 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-[#396FFA]">{faqPages.length}</div>
+                        <div className="text-sm text-[#396FFA] font-medium">FAQ Pages</div>
                       </div>
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 text-center">
-                        <div className="text-3xl font-bold text-green-700 dark:text-green-300">{pagesWithSchema.length}</div>
+                      <div className="bg-green-50 rounded-xl p-4 text-center">
+                        <div className="text-3xl font-bold text-green-700">{pagesWithSchema.length}</div>
                         <div className="text-sm text-green-600 font-medium">With Schema</div>
                       </div>
                     </div>
 
                     {/* URLs Analyzed */}
-                    <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+                    <div className="bg-off-white rounded-xl p-5 border border-[#E5E5E5]">
                       <div className="flex items-center justify-between mb-4">
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">🕷️ URLs Analyzed</span>
+                        <span className="font-semibold text-off-black">🕷️ URLs Analyzed</span>
                         {reportData.websiteAudit.sitemapFound && (
                           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
                             from sitemap
@@ -2576,19 +2576,19 @@ export default function ResultsPage() {
                           const hasSchema = page.schemas && page.schemas.length > 0;
                           
                           return (
-                            <div key={i} className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-lg px-3 py-2 text-sm">
+                            <div key={i} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 text-sm">
                               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                                hasSchema ? 'bg-green-500' : 'bg-gray-300'
+                                hasSchema ? 'bg-green-500' : 'bg-[#E5E5E5]'
                               }`} />
-                              <span className="text-gray-700 truncate flex-1" title={page.url}>
+                              <span className="text-[#4A5F5F] truncate flex-1" title={page.url}>
                                 {path}
                               </span>
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 {isProduct && (
-                                  <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded">Product</span>
+                                  <span className="text-xs bg-[#D0DBF9] text-[#192F80] px-2 py-0.5 rounded">Product</span>
                                 )}
                                 {isFaq && (
-                                  <span className="text-xs bg-cyan-100 text-cyan-600 px-2 py-0.5 rounded">FAQ</span>
+                                  <span className="text-xs bg-[#ACD3C8]/30 text-[#396FFA] px-2 py-0.5 rounded">FAQ</span>
                                 )}
                                 {hasSchema && (
                                   <span className="text-xs bg-green-100 text-green-600 px-2 py-0.5 rounded">
@@ -2609,9 +2609,9 @@ export default function ResultsPage() {
                       }`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl">{reportData.websiteAudit.sitemapFound ? '✅' : '⚠️'}</span>
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">Sitemap</span>
+                          <span className="font-semibold text-off-black">Sitemap</span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-xs text-[#4A5F5F]">
                           {reportData.websiteAudit.sitemapFound ? 'Found and accessible' : 'Not found or inaccessible'}
                         </p>
                       </div>
@@ -2620,9 +2620,9 @@ export default function ResultsPage() {
                       }`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl">{reportData.websiteAudit.robotsAllowsAI !== false ? '✅' : '❌'}</span>
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">AI Bots</span>
+                          <span className="font-semibold text-off-black">AI Bots</span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-xs text-[#4A5F5F]">
                           {reportData.websiteAudit.robotsAllowsAI !== false ? 'Allowed to crawl' : 'Blocked in robots.txt'}
                         </p>
                       </div>
@@ -2631,9 +2631,9 @@ export default function ResultsPage() {
                       }`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xl">{reportData.websiteAudit.faqContent?.hasFAQSection ? '✅' : '⚠️'}</span>
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">FAQ Content</span>
+                          <span className="font-semibold text-off-black">FAQ Content</span>
                         </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-xs text-[#4A5F5F]">
                           {reportData.websiteAudit.faqContent?.hasFAQSection ? 'Detected on pages' : 'No FAQ sections found'}
                         </p>
                       </div>
@@ -2649,7 +2649,7 @@ export default function ResultsPage() {
             <div className="mb-10">
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 font-bold text-sm">2</div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Challenges: Schema Gaps Identified</h3>
+                <h3 className="text-xl font-bold font-headline text-off-black">Challenges: Schema Gaps Identified</h3>
               </div>
 
               {/* Schema Status Grid */}
@@ -2662,60 +2662,60 @@ export default function ResultsPage() {
                 ].map((schema) => (
                   <div key={schema.name} className={`p-4 rounded-xl text-center transition-all ${
                     schema.has 
-                      ? "bg-green-50 border-2 border-green-200 dark:border-green-800" 
-                      : "bg-red-50 border-2 border-red-200 dark:border-red-800"
+                      ? "bg-green-50 border-2 border-green-200" 
+                      : "bg-red-50 border-2 border-red-200"
                   }`}>
                     <div className="text-2xl mb-1">{schema.has ? "✅" : "❌"}</div>
-                    <div className="font-semibold text-gray-900 dark:text-gray-100">{schema.name}</div>
-                    <div className="text-xs text-gray-500 mt-1">{schema.impact}</div>
+                    <div className="font-semibold text-off-black">{schema.name}</div>
+                    <div className="text-xs text-off-grey mt-1">{schema.impact}</div>
                   </div>
                 ))}
               </div>
 
               {/* Transparency - Why we reached these conclusions */}
-              <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-5 border border-gray-200 dark:border-gray-700">
+              <div className="bg-off-white rounded-xl p-5 border border-[#E5E5E5]">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="text-lg">🔍</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">Our Analysis Explained</span>
+                  <span className="font-semibold text-off-black">Our Analysis Explained</span>
                 </div>
                 <div className="space-y-3">
                   {reportData.websiteAudit.robotsAnalysisReason && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-blue-400">
+                    <div className="bg-white rounded-lg p-3 border-l-4 border-[#396FFA]">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-gray-900 text-sm">🤖 robots.txt</span>
+                        <span className="font-medium text-off-black text-sm">🤖 robots.txt</span>
                         <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
                           reportData.websiteAudit.robotsAllowsAI !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                         }`}>
                           {reportData.websiteAudit.robotsAllowsAI !== false ? 'OK' : 'Blocked'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">{reportData.websiteAudit.robotsAnalysisReason}</p>
+                      <p className="text-xs text-[#4A5F5F]">{reportData.websiteAudit.robotsAnalysisReason}</p>
                     </div>
                   )}
                   {reportData.websiteAudit.sitemapAnalysisReason && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-cyan-400">
+                    <div className="bg-white rounded-lg p-3 border-l-4 border-[#ACD3C8]">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-gray-900 text-sm">🗺️ Sitemap</span>
+                        <span className="font-medium text-off-black text-sm">🗺️ Sitemap</span>
                         <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
                           reportData.websiteAudit.sitemapFound ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
                         }`}>
                           {reportData.websiteAudit.sitemapFound ? 'Found' : 'Missing'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">{reportData.websiteAudit.sitemapAnalysisReason}</p>
+                      <p className="text-xs text-[#4A5F5F]">{reportData.websiteAudit.sitemapAnalysisReason}</p>
                     </div>
                   )}
                   {reportData.websiteAudit.productSchemaReason && (
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-3 border-l-4 border-purple-400">
+                    <div className="bg-white rounded-lg p-3 border-l-4 border-[#ACD3C8]">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-gray-900 text-sm">🛍️ Product Schema</span>
+                        <span className="font-medium text-off-black text-sm">🛍️ Product Schema</span>
                         <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
                           reportData.websiteAudit.schemas?.hasProduct ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                         }`}>
                           {reportData.websiteAudit.schemas?.hasProduct ? 'Found' : 'Missing'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">{reportData.websiteAudit.productSchemaReason}</p>
+                      <p className="text-xs text-[#4A5F5F]">{reportData.websiteAudit.productSchemaReason}</p>
                     </div>
                   )}
                 </div>
@@ -2731,42 +2731,42 @@ export default function ResultsPage() {
               <div className="mb-8">
                 <div className="flex items-center gap-2 mb-6">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-600 font-bold text-sm">3</div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Actions: Schema Markup to Add</h3>
+                  <h3 className="text-xl font-bold font-headline text-off-black">Actions: Schema Markup to Add</h3>
                 </div>
 
-                <p className="text-gray-600 mb-4 text-sm">
-                  Click each schema type below to see the exact code to add. Place these in your HTML <code className="bg-gray-100 px-1 rounded text-xs">&lt;head&gt;</code> section.
+                <p className="text-[#4A5F5F] mb-4 text-sm">
+                  Click each schema type below to see the exact code to add. Place these in your HTML <code className="bg-off-white px-1 rounded text-xs">&lt;head&gt;</code> section.
                 </p>
                 
                 <div className="space-y-3">
                   {/* Organization Schema - Expandable */}
                   {!reportData.websiteAudit.schemas?.hasOrganization && (
-                    <div className="border border-blue-200 rounded-xl overflow-hidden">
+                    <div className="border border-[#ACD3C8] rounded-xl overflow-hidden">
                       <button
                         onClick={() => setExpandedSchemas(prev => 
                           prev.includes('organization') 
                             ? prev.filter(s => s !== 'organization')
                             : [...prev, 'organization']
                         )}
-                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                        className="w-full flex items-center justify-between p-4 bg-[#D0DBF9]/20 hover:bg-[#D0DBF9]/30 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">🏢</span>
                           <div className="text-left">
-                            <span className="font-bold text-gray-900 dark:text-gray-100">Organization Schema</span>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Helps AI identify your brand • Add to homepage</p>
+                            <span className="font-bold text-off-black">Organization Schema</span>
+                            <p className="text-xs text-[#4A5F5F]">Helps AI identify your brand • Add to homepage</p>
                           </div>
                         </div>
-                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${
+                        <ChevronDown className={`w-5 h-5 text-off-grey transition-transform ${
                           expandedSchemas.includes('organization') ? 'rotate-180' : ''
                         }`} />
                       </button>
                       {expandedSchemas.includes('organization') && (
-                        <div className="p-4 bg-white border-t border-blue-100">
-                          <p className="text-sm text-gray-600 mb-3">
+                        <div className="p-4 bg-white border-t border-[#ACD3C8]">
+                          <p className="text-sm text-[#4A5F5F] mb-3">
                             <strong>Why it matters:</strong> Helps AI understand your brand identity, making it more likely to mention your company correctly in responses.
                           </p>
-                          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                          <div className="bg-petrol rounded-lg p-4 overflow-x-auto">
                             <pre className="text-xs text-green-400 whitespace-pre-wrap">
 {`<script type="application/ld+json">
 {
@@ -2791,32 +2791,32 @@ export default function ResultsPage() {
 
                   {/* Product Schema - Expandable */}
                   {!reportData.websiteAudit.schemas?.hasProduct && (
-                    <div className="border border-purple-200 rounded-xl overflow-hidden">
+                    <div className="border border-[#ACD3C8] rounded-xl overflow-hidden">
                       <button
                         onClick={() => setExpandedSchemas(prev => 
                           prev.includes('product') 
                             ? prev.filter(s => s !== 'product')
                             : [...prev, 'product']
                         )}
-                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-colors"
+                        className="w-full flex items-center justify-between p-4 bg-[#D0DBF9]/20 hover:bg-[#D0DBF9]/40 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">🛍️</span>
                           <div className="text-left">
-                            <span className="font-bold text-gray-900 dark:text-gray-100">Product Schema</span>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">Required for AI shopping recommendations • Add to each product page</p>
+                            <span className="font-bold text-off-black">Product Schema</span>
+                            <p className="text-xs text-[#4A5F5F]">Required for AI shopping recommendations • Add to each product page</p>
                           </div>
                         </div>
-                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${
+                        <ChevronDown className={`w-5 h-5 text-off-grey transition-transform ${
                           expandedSchemas.includes('product') ? 'rotate-180' : ''
                         }`} />
                       </button>
                       {expandedSchemas.includes('product') && (
-                        <div className="p-4 bg-white border-t border-purple-100">
-                          <p className="text-sm text-gray-600 mb-3">
+                        <div className="p-4 bg-white border-t border-[#ACD3C8]">
+                          <p className="text-sm text-[#4A5F5F] mb-3">
                             <strong>Why it matters:</strong> When users ask AI "What's the best [product]?", AI platforms look for Product schema. Without it, your products won't appear in recommendations.
                           </p>
-                          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                          <div className="bg-petrol rounded-lg p-4 overflow-x-auto">
                             <pre className="text-xs text-green-400 whitespace-pre-wrap">
 {`<script type="application/ld+json">
 {
@@ -2844,33 +2844,33 @@ export default function ResultsPage() {
 
                   {/* FAQ Schema - Expandable */}
                   {!reportData.websiteAudit.schemas?.hasFAQ && (
-                    <div className="border border-cyan-200 rounded-xl overflow-hidden">
+                    <div className="border border-[#ACD3C8] rounded-xl overflow-hidden">
                       <button
                         onClick={() => setExpandedSchemas(prev => 
                           prev.includes('faq') 
                             ? prev.filter(s => s !== 'faq')
                             : [...prev, 'faq']
                         )}
-                        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-teal-50 hover:from-cyan-100 hover:to-teal-100 transition-colors"
+                        className="w-full flex items-center justify-between p-4 bg-[#ACD3C8]/20 hover:bg-[#ACD3C8]/30 transition-colors"
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">❓</span>
                           <div className="text-left">
-                            <span className="font-bold text-gray-900 dark:text-gray-100">FAQ Schema</span>
+                            <span className="font-bold text-off-black">FAQ Schema</span>
                             <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Highest Impact!</span>
-                            <p className="text-xs text-gray-600 dark:text-gray-400">3x more likely to be cited by AI • Add to FAQ & landing pages</p>
+                            <p className="text-xs text-[#4A5F5F]">3x more likely to be cited by AI • Add to FAQ & landing pages</p>
                           </div>
                         </div>
-                        <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${
+                        <ChevronDown className={`w-5 h-5 text-off-grey transition-transform ${
                           expandedSchemas.includes('faq') ? 'rotate-180' : ''
                         }`} />
                       </button>
                       {expandedSchemas.includes('faq') && (
-                        <div className="p-4 bg-white border-t border-cyan-100">
-                          <p className="text-sm text-gray-600 mb-3">
+                        <div className="p-4 bg-white border-t border-[#ACD3C8]">
+                          <p className="text-sm text-[#4A5F5F] mb-3">
                             <strong>Why it matters:</strong> AI platforms directly cite FAQ schema content. Pages with FAQ schema are <strong>3x more likely</strong> to be referenced in AI responses.
                           </p>
-                          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+                          <div className="bg-petrol rounded-lg p-4 overflow-x-auto">
                             <pre className="text-xs text-green-400 whitespace-pre-wrap">
 {`<script type="application/ld+json">
 {
@@ -2907,11 +2907,11 @@ export default function ResultsPage() {
                 {/* Quick Implementation Tips */}
                 <div className="mt-4 flex flex-wrap gap-2 text-xs">
                   <a href="https://validator.schema.org/" target="_blank" rel="noopener noreferrer" 
-                     className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors">
+                     className="inline-flex items-center gap-1 bg-off-white hover:bg-[#E5E5E5] text-[#4A5F5F] px-3 py-1.5 rounded-full transition-colors">
                     🔗 Validate Schema
                   </a>
                   <a href="https://search.google.com/test/rich-results" target="_blank" rel="noopener noreferrer"
-                     className="inline-flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full transition-colors">
+                     className="inline-flex items-center gap-1 bg-off-white hover:bg-[#E5E5E5] text-[#4A5F5F] px-3 py-1.5 rounded-full transition-colors">
                     🔗 Google Rich Results Test
                   </a>
                   <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full">
@@ -2924,23 +2924,23 @@ export default function ResultsPage() {
             {/* Issues Found */}
             {reportData.websiteAudit.issues?.length > 0 && (
               <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">⚠️ Additional Issues</h3>
+                <h3 className="text-lg font-bold text-off-black mb-4">⚠️ Additional Issues</h3>
                 <div className="space-y-2">
                   {reportData.websiteAudit.issues.map((issue: any, i: number) => (
                     <div key={i} className={`p-3 rounded-lg border-l-4 ${
                       issue.severity === "critical" ? "bg-red-50 border-red-500" :
-                      issue.severity === "warning" ? "bg-yellow-50 border-yellow-500" : "bg-blue-50 border-blue-500"
+                      issue.severity === "warning" ? "bg-yellow-50 border-yellow-500" : "bg-[#D0DBF9]/30 border-[#396FFA]"
                     }`}>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded ${
                           issue.severity === "critical" ? "bg-red-200 text-red-800" :
-                          issue.severity === "warning" ? "bg-yellow-200 text-yellow-800" : "bg-blue-200 text-blue-800"
+                          issue.severity === "warning" ? "bg-yellow-200 text-yellow-800" : "bg-[#D0DBF9] text-[#192F80]"
                         }`}>
                           {issue.severity?.toUpperCase()}
                         </span>
-                        <span className="font-medium text-gray-900 text-sm">{issue.issue}</span>
+                        <span className="font-medium text-off-black text-sm">{issue.issue}</span>
                       </div>
-                      <p className="text-xs text-gray-600 mt-1 ml-16">{issue.impact}</p>
+                      <p className="text-xs text-[#4A5F5F] mt-1 ml-16">{issue.impact}</p>
                     </div>
                   ))}
                 </div>
@@ -2951,15 +2951,15 @@ export default function ResultsPage() {
 
         {/* Expanded Section: Recommendations */}
         {expandedSection === "recommendations" && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
+          <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">💡 All Recommendations</h2>
-              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-400">
+              <h2 className="text-2xl font-bold font-headline text-off-black">💡 All Recommendations</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-off-grey hover:text-[#4A5F5F]">
                 <ChevronUp className="w-6 h-6" />
               </button>
             </div>
 
-            <p className="text-gray-600 mb-6">
+            <p className="text-[#4A5F5F] mb-6">
               Based on your AI visibility analysis, here are personalized recommendations for each stage of the customer journey.
             </p>
 
@@ -2969,8 +2969,8 @@ export default function ResultsPage() {
                 
                 return (
                   <div key={i} className={`rounded-xl p-8 border-2 relative ${
-                    rec.stage === "Awareness" ? "bg-blue-50 border-blue-200 dark:border-blue-800" :
-                    rec.stage === "Consideration" ? "bg-cyan-50 border-cyan-200" : "bg-green-50 border-green-200 dark:border-green-800"
+                    rec.stage === "Awareness" ? "bg-[#D0DBF9]/30 border-[#ACD3C8]" :
+                    rec.stage === "Consideration" ? "bg-[#ACD3C8]/30 border-[#ACD3C8]" : "bg-green-50 border-green-200"
                   } ${isLocked ? "opacity-60" : ""}`}>
                     {/* Lock overlay for additional recommendations on free tier */}
                     {isLocked && (
@@ -2978,16 +2978,16 @@ export default function ResultsPage() {
                         className="absolute inset-0 bg-white/70 backdrop-blur-[2px] rounded-xl z-10 flex flex-col items-center justify-center cursor-pointer"
                         onClick={() => openUpgradeModal("recommendations")}
                       >
-                        <Lock className="w-6 h-6 text-gray-400 mb-2" />
-                        <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Unlock Full Recommendations</span>
+                        <Lock className="w-6 h-6 text-off-grey mb-2" />
+                        <span className="text-sm font-medium text-[#4A5F5F]">Unlock Full Recommendations</span>
                         <span className="text-xs text-amber-500 mt-1">Click to upgrade</span>
                       </div>
                     )}
                     <div className="flex items-center gap-3 mb-4">
                       <span className="text-3xl">{rec.stageIcon}</span>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">{rec.stage} Stage</h3>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">Current visibility: {Math.round(rec.visibilityScore)}%</div>
+                        <h3 className="text-xl font-bold font-headline text-off-black">{rec.stage} Stage</h3>
+                        <div className="text-sm text-off-grey">Current visibility: {Math.round(rec.visibilityScore)}%</div>
                       </div>
                     </div>
 
@@ -2995,34 +2995,34 @@ export default function ResultsPage() {
                       <div className="space-y-4">
                         {/* Pattern Identified */}
                         {rec.recommendation.commonPattern && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                          <div className="bg-white rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-lg">🔍</span>
-                              <span className="font-semibold text-gray-900 dark:text-gray-100">Pattern Identified</span>
+                              <span className="font-semibold text-off-black">Pattern Identified</span>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-400">{rec.recommendation.commonPattern}</p>
+                            <p className="text-[#4A5F5F]">{rec.recommendation.commonPattern}</p>
                           </div>
                         )}
 
                         {/* Content Type Needed */}
                         {rec.recommendation.contentType && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                          <div className="bg-white rounded-lg p-4">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-lg">📚</span>
-                              <span className="font-semibold text-gray-900 dark:text-gray-100">Content Type Needed</span>
+                              <span className="font-semibold text-off-black">Content Type Needed</span>
                             </div>
-                            <p className="text-gray-600 dark:text-gray-400">{rec.recommendation.contentType}</p>
+                            <p className="text-[#4A5F5F]">{rec.recommendation.contentType}</p>
                           </div>
                         )}
 
                         {/* Recommended Action */}
                         {rec.recommendation.focusedAction && (
-                          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-amber-500">
+                          <div className="bg-white rounded-lg p-4 border-l-4 border-amber-500">
                             <div className="flex items-center gap-2 mb-2">
                               <span className="text-lg">✅</span>
-                              <span className="font-semibold text-gray-900 dark:text-gray-100">Recommended Action</span>
+                              <span className="font-semibold text-off-black">Recommended Action</span>
                             </div>
-                            <p className="text-gray-700 font-medium">{rec.recommendation.focusedAction}</p>
+                            <p className="text-[#4A5F5F] font-medium">{rec.recommendation.focusedAction}</p>
                           </div>
                         )}
                       </div>
@@ -3034,16 +3034,16 @@ export default function ResultsPage() {
 
             {/* Upgrade CTA for free tier */}
             {!limits.showDetailedRecommendations && (
-              <div className="mt-6 bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-xl p-8 text-center">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <div className="mt-6 bg-off-white border-2 border-amber-200 rounded-xl p-8 text-center">
+                <h3 className="text-lg font-bold text-off-black mb-2">
                   🔒 {allRecommendations.length - 1} More Recommendations Available
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-[#4A5F5F] mb-4">
                   Get detailed action items with implementation guides for all funnel stages.
                 </p>
                 <button
                   onClick={() => openUpgradeModal("recommendations")}
-                  className="bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white font-semibold py-3 px-6 rounded-lg transition-all flex items-center gap-2 mx-auto"
+                  className="bg-[#EB4200] hover:opacity-90 text-white font-semibold py-3 px-6 rounded-lg transition-all flex items-center gap-2 mx-auto"
                 >
                   <Sparkles className="w-5 h-5" />
                   Unlock All Recommendations
@@ -3055,24 +3055,24 @@ export default function ResultsPage() {
             {reportData.websiteAudit?.recommendations?.length > 0 && (
               <div className="mt-8 pt-8 border-t">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">🔧 Technical Recommendations</h3>
+                  <h3 className="text-xl font-bold font-headline text-off-black">🔧 Technical Recommendations</h3>
                   {!limits.showDetailedRecommendations && (
                     <PremiumBadge size="md" />
                   )}
                 </div>
                 <div className="space-y-4">
                   {reportData.websiteAudit.recommendations.slice(0, limits.showDetailedRecommendations ? undefined : 1).map((rec: any, i: number) => (
-                    <div key={i} className="bg-gray-50 rounded-lg p-4">
+                    <div key={i} className="bg-off-white rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">{rec.title}</span>
+                        <span className="font-semibold text-off-black">{rec.title}</span>
                         <span className={`text-xs font-bold px-2 py-1 rounded ${
-                          rec.priority === "high" ? "bg-red-100 text-red-700 dark:text-red-300" :
-                          rec.priority === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700 dark:text-blue-300"
+                          rec.priority === "high" ? "bg-red-100 text-red-700" :
+                          rec.priority === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-[#D0DBF9]/30 text-[#396FFA]"
                         }`}>
                           {rec.priority?.toUpperCase()} PRIORITY
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{rec.description}</p>
+                      <p className="text-sm text-[#4A5F5F] mb-2">{rec.description}</p>
                       {rec.expectedImpact && limits.showDetailedRecommendations && (
                         <p className="text-xs text-green-600">Expected impact: {rec.expectedImpact}</p>
                       )}
@@ -3080,11 +3080,11 @@ export default function ResultsPage() {
                   ))}
                   {!limits.showDetailedRecommendations && reportData.websiteAudit.recommendations.length > 1 && (
                     <div 
-                      className="bg-gray-100 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-200 transition-colors"
+                      className="bg-off-white rounded-lg p-4 text-center cursor-pointer hover:bg-[#E5E5E5] transition-colors"
                       onClick={() => openUpgradeModal("technical_audit")}
                     >
-                      <Lock className="w-5 h-5 text-gray-400 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <Lock className="w-5 h-5 text-off-grey mx-auto mb-2" />
+                      <p className="text-sm text-[#4A5F5F]">
                         +{reportData.websiteAudit.recommendations.length - 1} more technical recommendations
                       </p>
                       <p className="text-xs text-amber-500 mt-1">Click to unlock</p>
@@ -3098,10 +3098,10 @@ export default function ResultsPage() {
 
         {/* Expanded Section: Competitive Landscape - Redesigned */}
         {expandedSection === "competitive" && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
+          <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">🏆 Competitive Analysis</h2>
-              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600">
+              <h2 className="text-2xl font-bold font-headline text-off-black">🏆 Competitive Analysis</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-off-grey hover:text-[#4A5F5F]">
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -3142,7 +3142,7 @@ export default function ResultsPage() {
                       {isWinning ? '🏆' : '⚠️'}
                     </div>
                     <div>
-                      <h3 className={`text-xl font-bold ${isWinning ? 'text-green-800' : 'text-amber-800'}`}>
+                      <h3 className={`text-xl font-bold font-headline ${isWinning ? 'text-green-800' : 'text-amber-800'}`}>
                         {isWinning
                           ? `You're outperforming ${beatingCount} of ${totalCompetitors} competitors`
                           : `${totalCompetitors - beatingCount} of ${totalCompetitors} competitors have higher visibility`
@@ -3163,23 +3163,23 @@ export default function ResultsPage() {
             {/* Leaderboard - Who's Winning? */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">📊 AI Visibility Leaderboard</h3>
+                <h3 className="text-lg font-bold text-off-black">📊 AI Visibility Leaderboard</h3>
                 <details className="text-xs relative">
-                  <summary className="text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                  <summary className="text-off-grey cursor-pointer hover:text-[#4A5F5F]:text-off-grey">
                     How to read this?
                   </summary>
-                  <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 border border-gray-200 dark:border-gray-700 z-10">
-                    <p className="text-gray-700 dark:text-gray-200 font-medium mb-2">
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg p-4 border border-[#E5E5E5] z-10">
+                    <p className="text-[#4A5F5F] font-medium mb-2">
                       📊 Mentions = Times AI recommended the brand
                     </p>
-                    <p className="text-gray-600 dark:text-gray-300 text-xs mb-3">
+                    <p className="text-[#4A5F5F] text-xs mb-3">
                       We tested multiple AI platforms with buyer questions. This shows how many times each brand was mentioned.
                     </p>
-                    <div className="bg-gray-50 dark:bg-gray-900 rounded p-3 text-xs space-y-2">
-                      <p className="text-gray-600 dark:text-gray-400">
-                        <strong>Example:</strong> <span className="font-bold text-blue-600">5/9 mentions</span> means the brand was recommended in 5 out of 9 AI responses.
+                    <div className="bg-off-white rounded p-3 text-xs space-y-2">
+                      <p className="text-[#4A5F5F]">
+                        <strong>Example:</strong> <span className="font-bold text-[#396FFA]">5/9 mentions</span> means the brand was recommended in 5 out of 9 AI responses.
                       </p>
-                      <p className="text-gray-500 dark:text-gray-400">
+                      <p className="text-off-grey">
                         <span className="text-green-600 font-medium">You: +2</span> = You were mentioned 2 more times<br/>
                         <span className="text-red-600 font-medium">They: +1</span> = Competitor mentioned 1 more time
                       </p>
@@ -3187,7 +3187,7 @@ export default function ResultsPage() {
                   </div>
                 </details>
               </div>
-              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl overflow-hidden">
+              <div className="bg-off-white rounded-xl overflow-hidden">
                 {(() => {
                   const yourScore = reportData.overallScore || 0;
                   const totalTests = reportData.aiTestResults?.length || 9; // Total AI queries tested
@@ -3239,7 +3239,7 @@ export default function ResultsPage() {
 
                   if (leaderboard.length <= 1) {
                     return (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-8 text-off-grey">
                         <p className="text-lg mb-2">No competitor data available</p>
                         <p className="text-sm">Add competitors when starting your analysis to see comparison data.</p>
                       </div>
@@ -3247,38 +3247,38 @@ export default function ResultsPage() {
                   }
 
                   return (
-                    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                    <div className="divide-y divide-[#E5E5E5]">
                       {leaderboard.map((entry, idx) => (
                         <div
                           key={idx}
-                          className={`flex items-center gap-4 p-4 ${entry.isYou ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}
+                          className={`flex items-center gap-4 p-4 ${entry.isYou ? 'bg-[#D0DBF9]/30' : ''}`}
                         >
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
                             idx === 0 ? 'bg-yellow-400 text-yellow-900' :
-                            idx === 1 ? 'bg-gray-300 text-gray-700' :
-                            idx === 2 ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-600'
+                            idx === 1 ? 'bg-[#E5E5E5] text-[#4A5F5F]' :
+                            idx === 2 ? 'bg-amber-600 text-white' : 'bg-[#E5E5E5] text-[#4A5F5F]'
                           }`}>
                             {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <span className={`font-bold ${entry.isYou ? 'text-blue-700 dark:text-blue-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                              <span className={`font-bold ${entry.isYou ? 'text-[#396FFA]' : 'text-off-black'}`}>
                                 {entry.name}
                               </span>
                               {entry.isYou && (
-                                <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">YOU</span>
+                                <span className="text-xs bg-[#396FFA] text-white px-2 py-0.5 rounded-full">YOU</span>
                               )}
                             </div>
                             <div className="flex items-center gap-3 mt-1">
-                              <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 max-w-xs">
+                              <div className="flex-1 bg-[#E5E5E5] rounded-full h-2 max-w-xs">
                                 <div
-                                  className={`h-2 rounded-full ${entry.isYou ? 'bg-blue-500' : 'bg-gray-400'}`}
+                                  className={`h-2 rounded-full ${entry.isYou ? 'bg-[#D0DBF9]/30' : 'bg-off-grey'}`}
                                   style={{ width: `${entry.score}%` }}
                                 />
                               </div>
-                              <span className={`text-sm ${entry.isYou ? 'text-blue-600' : 'text-gray-600'}`}>
+                              <span className={`text-sm ${entry.isYou ? 'text-[#396FFA]' : 'text-[#4A5F5F]'}`}>
                                 <span className="font-bold">{entry.mentions}</span>
-                                <span className="text-xs text-gray-500">/{totalTests} mentions</span>
+                                <span className="text-xs text-off-grey">/{totalTests} mentions</span>
                               </span>
                             </div>
                           </div>
@@ -3288,7 +3288,7 @@ export default function ResultsPage() {
                                 ? 'bg-green-100 text-green-700'
                                 : yourMentions < entry.mentions
                                 ? 'bg-red-100 text-red-700'
-                                : 'bg-gray-100 text-gray-600'
+                                : 'bg-off-white text-[#4A5F5F]'
                             }`}>
                               {yourMentions > entry.mentions
                                 ? `You: +${yourMentions - entry.mentions}`
@@ -3307,8 +3307,8 @@ export default function ResultsPage() {
 
             {/* Evidence: When Competitors Get Recommended Instead */}
             <div className="mb-8">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📝 Evidence: When AI Recommends Competitors Over You</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <h3 className="text-lg font-bold text-off-black mb-4">📝 Evidence: When AI Recommends Competitors Over You</h3>
+              <p className="text-sm text-[#4A5F5F] mb-4">
                 Strategic analysis of AI responses where competitors were mentioned instead of your brand.
               </p>
               {(() => {
@@ -3412,9 +3412,9 @@ export default function ResultsPage() {
 
                   if (missedOpportunities.length === 0) {
                     return (
-                      <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 text-center">
+                      <div className="bg-green-50 rounded-xl p-6 text-center">
                         <span className="text-4xl mb-3 block">🎉</span>
-                        <p className="text-green-800 dark:text-green-200 font-medium">
+                        <p className="text-green-800 font-medium">
                           Excellent! Your brand was mentioned in all AI responses analyzed.
                         </p>
                       </div>
@@ -3428,52 +3428,52 @@ export default function ResultsPage() {
                         const insight = generateStrategicInsight(response, brandName, category, true);
                         const questionStage = getQuestionStage(response.question);
                         return (
-                          <div key={idx} className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-5 border border-amber-200 dark:border-amber-800">
+                          <div key={idx} className="bg-amber-50 rounded-xl p-5 border border-amber-200">
                             <div className="flex items-start gap-4">
                               <div className="flex-shrink-0">
-                                <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-800 flex items-center justify-center">
-                                  <span className="text-amber-600 dark:text-amber-300 font-bold text-sm">
+                                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                                  <span className="text-amber-600 font-bold text-sm">
                                     {response.platform?.substring(0, 2).toUpperCase() || 'AI'}
                                   </span>
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                  <span className="text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-800 px-2 py-0.5 rounded">
+                                  <span className="text-xs font-medium text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
                                     {response.platform || 'AI Platform'}
                                   </span>
                                   {/* Funnel Stage Badge */}
                                   {questionStage && (
                                     <span className={`text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1 ${
-                                      questionStage.stage === 'awareness' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
-                                      questionStage.stage === 'consideration' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' :
-                                      'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                      questionStage.stage === 'awareness' ? 'bg-[#D0DBF9]/30 text-[#396FFA]' :
+                                      questionStage.stage === 'consideration' ? 'bg-[#D0DBF9] text-[#192F80]' :
+                                      'bg-green-100 text-green-700'
                                     }`}>
                                       <span>{questionStage.icon}</span>
                                       <span>{questionStage.label}</span>
                                     </span>
                                   )}
                                 </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                                <p className="text-sm text-[#4A5F5F] mb-2">
                                   <span className="font-medium">Query:</span> &quot;{response.question}&quot;
                                 </p>
 
                                 {/* Strategic Insight */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-amber-400 mb-3">
-                                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                                <div className="bg-white rounded-lg p-4 border-l-4 border-amber-400 mb-3">
+                                  <p className="text-sm font-medium text-off-black mb-2">
                                     🔍 {insight.insight}
                                   </p>
-                                  <p className="text-xs text-amber-700 dark:text-amber-300 italic">
+                                  <p className="text-xs text-amber-700 italic">
                                     💡 {insight.recommendation}
                                   </p>
                                 </div>
 
                                 {/* Supporting snippet */}
                                 <details className="group">
-                                  <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
+                                  <summary className="text-xs text-off-grey cursor-pointer hover:text-[#4A5F5F]">
                                     View AI response snippet →
                                   </summary>
-                                  <div className="mt-2 bg-gray-50 dark:bg-gray-900 rounded p-3 text-xs text-gray-600 dark:text-gray-400 italic">
+                                  <div className="mt-2 bg-off-white rounded p-3 text-xs text-[#4A5F5F] italic">
                                     &quot;{extractSmartSnippet(response.fullResponse, 300)}&quot;
                                   </div>
                                 </details>
@@ -3493,40 +3493,40 @@ export default function ResultsPage() {
                       const stats = response._aggregateStats;
                       const questionStage = getQuestionStage(response.question);
                       return (
-                        <div key={idx} className="bg-red-50 dark:bg-red-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
+                        <div key={idx} className="bg-red-50 rounded-xl p-5 border border-red-200">
                           <div className="flex items-start gap-4">
                             <div className="flex-shrink-0">
-                              <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-800 flex items-center justify-center">
-                                <span className="text-red-600 dark:text-red-300 font-bold text-sm">
+                              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                <span className="text-red-600 font-bold text-sm">
                                   {response.platform?.substring(0, 2).toUpperCase() || 'AI'}
                                 </span>
                               </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <span className="text-xs font-medium text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-800 px-2 py-0.5 rounded">
+                                <span className="text-xs font-medium text-red-700 bg-red-100 px-2 py-0.5 rounded">
                                   {response.platform || 'AI Platform'}
                                 </span>
                                 {/* Funnel Stage Badge */}
                                 {questionStage && (
                                   <span className={`text-xs font-medium px-2 py-0.5 rounded flex items-center gap-1 ${
-                                    questionStage.stage === 'awareness' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' :
-                                    questionStage.stage === 'consideration' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' :
-                                    'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                                    questionStage.stage === 'awareness' ? 'bg-[#D0DBF9]/30 text-[#396FFA]' :
+                                    questionStage.stage === 'consideration' ? 'bg-[#D0DBF9] text-[#192F80]' :
+                                    'bg-green-100 text-green-700'
                                   }`}>
                                     <span>{questionStage.icon}</span>
                                     <span>{questionStage.label}</span>
                                   </span>
                                 )}
                                 {stats && (
-                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  <span className="text-xs text-off-grey">
                                     (missed {stats.testedCount - stats.brandMentionCount}/{stats.testedCount} tests)
                                   </span>
                                 )}
                                 {response.foundCompetitors?.length > 0 && (
                                   <div className="flex flex-wrap gap-1">
                                     {response.foundCompetitors.slice(0, 3).map((comp: string, cIdx: number) => (
-                                      <span key={cIdx} className="text-xs bg-red-200 dark:bg-red-700 text-red-800 dark:text-red-100 px-2 py-0.5 rounded-full">
+                                      <span key={cIdx} className="text-xs bg-red-200 text-red-800 px-2 py-0.5 rounded-full">
                                         {comp}
                                       </span>
                                     ))}
@@ -3534,37 +3534,37 @@ export default function ResultsPage() {
                                 )}
                               </div>
 
-                              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                              <p className="text-sm text-[#4A5F5F] mb-2">
                                 <span className="font-medium">Query:</span> &quot;{response.question}&quot;
                               </p>
 
                               {/* Strategic Insight */}
-                              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border-l-4 border-red-400 mb-3">
-                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                              <div className="bg-white rounded-lg p-4 border-l-4 border-red-400 mb-3">
+                                <p className="text-sm font-medium text-off-black mb-2">
                                   🔍 {insight.insight}
                                 </p>
-                                <p className="text-xs text-red-700 dark:text-red-300 italic">
+                                <p className="text-xs text-red-700 italic">
                                   💡 {insight.recommendation}
                                 </p>
                               </div>
 
                               {/* Follow-up Question & Response - WHY wasn't brand mentioned */}
                               {response.followUpQuestion && response.followUpResponse && (
-                                <div className="mt-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                                <div className="mt-3 bg-[#D0DBF9]/30 rounded-lg p-4 border border-[#ACD3C8]">
                                   <div className="flex items-center gap-2 mb-2">
-                                    <span className="text-purple-600 dark:text-purple-400">🤔</span>
-                                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                                    <span className="text-[#192F80]">🤔</span>
+                                    <span className="text-sm font-medium text-[#192F80]">
                                       We asked: &quot;{response.followUpQuestion}&quot;
                                     </span>
                                   </div>
-                                  <div className="text-sm text-purple-800 dark:text-purple-200 leading-relaxed whitespace-pre-wrap">
+                                  <div className="text-sm text-[#192F80] leading-relaxed whitespace-pre-wrap">
                                     {response.followUpResponse}
                                   </div>
                                   {response.followUpSources && (response.followUpSources as any[]).length > 0 && (
                                     <div className="mt-3 flex flex-wrap items-center gap-1">
-                                      <span className="text-xs text-purple-600">Sources cited:</span>
+                                      <span className="text-xs text-[#192F80]">Sources cited:</span>
                                       {(response.followUpSources as any[]).slice(0, 3).map((src: any, sIdx: number) => (
-                                        <span key={sIdx} className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                        <span key={sIdx} className="text-xs bg-[#D0DBF9] text-[#192F80] px-2 py-0.5 rounded">
                                           {src.domain || 'source'}
                                         </span>
                                       ))}
@@ -3575,10 +3575,10 @@ export default function ResultsPage() {
 
                               {/* View full AI response - collapsible */}
                               <details className="group mt-3">
-                                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+                                <summary className="text-xs text-off-grey cursor-pointer hover:text-[#4A5F5F]:text-off-grey">
                                   View full AI response →
                                 </summary>
-                                <div className="mt-2 bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed max-h-64 overflow-y-auto">
+                                <div className="mt-2 bg-off-white rounded-lg p-4 text-sm text-[#4A5F5F] leading-relaxed max-h-64 overflow-y-auto">
                                   {response.fullResponse}
                                 </div>
                               </details>
@@ -3586,7 +3586,7 @@ export default function ResultsPage() {
                               {/* Sources - important for understanding why */}
                               {(response.sources?.length > 0 || response.citations?.length > 0) && (
                                 <div className="mt-3 flex flex-wrap items-center gap-2">
-                                  <span className="text-xs text-gray-500">🔗 AI cited:</span>
+                                  <span className="text-xs text-off-grey">🔗 AI cited:</span>
                                   {[...(response.sources || []), ...(response.citations || [])].slice(0, 3).map((src: any, sIdx: number) => {
                                     try {
                                       const url = typeof src === 'string' ? src : src.url;
@@ -3597,7 +3597,7 @@ export default function ResultsPage() {
                                           href={url}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-xs bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:underline px-2 py-1 rounded"
+                                          className="text-xs bg-red-100 text-red-700 hover:underline px-2 py-1 rounded"
                                         >
                                           {hostname}
                                         </a>
@@ -3619,8 +3619,8 @@ export default function ResultsPage() {
             </div>
 
             {/* Summary Stats */}
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">📊 Analysis Summary</h3>
+            <div className="bg-[#D0DBF9]/20 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-off-black mb-4">📊 Analysis Summary</h3>
               {(() => {
                 const allResponses = reportData.aiTestResults || [];
                 const competitors = reportData.competitors || [];
@@ -3643,28 +3643,28 @@ export default function ResultsPage() {
                 return (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-indigo-600">{totalResponses}</div>
-                        <div className="text-xs text-gray-500 mt-1">AI Responses Analyzed</div>
+                      <div className="bg-white rounded-lg p-4 text-center">
+                        <div className="text-3xl font-bold text-petrol">{totalResponses}</div>
+                        <div className="text-xs text-off-grey mt-1">AI Responses Analyzed</div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                      <div className="bg-white rounded-lg p-4 text-center">
                         <div className="text-3xl font-bold text-green-600">{brandMentions}</div>
-                        <div className="text-xs text-gray-500 mt-1">Brand Mentions</div>
+                        <div className="text-xs text-off-grey mt-1">Brand Mentions</div>
                         <div className="text-xs text-green-600 font-medium mt-1">{mentionRate}% rate</div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
+                      <div className="bg-white rounded-lg p-4 text-center">
                         <div className="text-3xl font-bold text-amber-600">{missedOpportunities}</div>
-                        <div className="text-xs text-gray-500 mt-1">Missed Opportunities</div>
+                        <div className="text-xs text-off-grey mt-1">Missed Opportunities</div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 text-center">
-                        <div className="text-3xl font-bold text-blue-600">{positiveMentions}</div>
-                        <div className="text-xs text-gray-500 mt-1">Positive Mentions</div>
+                      <div className="bg-white rounded-lg p-4 text-center">
+                        <div className="text-3xl font-bold text-[#396FFA]">{positiveMentions}</div>
+                        <div className="text-xs text-off-grey mt-1">Positive Mentions</div>
                       </div>
                     </div>
 
                     {/* Quick insight */}
-                    <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <div className="bg-white rounded-lg p-4">
+                      <p className="text-sm text-[#4A5F5F]">
                         {mentionRate >= 70 ? (
                           <>🎯 <strong>Strong visibility!</strong> Your brand appears in {mentionRate}% of AI responses.</>
                         ) : mentionRate >= 40 ? (
@@ -3705,10 +3705,10 @@ export default function ResultsPage() {
 
         {/* Expanded Section: Methodology & FAQ */}
         {expandedSection === "methodology" && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
+          <div className="bg-white rounded-xl border-2 border-[#E5E5E5] shadow-lg p-8 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">❓ How It Works - Methodology & Transparency</h2>
-              <button onClick={() => setExpandedSection(null)} className="text-gray-400 hover:text-gray-600 dark:text-gray-400">
+              <h2 className="text-2xl font-bold font-headline text-off-black">❓ How It Works - Methodology & Transparency</h2>
+              <button onClick={() => setExpandedSection(null)} className="text-off-grey hover:text-[#4A5F5F]">
                 <ChevronUp className="w-6 h-6" />
               </button>
             </div>
@@ -3716,66 +3716,66 @@ export default function ResultsPage() {
             <div className="space-y-6">
               {/* How is the AI Visibility Score calculated? */}
               <div className="border-b pb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <span className="text-blue-500">📊</span> How is the AI Visibility Score calculated?
+                <h3 className="text-lg font-semibold text-off-black mb-3 flex items-center gap-2">
+                  <span className="text-[#396FFA]">📊</span> How is the AI Visibility Score calculated?
                 </h3>
-                <p className="text-gray-600 mb-3">
+                <p className="text-[#4A5F5F] mb-3">
                   Your AI Visibility Score (0-100) is a weighted combination of three key metrics:
                 </p>
                 <div className="grid md:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-blue-700 mb-1">50%</div>
-                    <div className="font-semibold text-gray-900 dark:text-gray-100">Mention Rate</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">How often AI platforms mention your brand when answering relevant questions.</p>
+                  <div className="bg-[#D0DBF9]/30 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-[#396FFA] mb-1">50%</div>
+                    <div className="font-semibold text-off-black">Mention Rate</div>
+                    <p className="text-sm text-[#4A5F5F]">How often AI platforms mention your brand when answering relevant questions.</p>
                   </div>
-                  <div className="bg-cyan-50 rounded-lg p-4">
-                    <div className="text-2xl font-bold text-cyan-700 mb-1">30%</div>
-                    <div className="font-semibold text-gray-900 dark:text-gray-100">Position</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Where your brand appears in responses. Being mentioned first is better than being listed third.</p>
+                  <div className="bg-[#ACD3C8]/30 rounded-lg p-4">
+                    <div className="text-2xl font-bold text-[#396FFA] mb-1">30%</div>
+                    <div className="font-semibold text-off-black">Position</div>
+                    <p className="text-sm text-[#4A5F5F]">Where your brand appears in responses. Being mentioned first is better than being listed third.</p>
                   </div>
                   <div className="bg-green-50 rounded-lg p-4">
                     <div className="text-2xl font-bold text-green-700 mb-1">20%</div>
-                    <div className="font-semibold text-gray-900 dark:text-gray-100">Sentiment</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Whether AI speaks positively, neutrally, or negatively about your brand.</p>
+                    <div className="font-semibold text-off-black">Sentiment</div>
+                    <p className="text-sm text-[#4A5F5F]">Whether AI speaks positively, neutrally, or negatively about your brand.</p>
                   </div>
                 </div>
               </div>
 
               {/* What is the audit process? */}
               <div className="border-b pb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                  <span className="text-cyan-500">🔬</span> What is the audit process?
+                <h3 className="text-lg font-semibold text-off-black mb-3 flex items-center gap-2">
+                  <span className="text-[#396FFA]">🔬</span> What is the audit process?
                 </h3>
-                <p className="text-gray-600 mb-3">
+                <p className="text-[#4A5F5F] mb-3">
                   Our analysis follows a rigorous, multi-step process:
                 </p>
                 <div className="space-y-3">
                   <div className="flex gap-3 items-start">
-                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
+                    <span className="bg-[#ACD3C8]/30 text-[#396FFA] rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
                     <div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">Question Discovery</span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">We pull real questions from search data (DataForSEO) and generate strategic questions based on your industry.</p>
+                      <span className="font-semibold text-off-black">Question Discovery</span>
+                      <p className="text-sm text-[#4A5F5F]">We pull real questions from search data (DataForSEO) and generate strategic questions based on your industry.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
-                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
+                    <span className="bg-[#ACD3C8]/30 text-[#396FFA] rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
                     <div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">Multi-Platform Testing</span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Each question is sent to all 4 AI platforms: ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. We run multiple tests per platform for statistical reliability.</p>
+                      <span className="font-semibold text-off-black">Multi-Platform Testing</span>
+                      <p className="text-sm text-[#4A5F5F]">Each question is sent to all 4 AI platforms: ChatGPT (OpenAI), Google Gemini, Microsoft Copilot, and Perplexity. We run multiple tests per platform for statistical reliability.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
-                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
+                    <span className="bg-[#ACD3C8]/30 text-[#396FFA] rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
                     <div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">Response Analysis</span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">We analyze each response for brand mentions, positioning, sentiment, and competitor references using pattern matching and NLP.</p>
+                      <span className="font-semibold text-off-black">Response Analysis</span>
+                      <p className="text-sm text-[#4A5F5F]">We analyze each response for brand mentions, positioning, sentiment, and competitor references using pattern matching and NLP.</p>
                     </div>
                   </div>
                   <div className="flex gap-3 items-start">
-                    <span className="bg-cyan-100 text-cyan-700 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
+                    <span className="bg-[#ACD3C8]/30 text-[#396FFA] rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold flex-shrink-0">4</span>
                     <div>
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">Technical Audit</span>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">If you provided a domain, we scan your website for schema markup, content structure, FAQ sections, and robots.txt settings that affect AI visibility.</p>
+                      <span className="font-semibold text-off-black">Technical Audit</span>
+                      <p className="text-sm text-[#4A5F5F]">If you provided a domain, we scan your website for schema markup, content structure, FAQ sections, and robots.txt settings that affect AI visibility.</p>
                     </div>
                   </div>
                 </div>
@@ -3783,13 +3783,13 @@ export default function ResultsPage() {
 
               {/* How are recommendations generated? */}
               <div className="border-b pb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-off-black mb-3 flex items-center gap-2">
                   <span className="text-amber-500">💡</span> How are recommendations generated?
                 </h3>
-                <p className="text-gray-600 mb-3">
+                <p className="text-[#4A5F5F] mb-3">
                   Our recommendations are data-driven and specific to your results:
                 </p>
-                <ul className="space-y-2 text-gray-600 dark:text-gray-400">
+                <ul className="space-y-2 text-[#4A5F5F]">
                   <li className="flex gap-2">
                     <span className="text-amber-500">•</span>
                     <span><strong>Pattern Analysis:</strong> We identify common themes across AI responses - what topics trigger mentions, what questions lead to competitor recommendations, etc.</span>
@@ -3811,25 +3811,25 @@ export default function ResultsPage() {
 
               {/* What makes this analysis reliable? */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-off-black mb-3 flex items-center gap-2">
                   <span className="text-green-500">✅</span> What makes this analysis reliable?
                 </h3>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="font-semibold text-gray-900 mb-1">Real API Calls</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">We use actual ChatGPT (OpenAI) and Gemini (Google) APIs - not simulations or scraping. You see real AI responses.</p>
+                  <div className="bg-off-white rounded-lg p-4">
+                    <div className="font-semibold text-off-black mb-1">Real API Calls</div>
+                    <p className="text-sm text-[#4A5F5F]">We use actual ChatGPT (OpenAI) and Gemini (Google) APIs - not simulations or scraping. You see real AI responses.</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="font-semibold text-gray-900 mb-1">Statistical Significance</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">3 tests per question per platform reduces noise from AI variability. More tests = more reliable patterns.</p>
+                  <div className="bg-off-white rounded-lg p-4">
+                    <div className="font-semibold text-off-black mb-1">Statistical Significance</div>
+                    <p className="text-sm text-[#4A5F5F]">3 tests per question per platform reduces noise from AI variability. More tests = more reliable patterns.</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="font-semibold text-gray-900 mb-1">Full Funnel Coverage</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Testing across Awareness, Consideration, and Decision stages gives a complete picture of the customer journey.</p>
+                  <div className="bg-off-white rounded-lg p-4">
+                    <div className="font-semibold text-off-black mb-1">Full Funnel Coverage</div>
+                    <p className="text-sm text-[#4A5F5F]">Testing across Awareness, Consideration, and Decision stages gives a complete picture of the customer journey.</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="font-semibold text-gray-900 mb-1">Transparent Methodology</div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">You see the actual questions tested, the real AI responses, and exactly how scores are calculated.</p>
+                  <div className="bg-off-white rounded-lg p-4">
+                    <div className="font-semibold text-off-black mb-1">Transparent Methodology</div>
+                    <p className="text-sm text-[#4A5F5F]">You see the actual questions tested, the real AI responses, and exactly how scores are calculated.</p>
                   </div>
                 </div>
               </div>
@@ -3861,16 +3861,16 @@ export default function ResultsPage() {
       {/* Schedule Modal */}
       {showScheduleModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-off-black">
                 Schedule AI Visibility Analysis
               </h3>
               <button
                 onClick={() => setShowScheduleModal(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-off-white rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-off-grey" />
               </button>
             </div>
 
@@ -3878,23 +3878,23 @@ export default function ResultsPage() {
               {!isProfessionalOrHigher() ? (
                 // Free tier - show upgrade prompt
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Lock className="w-8 h-8 text-amber-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  <h4 className="text-lg font-semibold text-off-black mb-2">
                     Upgrade to Schedule
                   </h4>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-[#4A5F5F] mb-6">
                     Automated scheduling is available on Professional and Partner tiers.
                     Get regular AI visibility reports delivered automatically.
                   </p>
                   <div className="space-y-3">
-                    <button className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <button className="w-full py-2 px-4 bg-[#396FFA] text-white rounded-lg hover:opacity-90 transition-colors">
                       Upgrade to Professional
                     </button>
                     <button
                       onClick={() => setShowScheduleModal(false)}
-                      className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full py-2 px-4 border border-[#E5E5E5] text-[#4A5F5F] rounded-lg hover:bg-off-white transition-colors"
                     >
                       Maybe Later
                     </button>
@@ -3903,28 +3903,28 @@ export default function ResultsPage() {
               ) : existingSchedule ? (
                 // Already scheduled
                 <div className="text-center">
-                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Clock className="w-8 h-8 text-green-600" />
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  <h4 className="text-lg font-semibold text-off-black mb-2">
                     Already Scheduled
                   </h4>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  <p className="text-[#4A5F5F] mb-4">
                     This analysis is scheduled to run <span className="font-medium">{existingSchedule.frequency}</span>.
                   </p>
-                  <p className="text-sm text-gray-500 mb-6">
+                  <p className="text-sm text-off-grey mb-6">
                     Next run: {new Date(existingSchedule.nextRun).toLocaleDateString()}
                   </p>
                   <div className="space-y-3">
                     <Link
                       href="/automation"
-                      className="block w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-center"
+                      className="block w-full py-2 px-4 bg-[#396FFA] text-white rounded-lg hover:opacity-90 transition-colors text-center"
                     >
                       Manage in Automation Dashboard
                     </Link>
                     <button
                       onClick={() => setShowScheduleModal(false)}
-                      className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full py-2 px-4 border border-[#E5E5E5] text-[#4A5F5F] rounded-lg hover:bg-off-white transition-colors"
                     >
                       Close
                     </button>
@@ -3933,7 +3933,7 @@ export default function ResultsPage() {
               ) : (
                 // Schedule form
                 <div>
-                  <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  <p className="text-[#4A5F5F] mb-6">
                     Schedule automated AI visibility checks for <span className="font-medium">{reportData?.brandOrKeyword}</span>
                     with the same setup as this analysis.
                   </p>
@@ -3941,13 +3941,13 @@ export default function ResultsPage() {
                   <div className="space-y-4">
                     {/* Frequency */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-[#4A5F5F] mb-2">
                         Frequency
                       </label>
                       <select
                         value={scheduleFrequency}
                         onChange={(e) => setScheduleFrequency(e.target.value as 'daily' | 'weekly' | 'monthly')}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-[#E5E5E5] rounded-lg bg-white text-off-black"
                       >
                         {isPartner() && <option value="daily">Daily</option>}
                         <option value="weekly">Weekly</option>
@@ -3958,13 +3958,13 @@ export default function ResultsPage() {
                     {/* Day selection */}
                     {scheduleFrequency === 'weekly' && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-[#4A5F5F] mb-2">
                           Day of Week
                         </label>
                         <select
                           value={scheduleDay}
                           onChange={(e) => setScheduleDay(parseInt(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-[#E5E5E5] rounded-lg bg-white text-off-black"
                         >
                           <option value={1}>Monday</option>
                           <option value={2}>Tuesday</option>
@@ -3979,13 +3979,13 @@ export default function ResultsPage() {
 
                     {scheduleFrequency === 'monthly' && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-[#4A5F5F] mb-2">
                           Day of Month
                         </label>
                         <select
                           value={scheduleDay}
                           onChange={(e) => setScheduleDay(parseInt(e.target.value))}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                          className="w-full px-3 py-2 border border-[#E5E5E5] rounded-lg bg-white text-off-black"
                         >
                           {[1, 5, 10, 15, 20, 25].map(day => (
                             <option key={day} value={day}>{day}{day === 1 ? 'st' : day === 2 ? 'nd' : day === 3 ? 'rd' : 'th'}</option>
@@ -3996,13 +3996,13 @@ export default function ResultsPage() {
 
                     {/* Time */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-[#4A5F5F] mb-2">
                         Time (UTC)
                       </label>
                       <select
                         value={scheduleHour}
                         onChange={(e) => setScheduleHour(parseInt(e.target.value))}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-[#E5E5E5] rounded-lg bg-white text-off-black"
                       >
                         {[6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18].map(hour => (
                           <option key={hour} value={hour}>{hour}:00</option>
@@ -4015,7 +4015,7 @@ export default function ResultsPage() {
                     <button
                       onClick={scheduleAnalysis}
                       disabled={isScheduling}
-                      className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-2 px-4 bg-[#396FFA] text-white rounded-lg hover:opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {isScheduling ? (
                         <>
@@ -4031,7 +4031,7 @@ export default function ResultsPage() {
                     </button>
                     <button
                       onClick={() => setShowScheduleModal(false)}
-                      className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="w-full py-2 px-4 border border-[#E5E5E5] text-[#4A5F5F] rounded-lg hover:bg-off-white transition-colors"
                     >
                       Cancel
                     </button>
@@ -4080,7 +4080,7 @@ function transformAnalysisData(data: any) {
       icon: iconMap[stageData.stage] || "Brain",
       color: 
         stageData.stage === "awareness" ? "from-blue-500 to-blue-600" :
-        stageData.stage === "consideration" ? "from-cyan-500 to-cyan-600" :
+        stageData.stage === "consideration" ? "from-[#1D5142] to-[#173D32]" :
         "from-pink-500 to-pink-600",
       questions: stageData.questions || [],
       portrayal: stageData.portrayal || {
