@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { DataForSEOService } from "@/lib/services/dataforseo-service";
 import { PERSONA_QUERY_MAPPING, FUNNEL_STAGE_PATTERNS } from "@/lib/services/persona-query-engine";
 import { BrandDataFetcher, FetchedBrandData } from "@/lib/services/brand-data-fetcher";
+import OpenAI from "openai";
 
 /**
  * Brand context used to disambiguate brand names and generate relevant questions.
@@ -171,8 +172,18 @@ export async function POST(request: Request) {
     }
 
     // Generate STRATEGIC questions for comprehensive brand positioning analysis
-    // Uses persona-informed question generation + brand context when available
-    const strategicQuestions = generateStrategicQuestions(brandName, effectiveCategory, competitors || [], buyerPersona, brandContext);
+    // Try AI-powered generation first (produces brand-specific questions),
+    // fall back to template-based generation if OpenAI fails
+    let strategicQuestions: ReturnType<typeof generateStrategicQuestions>;
+
+    const aiQuestions = await generateAIQuestions(brandName, effectiveCategory, competitors || [], buyerPersona, brandContext);
+    if (aiQuestions) {
+      strategicQuestions = aiQuestions;
+      console.log(`🤖 [DISCOVER] Using AI-generated strategic questions`);
+    } else {
+      strategicQuestions = generateStrategicQuestions(brandName, effectiveCategory, competitors || [], buyerPersona, brandContext);
+      console.log(`📋 [DISCOVER] Using template-based strategic questions (AI fallback)`);
+    }
 
     // Stage descriptions for UI
     const stageDescriptions = {
@@ -560,4 +571,144 @@ function generateContextAwareQuestions(
   }
 
   return { brand, category: cat };
+}
+
+/**
+ * AI-powered question generation using OpenAI.
+ * Generates brand-specific, context-aware questions instead of generic templates.
+ * Returns null if OpenAI is unavailable or fails (caller should fall back to templates).
+ */
+async function generateAIQuestions(
+  brandName: string,
+  category: string,
+  competitors: string[],
+  buyerPersona?: string,
+  brandContext?: BrandContext
+): Promise<{
+  brand: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
+  category: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
+} | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    console.log(`⚠️ [AI-QUESTIONS] OpenAI API key not configured, skipping AI generation`);
+    return null;
+  }
+
+  try {
+    const openai = new OpenAI({ apiKey, timeout: 15000, maxRetries: 1 });
+
+    // Build context block for the prompt
+    const contextLines: string[] = [];
+    contextLines.push(`Brand: ${brandName}`);
+    contextLines.push(`Category: ${category}`);
+    if (competitors.length > 0) {
+      contextLines.push(`Competitors: ${competitors.join(", ")}`);
+    }
+    if (buyerPersona) {
+      contextLines.push(`Buyer Persona: ${buyerPersona}`);
+    }
+    if (brandContext?.description) {
+      contextLines.push(`Brand Description: ${brandContext.description}`);
+    }
+    if (brandContext?.industry) {
+      contextLines.push(`Industry: ${brandContext.industry}`);
+    }
+    if (brandContext?.positioning) {
+      contextLines.push(`Positioning: ${brandContext.positioning}`);
+    }
+    if (brandContext?.pricePoint) {
+      contextLines.push(`Price Point: ${brandContext.pricePoint}`);
+    }
+    if (brandContext?.parentCompany) {
+      contextLines.push(`Parent Company: ${brandContext.parentCompany}`);
+    }
+    if (brandContext?.keyAttributes && brandContext.keyAttributes.length > 0) {
+      contextLines.push(`Key Attributes: ${brandContext.keyAttributes.join(", ")}`);
+    }
+
+    const prompt = `You are an AI visibility strategist. Generate search questions that real users would ask AI chatbots (ChatGPT, Gemini, Perplexity) about this brand and category.
+
+${contextLines.join("\n")}
+
+Generate exactly 18 questions total: 3 brand + 3 category for each of 3 funnel stages.
+
+FUNNEL STAGES:
+- awareness: Discovery questions. Users are learning about the category or brand for the first time. Questions like "What is...", "How does... work", "Who makes..."
+- consideration: Comparison questions. Users are evaluating options. Questions like "Best...", "X vs Y", "Is X worth it", "Top brands for..."
+- decision: Purchase-intent questions. Users are ready to act. Questions like "Should I buy...", "Where to buy...", "Is X recommended..."
+
+RULES:
+- Brand questions must mention "${brandName}" by name
+- Category questions must NOT mention "${brandName}" — they should be about the category "${category}" in general
+- Questions must sound natural, like something a real person would type into ChatGPT
+- Make questions specific to this brand's actual identity and positioning — NOT generic templates
+- Each question should be unique and cover a different angle
+- Do NOT include question marks in the output
+
+Return ONLY valid JSON in this exact format (no markdown, no explanation):
+{"brand":{"awareness":["q1","q2","q3"],"consideration":["q1","q2","q3"],"decision":["q1","q2","q3"]},"category":{"awareness":["q1","q2","q3"],"consideration":["q1","q2","q3"],"decision":["q1","q2","q3"]}}`;
+
+    console.log(`🤖 [AI-QUESTIONS] Calling OpenAI to generate strategic questions...`);
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const content = response.choices[0]?.message?.content?.trim();
+    if (!content) {
+      console.warn(`⚠️ [AI-QUESTIONS] Empty response from OpenAI`);
+      return null;
+    }
+
+    // Parse JSON — handle potential markdown wrapping
+    const jsonStr = content.replace(/^```json?\s*/, "").replace(/\s*```$/, "");
+    const parsed = JSON.parse(jsonStr);
+
+    // Validate structure
+    if (!parsed.brand || !parsed.category) {
+      console.warn(`⚠️ [AI-QUESTIONS] Invalid response structure`);
+      return null;
+    }
+
+    // Convert to internal format
+    const stages: ("awareness" | "consideration" | "decision")[] = ["awareness", "consideration", "decision"];
+    const brandQuestions: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[] = [];
+    const categoryQuestions: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[] = [];
+
+    for (const stage of stages) {
+      const brandStageQs = parsed.brand[stage];
+      const catStageQs = parsed.category[stage];
+
+      if (Array.isArray(brandStageQs)) {
+        for (const q of brandStageQs.slice(0, 3)) {
+          if (typeof q === "string" && q.length > 5) {
+            brandQuestions.push({ question: q, searchVolume: 0, category: stage });
+          }
+        }
+      }
+      if (Array.isArray(catStageQs)) {
+        for (const q of catStageQs.slice(0, 3)) {
+          if (typeof q === "string" && q.length > 5) {
+            categoryQuestions.push({ question: q, searchVolume: 0, category: stage });
+          }
+        }
+      }
+    }
+
+    console.log(`✅ [AI-QUESTIONS] Generated ${brandQuestions.length} brand + ${categoryQuestions.length} category questions`);
+
+    // Only return if we got a reasonable number of questions
+    if (brandQuestions.length < 6 || categoryQuestions.length < 6) {
+      console.warn(`⚠️ [AI-QUESTIONS] Too few questions generated (${brandQuestions.length} brand, ${categoryQuestions.length} category), falling back`);
+      return null;
+    }
+
+    return { brand: brandQuestions, category: categoryQuestions };
+  } catch (err: any) {
+    console.warn(`⚠️ [AI-QUESTIONS] OpenAI generation failed: ${err.message}`);
+    return null;
+  }
 }
