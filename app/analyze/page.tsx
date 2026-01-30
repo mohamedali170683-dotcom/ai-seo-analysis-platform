@@ -731,7 +731,7 @@ export default function AnalyzePage() {
                   <textarea
                     value={brandDescription}
                     onChange={(e) => setBrandDescription(e.target.value)}
-                    placeholder="e.g., QS is a young fashion brand by S.Oliver Group, targeting trend-conscious shoppers with affordable streetwear and casual clothing."
+                    placeholder="Describe what your brand does, its positioning, and target audience"
                     rows={2}
                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   />
