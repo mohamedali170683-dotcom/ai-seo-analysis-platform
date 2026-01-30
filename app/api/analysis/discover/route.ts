@@ -1,6 +1,21 @@
 import { NextResponse } from "next/server";
 import { DataForSEOService } from "@/lib/services/dataforseo-service";
 import { PERSONA_QUERY_MAPPING, FUNNEL_STAGE_PATTERNS } from "@/lib/services/persona-query-engine";
+import { BrandDataFetcher, FetchedBrandData } from "@/lib/services/brand-data-fetcher";
+
+/**
+ * Brand context used to disambiguate brand names and generate relevant questions.
+ * Assembled from website metadata, Wikipedia, and/or user-provided description.
+ */
+interface BrandContext {
+  description?: string;
+  industry?: string;
+  positioning?: string;
+  pricePoint?: string;
+  keyAttributes?: string[];
+  parentCompany?: string;
+  products?: string[];
+}
 
 export const maxDuration = 60;
 
@@ -33,15 +48,18 @@ type UserTier = "free" | "professional" | "partner";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { 
-      brandName, 
+    const {
+      brandName,
       category, // This should be the SUBCATEGORY (specific, e.g., "running shoes")
-      competitors, 
+      competitors,
       tier = "free",
       // Persona context for question generation
       industryCategory,
       subcategory,
       buyerPersona,
+      // Brand context enrichment fields
+      domain,
+      brandDescription,
     } = body;
     
     // Validate tier
@@ -71,6 +89,63 @@ export async function POST(request: Request) {
       console.log(`👤 [PERSONA] Buyer persona selected: ${buyerPersona}`);
     }
 
+    // ============================================
+    // BRAND CONTEXT ENRICHMENT
+    // Fetch brand data from website/Wikipedia to disambiguate
+    // ambiguous brand names (e.g., "QS" = fashion vs. finance)
+    // ============================================
+    let brandContext: BrandContext = {};
+
+    // Priority 1: User-provided description (most reliable)
+    if (brandDescription) {
+      brandContext.description = brandDescription;
+      console.log(`📝 [DISCOVER] Using user-provided brand description`);
+    }
+
+    // Priority 2: Fetch from domain if provided (automatic enrichment)
+    if (domain) {
+      try {
+        console.log(`🌐 [DISCOVER] Fetching brand context from domain: ${domain}`);
+        const fetcher = new BrandDataFetcher();
+        const brandData = await fetcher.fetchBrandData(domain);
+
+        if (brandData.description && !brandContext.description) {
+          brandContext.description = brandData.description;
+        }
+        if (brandData.industry) {
+          brandContext.industry = brandData.industry;
+        }
+        if (brandData.positioning?.primary) {
+          brandContext.positioning = brandData.positioning.primary;
+        }
+        if (brandData.positioning?.pricePoint) {
+          brandContext.pricePoint = brandData.positioning.pricePoint;
+        }
+        if (brandData.positioning?.keyAttributes) {
+          brandContext.keyAttributes = brandData.positioning.keyAttributes;
+        }
+        if (brandData.parentCompany) {
+          brandContext.parentCompany = brandData.parentCompany;
+        }
+        if (brandData.products) {
+          brandContext.products = brandData.products;
+        }
+        console.log(`✅ [DISCOVER] Brand context enriched:`, {
+          hasDescription: !!brandContext.description,
+          industry: brandContext.industry,
+          positioning: brandContext.positioning,
+          parentCompany: brandContext.parentCompany,
+        });
+      } catch (err: any) {
+        console.warn(`⚠️ [DISCOVER] Brand context fetch failed: ${err.message}`);
+      }
+    }
+
+    // Build a disambiguation qualifier for DataForSEO queries
+    // This ensures "QS" becomes "QS fashion" instead of matching finance results
+    const brandQualifier = buildBrandQualifier(brandName, effectiveCategory, brandContext);
+    console.log(`🔑 [DISCOVER] Brand qualifier for search: "${brandQualifier}"`);
+
     let realBrandQuestions: any[] = [];
     let realCategoryQuestions: any[] = [];
 
@@ -85,8 +160,9 @@ export async function POST(request: Request) {
       const dataForSEO = new DataForSEOService(dataForSEOLogin, dataForSEOPassword);
 
       // Fetch REAL brand questions from search data
-      console.log(`📡 [DISCOVER] Fetching real brand questions...`);
-      realBrandQuestions = await dataForSEO.getBrandQuestions(brandName, 20);
+      // Use qualified brand name to disambiguate (e.g., "QS fashion" instead of just "QS")
+      console.log(`📡 [DISCOVER] Fetching real brand questions for: "${brandQualifier}"`);
+      realBrandQuestions = await dataForSEO.getBrandQuestions(brandQualifier, 20);
 
       // Fetch REAL category questions from search data
       // Use effectiveCategory (subcategory if available) for more specific results
@@ -95,8 +171,8 @@ export async function POST(request: Request) {
     }
 
     // Generate STRATEGIC questions for comprehensive brand positioning analysis
-    // Uses persona-informed question generation when persona is provided
-    const strategicQuestions = generateStrategicQuestions(brandName, effectiveCategory, competitors || [], buyerPersona);
+    // Uses persona-informed question generation + brand context when available
+    const strategicQuestions = generateStrategicQuestions(brandName, effectiveCategory, competitors || [], buyerPersona, brandContext);
 
     // Stage descriptions for UI
     const stageDescriptions = {
@@ -228,10 +304,11 @@ export async function POST(request: Request) {
  * Persona only influences the framing, intent, and context.
  */
 function generateStrategicQuestions(
-  brandName: string, 
+  brandName: string,
   category: string, // This is the SUBCATEGORY (specific, e.g., "running shoes")
   competitors: string[],
-  buyerPersona?: string
+  buyerPersona?: string,
+  brandContext?: BrandContext
 ): {
   brand: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
   category: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
@@ -365,9 +442,122 @@ function generateStrategicQuestions(
     { question: `Where to buy ${brandName} ${category}`, searchVolume: 0, category: "decision" },
     { question: `Is ${brandName} recommended by experts`, searchVolume: 0, category: "decision" },
   );
-  
+
+  // ============================================
+  // BRAND-CONTEXT-AWARE QUESTIONS
+  // When we know more about the brand (from website/description),
+  // generate questions that reflect its actual positioning
+  // ============================================
+  if (brandContext && (brandContext.description || brandContext.industry || brandContext.positioning)) {
+    const contextQuestions = generateContextAwareQuestions(brandName, category, brandContext, mainCompetitor);
+    brandQuestions.push(...contextQuestions.brand);
+    categoryQuestions.push(...contextQuestions.category);
+  }
+
   return {
     brand: brandQuestions,
     category: categoryQuestions,
   };
+}
+
+/**
+ * Build a search qualifier to disambiguate brand names in DataForSEO queries.
+ * For well-known brands, the name alone is sufficient.
+ * For ambiguous names (e.g., "QS" could be fashion or finance), we append the category.
+ */
+function buildBrandQualifier(brandName: string, category: string, brandContext: BrandContext): string {
+  // Short brand names (1-3 chars) or acronyms are most likely to be ambiguous
+  const isShortName = brandName.replace(/\s/g, '').length <= 3;
+  const isAcronym = brandName === brandName.toUpperCase() && brandName.length <= 5;
+  const hasIndustryContext = !!brandContext.industry || !!brandContext.description;
+
+  // Always qualify short/ambiguous names with category
+  if (isShortName || isAcronym) {
+    // Use industry from brand context if available, otherwise use category
+    const qualifier = brandContext.industry || category;
+    return `${brandName} ${qualifier}`;
+  }
+
+  // For longer names, use just the brand name (less likely to be ambiguous)
+  return brandName;
+}
+
+/**
+ * Generate additional questions informed by brand context.
+ * These questions are specific to the brand's actual positioning, industry, and attributes.
+ */
+function generateContextAwareQuestions(
+  brandName: string,
+  category: string,
+  brandContext: BrandContext,
+  mainCompetitor: string
+): {
+  brand: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
+  category: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[];
+} {
+  const brand: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[] = [];
+  const cat: { question: string; searchVolume: number; category: "awareness" | "consideration" | "decision" }[] = [];
+
+  // Parent company context (e.g., QS belongs to S.Oliver Group)
+  if (brandContext.parentCompany) {
+    brand.push(
+      { question: `Is ${brandName} part of ${brandContext.parentCompany}`, searchVolume: 0, category: "awareness" },
+      { question: `${brandName} vs other ${brandContext.parentCompany} brands`, searchVolume: 0, category: "consideration" },
+    );
+  }
+
+  // Positioning-aware questions
+  const positioning = brandContext.positioning;
+  if (positioning === 'sustainable' || brandContext.keyAttributes?.includes('sustainable')) {
+    brand.push(
+      { question: `Is ${brandName} really sustainable`, searchVolume: 0, category: "consideration" },
+      { question: `Most sustainable ${category} brands`, searchVolume: 0, category: "consideration" },
+    );
+  }
+  if (positioning === 'premium' || positioning === 'luxury') {
+    brand.push(
+      { question: `Is ${brandName} worth the premium price`, searchVolume: 0, category: "decision" },
+      { question: `Best premium ${category}`, searchVolume: 0, category: "consideration" },
+    );
+  }
+  if (positioning === 'affordable' || positioning === 'value-oriented') {
+    brand.push(
+      { question: `Best affordable ${category} like ${brandName}`, searchVolume: 0, category: "consideration" },
+      { question: `Is ${brandName} good quality for the price`, searchVolume: 0, category: "decision" },
+    );
+  }
+  if (positioning === 'innovative' || positioning === 'tech-forward') {
+    brand.push(
+      { question: `What makes ${brandName} innovative`, searchVolume: 0, category: "awareness" },
+      { question: `Most innovative ${category} brands`, searchVolume: 0, category: "consideration" },
+    );
+  }
+  if (positioning === 'lifestyle') {
+    brand.push(
+      { question: `What lifestyle does ${brandName} represent`, searchVolume: 0, category: "awareness" },
+    );
+    cat.push(
+      { question: `Best ${category} for modern lifestyle`, searchVolume: 0, category: "consideration" },
+    );
+  }
+
+  // Price point-aware questions
+  if (brandContext.pricePoint === 'budget') {
+    cat.push(
+      { question: `Best budget ${category} brands`, searchVolume: 0, category: "consideration" },
+    );
+  } else if (brandContext.pricePoint === 'mid-range') {
+    cat.push(
+      { question: `Best mid-range ${category}`, searchVolume: 0, category: "consideration" },
+    );
+  }
+
+  // Industry-specific awareness questions
+  if (brandContext.industry && brandContext.industry.toLowerCase() !== category.toLowerCase()) {
+    brand.push(
+      { question: `What does ${brandName} do in ${brandContext.industry}`, searchVolume: 0, category: "awareness" },
+    );
+  }
+
+  return { brand, category: cat };
 }

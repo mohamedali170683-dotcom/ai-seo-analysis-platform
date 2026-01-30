@@ -52,6 +52,7 @@ export default function AnalyzePage() {
   const [targetCountry, setTargetCountry] = useState("US");
   const [questionLanguage, setQuestionLanguage] = useState("en");
   const [competitors, setCompetitors] = useState("");
+  const [brandDescription, setBrandDescription] = useState("");
   
   // AI Persona suggestions - simplified approach
   const [suggestedPersonas, setSuggestedPersonas] = useState<SuggestedPersona[]>([]);
@@ -193,6 +194,9 @@ export default function AnalyzePage() {
           // Persona context for question generation (simplified)
           subcategory: category, // Use category as subcategory
           buyerPersona: getEffectivePersona(),
+          // Brand context enrichment
+          domain: domain || undefined,
+          brandDescription: brandDescription || undefined,
         }),
       });
 
@@ -720,6 +724,20 @@ export default function AnalyzePage() {
                     className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-4 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[48px]"
                   />
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">{t('form.domainHelp')}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Brand Description ({t("common.optional")})</label>
+                  <textarea
+                    value={brandDescription}
+                    onChange={(e) => setBrandDescription(e.target.value)}
+                    placeholder="e.g., QS is a young fashion brand by S.Oliver Group, targeting trend-conscious shoppers with affordable streetwear and casual clothing."
+                    rows={2}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  />
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                    Helps generate more relevant questions, especially for lesser-known or ambiguous brand names.
+                  </p>
                 </div>
 
                 <div>
