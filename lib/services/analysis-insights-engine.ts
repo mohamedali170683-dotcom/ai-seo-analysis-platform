@@ -6,6 +6,17 @@
  */
 
 import { AIResponse } from "./multi-platform-ai-service";
+import {
+  getStageRecommendation,
+  getPlatformAdvice,
+  getTopTactics,
+  getRelevantCaseStudy,
+  CHALLENGER_BRAND_INSIGHT,
+  AI_CONVERSION_INSIGHT,
+  PLATFORM_INSIGHTS,
+  IMPLEMENTATION_PRIORITIES,
+  GEO_TACTICS,
+} from "../knowledge/geo-research";
 
 export interface PatternAnalysis {
   consistentMentions: string[];
@@ -261,75 +272,66 @@ function generateKeyFinding(
     }
   }
 
-  // Stage-based findings
+  // Stage-based findings with research context
   if (weakestStage.score < 30) {
-    return `${brandName} struggles in the ${weakestStage.name} stage (${weakestStage.score}%). This is a critical gap requiring immediate attention.`;
+    return `${brandName} struggles in the ${weakestStage.name} stage (${weakestStage.score}%). Research shows brands can increase AI visibility by 30-40% through content optimization (KDD 2024). Challenger brands benefit the most — sites ranking 5th gained 115% visibility from GEO tactics.`;
   }
 
   if (strongestStage.score > 70) {
-    return `${brandName} performs well in ${strongestStage.name} queries (${strongestStage.score}%) but has room to improve in ${weakestStage.name}.`;
+    return `${brandName} performs well in ${strongestStage.name} queries (${strongestStage.score}%) but has growth opportunity in ${weakestStage.name}. AI-sourced leads convert at 6-27x higher rates than traditional search — improving ${weakestStage.name} will directly impact business outcomes.`;
   }
 
-  return `${brandName} has an overall AI visibility score of ${overallScore}% with the strongest performance in ${strongestStage.name} stage.`;
+  return `${brandName} has an overall AI visibility score of ${overallScore}%. Peer-reviewed research shows adding statistics (+30.6%), expert quotations (+40.9%), and source citations (+27.5%) are the most effective ways to improve this score.`;
 }
 
 /**
  * Generate stage-specific insights
  */
 function getAwarenessInsight(score: number, responses: AIResponse[]): string {
-  const awarenessResponses = responses.filter(r => 
-    r.question.toLowerCase().includes('what is') || 
-    r.question.toLowerCase().includes('how does') ||
-    r.question.toLowerCase().includes('types of') ||
-    r.question.toLowerCase().includes('guide')
-  );
-  
-  const citedCount = awarenessResponses.filter(r => r.hasGrounding || r.sources.length > 0).length;
-  
   if (score >= 70) {
-    return 'Brand content is frequently cited as authoritative source in educational queries.';
+    return 'Brand content is frequently cited as an authority source. Research shows 92% of AI citations come from top-10 ranked pages (Ahrefs, 1.9M citations). Maintain content freshness — 85% of citations come from content less than 2 years old (Seer Interactive).';
   } else if (score >= 40) {
-    return 'Moderate content citation. Opportunity to create more authoritative, linkable content.';
+    return 'Moderate citation rate. The GEO study (KDD 2024) found adding statistics (+30.6%) and expert quotations (+40.9%) are the highest-impact ways to increase visibility. Also implement FAQPage schema for a 2.7x citation rate improvement.';
   } else {
-    return 'Brand content rarely cited. Priority: Create definitive guides and research content that LLMs can reference.';
+    return 'Brand content is rarely cited by AI platforms. Priority: Create fact-dense educational content with expert quotations (+40.9% visibility, KDD 2024), statistics (+30.6%), and source citations (+27.5%). Implement FAQPage schema — pages with it achieve 41% citation rates vs 15% without.';
   }
 }
 
 function getConsiderationInsight(score: number, responses: AIResponse[]): string {
-  const comparisonResponses = responses.filter(r => 
-    r.question.toLowerCase().includes('best') || 
+  const comparisonResponses = responses.filter(r =>
+    r.question.toLowerCase().includes('best') ||
     r.question.toLowerCase().includes('vs') ||
     r.question.toLowerCase().includes('comparison')
   );
-  
+
   const mentioned = comparisonResponses.filter(r => r.brandMentioned).length;
   const total = comparisonResponses.length;
-  
+
   if (score >= 70) {
-    return `Brand appears in ${Math.round((mentioned/total) * 100)}% of comparison queries. Strong competitive positioning.`;
+    return `Brand appears in ${total > 0 ? Math.round((mentioned/total) * 100) : 0}% of comparison queries. AI-sourced leads convert at 6-27x higher rates than traditional search — strong positioning here drives real business impact.`;
   } else if (score >= 40) {
-    return 'Brand included in some comparisons but not consistently. Focus on differentiating content.';
+    return 'Brand appears in some comparisons but not consistently. Research shows challenger brands benefit most from GEO — sites ranking 5th gained 115% visibility from source citations (KDD 2024). Use authoritative tone (+10.4%) and cite credible sources (+27.5%) in comparison content.';
   } else {
-    return 'Brand missing from most comparison queries. Priority: Create comparison content and boost review signals.';
+    return 'Brand missing from most comparison queries. Priority: Create data-backed comparison content. Avoid keyword stuffing (-8.3% visibility, KDD 2024). Instead, focus on expert quotations (+40.9%), statistics (+30.6%), and authoritative source citations (+27.5%).';
   }
 }
 
 function getDecisionInsight(score: number, responses: AIResponse[]): string {
-  const decisionResponses = responses.filter(r => 
-    r.question.toLowerCase().includes('should i buy') || 
+  const decisionResponses = responses.filter(r =>
+    r.question.toLowerCase().includes('should i buy') ||
     r.question.toLowerCase().includes('worth it') ||
     r.question.toLowerCase().includes('recommend')
   );
-  
+
   const positive = decisionResponses.filter(r => r.sentiment === 'positive').length;
   const total = decisionResponses.length;
-  
+
   if (score >= 70) {
-    return `${Math.round((positive/Math.max(total, 1)) * 100)}% positive sentiment in purchase queries. Strong recommendation signals.`;
+    return `${Math.round((positive/Math.max(total, 1)) * 100)}% positive sentiment in purchase queries. Strong recommendation signals. Companies with similar scores see 6-27x higher conversion rates from AI-sourced leads vs traditional search.`;
   } else if (score >= 40) {
-    return 'Mixed recommendations in purchase queries. Focus on building stronger social proof.';
+    return 'Mixed purchase recommendations. E-E-A-T signals (Experience, Expertise, Authoritativeness, Trustworthiness) heavily influence AI purchase advice — over 75% of health-related ChatGPT citations come from established institutional sources. Build verifiable trust signals and expert endorsements.';
   } else {
-    return 'Weak recommendation signals. Priority: Address negative reviews and build expert endorsements.';
+    return 'Weak recommendation signals in purchase queries. Priority: Build trust through verified case studies, expert endorsements, and transparent pricing. Knowledge Graph entities receive 60% more AI citations (GEO research) — ensure your brand has a Wikidata entry with structured Organization schema.';
   }
 }
 
@@ -352,16 +354,16 @@ function generateActionItems(
     return Math.round((impactScore * stageWeight * 10) / effortScores[effort]);
   };
 
-  // Priority 1: Address weakest stage
+  // Priority 1: Address weakest stage with evidence-backed recommendations
   if (stageScores.awareness < 40) {
     const impact = Math.min(10, Math.round((40 - stageScores.awareness) / 4) + 5);
     actions.push({
       priority: 'high',
-      action: 'Create authoritative educational content',
-      rationale: `Awareness stage score is ${stageScores.awareness}%. LLMs are not citing your content as a source.`,
-      expectedImpact: 'Increase content citations by 50%+ in 90 days',
-      timeline: '30-60 days for content creation',
-      roiScore: calculateROI(impact, 'medium', 0.2), // Awareness weight: 20%
+      action: 'Enrich content with expert quotations and statistics (Tier 1 evidence)',
+      rationale: `Awareness score is ${stageScores.awareness}%. The GEO study (KDD 2024, peer-reviewed) found expert quotations increase visibility by +40.9% and statistics by +30.6% — the two highest-impact tactics available.`,
+      expectedImpact: '+30-40% visibility improvement based on peer-reviewed research (Princeton/IIT Delhi)',
+      timeline: '30-60 days for content enrichment',
+      roiScore: calculateROI(impact, 'medium', 0.2),
       effort: 'medium',
       category: 'content',
     });
@@ -371,11 +373,11 @@ function generateActionItems(
     const impact = Math.min(10, Math.round((40 - stageScores.consideration) / 4) + 6);
     actions.push({
       priority: 'high',
-      action: 'Build comparison and review content',
-      rationale: `Consideration stage score is ${stageScores.consideration}%. Brand missing from "best of" queries.`,
-      expectedImpact: 'Appear in 50%+ of comparison queries',
-      timeline: '60-90 days',
-      roiScore: calculateROI(impact, 'medium', 0.35), // Consideration weight: 35%
+      action: 'Create data-backed comparison content with source citations',
+      rationale: `Consideration score is ${stageScores.consideration}%. Citing authoritative sources increases visibility by +27.5% (KDD 2024). Challenger brands benefit most — sites ranking 5th gained 115% visibility from source citations.`,
+      expectedImpact: '+27-40% visibility in comparison queries. AI-sourced leads convert 6-27x higher than traditional search.',
+      timeline: '45-60 days',
+      roiScore: calculateROI(impact, 'medium', 0.35),
       effort: 'medium',
       category: 'content',
     });
@@ -385,70 +387,77 @@ function generateActionItems(
     const impact = Math.min(10, Math.round((40 - stageScores.decision) / 4) + 7);
     actions.push({
       priority: 'high',
-      action: 'Address reputation and boost social proof',
-      rationale: `Decision stage score is ${stageScores.decision}%. Weak recommendation signals.`,
-      expectedImpact: 'Improve positive sentiment to 60%+',
-      timeline: '90-120 days',
-      roiScore: calculateROI(impact, 'high', 0.45), // Decision weight: 45%
+      action: 'Build verifiable trust signals and Knowledge Graph presence',
+      rationale: `Decision score is ${stageScores.decision}%. Knowledge Graph entities receive 60% more AI citations. E-E-A-T signals drive 75%+ of ChatGPT citations in regulated industries.`,
+      expectedImpact: '+60% citation boost from Knowledge Graph presence. Stronger purchase recommendation signals.',
+      timeline: '60-90 days',
+      roiScore: calculateROI(impact, 'high', 0.45),
       effort: 'high',
       category: 'reputation',
     });
   }
 
-  // Address competitor preference
+  // Address competitor preference with research-backed strategy
   if (patterns.competitorPreferences.length > 0) {
     const topCompetitor = patterns.competitorPreferences[0];
     const impact = Math.min(10, topCompetitor.frequency + 3);
     actions.push({
       priority: 'medium',
-      action: `Create competitive positioning content vs ${topCompetitor.competitor}`,
-      rationale: `${topCompetitor.competitor} recommended ${topCompetitor.frequency} times when ${brandName} was not.`,
-      expectedImpact: 'Reduce competitor preference by 30%',
-      timeline: '45-60 days',
+      action: `Create fact-dense competitive content vs ${topCompetitor.competitor}`,
+      rationale: `${topCompetitor.competitor} recommended ${topCompetitor.frequency} times when ${brandName} was absent. Harvard research (2024) shows strategically crafted content can influence AI recommendations in ~40% of evaluations.`,
+      expectedImpact: 'Reduce competitor preference through citation-worthy comparison content. Ramp achieved 300+ citations from just 2 targeted pages.',
+      timeline: '30-45 days',
       roiScore: calculateROI(impact, 'medium', 0.35),
       effort: 'medium',
       category: 'competitive',
     });
   }
 
-  // Address LLM-specific issues
+  // Platform-specific optimizations with evidence
   for (const bias of patterns.llmSpecificBias) {
     if (bias.severity === 'high') {
+      const platformKey = bias.llm;
+      const platformInsight = PLATFORM_INSIGHTS[platformKey];
+      const advice = platformInsight
+        ? `${platformInsight.uniqueAdvantage}`
+        : `Platform-specific content optimization needed.`;
+
       actions.push({
         priority: 'medium',
-        action: `Optimize content for ${bias.llm}`,
-        rationale: `${bias.llm} shows ${bias.bias}.`,
-        expectedImpact: `Improve ${bias.llm} mention rate by 40%`,
+        action: `Optimize for ${bias.llm}: ${platformInsight?.contentStrategy[0] || 'create platform-aligned content'}`,
+        rationale: `${bias.llm} shows ${bias.bias}. ${advice}`,
+        expectedImpact: `Improve ${bias.llm} visibility. ${platformInsight ? platformInsight.topSources.map(s => `${s.source}: ${s.share}`).join(', ') : ''}`,
         timeline: '30-45 days',
-        roiScore: calculateROI(7, 'low', 0.33), // Platform-specific optimization is usually quick
+        roiScore: calculateROI(7, 'low', 0.33),
         effort: 'low',
         category: 'technical',
       });
     }
   }
 
-  // Add low-hanging fruit recommendations based on scores
+  // Quick-win: Schema markup (Tier 1 evidence)
   if (stageScores.awareness >= 40 && stageScores.awareness < 70) {
     actions.push({
       priority: 'low',
-      action: 'Add structured data and schema markup',
-      rationale: 'Technical optimization can improve LLM understanding of your content.',
-      expectedImpact: 'Increase content structure recognition by 25%',
-      timeline: '7-14 days',
-      roiScore: calculateROI(6, 'low', 0.2),
+      action: 'Implement FAQPage and Organization schema markup (JSON-LD)',
+      rationale: 'FAQPage schema achieves 41% citation rates vs 15% without — a 2.7x improvement (Relixir, n=50). Confirmed by Microsoft and Google as helping LLM understanding.',
+      expectedImpact: '2.7x citation rate improvement. Low effort, high evidence (Tier 1).',
+      timeline: '3-7 days',
+      roiScore: calculateROI(8, 'low', 0.2),
       effort: 'low',
       category: 'technical',
     });
   }
 
+  // Quick-win: Content freshness (Tier 1 evidence)
   if (stageScores.consideration >= 40 && stageScores.consideration < 70) {
     actions.push({
       priority: 'low',
-      action: 'Create FAQ content addressing common questions',
-      rationale: 'FAQ-style content is highly cited by LLMs in comparison queries.',
-      expectedImpact: 'Improve consideration stage visibility by 20%',
-      timeline: '14-21 days',
-      roiScore: calculateROI(5, 'low', 0.35),
+      action: 'Refresh key content with timestamps and quarterly update cadence',
+      rationale: '85% of AI Overview citations come from content published in the last 2 years (Seer Interactive). On Perplexity, content decay begins 2-3 days after publication. Pages not refreshed quarterly are 3x more likely to lose citations.',
+      expectedImpact: 'Maintain and grow AI citation rates across platforms.',
+      timeline: '7-14 days initial audit, then quarterly',
+      roiScore: calculateROI(6, 'low', 0.35),
       effort: 'low',
       category: 'content',
     });

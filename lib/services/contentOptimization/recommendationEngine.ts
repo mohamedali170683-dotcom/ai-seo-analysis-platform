@@ -230,55 +230,62 @@ function analyzeCitationPatterns(responses: LLMResponse[]): any {
 }
 
 /**
- * Create citation improvement recommendation
+ * Create citation improvement recommendation (evidence-backed by GEO research)
  */
 function createCitationRecommendation(analysis: any): Recommendation {
   return {
     id: generateRecommendationId(),
     type: "improve_citations",
     priority: "high",
-    title: "Improve Content Citation-Worthiness",
-    description: `Only ${(analysis.citationRate * 100).toFixed(1)}% of responses cite your content. Improving citation-worthiness can significantly boost visibility.`,
-    reasoning: "AI platforms prefer citing authoritative, data-rich content. Higher citation rates directly correlate with visibility.",
+    title: "Improve Content Citation-Worthiness (GEO-Optimized)",
+    description: `Only ${(analysis.citationRate * 100).toFixed(1)}% of responses cite your content. The GEO study (KDD 2024) shows expert quotations increase visibility by +40.9% and statistics by +30.6% — these are the highest-impact optimizations available.`,
+    reasoning: "Peer-reviewed research (Princeton/IIT Delhi, KDD 2024) confirms that citation-worthy content with statistics, expert quotes, and authoritative sources significantly outperforms traditional SEO. 92% of AI citations come from pages already ranking in Google's top 10. FAQPage schema alone improves citation rates from 15% to 41% (2.7x improvement).",
     expectedImpact: {
       visibilityIncrease: (0.5 - analysis.citationRate) * 100,
       timeframe: "4-8 weeks",
       affectedQueries: analysis.missingCount,
       estimatedTraffic: analysis.missingCount * 50,
-      confidence: 80
+      confidence: 85
     },
-    effort: "high",
+    effort: "medium",
     roi: 0,
     actionItems: [
       {
         id: generateActionItemId(),
-        description: "Add original research and data",
+        description: "Add statistics and data points to key content pages (+30.6% visibility, Tier 1 evidence)",
         priority: 1,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: "Create comprehensive guides and resources",
+        description: "Include expert quotations with credentials (+40.9% visibility, Tier 1 evidence)",
         priority: 2,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: "Include expert quotes and case studies",
+        description: "Cite authoritative sources throughout content (+27.5% visibility, Tier 1 evidence)",
         priority: 3,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: "Improve content freshness (update regularly)",
+        description: "Implement FAQPage schema in JSON-LD format (2.7x citation improvement, Tier 1 evidence)",
         priority: 4,
+        completed: false
+      },
+      {
+        id: generateActionItemId(),
+        description: "Add visible 'last updated' timestamps — 85% of AI citations come from content < 2 years old",
+        priority: 5,
         completed: false
       }
     ],
     examples: [
-      "Add proprietary data or statistics",
-      "Create an industry benchmark report",
-      "Develop a comprehensive glossary or resource center"
+      "Add proprietary data or statistics (e.g., 'Our analysis of 1,000 customers found...')",
+      "Include named expert quotations (e.g., 'According to [Expert], [Credential]...')",
+      "Create comprehensive resource pages with authoritative source citations",
+      "Implement FAQPage schema — proven 2.7x citation rate improvement"
     ]
   };
 }
@@ -306,40 +313,40 @@ function createSentimentRecommendation(analysis: any): Recommendation {
     id: generateRecommendationId(),
     type: "enhance_authority",
     priority: "high",
-    title: "Address Negative Sentiment in AI Responses",
-    description: `${(analysis.negativeRate * 100).toFixed(1)}% of AI responses have negative sentiment about your brand. This requires immediate attention.`,
-    reasoning: "Negative sentiment in AI responses can damage brand reputation and reduce conversion rates.",
+    title: "Address Negative Sentiment & Strengthen E-E-A-T Signals",
+    description: `${(analysis.negativeRate * 100).toFixed(1)}% of AI responses have negative sentiment. E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) heavily influences AI source selection — over 75% of ChatGPT citations in sensitive categories come from established institutional sources.`,
+    reasoning: "Brand authority transfers from traditional signals to AI systems. Brand search volume shows a 0.334 correlation with AI citation probability — the strongest single predictor identified (Profound, 680M citations). Sites cited across 4+ AI platforms are 2.8x more likely to appear in ChatGPT responses.",
     expectedImpact: {
       visibilityIncrease: analysis.negativeRate * 50,
-      timeframe: "2-4 weeks",
+      timeframe: "4-8 weeks",
       affectedQueries: analysis.negativeCount,
       estimatedTraffic: 0,
-      confidence: 70
+      confidence: 75
     },
     effort: "high",
     roi: 0,
     actionItems: [
       {
         id: generateActionItemId(),
-        description: "Identify root causes of negative sentiment",
+        description: "Publish verified case studies with specific, measurable outcomes",
         priority: 1,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: "Address misinformation or outdated information",
+        description: "Create or optimize Wikidata entity for brand recognition (Knowledge Graph entities get 60% more citations)",
         priority: 2,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: "Publish positive case studies and testimonials",
+        description: "Build author profile pages with credentials and sameAs schema for E-E-A-T",
         priority: 3,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: "Improve transparency and communication",
+        description: "Pursue media coverage and third-party mentions to build cross-platform authority",
         priority: 4,
         completed: false
       }
@@ -375,34 +382,34 @@ function createQuestionRecommendation(analysis: any): Recommendation {
     id: generateRecommendationId(),
     type: "answer_questions",
     priority: "medium",
-    title: "Improve Question Coverage with FAQ Content",
-    description: `${analysis.missingQuestions.length} common questions lack comprehensive answers. Creating FAQ content can improve visibility for these queries.`,
-    reasoning: "AI platforms heavily rely on FAQ content for question-based queries. Better question coverage improves answer engine visibility.",
+    title: "Implement FAQ Content with Schema Markup (Proven 2.7x Impact)",
+    description: `${analysis.missingQuestions.length} common questions lack comprehensive answers. Pages with FAQPage schema achieve 41% citation rates vs 15% without — a 2.7x improvement (Relixir study, Tier 1 evidence).`,
+    reasoning: "LLMs parse content at paragraph level. Each section must function as a standalone unit answering a specific question. Optimal paragraph length is 40-60 words — long enough for substance, short enough for clean extraction. Begin with a direct answer in the first 1-3 sentences.",
     expectedImpact: {
-      visibilityIncrease: analysis.missingQuestions.length * 3,
+      visibilityIncrease: analysis.missingQuestions.length * 5,
       timeframe: "1-2 weeks",
       affectedQueries: analysis.missingQuestions.length,
       estimatedTraffic: analysis.missingQuestions.length * 30,
-      confidence: 85
+      confidence: 90
     },
     effort: "low",
     roi: 0,
     actionItems: [
       {
         id: generateActionItemId(),
-        description: "Create comprehensive FAQ page",
+        description: "Create FAQ page with 40-60 word answer blocks, each starting with a direct answer",
         priority: 1,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: "Add FAQ schema markup",
+        description: "Implement FAQPage schema in JSON-LD format (2.7x citation improvement, Tier 1 evidence)",
         priority: 2,
         completed: false
       },
       {
         id: generateActionItemId(),
-        description: `Answer top questions: ${analysis.missingQuestions.slice(0, 3).join(", ")}`,
+        description: `Answer top questions with data and expert quotes: ${analysis.missingQuestions.slice(0, 3).join(", ")}`,
         priority: 3,
         completed: false
       }
@@ -417,31 +424,39 @@ function createQuestionRecommendation(analysis: any): Recommendation {
 function generateQuickWins(gaps: ContentGap[], responses: LLMResponse[]): Recommendation[] {
   const quickWins: Recommendation[] = [];
 
-  // Schema markup is a quick win
+  // Schema markup is a quick win — Tier 1 evidence
   const schemaGaps = gaps.filter(g => g.type === "no_schema_markup");
   if (schemaGaps.length > 0) {
     quickWins.push({
       id: generateRecommendationId(),
       type: "add_schema",
       priority: "high",
-      title: "Quick Win: Add Schema Markup to Existing Pages",
-      description: "Implement schema markup on key pages - requires minimal effort but can significantly improve visibility.",
-      reasoning: "Schema markup is a low-effort, high-impact optimization that helps AI platforms better understand your content.",
+      title: "Quick Win: Deploy Schema Markup (Tier 1 Evidence, 2.7x Impact)",
+      description: "Microsoft's Fabrice Canel confirmed at SMX Munich 2025 that schema markup helps LLMs understand content. Google's Ryan Levering stated schema plays a critical role in 'grounding and scaling generative AI systems.'",
+      reasoning: "FAQPage schema achieves 41% citation rates vs 15% without (2.7x improvement). Priority schemas: FAQPage, Organization, Person, Article, HowTo. Use JSON-LD format with sameAs properties linking to Wikidata, LinkedIn, and official profiles.",
       expectedImpact: {
-        visibilityIncrease: 15,
+        visibilityIncrease: 20,
         timeframe: "1-3 days",
         affectedQueries: schemaGaps.reduce((sum, g) => sum + g.impact.opportunityQueries.length, 0),
         estimatedTraffic: 0,
-        confidence: 90
+        confidence: 92
       },
       effort: "low",
       roi: 0,
-      actionItems: schemaGaps.slice(0, 3).map(gap => ({
-        id: generateActionItemId(),
-        description: gap.suggestedActions[0],
-        priority: 1,
-        completed: false
-      }))
+      actionItems: [
+        ...schemaGaps.slice(0, 2).map(gap => ({
+          id: generateActionItemId(),
+          description: gap.suggestedActions[0],
+          priority: 1,
+          completed: false
+        })),
+        {
+          id: generateActionItemId(),
+          description: "Add Organization schema with sameAs links to Wikidata, LinkedIn, and official profiles",
+          priority: 2,
+          completed: false
+        },
+      ]
     });
   }
 
@@ -482,48 +497,54 @@ function generateQuickWins(gaps: ContentGap[], responses: LLMResponse[]): Recomm
 function generateStrategicRecommendations(gaps: ContentGap[], responses: LLMResponse[]): Recommendation[] {
   const strategic: Recommendation[] = [];
 
-  // Content hub strategy
+  // Content hub strategy — backed by case study evidence
   const topicGaps = gaps.filter(g => g.type === "missing_topic" || g.type === "insufficient_depth");
   if (topicGaps.length >= 5) {
     strategic.push({
       id: generateRecommendationId(),
       type: "create_content",
       priority: "medium",
-      title: "Strategic: Build Comprehensive Content Hub",
-      description: "Create a comprehensive content hub covering all key topics to establish topical authority.",
-      reasoning: "AI platforms favor brands with comprehensive topic coverage. A content hub demonstrates expertise across your domain.",
+      title: "Strategic: Build GEO-Optimized Content Hub",
+      description: "Create a comprehensive content hub using proven GEO tactics. Mint Studios achieved 67% visibility growth using short (500-1000 word), fact-dense articles targeting specific AI prompts. Go Fish Digital saw +43% AI traffic with cornerstone content enriched with statistics and schema.",
+      reasoning: "AI platforms favor brands with comprehensive topic coverage. Each content piece should include: expert quotations (+40.9%), statistics (+30.6%), authoritative source citations (+27.5%). Structure in 40-60 word extractable blocks. Avoid keyword stuffing (-8.3%). Sites cited across 4+ AI platforms are 2.8x more likely to appear in ChatGPT responses.",
       expectedImpact: {
-        visibilityIncrease: 40,
-        timeframe: "2-3 months",
+        visibilityIncrease: 45,
+        timeframe: "1-3 months (results documented in as little as 1 week for new content)",
         affectedQueries: topicGaps.reduce((sum, g) => sum + g.impact.opportunityQueries.length, 0),
         estimatedTraffic: topicGaps.reduce((sum, g) => sum + g.impact.estimatedTraffic, 0),
-        confidence: 75
+        confidence: 80
       },
       effort: "high",
       roi: 0,
       actionItems: [
         {
           id: generateActionItemId(),
-          description: "Map out content hub structure and topics",
+          description: "Map content hub topics to specific AI prompts (prompt mapping strategy, as used by Go Fish Digital)",
           priority: 1,
           completed: false
         },
         {
           id: generateActionItemId(),
-          description: "Create pillar content for main topics",
+          description: "Create pillar content: 500-1000 words, fact-dense, with expert quotes and statistics",
           priority: 2,
           completed: false
         },
         {
           id: generateActionItemId(),
-          description: "Develop supporting content for subtopics",
+          description: "Structure all content in 40-60 word paragraph blocks starting with direct answers",
           priority: 3,
           completed: false
         },
         {
           id: generateActionItemId(),
-          description: "Implement internal linking strategy",
+          description: "Implement Article, FAQPage, and HowTo schema on all content hub pages",
           priority: 4,
+          completed: false
+        },
+        {
+          id: generateActionItemId(),
+          description: "Set up quarterly content refresh cadence with visible timestamps",
+          priority: 5,
           completed: false
         }
       ]

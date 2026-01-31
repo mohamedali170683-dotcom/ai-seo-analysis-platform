@@ -4,6 +4,7 @@ import { MultiPlatformAIService, QuestionAnalysis, AIResponse } from "./multi-pl
 import { QUERY_REPETITION_CONFIG, generatePersonaInformedQuestions } from "./persona-query-engine";
 import { analyzeCitations, calculateAwarenessScoreFromCitations, CitationAnalysis } from "./citation-detector";
 import { detectPatterns, generateExecutiveSummary, ExecutiveSummary, PatternAnalysis } from "./analysis-insights-engine";
+import { getStageRecommendation } from "../knowledge/geo-research";
 
 // Stage weights: Awareness 20%, Consideration 35%, Decision 45%
 const STAGE_WEIGHTS = {
@@ -463,7 +464,7 @@ export class ComprehensiveAnalysisService {
 
       const aiAnswerExamples = this.getAIAnswerExamples(stageAnalyses);
       const competitorComparison = this.generateCompetitorComparison(stageAnalyses, mentionRate, avgPosition);
-      const recommendation = this.getDefaultRecommendation(stage);
+      const recommendation = this.getScoreBasedRecommendation(stage, visibilityScore);
 
       journeyStages.push({
         stage,
@@ -507,7 +508,7 @@ export class ComprehensiveAnalysisService {
         sentiment: { positive: 0, negative: 0, neutral: 100, dominant: "neutral" },
         aiAnswerExamples: [], competitorComparison: [],
       },
-      recommendation: { commonPattern: "No data.", contentType: "N/A", focusedAction: `Create content for ${stage} stage.` },
+      recommendation: this.getScoreBasedRecommendation(stage, 0),
     };
   }
 
@@ -560,25 +561,28 @@ export class ComprehensiveAnalysisService {
     });
   }
 
-  private getDefaultRecommendation(stage: string): JourneyStageData["recommendation"] {
-    const defaults: Record<string, JourneyStageData["recommendation"]> = {
-      awareness: {
-        commonPattern: "AI responses prioritize brands with clear educational content and authority signals.",
-        contentType: "Educational content, brand story, FAQ pages",
-        focusedAction: `Create comprehensive educational content about ${this.config.brandName} including FAQ pages and how-it-works guides.`,
-      },
-      consideration: {
-        commonPattern: "AI chatbots favor brands with comparison-friendly content and verified reviews.",
-        contentType: "Comparison guides, testimonials, reviews",
-        focusedAction: `Develop comparison content showing how ${this.config.brandName} compares to competitors with customer reviews.`,
-      },
-      decision: {
-        commonPattern: "AI responses prioritize brands with clear purchase paths and pricing info.",
-        contentType: "Pricing pages, purchase guides, retailer info",
-        focusedAction: `Ensure ${this.config.brandName}'s pricing and purchase options are clearly structured for AI discovery.`,
-      },
+  /**
+   * Score-based recommendations powered by GEO research knowledge base.
+   * Returns evidence-backed advice tailored to the brand's visibility score per stage.
+   */
+  private getScoreBasedRecommendation(
+    stage: string,
+    visibilityScore: number
+  ): JourneyStageData["recommendation"] {
+    const validStage = stage as "awareness" | "consideration" | "decision";
+    const rec = getStageRecommendation(validStage, visibilityScore);
+
+    // Personalize the focused action with the brand name
+    const personalizedAction = rec.focusedAction.replace(
+      /your brand/gi,
+      this.config.brandName
+    );
+
+    return {
+      commonPattern: rec.commonPattern,
+      contentType: rec.contentType,
+      focusedAction: personalizedAction,
     };
-    return defaults[stage] || defaults.awareness;
   }
 
   /**
