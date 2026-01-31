@@ -847,58 +847,78 @@ export class MultiPlatformAIService {
   }
 
   /**
-   * Extract brand names that appear to be recommended in the response
-   * This helps detect competitors that weren't pre-specified
+   * Extract brand names that appear to be recommended in the response.
+   * Uses strict filtering to avoid extracting common English phrases as "brands".
    */
   private extractRecommendedBrands(response: string, brandToExclude: string): string[] {
     const brands: string[] = [];
     const lowerBrand = brandToExclude.toLowerCase();
 
-    // Common cosmetics/skincare brands that might be recommended
-    const knownBrands = [
-      "Weleda", "Dr. Hauschka", "Lavera", "Sante", "Logona", "Alverde",
-      "Natura Siberica", "Urtekram", "Madara", "RMS Beauty", "ILIA",
-      "Kjaer Weis", "Tata Harper", "Drunk Elephant", "The Ordinary",
-      "CeraVe", "La Roche-Posay", "Neutrogena", "Olay", "L'Oreal",
-      "Nivea", "Dove", "Eucerin", "Avene", "Bioderma", "Vichy",
-      "Estee Lauder", "Clinique", "Lancome", "Shiseido", "SK-II",
-      "Herbivore", "Youth to the People", "Pai Skincare", "Neal's Yard"
+    // Words that are NOT brand names — common nouns, adjectives, verbs, and industry terms
+    const nonBrandWords = new Set([
+      // Common English
+      "the", "and", "for", "with", "that", "this", "your", "their", "also", "some",
+      "most", "many", "other", "more", "less", "such", "each", "both", "just", "only",
+      "well", "very", "much", "here", "there", "when", "where", "what", "which", "who",
+      "how", "why", "not", "all", "any", "few", "own", "same", "new", "old", "big",
+      // Common verbs / adjectives that get capitalized at sentence start
+      "best", "top", "leading", "popular", "known", "based", "focused", "driven",
+      "recommended", "trusted", "rated", "choice", "chosen", "preferred", "compared",
+      "offers", "provides", "includes", "covers", "features", "stands", "works",
+      "consider", "looking", "finding", "getting", "buying", "choosing", "comparing",
+      "fit", "deal", "value", "price", "cost", "rate", "plan", "policy", "coverage",
+      "auto", "car", "home", "life", "health", "travel", "pet", "business",
+      "insurance", "insurer", "provider", "company", "companies", "brand", "brands",
+      "online", "direct", "digital", "traditional", "modern", "comprehensive",
+      "affordable", "cheap", "expensive", "premium", "basic", "full", "partial",
+      "customer", "service", "support", "claims", "quote", "quotes",
+      // Generic industry terms
+      "liability", "collision", "deductible", "premium", "policyholder",
+      // Fragments that appear in AI responses
+      "among", "between", "across", "within", "through", "about", "after", "before",
+      "however", "therefore", "moreover", "furthermore", "additionally",
+      "important", "significant", "essential", "key", "main", "major", "primary",
+      // Category-generic words
+      "fashion", "beauty", "skincare", "cosmetics", "clothing", "apparel",
+      "natural", "organic", "sustainable", "eco", "green",
+    ]);
+
+    // Only extract from explicit brand listing patterns (much stricter)
+    // These patterns require the AI to explicitly list or recommend something
+    const strictPatterns = [
+      // "brands like X, Y, and Z" or "brands such as X, Y"
+      /brands?\s+(?:like|such as|including)\s+([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)?)/gi,
+      // Numbered lists: "1. BrandName" or "- BrandName:"
+      /(?:^|\n)\s*(?:\d+[\.\)]\s*|[-•]\s*)([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)?)\s*[:\-–]/gm,
+      // "**BrandName**" (bold in markdown — AI often bolds brand names in lists)
+      /\*\*([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)?)\*\*/g,
     ];
 
-    // Pattern to find capitalized brand-like names (2+ words or single capitalized word followed by recommendation context)
-    const recommendPatterns = [
-      /(?:recommend|suggest|try|consider|best|top|leading|popular|favorite)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi,
-      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s+(?:is|are|stands out|offers|provides|known for)/gi,
-      /brands?\s+(?:like|such as|including)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)/gi,
-    ];
-
-    // Check known brands first
-    for (const brand of knownBrands) {
-      if (response.toLowerCase().includes(brand.toLowerCase()) &&
-          brand.toLowerCase() !== lowerBrand) {
-        brands.push(brand);
-      }
-    }
-
-    // Also try to extract from recommendation patterns
-    for (const pattern of recommendPatterns) {
+    for (const pattern of strictPatterns) {
       const matches = response.matchAll(pattern);
       for (const match of matches) {
-        const potentialBrand = match[1]?.trim();
-        if (potentialBrand &&
-            potentialBrand.length >= 3 &&
-            potentialBrand.toLowerCase() !== lowerBrand &&
-            !brands.some(b => b.toLowerCase() === potentialBrand.toLowerCase())) {
-          // Verify it looks like a brand name (capitalized, not common words)
-          const commonWords = ["the", "and", "for", "with", "that", "this", "your", "their", "natural", "organic", "beauty", "skincare"];
-          if (!commonWords.includes(potentialBrand.toLowerCase())) {
-            brands.push(potentialBrand);
-          }
-        }
+        const candidate = match[1]?.trim();
+        if (!candidate || candidate.length < 2) continue;
+
+        const lowerCandidate = candidate.toLowerCase();
+
+        // Skip if it's the brand being analyzed
+        if (lowerCandidate === lowerBrand) continue;
+        // Skip if already found
+        if (brands.some(b => b.toLowerCase() === lowerCandidate)) continue;
+        // Skip if ALL words are non-brand words
+        const words = lowerCandidate.split(/\s+/);
+        if (words.every(w => nonBrandWords.has(w))) continue;
+        // Skip single-word candidates that are in the blocklist
+        if (words.length === 1 && nonBrandWords.has(lowerCandidate)) continue;
+        // Skip if it looks like a generic phrase (all lowercase words when lowered)
+        if (words.length > 1 && words.every(w => w.length <= 3)) continue;
+
+        brands.push(candidate);
       }
     }
 
-    return brands.slice(0, 3); // Return top 3 detected competitors
+    return brands.slice(0, 3);
   }
 
   private analyzeSentiment(response: string, brandName: string, brandMentioned: boolean): "positive" | "neutral" | "negative" {
