@@ -369,20 +369,31 @@ async function executeSelectedAnalysis(
       ]);
     }
 
-    // Test each question - using simple async/await (AI service handles timeouts internally)
+    // Time budget: leave 60s for saving insights + website audit
+    const maxExecutionMs = (maxDuration - 60) * 1000; // 240s for question testing
+    const maxFollowUpsPerQuestion = 1; // Limit follow-ups to save time
+
+    // Test each question and save results incrementally
     const allResults: any[] = [];
     const totalQuestions = selectedQuestions.length;
+    let savedResponseCount = 0;
 
     for (let i = 0; i < totalQuestions; i++) {
+      const elapsed = Date.now() - startTime;
+      if (elapsed > maxExecutionMs) {
+        console.warn(`⏱️ [EXEC] Time budget exceeded (${Math.round(elapsed/1000)}s), stopping at Q${i}/${totalQuestions}`);
+        await updateProgress(85, `Time limit reached — processed ${i}/${totalQuestions} questions`);
+        break;
+      }
+
       const question = selectedQuestions[i];
       const progress = 5 + Math.floor(((i + 1) / totalQuestions) * 80);
-      
+
       await updateProgress(progress, `Testing Q${i + 1}/${totalQuestions}: "${question.question.substring(0, 25)}..."`);
-      
+
       console.log(`🤖 [EXEC] Q${i + 1}/${totalQuestions}: "${question.question.substring(0, 35)}..."`);
 
       try {
-        // Simple async/await - AI service handles its own timeouts with AbortController
         const analysis = await aiService.testQuestionOnPlatforms(
           question.question,
           brandName,
@@ -392,14 +403,12 @@ async function executeSelectedAnalysis(
           targetCountry
         );
 
-        // Ask follow-up questions when brand not mentioned or competitor recommended over brand
-        // This helps understand WHY competitors are recommended over the brand
-        // Note: We ask follow-ups for ALL stages, not just consideration/decision
+        // Ask follow-up for at most one response per question to save time
         if (analysis.responses) {
+          let followUpsAsked = 0;
           for (const response of analysis.responses) {
-            // Ask follow-up if:
-            // 1. Brand was NOT mentioned at all, OR
-            // 2. Brand was mentioned but ranked below a competitor
+            if (followUpsAsked >= maxFollowUpsPerQuestion) break;
+
             const shouldAskFollowUp = !response.brandMentioned ||
               (response.brandPosition && response.brandPosition > 1 && response.competitorsMentioned.length > 0);
 
@@ -416,9 +425,8 @@ async function executeSelectedAnalysis(
                   response.followUpQuestion = followUp.question;
                   response.followUpResponse = followUp.response;
                   response.followUpSources = followUp.sources;
+                  followUpsAsked++;
                   console.log(`  🔄 [EXEC] Got follow-up for ${response.platform}: "${followUp.question.substring(0, 40)}..."`);
-                } else {
-                  console.log(`  ℹ️ [EXEC] No follow-up needed for ${response.platform} (brand mentioned first)`);
                 }
               } catch (followUpError: any) {
                 console.warn(`  ⚠️ [EXEC] Follow-up failed for ${response.platform}: ${followUpError.message}`);
@@ -427,14 +435,54 @@ async function executeSelectedAnalysis(
           }
         }
 
-        allResults.push({
+        const result = {
           questionText: question.question,
           questionSearchVolume: question.searchVolume,
           questionCategory: question.category,
           questionType: question.type,
           ...analysis,
-        });
+        };
+        allResults.push(result);
         console.log(`✅ Q${i + 1} done: ${analysis.totalResponses} responses`);
+
+        // --- INCREMENTAL SAVE: persist this question's results immediately ---
+        try {
+          await prisma.discoveredQuestion.create({
+            data: {
+              analysisId,
+              question: question.question,
+              searchVolume: question.searchVolume,
+              difficulty: 50,
+              intent: question.category === "decision" ? "commercial" : "informational",
+              category: question.category,
+              score: Math.min(100, Math.floor(Math.log10(question.searchVolume + 1) * 20)),
+            },
+          });
+          for (const response of (analysis.responses || [])) {
+            await prisma.aITestResult.create({
+              data: {
+                analysisId,
+                question: question.question,
+                platform: response.platform,
+                brandMentioned: response.brandMentioned,
+                position: response.brandPosition,
+                sentiment: response.sentiment,
+                context: response.contextExtract,
+                fullResponse: response.fullResponse || "",
+                citations: response.citedUrls || [],
+                sources: (response.sources || []) as any,
+                hasGrounding: response.hasGrounding || false,
+                isRealAPI: response.isRealAPI || false,
+                followUpQuestion: response.followUpQuestion || null,
+                followUpResponse: response.followUpResponse || null,
+                followUpSources: response.followUpSources ? (response.followUpSources as any) : null,
+              },
+            });
+            savedResponseCount++;
+          }
+        } catch (saveErr: any) {
+          console.error(`⚠️ [EXEC] Incremental save failed for Q${i + 1}: ${saveErr.message}`);
+        }
 
       } catch (error: any) {
         console.error(`⚠️ [EXEC] Q${i + 1} failed: ${error.message}`);
@@ -455,6 +503,7 @@ async function executeSelectedAnalysis(
       }
     }
 
+    console.log(`💾 [EXEC] Incremental saves complete: ${savedResponseCount} responses saved during execution`);
     await updateProgress(90, "Calculating results...");
 
     // Calculate aggregate metrics
@@ -475,62 +524,8 @@ async function executeSelectedAnalysis(
       }
     });
 
-    // Save to database
-    await updateProgress(95, "Saving results...");
-    console.log(`💾 [EXEC-SELECTED] Saving ${selectedQuestions.length} questions and ${successfulResults.length} result sets...`);
-
-    // Save questions
-    for (const q of selectedQuestions) {
-      try {
-        await prisma.discoveredQuestion.create({
-          data: {
-            analysisId,
-            question: q.question,
-            searchVolume: q.searchVolume,
-            difficulty: 50,
-            intent: q.category === "decision" ? "commercial" : "informational",
-            category: q.category,
-            score: Math.min(100, Math.floor(Math.log10(q.searchVolume + 1) * 20)),
-          },
-        });
-      } catch (qErr: any) {
-        console.error(`⚠️ [EXEC-SELECTED] Failed to save question: ${qErr.message}`);
-      }
-    }
-    console.log(`✅ [EXEC-SELECTED] Questions saved`);
-
-    // Save AI results with sources
-    let savedResponses = 0;
-    for (const result of successfulResults) {
-      for (const response of (result.responses || [])) {
-        try {
-          await prisma.aITestResult.create({
-            data: {
-              analysisId,
-              question: result.questionText || result.question || "",
-              platform: response.platform,
-              brandMentioned: response.brandMentioned,
-              position: response.brandPosition,
-              sentiment: response.sentiment,
-              context: response.contextExtract,
-              fullResponse: response.fullResponse || "",  // Store full response - no truncation
-              citations: response.citedUrls || [],
-              sources: (response.sources || []) as any,
-              hasGrounding: response.hasGrounding || false,
-              isRealAPI: response.isRealAPI || false,
-              // Follow-up question data for competitive analysis
-              followUpQuestion: response.followUpQuestion || null,
-              followUpResponse: response.followUpResponse || null,
-              followUpSources: response.followUpSources ? (response.followUpSources as any) : null,
-            },
-          });
-          savedResponses++;
-        } catch (rErr: any) {
-          console.error(`⚠️ [EXEC-SELECTED] Failed to save response: ${rErr.message}`);
-        }
-      }
-    }
-    console.log(`✅ [EXEC-SELECTED] Saved ${savedResponses} AI responses`);
+    // Questions and AI responses already saved incrementally above
+    await updateProgress(95, "Generating insights...");
 
     // Create journey stage insights (REQUIRED for results page)
     const stageLabels: Record<string, string> = {

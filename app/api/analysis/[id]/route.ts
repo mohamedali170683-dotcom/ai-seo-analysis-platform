@@ -50,6 +50,48 @@ export async function GET(
       );
     }
 
+    // --- STALE ANALYSIS RECOVERY ---
+    // If analysis has been "running" for more than 8 minutes, the serverless function
+    // likely timed out silently. Recover by marking it based on saved results.
+    const STALE_THRESHOLD_MS = 8 * 60 * 1000; // 8 minutes
+    if (
+      analysis.status === "running" &&
+      Date.now() - analysis.createdAt.getTime() > STALE_THRESHOLD_MS
+    ) {
+      const savedResults = analysis.aiTestResults.length;
+      console.warn(`⏱️ [API] Analysis ${id} stuck in "running" for >8min. Saved results: ${savedResults}`);
+
+      if (savedResults > 0) {
+        // Has partial results — mark as completed so the user can see what was collected
+        await prisma.analysis.update({
+          where: { id },
+          data: {
+            status: "completed",
+            progress: 100,
+            currentStep: `Partial results (${savedResults} responses) — server timed out`,
+            completedAt: new Date(),
+          },
+        });
+        analysis.status = "completed" as any;
+        analysis.progress = 100;
+        analysis.currentStep = `Partial results (${savedResults} responses) — server timed out`;
+        analysis.completedAt = new Date();
+        console.log(`♻️ [API] Recovered analysis ${id} with ${savedResults} partial results`);
+      } else {
+        // No results at all — mark as failed
+        await prisma.analysis.update({
+          where: { id },
+          data: {
+            status: "failed",
+            currentStep: "Analysis timed out — no results were saved. Please try with fewer questions.",
+          },
+        });
+        analysis.status = "failed" as any;
+        analysis.currentStep = "Analysis timed out — no results were saved. Please try with fewer questions.";
+        console.log(`❌ [API] Marked analysis ${id} as failed (no results after timeout)`);
+      }
+    }
+
     // Transform aiInsights to journeyStages format
     const journeyStages = analysis.aiInsights
       .filter((i: any) => i.category === "journey_stage")

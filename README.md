@@ -1,84 +1,52 @@
-# AI-Powered SEO & Search Visibility Analysis Platform
+# Velaris — AI Visibility Analysis Platform
 
-A comprehensive web application that analyzes how AI platforms (ChatGPT, Gemini) mention and recommend your brand across the user journey, providing actionable insights to improve AI visibility.
+A web application that analyzes how AI platforms (ChatGPT, Gemini, Perplexity) mention and recommend your brand across the user journey, providing actionable insights to improve AI visibility.
 
-## 🆕 NEW: Forma & Attention - Behavioral Science Conversion Optimizer
+## Features
 
-This repository now includes **Forma & Attention**, a behavioral science-based conversion optimization platform that measures and improves how brands capture and convert attention.
+### AI Visibility Analysis
+- **Multi-Platform Testing**: Queries across ChatGPT, Gemini, and Perplexity
+- **Funnel Stage Analysis**: Brand presence across Awareness, Consideration, and Decision stages
+- **Visibility Scoring**: Score (0–100) based on mention rate, position, and sentiment
+- **Competitive Intelligence**: Compare visibility against competitors
+- **Strategic Recommendations**: AI-generated insights to improve visibility
 
-**🚀 Quick Access:**
-- **Landing Page**: Visit `/forma` to see the product
-- **Documentation**: [FORMA_README.md](./FORMA_README.md) - Complete guide
-- **Quick Start**: [FORMA_QUICKSTART.md](./FORMA_QUICKSTART.md) - Deploy in 5 minutes
+### Smart Question Discovery
+- **DataForSEO Integration**: Real "People Also Ask" questions from search data
+- **AI-Powered Question Generation**: OpenAI generates brand-specific funnel questions using full brand context
+- **Brand Disambiguation**: Short/acronym brand names are automatically qualified with industry context to avoid irrelevant results (e.g., "QS" → "QS fashion")
+- **Brand Context Enrichment**: Fetches brand data from website metadata and Wikipedia to inform question generation
+- **Optional Brand Description**: Users can provide a free-text description for lesser-known or ambiguous brands
+- **Template Fallback**: If AI generation fails, enhanced template-based questions are used
 
-**Key Features:**
-- 📊 Behavioral Science Optimization Score (BSOS) - 0-100 scale
-- 🎯 33-metric assessment across Website, Social Media, and Paid Ads
-- 💡 Personalized optimization recommendations
-- 📈 Beautiful results dashboard with component breakdowns
+### Analysis Form
+- Brand name, domain, category, target country, and language
+- Optional brand description for disambiguation
+- Competitor input (tier-dependent limits)
+- AI-suggested buyer personas
 
-## 🚀 Features
-
-### Journey-Based AI Visibility Analysis
-- **Automated Testing**: 100+ AI queries across ChatGPT and Gemini
-- **User Journey Stages**: Analyze brand presence in Awareness, Consideration, and Decision stages
-- **Visibility Scoring**: Overall score (0-100) based on mention rate (50%), position (30%), and sentiment (20%)
-- **Real AI Examples**: See actual excerpts from AI responses mentioning your brand
-- **Sentiment Analysis**: Track positive, negative, and neutral brand portrayals
-- **Competitive Intelligence**: Compare your visibility against competitors
-- **Strategic Recommendations**: AI-generated insights on how to improve visibility
-- **Beautiful Reports**: Interactive, visually stunning analysis reports
-
-### Key Capabilities
-- **Instant Smart Questions**: Brand-specific question generation (no external APIs needed!)
-- **15-25 Second Analysis**: Ultra-fast with 99.9% reliability
-- **Real-time Progress Tracking**: See your analysis progress live
-- **Database Persistence**: All results stored for future reference
-- **Export-Ready Reports**: Beautiful, shareable analysis reports
-
-## 📋 Tech Stack
+## Tech Stack
 
 - **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **Design System**: Stratum UI (Work Sans + Rubik fonts, petrol/orange/blue palette)
 - **Backend**: Next.js API Routes, Node.js
 - **Database**: PostgreSQL with Prisma ORM
-- **APIs**: Google Search Console, Ahrefs, OpenAI, Google Gemini
-- **Charts**: Recharts
+- **AI APIs**: OpenAI (GPT-4o, GPT-4o-mini), Google Gemini
+- **Search Data**: DataForSEO (People Also Ask, keyword data)
+- **Brand Data**: Wikipedia API, website metadata scraping
 
-## 🎨 Try It Now
-
-### 🚀 **NEW: Full Functional Solution**
-Visit **http://localhost:3000/analysis/new** to create your own AI visibility analysis for any brand!
-
-**What's New:**
-- ✅ Start analyses for any brand or keyword
-- ✅ Real-time progress tracking (15-25 seconds)
-- ✅ Beautiful journey stage reports with real data
-- ✅ Export reports as PDF
-- ✅ Dashboard to manage all analyses
-- ✅ Database persistence for all results
-
-### 📊 Demo Report
-Visit **http://localhost:3000/demo** to see a sample analysis report with mock data (Purina pet food example).
-
-## 🛠️ Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+
 - PostgreSQL 14+
-- API Keys:
-  - **OpenAI API Key** (required) - That's it! No other APIs needed!
-  
-**Why is this amazing?**
-- ⚡ **15-25 seconds per analysis** (consistently fast)
-- 💰 **~$0.10 per analysis** (no Ahrefs/DataForSEO subscriptions)
-- 🎯 **99.9% reliability** (no external API failures)
-- 🚀 **Works for any brand** (universal question patterns)
+- API Keys: OpenAI (required), DataForSEO (optional), Google Gemini (optional)
 
 ### Installation
 
 ```bash
 # Clone repository
-git clone https://github.com/mohamedali170683-dotcom/ai-seo-analysis-platform.git
+git clone <repo-url>
 cd ai-seo-analysis-platform
 
 # Install dependencies
@@ -86,9 +54,7 @@ npm install
 
 # Setup environment
 cp .env.example .env
-# Edit .env with your API keys:
-# - POSTGRES_PRISMA_URL (database connection)
-# - OPENAI_API_KEY (for ChatGPT testing - ONLY ONE REQUIRED!)
+# Edit .env with your API keys
 
 # Initialize database
 npx prisma generate
@@ -98,81 +64,75 @@ npx prisma migrate dev
 npm run dev
 ```
 
-Visit:
-- **http://localhost:3000/analysis/new** - ⚡ Create your own AI visibility analysis
-- **http://localhost:3000/dashboard** - 📊 View all analyses and manage results
-- **http://localhost:3000/demo** - 👀 View sample report (Purina example)
-
-### Running Your First Analysis
-
-1. Navigate to **http://localhost:3000/analysis/new**
-2. Enter:
-   - **Brand/Keyword**: e.g., "Nike", "Shopify", "project management software"
-   - **Domain** (optional): e.g., "nike.com", "shopify.com"
-   - **Competitors** (optional): e.g., "Adidas, Puma"
-3. Click **"Start Analysis"**
-4. Watch real-time progress (0% → 100%)
-5. Wait 15-25 seconds for analysis to complete ⚡
-6. View your comprehensive journey-based report with real data!
-7. Export as PDF with one click 📥
-
-**See all your analyses:** Visit **http://localhost:3000/dashboard**
-
-📊 Project Structure
-ai-seo-analysis-platform/
-├── app/              # Next.js pages and API routes
-├── components/       # React components
-├── lib/
-│   ├── services/    # Business logic
-│   ├── db/          # Database utilities
-│   └── types/       # TypeScript types
-├── prisma/          # Database schema
-└── public/          # Static assets
-## 🔑 Environment Variables
+### Environment Variables
 
 Required in `.env`:
 
 ```bash
-# Database (Required)
+# Database
 POSTGRES_PRISMA_URL="postgresql://user:password@localhost:5432/seo_analysis"
 
-# OpenAI API (Required - ONLY ONE API KEY NEEDED!)
+# OpenAI (required)
 OPENAI_API_KEY="your-openai-api-key"
+
+# DataForSEO (optional — enables real search questions)
+DATAFORSEO_LOGIN="your-login"
+DATAFORSEO_PASSWORD="your-password"
+
+# Google Gemini (optional — enables Gemini platform testing)
+GEMINI_API_KEY="your-gemini-key"
 ```
 
-That's all you need! No Ahrefs, no DataForSEO, no other external APIs.
-## 📖 Documentation
+### Usage
 
-### 🆕 **Journey Analysis Platform** (Full Functional Solution)
-- **[QUICK_START.md](./QUICK_START.md)** - ⚡ Get started in 30 seconds
-- **[JOURNEY_ANALYSIS_GUIDE.md](./JOURNEY_ANALYSIS_GUIDE.md)** - Complete implementation guide
-- **[TRANSFORMATION_SUMMARY.md](./TRANSFORMATION_SUMMARY.md)** - What was built and how
+1. Navigate to `/analyze`
+2. Enter brand name, category, and optionally domain + brand description
+3. Click **Discover Questions** — the system fetches real search questions and generates AI-powered funnel questions
+4. Select questions to analyze
+5. Run analysis — AI platforms are queried and results are scored
+6. View the report with visibility scores, funnel breakdown, and recommendations
 
-### Technical Documentation
-- **[INSTANT_MODE.md](./INSTANT_MODE.md)** - ⚡ How Instant Mode works (NO external APIs!)
-- **[IMPLEMENTATION.md](./IMPLEMENTATION.md)** - Complete technical implementation guide
-- **[IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md)** - Summary of recent implementation work
-- **[API.md](./API.md)** - API endpoint reference
-- **[CONTRIBUTING.md](./CONTRIBUTING.md)** - Contributing guidelines
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Deployment instructions
+## Project Structure
 
-### Key Documentation Topics
+```
+ai-seo-analysis-platform/
+├── app/
+│   ├── analyze/           # Analysis form (question discovery + run)
+│   ├── results/           # Analysis results page
+│   ├── api/
+│   │   └── analysis/
+│   │       ├── discover/  # Question discovery endpoint
+│   │       ├── run-selected/  # Run analysis on selected questions
+│   │       └── [id]/      # Fetch analysis results
+│   ├── features/          # Features page
+│   ├── pricing/           # Pricing page
+│   └── page.tsx           # Home page
+├── components/            # React components
+├── lib/
+│   ├── services/
+│   │   ├── dataforseo-service.ts    # DataForSEO API integration
+│   │   ├── brand-data-fetcher.ts    # Wikipedia + website brand data
+│   │   ├── ai-testing-service.ts    # AI platform query service
+│   │   ├── persona-query-engine.ts  # Buyer persona query mapping
+│   │   └── website-audit-service.ts # Website technical audit
+│   ├── db/                # Database utilities
+│   └── types/             # TypeScript types
+├── prisma/                # Database schema
+└── public/                # Static assets
+```
 
-- Data structure and interfaces
-- Scoring methodology
-- Journey stage analysis
-- AI testing service
-- Question discovery
-- Database schema
-- API endpoints
+## Recent Changes
 
-## 🤝 Contributing
+### Brand Disambiguation (Jan 2025)
+Fixed an issue where short or acronym brand names (e.g., "QS") returned irrelevant questions from unrelated domains (finance instead of fashion). Three layers were added:
 
-Contributions welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) and open an issue or submit a pull request.
+1. **Brand context enrichment** — fetches industry, positioning, and product data from domain/Wikipedia before question generation
+2. **AI-powered question generation** — sends full brand context to OpenAI for tailored funnel questions, with template fallback
+3. **DataForSEO query qualification** — short names (≤3 chars) and acronyms (≤5 chars) are appended with industry/category
 
-📄 License
-MIT License - see LICENSE file
+### Stratum UI Design System (Jan 2025)
+Applied custom design system across all components: Work Sans + Rubik typography, petrol/orange/blue color palette, light-mode only.
 
-🙏 Acknowledgments
-Built with Next.js, Prisma, OpenAI, and love ❤️
-Version 1.0.0 - Full Interactive App
+## License
+
+MIT

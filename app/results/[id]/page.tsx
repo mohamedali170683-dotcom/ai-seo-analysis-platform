@@ -574,7 +574,9 @@ export default function ResultsPage() {
               <div className="text-5xl font-bold text-[#EB4200] font-mono mb-2">
                 {minutes}:{seconds.toString().padStart(2, '0')}
               </div>
-              <p className="text-sm text-off-grey">estimated time remaining</p>
+              <p className="text-sm text-off-grey">
+                {countdown === 0 ? "Taking longer than expected — still checking..." : "estimated time remaining"}
+              </p>
             </div>
 
             {/* Progress Bar */}
