@@ -362,7 +362,14 @@ export default function AnalyzePage() {
       const data = await response.json();
       if (data.success) {
         // Redirect immediately to results page instead of polling here
-        window.location.href = `/results/${data.analysisId}`;
+        // Pass config as URL params so the results page can estimate time accurately
+        const config = data.config || {};
+        const params = new URLSearchParams({
+          q: String(config.questions || allQuestions.length),
+          p: String(config.platforms || selectedPlatforms.filter(p => isPlatformAllowed(p)).length),
+          t: String(config.testsPerPlatform || limits.testsPerQuestion),
+        });
+        window.location.href = `/results/${data.analysisId}?${params.toString()}`;
       } else {
         alert(data.error || "Failed to start analysis");
         setPhase(2);

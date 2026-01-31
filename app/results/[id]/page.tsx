@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2, TrendingUp, HelpCircle } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
@@ -346,7 +346,13 @@ function TranslatableContent({ content, targetLang, className = '' }: Translatab
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const analysisId = params.id as string;
+
+  // Analysis config from URL params (passed by analyze page)
+  const configQuestions = parseInt(searchParams.get("q") || "0", 10);
+  const configPlatforms = parseInt(searchParams.get("p") || "3", 10);
+  const configTests = parseInt(searchParams.get("t") || "1", 10);
 
   // Tier management
   const { tier, limits, isStageAllowed, isPlatformAllowed, userEmail, setUserEmail, isProfessionalOrHigher, isPartner } = useTier();
@@ -365,8 +371,8 @@ export default function ResultsPage() {
   const [reportData, setReportData] = useState<any>(null);
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<string>("pending");
-  const [countdown, setCountdown] = useState(180); // 3 minutes countdown
   const [currentStep, setCurrentStep] = useState<string>("Initializing...");
+  const [analysisStartTime] = useState<number>(Date.now());
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedSchemas, setExpandedSchemas] = useState<string[]>([]);
 
@@ -493,16 +499,42 @@ export default function ResultsPage() {
     }
   };
 
-  // Countdown timer for loading state
+  // Compute dynamic time estimate based on analysis config
+  // ~12s per question per platform (AI call + follow-up) + 1s delay between questions + 30s overhead for saving/insights
+  const estimatedTotalSeconds = configQuestions > 0
+    ? Math.ceil(configQuestions * configPlatforms * configTests * 12 / configPlatforms) + configQuestions + 30
+    : 180; // fallback 3 min if no config
+
+  // Compute live ETA based on actual progress rate
+  const computeETA = (): number => {
+    const elapsed = (Date.now() - analysisStartTime) / 1000;
+
+    // If we have progress data, compute rate-based ETA
+    if (progress > 5 && elapsed > 5) {
+      const progressPerSecond = progress / elapsed;
+      if (progressPerSecond > 0) {
+        const remainingProgress = 100 - progress;
+        return Math.ceil(remainingProgress / progressPerSecond);
+      }
+    }
+
+    // Before meaningful progress, use config-based estimate minus elapsed
+    return Math.max(0, estimatedTotalSeconds - Math.floor(elapsed));
+  };
+
+  const [displayETA, setDisplayETA] = useState(estimatedTotalSeconds);
+
+  // Update ETA every second
   useEffect(() => {
     if (!loading) return;
 
-    const countdownInterval = setInterval(() => {
-      setCountdown(prev => Math.max(0, prev - 1));
+    const etaInterval = setInterval(() => {
+      setDisplayETA(computeETA());
     }, 1000);
 
-    return () => clearInterval(countdownInterval);
-  }, [loading]);
+    return () => clearInterval(etaInterval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, progress, analysisStartTime]);
 
   useEffect(() => {
     if (!analysisId) {
@@ -524,7 +556,9 @@ export default function ResultsPage() {
         // API returns data nested under 'analysis' key
         const analysis = data.analysis || data;
 
-        setProgress(analysis.progress || 0);
+        const newProgress = analysis.progress || 0;
+
+        setProgress(newProgress);
         setStatus(analysis.status);
         if (analysis.currentStep) {
           setCurrentStep(analysis.currentStep);
@@ -548,11 +582,15 @@ export default function ResultsPage() {
     }, 2000);
 
     return () => clearInterval(pollInterval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analysisId]);
 
   if (loading) {
-    const minutes = Math.floor(countdown / 60);
-    const seconds = countdown % 60;
+    const eta = Math.max(0, displayETA);
+    const minutes = Math.floor(eta / 60);
+    const seconds = eta % 60;
+    const elapsed = Math.floor((Date.now() - analysisStartTime) / 1000);
+    const isOverEstimate = eta === 0 && progress < 95;
 
     return (
       <div className="min-h-screen bg-off-white flex items-center justify-center p-4">
@@ -572,10 +610,18 @@ export default function ResultsPage() {
             {/* Countdown Timer */}
             <div className="mb-8">
               <div className="text-5xl font-bold text-[#EB4200] font-mono mb-2">
-                {minutes}:{seconds.toString().padStart(2, '0')}
+                {isOverEstimate ? (
+                  <span className="text-4xl">Almost done...</span>
+                ) : (
+                  <>{minutes}:{seconds.toString().padStart(2, '0')}</>
+                )}
               </div>
               <p className="text-sm text-off-grey">
-                {countdown === 0 ? "Taking longer than expected — still checking..." : "estimated time remaining"}
+                {isOverEstimate
+                  ? "Taking a bit longer — finalizing results"
+                  : progress >= 90
+                    ? "wrapping up"
+                    : "estimated time remaining"}
               </p>
             </div>
 
