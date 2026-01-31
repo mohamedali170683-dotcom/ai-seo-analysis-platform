@@ -173,16 +173,13 @@ export async function GET(
       };
 
       // Calculate weighted overall score
+      // All stages count — 0% visibility in a stage pulls the overall score down
       let weightedScore = 0;
-      let totalWeight = 0;
       for (const [stage, score] of Object.entries(stageScores)) {
         const weight = STAGE_WEIGHTS[stage as keyof typeof STAGE_WEIGHTS] || 0.33;
-        if (score > 0) {
-          weightedScore += score * weight;
-          totalWeight += weight;
-        }
+        weightedScore += score * weight;
       }
-      const overallWeightedScore = totalWeight > 0 ? Math.round(weightedScore / totalWeight) : visibilityScore;
+      const overallWeightedScore = Math.round(weightedScore);
 
       // Detect patterns
       patterns = detectPatterns(aiResponses, analysis.brandOrKeyword, analysis.competitors || []);
