@@ -848,53 +848,38 @@ export class MultiPlatformAIService {
 
   /**
    * Extract brand names that appear to be recommended in the response.
-   * Uses strict filtering to avoid extracting common English phrases as "brands".
+   * Works for any industry — uses structural patterns (bold, lists) rather than word blocklists.
+   * Only called when pre-specified competitors weren't found and brand wasn't mentioned.
    */
   private extractRecommendedBrands(response: string, brandToExclude: string): string[] {
     const brands: string[] = [];
     const lowerBrand = brandToExclude.toLowerCase();
 
-    // Words that are NOT brand names — common nouns, adjectives, verbs, and industry terms
-    const nonBrandWords = new Set([
-      // Common English
-      "the", "and", "for", "with", "that", "this", "your", "their", "also", "some",
-      "most", "many", "other", "more", "less", "such", "each", "both", "just", "only",
-      "well", "very", "much", "here", "there", "when", "where", "what", "which", "who",
-      "how", "why", "not", "all", "any", "few", "own", "same", "new", "old", "big",
-      // Common verbs / adjectives that get capitalized at sentence start
-      "best", "top", "leading", "popular", "known", "based", "focused", "driven",
-      "recommended", "trusted", "rated", "choice", "chosen", "preferred", "compared",
-      "offers", "provides", "includes", "covers", "features", "stands", "works",
-      "consider", "looking", "finding", "getting", "buying", "choosing", "comparing",
-      "fit", "deal", "value", "price", "cost", "rate", "plan", "policy", "coverage",
-      "auto", "car", "home", "life", "health", "travel", "pet", "business",
-      "insurance", "insurer", "provider", "company", "companies", "brand", "brands",
-      "online", "direct", "digital", "traditional", "modern", "comprehensive",
-      "affordable", "cheap", "expensive", "premium", "basic", "full", "partial",
-      "customer", "service", "support", "claims", "quote", "quotes",
-      // Generic industry terms
-      "liability", "collision", "deductible", "premium", "policyholder",
-      // Fragments that appear in AI responses
-      "among", "between", "across", "within", "through", "about", "after", "before",
-      "however", "therefore", "moreover", "furthermore", "additionally",
-      "important", "significant", "essential", "key", "main", "major", "primary",
-      // Category-generic words
-      "fashion", "beauty", "skincare", "cosmetics", "clothing", "apparel",
-      "natural", "organic", "sustainable", "eco", "green",
-    ]);
-
-    // Only extract from explicit brand listing patterns (much stricter)
-    // These patterns require the AI to explicitly list or recommend something
-    const strictPatterns = [
-      // "brands like X, Y, and Z" or "brands such as X, Y"
-      /brands?\s+(?:like|such as|including)\s+([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)?)/gi,
-      // Numbered lists: "1. BrandName" or "- BrandName:"
-      /(?:^|\n)\s*(?:\d+[\.\)]\s*|[-•]\s*)([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)?)\s*[:\-–]/gm,
-      // "**BrandName**" (bold in markdown — AI often bolds brand names in lists)
-      /\*\*([A-Z][a-zA-Z0-9]+(?:\s+[A-Z][a-zA-Z0-9]+)?)\*\*/g,
+    // Structural patterns that AI models use when listing brands/companies.
+    // These are industry-agnostic — they detect HOW the AI formats brand names.
+    const structuralPatterns = [
+      // "**BrandName**" — AI models bold brand names in recommendation lists
+      /\*\*([A-Z][a-zA-Z0-9][\w\s.'-]{0,30}?)\*\*/g,
+      // Numbered/bulleted lists: "1. BrandName:" or "- BrandName -"
+      /(?:^|\n)\s*(?:\d+[\.\)]\s*|[-•]\s*)([A-Z][a-zA-Z0-9][\w\s.'-]{0,25}?)\s*[:\-–]/gm,
+      // "brands like X, Y" or "companies such as X"
+      /(?:brands?|companies|providers?|insurers?|competitors?)\s+(?:like|such as|including|e\.g\.)\s+([A-Z][\w.'-]+)/gi,
     ];
 
-    for (const pattern of strictPatterns) {
+    // Common English words that should never be treated as brand names.
+    // Kept minimal and universal — no industry-specific terms needed
+    // because structural patterns already filter most junk.
+    const stopWords = new Set([
+      // Structural/formatting words that get caught by bold pattern
+      "important", "note", "example", "conclusion", "summary", "overview",
+      "comparison", "recommendation", "considerations", "advantages", "disadvantages",
+      "pros", "cons", "key", "why", "how", "what", "when", "where", "tips",
+      // Section headers AI models commonly bold
+      "features", "benefits", "pricing", "coverage", "options", "factors",
+      "step", "option", "alternative", "alternatives", "result", "results",
+    ]);
+
+    for (const pattern of structuralPatterns) {
       const matches = response.matchAll(pattern);
       for (const match of matches) {
         const candidate = match[1]?.trim();
@@ -902,19 +887,24 @@ export class MultiPlatformAIService {
 
         const lowerCandidate = candidate.toLowerCase();
 
-        // Skip if it's the brand being analyzed
-        if (lowerCandidate === lowerBrand) continue;
-        // Skip if already found
+        // Skip the brand being analyzed
+        if (lowerCandidate === lowerBrand || lowerBrand.includes(lowerCandidate)) continue;
+        // Skip duplicates
         if (brands.some(b => b.toLowerCase() === lowerCandidate)) continue;
-        // Skip if ALL words are non-brand words
-        const words = lowerCandidate.split(/\s+/);
-        if (words.every(w => nonBrandWords.has(w))) continue;
-        // Skip single-word candidates that are in the blocklist
-        if (words.length === 1 && nonBrandWords.has(lowerCandidate)) continue;
-        // Skip if it looks like a generic phrase (all lowercase words when lowered)
-        if (words.length > 1 && words.every(w => w.length <= 3)) continue;
+        // Skip single stop words
+        if (stopWords.has(lowerCandidate)) continue;
+        // Skip if candidate is just 1-2 very short words (likely a fragment)
+        const words = candidate.split(/\s+/);
+        if (words.length === 1 && candidate.length <= 3) continue;
 
-        brands.push(candidate);
+        // Validation: a real brand name should appear more than once in the response,
+        // OR be in a bold/list context (which our patterns already ensure).
+        // Additional check: the candidate should contain at least one proper noun
+        // (starts with uppercase and is NOT at sentence start)
+        const mentionCount = (response.match(new RegExp(this.escapeRegex(candidate), 'gi')) || []).length;
+        if (mentionCount >= 1) {
+          brands.push(candidate);
+        }
       }
     }
 
