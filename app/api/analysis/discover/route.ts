@@ -626,23 +626,30 @@ async function generateAIQuestions(
       contextLines.push(`Key Attributes: ${brandContext.keyAttributes.join(", ")}`);
     }
 
-    const prompt = `You are an AI visibility strategist. Generate search questions that real users would ask AI chatbots (ChatGPT, Gemini, Perplexity) about this brand and category.
+    const prompt = `You are an AI visibility strategist specializing in Generative Engine Optimization (GEO). Generate search questions that real users would type into AI chatbots (ChatGPT, Gemini, Perplexity) when researching "${category}" — specifically relevant to "${brandName}".
 
 ${contextLines.join("\n")}
 
 Generate exactly 18 questions total: 3 brand + 3 category for each of 3 funnel stages.
 
 FUNNEL STAGES:
-- awareness: Discovery questions. Users are learning about the category or brand for the first time. Questions like "What is...", "How does... work", "Who makes..."
-- consideration: Comparison questions. Users are evaluating options. Questions like "Best...", "X vs Y", "Is X worth it", "Top brands for..."
-- decision: Purchase-intent questions. Users are ready to act. Questions like "Should I buy...", "Where to buy...", "Is X recommended..."
+- awareness: Discovery questions. Users learning about the category or brand for the first time.
+  Examples: "What is ${brandName}", "How does ${category} work", "Who are the main ${category} brands"
+- consideration: Comparison questions. Users actively evaluating options and comparing.
+  Examples: "Best ${category} 2025", "${brandName} vs [competitor]", "Is ${brandName} worth it", "Top brands for ${category}"
+- decision: Purchase-intent questions. Users ready to buy or take action.
+  Examples: "Should I buy ${brandName}", "Where to buy ${category}", "Is ${brandName} recommended for [use case]"
 
-RULES:
-- Brand questions must mention "${brandName}" by name
-- Category questions must NOT mention "${brandName}" — they should be about the category "${category}" in general
-- Questions must sound natural, like something a real person would type into ChatGPT
-- Make questions specific to this brand's actual identity and positioning — NOT generic templates
-- Each question should be unique and cover a different angle
+CRITICAL RULES:
+- Brand questions MUST mention "${brandName}" by name
+- Category questions must NOT mention "${brandName}" — use the category "${category}" or general phrasing
+- Questions must sound conversational and natural — like real people typing into ChatGPT
+- Questions MUST be directly relevant to this specific brand and industry
+- DO NOT generate generic marketing/business questions (e.g., "What marketing strategies does X use")
+- DO NOT generate questions about the company's internal operations, stock price, or corporate structure
+- Focus on what a potential CUSTOMER would ask, not an investor or journalist
+- If competitors are provided, use at least one real competitor name in a consideration question
+- Each question should cover a genuinely different angle — no rephrasing the same question
 - Do NOT include question marks in the output
 
 Return ONLY valid JSON in this exact format (no markdown, no explanation):
@@ -698,15 +705,59 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
       }
     }
 
-    console.log(`✅ [AI-QUESTIONS] Generated ${brandQuestions.length} brand + ${categoryQuestions.length} category questions`);
+    // Post-generation relevance filter — remove questions about internal operations, stock, HR, etc.
+    const irrelevantPatterns = [
+      /\b(stock price|share price|market cap|IPO|investor|shareholder|quarterly earnings)\b/i,
+      /\b(CEO|CFO|CTO|board of directors|corporate governance|annual report)\b/i,
+      /\b(marketing strateg|advertising campaign|brand ambassador|sponsorship deal)\b/i,
+      /\b(employee|hiring|salary|work culture|glassdoor|job opening)\b/i,
+      /\b(lawsuit|legal issue|controversy|scandal)\b/i,
+    ];
+    const isRelevant = (q: string) => !irrelevantPatterns.some(p => p.test(q));
 
-    // Only return if we got a reasonable number of questions
-    if (brandQuestions.length < 6 || categoryQuestions.length < 6) {
-      console.warn(`⚠️ [AI-QUESTIONS] Too few questions generated (${brandQuestions.length} brand, ${categoryQuestions.length} category), falling back`);
+    const filteredBrand = brandQuestions.filter(q => {
+      if (!isRelevant(q.question)) {
+        console.log(`🔍 [AI-QUESTIONS] Filtered irrelevant brand question: "${q.question}"`);
+        return false;
+      }
+      return true;
+    });
+    const filteredCategory = categoryQuestions.filter(q => {
+      if (!isRelevant(q.question)) {
+        console.log(`🔍 [AI-QUESTIONS] Filtered irrelevant category question: "${q.question}"`);
+        return false;
+      }
+      return true;
+    });
+
+    // Use filtered lists going forward
+    const finalBrand = filteredBrand;
+    const finalCategory = filteredCategory;
+
+    console.log(`✅ [AI-QUESTIONS] Generated ${finalBrand.length} brand + ${finalCategory.length} category questions (after relevance filter)`);
+
+    // Validate total count (use filtered lists)
+    if (finalBrand.length < 6 || finalCategory.length < 6) {
+      console.warn(`⚠️ [AI-QUESTIONS] Too few questions after filtering (${finalBrand.length} brand, ${finalCategory.length} category), falling back`);
       return null;
     }
 
-    return { brand: brandQuestions, category: categoryQuestions };
+    // Validate per-stage minimums — each stage must have at least 1 question per type
+    const hasAllStages = stages.every(stage => {
+      const brandCount = finalBrand.filter(q => q.category === stage).length;
+      const catCount = finalCategory.filter(q => q.category === stage).length;
+      if (brandCount === 0 || catCount === 0) {
+        console.warn(`⚠️ [AI-QUESTIONS] Stage "${stage}" missing questions (brand: ${brandCount}, category: ${catCount}), falling back`);
+        return false;
+      }
+      return true;
+    });
+
+    if (!hasAllStages) {
+      return null;
+    }
+
+    return { brand: finalBrand, category: finalCategory };
   } catch (err: any) {
     console.warn(`⚠️ [AI-QUESTIONS] OpenAI generation failed: ${err.message}`);
     return null;

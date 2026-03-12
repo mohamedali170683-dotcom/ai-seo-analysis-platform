@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/prisma";
 import { AnalysisStatus } from "@prisma/client";
 import { MultiPlatformAIService } from "@/lib/services/multi-platform-ai-service";
 import { WebsiteAuditService, WebsiteAuditResult } from "@/lib/services/website-audit-service";
+import { getContentRecommendations } from "@/lib/knowledge/geo-research";
 
 export const maxDuration = 300; // 5 minutes for longer analyses
 export const preferredRegion = "iad1"; // US East - for Gemini API availability
@@ -710,10 +711,14 @@ async function executeSelectedAnalysis(
       const competitorComparison = Object.entries(competitorMentions).map(([name, data]) => ({
         competitorName: name,
         mentionRate: stageResponses > 0 ? Math.round((data.count / stageResponses) * 100) : 0,
-        avgPosition: data.positions.length > 0 
+        avgPosition: data.positions.length > 0
           ? Math.round(data.positions.reduce((a, b) => a + b, 0) / data.positions.length)
           : 0,
       })).slice(0, 3);
+
+      // ── Citation Analysis ──────────────────────────────────────────
+      // Extract all cited URLs and sources from AI responses, categorize by authority
+      const citationAnalysis = analyzeCitations(stageResults, brandName);
 
       // Build questions for this stage
       const stageQuestions = stageResults.map((r: any) => ({
@@ -733,9 +738,13 @@ async function executeSelectedAnalysis(
         competitorComparison
       );
 
+      // Generate concrete content recommendations (on-page + distribution/PR)
+      const validStage = stage as "awareness" | "consideration" | "decision";
+      const contentPlan = getContentRecommendations(validStage, visibilityScore, brandName, competitors);
+
       // Create journey_stage insight (THIS IS WHAT THE RESULTS PAGE EXPECTS)
       const priorityMap: Record<string, number> = { awareness: 1, consideration: 2, decision: 3 };
-      
+
       try {
         await prisma.aIInsight.create({
           data: {
@@ -767,6 +776,8 @@ async function executeSelectedAnalysis(
                 competitorComparison,
               },
               recommendation,
+              contentPlan: JSON.parse(JSON.stringify(contentPlan)),
+              citationAnalysis: citationAnalysis ? JSON.parse(JSON.stringify(citationAnalysis)) : null,
             },
             effort: mentionRate < 50 ? "high" : "low",
             timeline: mentionRate < 50 ? "3-6 months" : "ongoing",
@@ -1151,5 +1162,119 @@ function generateStrategicRecommendation(
     commonPattern: commonPattern.trim(),
     contentType: contentType.trim(),
     focusedAction: focusedAction.trim(),
+  };
+}
+
+/**
+ * Analyze citations from AI responses to identify authority sources
+ * Extracts URLs, categorizes by source type, and checks brand presence
+ */
+function analyzeCitations(
+  stageResults: any[],
+  brandName: string
+): {
+  totalCitations: number;
+  brandCited: boolean;
+  authoritySources: { source: string; type: string; brandPresent: boolean; count: number }[];
+  topSources: { domain: string; count: number }[];
+  gaps: string[];
+} {
+  const allUrls: string[] = [];
+  const allSources: any[] = [];
+  const brandLower = brandName.toLowerCase();
+
+  // Collect all citations and sources from responses
+  stageResults.forEach((result: any) => {
+    (result.responses || []).forEach((resp: any) => {
+      if (resp.citedUrls && Array.isArray(resp.citedUrls)) {
+        allUrls.push(...resp.citedUrls);
+      }
+      if (resp.sources && Array.isArray(resp.sources)) {
+        allSources.push(...resp.sources);
+      }
+      // Also check follow-up sources
+      if (resp.followUpSources && Array.isArray(resp.followUpSources)) {
+        allSources.push(...resp.followUpSources);
+      }
+    });
+  });
+
+  // Authority source categories
+  const authorityCategories: Record<string, { type: string; patterns: string[] }> = {
+    Wikipedia: { type: "encyclopedia", patterns: ["wikipedia.org"] },
+    Reddit: { type: "community", patterns: ["reddit.com"] },
+    YouTube: { type: "video", patterns: ["youtube.com", "youtu.be"] },
+    LinkedIn: { type: "professional", patterns: ["linkedin.com"] },
+    "News/Media": { type: "media", patterns: ["nytimes.com", "bbc.com", "reuters.com", "theguardian.com", "forbes.com", "bloomberg.com", "washingtonpost.com"] },
+    "Review Sites": { type: "reviews", patterns: ["trustpilot.com", "g2.com", "capterra.com", "yelp.com"] },
+  };
+
+  // Count domain occurrences
+  const domainCounts: Record<string, number> = {};
+  allUrls.forEach(url => {
+    try {
+      const domain = new URL(url).hostname.replace("www.", "");
+      domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+    } catch {
+      // skip invalid URLs
+    }
+  });
+
+  // Categorize authority sources
+  const authoritySources: { source: string; type: string; brandPresent: boolean; count: number }[] = [];
+
+  for (const [sourceName, config] of Object.entries(authorityCategories)) {
+    const matchingUrls = allUrls.filter(url => {
+      const lower = url.toLowerCase();
+      return config.patterns.some(p => lower.includes(p));
+    });
+
+    const brandInSource = matchingUrls.some(url => url.toLowerCase().includes(brandLower)) ||
+      allSources.some((s: any) => {
+        const srcUrl = (s.url || s.link || "").toLowerCase();
+        return config.patterns.some(p => srcUrl.includes(p)) && srcUrl.includes(brandLower);
+      });
+
+    if (matchingUrls.length > 0) {
+      authoritySources.push({
+        source: sourceName,
+        type: config.type,
+        brandPresent: brandInSource,
+        count: matchingUrls.length,
+      });
+    }
+  }
+
+  // Identify gaps — important authority sources where brand is NOT present
+  const gaps: string[] = [];
+  const importantSources = ["Wikipedia", "Reddit", "Review Sites"];
+  importantSources.forEach(src => {
+    const found = authoritySources.find(a => a.source === src);
+    if (!found || !found.brandPresent) {
+      if (src === "Wikipedia") {
+        gaps.push(`${brandName} is not cited on Wikipedia — 47.9% of ChatGPT citations come from Wikipedia`);
+      } else if (src === "Reddit") {
+        gaps.push(`${brandName} is not present in Reddit discussions — Reddit accounts for 46.7% of Perplexity citations`);
+      } else if (src === "Review Sites") {
+        gaps.push(`${brandName} lacks presence on review aggregators — these are key trust signals for AI purchase recommendations`);
+      }
+    }
+  });
+
+  // Top cited domains
+  const topSources = Object.entries(domainCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([domain, count]) => ({ domain, count }));
+
+  const brandCited = allUrls.some(url => url.toLowerCase().includes(brandLower)) ||
+    allSources.some((s: any) => (s.url || s.link || "").toLowerCase().includes(brandLower));
+
+  return {
+    totalCitations: allUrls.length,
+    brandCited,
+    authoritySources,
+    topSources,
+    gaps,
   };
 }

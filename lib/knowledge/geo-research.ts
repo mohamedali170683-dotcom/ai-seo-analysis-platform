@@ -492,6 +492,119 @@ export function getPrioritiesByPhase(phase: "immediate" | "medium_term" | "ongoi
   return IMPLEMENTATION_PRIORITIES.filter(p => p.phase === phase);
 }
 
+// ─── Concrete Content Recommendations ────────────────────────────
+// Two categories: on-page (what to change on your site) and distribution (external PR/content)
+// Adapted per stage and score level for agency-ready actionability
+
+export interface ContentRecommendation {
+  type: "on_page" | "distribution";
+  action: string;
+  detail: string;
+  evidenceTier: EvidenceTier;
+  priority: "high" | "medium" | "low";
+}
+
+export interface StageContentPlan {
+  stage: "awareness" | "consideration" | "decision";
+  onPage: ContentRecommendation[];
+  distribution: ContentRecommendation[];
+}
+
+export function getContentRecommendations(
+  stage: "awareness" | "consideration" | "decision",
+  score: number,
+  brandName: string,
+  competitors: string[] = []
+): StageContentPlan {
+  const competitorList = competitors.length > 0 ? competitors.slice(0, 3).join(", ") : "key competitors";
+
+  if (stage === "awareness") {
+    return {
+      stage,
+      onPage: score < 40 ? [
+        { type: "on_page", action: "Create a comprehensive 'About' page with brand story and expert credentials", detail: `Add founder/expert quotations (+40.9% visibility, KDD 2024), company history, mission, and E-E-A-T signals. Include author bios with credentials and schema markup.`, evidenceTier: 1, priority: "high" },
+        { type: "on_page", action: "Build an educational hub with 5-10 pillar guides about your category", detail: `Each guide should be 1000-2000 words, fact-dense with statistics (+30.6% visibility). Structure in 40-60 word paragraph blocks with clear H2/H3 headers for AI extractability.`, evidenceTier: 1, priority: "high" },
+        { type: "on_page", action: "Implement FAQPage schema on key category pages", detail: `FAQPage schema delivers 2.7x citation improvement. Add 5-8 questions per page covering "What is ${brandName}?", brand positioning, and category fundamentals.`, evidenceTier: 1, priority: "high" },
+        { type: "on_page", action: "Add visible 'Last Updated' timestamps on all content pages", detail: `85% of AI citations come from content published in the last 2 years. Visible timestamps signal freshness to both users and AI crawlers.`, evidenceTier: 1, priority: "medium" },
+      ] : score < 70 ? [
+        { type: "on_page", action: "Enrich existing content with statistics and source citations", detail: `Audit your top 10 pages and add 3-5 data points per page with proper source attribution (+27.5% visibility from citations, KDD 2024).`, evidenceTier: 1, priority: "high" },
+        { type: "on_page", action: "Add expert quotations to key pages", detail: `Include quotes from industry experts, founders, or recognized authorities. Expert quotations deliver the highest single-tactic improvement at +40.9%.`, evidenceTier: 1, priority: "high" },
+        { type: "on_page", action: "Optimize content structure for AI extraction", detail: `Restructure pages into answer-first blocks: lead each section with a direct 1-3 sentence answer, then supporting detail. Optimal paragraph length: 40-60 words.`, evidenceTier: 2, priority: "medium" },
+      ] : [
+        { type: "on_page", action: "Refresh key content quarterly with 10-15% substantive updates", detail: `Content not refreshed quarterly is 3x more likely to lose AI citations. Add new data, update statistics, and expand coverage.`, evidenceTier: 1, priority: "medium" },
+        { type: "on_page", action: "Expand into adjacent topic clusters to deepen topical authority", detail: `Create content for related search queries that AI models associate with your category. This builds the topical depth that reinforces authority signals.`, evidenceTier: 2, priority: "medium" },
+      ],
+      distribution: score < 40 ? [
+        { type: "distribution", action: "Create or update Wikipedia article for your brand", detail: `47.9% of ChatGPT citations come from Wikipedia. If ${brandName} doesn't have a Wikipedia page, this is the single highest-impact distribution action. Follow Wikipedia notability guidelines and use neutral, sourced language.`, evidenceTier: 2, priority: "high" },
+        { type: "distribution", action: "Publish 3-5 guest articles on high-authority industry publications", detail: `Target publications that already rank in Google's top 10 for your category. 76% of Gemini citations come from top-10 organic results. Include mentions of ${brandName} with data-backed claims.`, evidenceTier: 2, priority: "high" },
+        { type: "distribution", action: "Build organic Reddit presence in relevant subreddits", detail: `Reddit accounts for 46.7% of Perplexity's top citations. Create genuinely helpful posts and comments in category-relevant subreddits. Never spam — authentic engagement is critical.`, evidenceTier: 2, priority: "medium" },
+      ] : score < 70 ? [
+        { type: "distribution", action: "Maintain and update Wikipedia entry with latest brand developments", detail: `Ensure your Wikipedia article references recent achievements, products, and third-party coverage. Keep citations current.`, evidenceTier: 2, priority: "high" },
+        { type: "distribution", action: "Secure 2-3 expert mentions or media features per quarter", detail: `Cross-platform authority (cited on 4+ platforms) makes your brand 2.8x more likely to appear in ChatGPT. PR coverage on authoritative sites compounds this signal.`, evidenceTier: 2, priority: "medium" },
+      ] : [
+        { type: "distribution", action: "Publish original industry research or annual report", detail: `Create a branded annual report or benchmark study that becomes a reference point for the industry. This generates natural citations across media and AI platforms.`, evidenceTier: 2, priority: "medium" },
+        { type: "distribution", action: "Maintain media coverage cadence with data-driven stories", detail: `Brand search volume is the strongest predictor (0.334 correlation) of AI citation probability. Consistent media presence builds this signal.`, evidenceTier: 2, priority: "medium" },
+      ],
+    };
+  }
+
+  if (stage === "consideration") {
+    return {
+      stage,
+      onPage: score < 40 ? [
+        { type: "on_page", action: `Create head-to-head comparison pages: "${brandName} vs ${competitorList}"`, detail: `Develop detailed, factual comparison pages for each major competitor. Include specific data points (features, pricing, performance), not opinions. Avoid keyword stuffing which harms visibility by -8.3% (KDD 2024).`, evidenceTier: 1, priority: "high" },
+        { type: "on_page", action: `Build a "Best [Category]" guide that positions ${brandName} fairly`, detail: `Create a comprehensive category guide that includes ${brandName} alongside competitors. AI models trust balanced, factual content. Include pros/cons with specific data for each brand.`, evidenceTier: 2, priority: "high" },
+        { type: "on_page", action: "Add verified customer testimonials and case studies with specific metrics", detail: `Include named testimonials with specific outcomes (e.g., "reduced costs by 32%"). Use Review and Product schema markup to help AI platforms extract social proof signals.`, evidenceTier: 2, priority: "high" },
+        { type: "on_page", action: "Implement Product and Review schema markup", detail: `Structured data helps AI platforms understand your product's attributes and reviews. Use Article schema on comparison content and Product schema on product pages.`, evidenceTier: 1, priority: "medium" },
+      ] : score < 70 ? [
+        { type: "on_page", action: "Add unique differentiator data to existing comparison content", detail: `Strengthen comparison pages with proprietary data, third-party test results, and specific performance metrics that competitors can't easily replicate.`, evidenceTier: 2, priority: "high" },
+        { type: "on_page", action: "Use authoritative writing tone across evaluation content", detail: `Authoritative tone increases visibility by +10.4% (KDD 2024). Write with confidence, cite sources, and present clear expert analysis rather than vague marketing claims.`, evidenceTier: 1, priority: "medium" },
+      ] : [
+        { type: "on_page", action: "Publish original benchmark data or category reports", detail: `Create original research comparing products/services in your category. This positions your brand as the category authority and generates natural citations.`, evidenceTier: 2, priority: "medium" },
+        { type: "on_page", action: "Keep comparison content fresh with quarterly updates", detail: `On Perplexity, content freshness decay begins 2-3 days after publication. Quarterly updates to comparison pages maintain citation eligibility.`, evidenceTier: 1, priority: "medium" },
+      ],
+      distribution: score < 40 ? [
+        { type: "distribution", action: "Get listed on major review aggregator sites for your category", detail: `Ensure ${brandName} has complete profiles on category-relevant review platforms (G2, Capterra, Trustpilot, etc.). These are high-authority sources that AI platforms cite when answering comparison queries.`, evidenceTier: 2, priority: "high" },
+        { type: "distribution", action: "Pitch comparison/review content to industry publications", detail: `Approach industry blogs and publications with data-driven comparison content. Third-party reviews carry more weight than self-published comparisons in AI citations.`, evidenceTier: 2, priority: "high" },
+        { type: "distribution", action: "Engage authentically in Reddit comparison threads", detail: `When users ask "X vs Y" on Reddit, provide genuinely helpful, balanced responses. Reddit is 46.7% of Perplexity citations — authentic participation directly influences AI recommendations.`, evidenceTier: 2, priority: "medium" },
+      ] : score < 70 ? [
+        { type: "distribution", action: "Secure third-party product reviews or expert evaluations", detail: `Independent reviews from recognized experts or testing organizations (e.g., Wirecutter, Stiftung Warentest) are high-authority citation sources that AI platforms trust for consideration queries.`, evidenceTier: 2, priority: "high" },
+        { type: "distribution", action: "Create YouTube comparison/review content", detail: `YouTube accounts for 11.11% of Perplexity citations. Create honest, data-driven review videos that AI platforms can reference.`, evidenceTier: 2, priority: "medium" },
+      ] : [
+        { type: "distribution", action: "Pursue industry award nominations and recognition", detail: `Awards and recognition from industry bodies strengthen brand authority signals across AI platforms. Brand search volume (strongest citation predictor at 0.334) increases with recognition.`, evidenceTier: 2, priority: "medium" },
+      ],
+    };
+  }
+
+  // Decision stage
+  return {
+    stage,
+    onPage: score < 40 ? [
+      { type: "on_page", action: "Create a transparent pricing/product page with structured data", detail: `AI platforms look for clear purchase information when answering decision queries. Include specific pricing, features, and availability. Use Product schema with offers and pricing properties.`, evidenceTier: 2, priority: "high" },
+      { type: "on_page", action: "Build dedicated case studies with measurable outcomes", detail: `Create 3-5 detailed case studies with specific metrics (ROI, time saved, cost reduction). AI models use these when recommending products. Include named customers when possible.`, evidenceTier: 2, priority: "high" },
+      { type: "on_page", action: `Develop a "Why ${brandName}" page addressing common purchase objections`, detail: `Address the top 5-7 objections buyers raise. Use data and testimonials to counter each. Structure in FAQ format with FAQPage schema for 2.7x citation improvement.`, evidenceTier: 1, priority: "high" },
+      { type: "on_page", action: "Add trust signals: certifications, guarantees, and security badges", detail: `AI platforms evaluate E-E-A-T signals when making purchase recommendations. Visible trust signals (money-back guarantees, security certifications, industry accreditations) strengthen recommendation likelihood.`, evidenceTier: 2, priority: "medium" },
+    ] : score < 70 ? [
+      { type: "on_page", action: "Strengthen social proof with specific, verifiable metrics", detail: `Replace generic testimonials with specific outcomes: "Reduced shipping costs by 42% in 3 months" is more AI-citable than "Great product!" Include customer names and company names when authorized.`, evidenceTier: 2, priority: "high" },
+      { type: "on_page", action: "Optimize purchase path pages for AI extractability", detail: `Ensure key purchase info (pricing, features, availability) is in plain HTML text (not images or JavaScript-rendered). AI crawlers don't execute JS — use server-side rendering for all purchase content.`, evidenceTier: 1, priority: "high" },
+    ] : [
+      { type: "on_page", action: "Create AI-targeted landing pages for high-intent queries", detail: `Ramp generated 300+ citations from just 2 targeted pages in 30 days (693% visibility improvement). Create dedicated pages answering specific purchase-intent AI queries.`, evidenceTier: 2, priority: "medium" },
+      { type: "on_page", action: "Maintain product/pricing freshness with visible timestamps", detail: `Keep product pages current with accurate pricing and availability. Add visible 'last updated' dates — stale pricing information reduces AI recommendation confidence.`, evidenceTier: 1, priority: "medium" },
+    ],
+    distribution: score < 40 ? [
+      { type: "distribution", action: "Get verified reviews on major platforms (Google, Trustpilot, G2)", detail: `AI platforms cross-reference review aggregators when making purchase recommendations. A strong review profile across multiple platforms significantly increases recommendation probability.`, evidenceTier: 2, priority: "high" },
+      { type: "distribution", action: "Create presence on marketplace/shopping platforms relevant to your category", detail: `Ensure ${brandName} has optimized listings on Amazon, Google Shopping, or category-specific marketplaces. AI models reference these for purchase and availability queries.`, evidenceTier: 2, priority: "high" },
+      { type: "distribution", action: "Publish customer success stories on LinkedIn and industry publications", detail: `Cross-platform presence builds citation signals. LinkedIn content appears faster in Copilot results. Industry publication features strengthen authority for all AI platforms.`, evidenceTier: 2, priority: "medium" },
+    ] : score < 70 ? [
+      { type: "distribution", action: "Engage with purchase-intent Reddit threads and forums", detail: `When users ask "Should I buy X?" on Reddit, ensure your brand has genuine advocates providing helpful, honest answers. This directly influences Perplexity recommendations (46.7% Reddit citations).`, evidenceTier: 2, priority: "high" },
+      { type: "distribution", action: "Pursue third-party endorsements from industry experts or testing organizations", detail: `Independent expert endorsements are among the strongest trust signals for AI purchase recommendations. Seek reviews from recognized testing organizations in your industry.`, evidenceTier: 2, priority: "medium" },
+    ] : [
+      { type: "distribution", action: "Track and optimize AI referral conversion funnel", detail: `AI-sourced leads convert at 6-27x higher rates than traditional search. Set up dedicated tracking for AI referral traffic in analytics to measure and optimize this high-value channel.`, evidenceTier: 2, priority: "medium" },
+      { type: "distribution", action: "Pursue earned media coverage highlighting customer outcomes", detail: `PR stories featuring specific customer results generate high-authority citations. These stories get indexed and referenced by AI platforms when answering purchase queries.`, evidenceTier: 2, priority: "medium" },
+    ],
+  };
+}
+
 // ─── Challenger Brand Advantage Insight ──────────────────────────
 
 export const CHALLENGER_BRAND_INSIGHT = {

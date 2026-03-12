@@ -1043,14 +1043,26 @@ export default function ResultsPage() {
 
           {/* Competitor Intelligence - Collapsible */}
           {(() => {
-            // Calculate outperforming count
-            const yourScore = reportData.overallScore || 0;
+            // Calculate outperforming count using mention rate vs mention rate (apples to apples)
+            const configuredCompetitors = (reportData.competitors || []).map((c: string) => c.toLowerCase());
+
+            // Collect your brand's average mention rate across stages
+            const brandMentionRates = journeyStages.map((s: any) => s?.portrayal?.mentionRate || 0);
+            const yourMentionRate = brandMentionRates.length > 0
+              ? Math.round(brandMentionRates.reduce((a: number, b: number) => a + b, 0) / brandMentionRates.length)
+              : 0;
+
             const allCompetitors = new Map();
             journeyStages.forEach((stage: any) => {
               if (stage?.portrayal?.competitorComparison) {
                 stage.portrayal.competitorComparison.forEach((comp: any) => {
                   const name = comp.competitorName || comp.competitor || comp.name;
                   if (name && name !== reportData.brandOrKeyword) {
+                    // Filter out noise: only include configured competitors or names that look like real brands
+                    const isConfigured = configuredCompetitors.includes(name.toLowerCase());
+                    const looksLikeNoise = name.includes(" ") && name.split(" ").length > 3; // "Popular Local Brands" etc.
+                    if (!isConfigured && looksLikeNoise) return;
+
                     if (!allCompetitors.has(name)) {
                       allCompetitors.set(name, { total: 0, count: 0 });
                     }
@@ -1060,11 +1072,12 @@ export default function ResultsPage() {
                 });
               }
             });
+            // Compare mention rate vs mention rate (same metric, fair comparison)
             const competitorScores = Array.from(allCompetitors.entries()).map(([name, data]: [string, any]) => ({
               name,
               score: Math.round(data.total / data.count)
             }));
-            const beatingCount = competitorScores.filter(c => yourScore > c.score).length;
+            const beatingCount = competitorScores.filter(c => yourMentionRate > c.score).length;
             const totalCompetitors = competitorScores.length;
             const isWinning = totalCompetitors > 0 && beatingCount >= totalCompetitors / 2;
 
@@ -1591,6 +1604,91 @@ export default function ResultsPage() {
                     })()}
                   </div>
 
+                  {/* ═══ CITATION ANALYSIS FOR THIS STAGE ═══ */}
+                  {stage?.citationAnalysis && stage.citationAnalysis.totalCitations > 0 && (
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setExpandedSchemas(prev =>
+                          prev.includes(`cite-${stage?.stage}`)
+                            ? prev.filter(s => s !== `cite-${stage?.stage}`)
+                            : [...prev, `cite-${stage?.stage}`]
+                        )}
+                        className="w-full flex items-center justify-between p-4 rounded-xl transition-colors bg-purple-50 hover:bg-purple-100 text-purple-900"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span>📚</span>
+                          <span className="font-medium">Citation Sources</span>
+                          <span className="text-xs bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full">
+                            {stage.citationAnalysis.totalCitations} citations found
+                          </span>
+                        </div>
+                        {expandedSchemas.includes(`cite-${stage?.stage}`) ? (
+                          <ChevronUp className="w-5 h-5" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5" />
+                        )}
+                      </button>
+
+                      {expandedSchemas.includes(`cite-${stage?.stage}`) && (
+                        <div className="mt-4 bg-white rounded-xl p-6 border-2 border-purple-200">
+                          {/* Brand citation status */}
+                          <div className={`flex items-center gap-3 p-3 rounded-lg mb-4 ${stage.citationAnalysis.brandCited ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                            <span className="text-xl">{stage.citationAnalysis.brandCited ? '✅' : '⚠️'}</span>
+                            <div>
+                              <p className="font-semibold text-sm text-off-black">
+                                {stage.citationAnalysis.brandCited
+                                  ? `${reportData.brandOrKeyword} is being cited as a source`
+                                  : `${reportData.brandOrKeyword} is not appearing in AI citations`
+                                }
+                              </p>
+                              <p className="text-xs text-[#4A5F5F]">
+                                {stage.citationAnalysis.brandCited
+                                  ? 'Your website or content is referenced by AI platforms when generating responses.'
+                                  : 'AI platforms are not citing your website as a source. Building authority on key platforms can change this.'
+                                }
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Authority sources detected */}
+                          {stage.citationAnalysis.authoritySources?.length > 0 && (
+                            <div className="mb-4">
+                              <h6 className="font-semibold text-sm text-off-black mb-2">Authority Sources Detected</h6>
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                {stage.citationAnalysis.authoritySources.map((src: any, idx: number) => (
+                                  <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-off-white border border-[#E5E5E5]">
+                                    <span className={`w-2 h-2 rounded-full ${src.brandPresent ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                                    <div>
+                                      <p className="text-xs font-medium text-off-black">{src.source}</p>
+                                      <p className="text-xs text-off-grey">
+                                        {src.count}x cited {src.brandPresent ? '• Brand present' : '• Brand absent'}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Citation gaps */}
+                          {stage.citationAnalysis.gaps?.length > 0 && (
+                            <div>
+                              <h6 className="font-semibold text-sm text-off-black mb-2">Citation Gaps</h6>
+                              <div className="space-y-2">
+                                {stage.citationAnalysis.gaps.map((gap: string, idx: number) => (
+                                  <div key={idx} className="flex items-start gap-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                                    <span className="text-amber-600 mt-0.5 text-sm">⚡</span>
+                                    <p className="text-xs text-off-black">{gap}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* ═══ RECOMMENDATIONS FOR THIS STAGE ═══ */}
                   {stage?.recommendation && (
                     <div className="mt-4">
@@ -1672,6 +1770,71 @@ export default function ResultsPage() {
                                     )}
                                   </div>
                                 ))}
+                              </div>
+                            )}
+
+                            {/* Content Action Plan — On-Page + Distribution */}
+                            {stage.contentPlan && (stage.contentPlan.onPage?.length > 0 || stage.contentPlan.distribution?.length > 0) && (
+                              <div className="mt-6 pt-4 border-t-2 border-[#E5E5E5]">
+                                <h5 className="font-bold text-off-black mb-4 flex items-center gap-2 text-base">
+                                  <span>📋</span> Content Action Plan
+                                </h5>
+
+                                {/* On-Page Actions */}
+                                {stage.contentPlan.onPage?.length > 0 && (
+                                  <div className="mb-4">
+                                    <h6 className="font-semibold text-[#1D5142] mb-3 flex items-center gap-2 text-sm">
+                                      <span className="w-2 h-2 bg-[#1D5142] rounded-full"></span> On-Page Content
+                                      <span className="text-xs text-off-grey font-normal ml-1">— Changes to make on your website</span>
+                                    </h6>
+                                    <div className="space-y-3">
+                                      {stage.contentPlan.onPage.map((rec: any, idx: number) => (
+                                        <div key={`onpage-${idx}`} className={`p-3 rounded-lg border ${rec.priority === 'high' ? 'border-red-200 bg-red-50/50' : rec.priority === 'medium' ? 'border-amber-200 bg-amber-50/50' : 'border-[#E5E5E5] bg-off-white'}`}>
+                                          <div className="flex items-start gap-2">
+                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded mt-0.5 ${rec.priority === 'high' ? 'bg-red-100 text-red-700' : rec.priority === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'}`}>
+                                              {rec.priority === 'high' ? 'HIGH' : rec.priority === 'medium' ? 'MED' : 'LOW'}
+                                            </span>
+                                            <div className="flex-1">
+                                              <p className="text-sm font-semibold text-off-black">{rec.action}</p>
+                                              <p className="text-xs text-[#4A5F5F] mt-1">{rec.detail}</p>
+                                              {rec.evidenceTier && (
+                                                <span className="inline-block text-xs text-off-grey mt-1">Tier {rec.evidenceTier} evidence</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Distribution/PR Actions */}
+                                {stage.contentPlan.distribution?.length > 0 && (
+                                  <div>
+                                    <h6 className="font-semibold text-[#396FFA] mb-3 flex items-center gap-2 text-sm">
+                                      <span className="w-2 h-2 bg-[#396FFA] rounded-full"></span> Distribution &amp; PR
+                                      <span className="text-xs text-off-grey font-normal ml-1">— External actions to amplify visibility</span>
+                                    </h6>
+                                    <div className="space-y-3">
+                                      {stage.contentPlan.distribution.map((rec: any, idx: number) => (
+                                        <div key={`dist-${idx}`} className={`p-3 rounded-lg border ${rec.priority === 'high' ? 'border-blue-200 bg-blue-50/50' : rec.priority === 'medium' ? 'border-indigo-200 bg-indigo-50/30' : 'border-[#E5E5E5] bg-off-white'}`}>
+                                          <div className="flex items-start gap-2">
+                                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded mt-0.5 ${rec.priority === 'high' ? 'bg-blue-100 text-blue-700' : rec.priority === 'medium' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'}`}>
+                                              {rec.priority === 'high' ? 'HIGH' : rec.priority === 'medium' ? 'MED' : 'LOW'}
+                                            </span>
+                                            <div className="flex-1">
+                                              <p className="text-sm font-semibold text-off-black">{rec.action}</p>
+                                              <p className="text-xs text-[#4A5F5F] mt-1">{rec.detail}</p>
+                                              {rec.evidenceTier && (
+                                                <span className="inline-block text-xs text-off-grey mt-1">Tier {rec.evidenceTier} evidence</span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
 
@@ -4147,6 +4310,8 @@ function transformAnalysisData(data: any) {
         contentType: insight.aiReasoning,
         focusedAction: insight.actions[0] || "Continue monitoring AI visibility",
       },
+      contentPlan: stageData.contentPlan || null,
+      citationAnalysis: stageData.citationAnalysis || null,
     };
   });
 
