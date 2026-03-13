@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, Sparkles, Lock, BarChart3, MessageSquare, AlertTriangle, Calendar, MoreVertical, Eye, Zap } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Plus, Brain, CheckCircle2, Clock, XCircle, Loader, Trash2, ChevronDown, ChevronUp, Sparkles, Lock, BarChart3, MessageSquare, AlertTriangle, Calendar, MoreVertical, Eye, Zap, RefreshCw } from "lucide-react";
 import { ProjectModal } from "@/components/project-modal";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal } from "@/components/UpgradeModal";
@@ -133,6 +134,7 @@ export default function DashboardPage() {
     setShowUpgradeModal(true);
   };
 
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const analysesRef = useRef<Analysis[]>([]);
@@ -141,6 +143,7 @@ export default function DashboardPage() {
   const [clearing, setClearing] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [rerunningId, setRerunningId] = useState<string | null>(null);
 
   const handleClearAll = async () => {
     setClearing(true);
@@ -175,6 +178,29 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Error deleting analysis:", error);
       alert("Failed to delete analysis");
+    }
+  };
+
+  const handleRerunAnalysis = async (id: string, brandName: string) => {
+    if (!confirm(`Re-run analysis for "${brandName}"? This will create a new analysis with the same configuration.`)) return;
+    setRerunningId(id);
+    try {
+      const response = await fetch("/api/analysis/rerun", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysisId: id }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        router.push(`/results/${data.analysisId}`);
+      } else {
+        alert("Failed to re-run: " + (data.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error re-running analysis:", error);
+      alert("Failed to re-run analysis");
+    } finally {
+      setRerunningId(null);
     }
   };
 
@@ -601,13 +627,24 @@ export default function DashboardPage() {
                       {/* Actions */}
                       <div className="flex items-center gap-2">
                         {analysis.status === "completed" ? (
-                          <Link
-                            href={`/results/${analysis.id}`}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1.5 font-medium text-sm transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View Report
-                          </Link>
+                          <>
+                            <Link
+                              href={`/results/${analysis.id}`}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center gap-1.5 font-medium text-sm transition-colors"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Report
+                            </Link>
+                            <button
+                              onClick={() => handleRerunAnalysis(analysis.id, analysis.brandOrKeyword)}
+                              disabled={rerunningId === analysis.id}
+                              className="px-3 py-2 bg-gray-100 hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg flex items-center gap-1.5 font-medium text-sm transition-colors"
+                              title="Re-run this analysis with the same configuration"
+                            >
+                              <RefreshCw className={`w-4 h-4 ${rerunningId === analysis.id ? "animate-spin" : ""}`} />
+                              {rerunningId === analysis.id ? "Starting..." : "Re-run"}
+                            </button>
+                          </>
                         ) : analysis.status === "running" || analysis.status === "pending" ? (
                           <Link
                             href={`/results/${analysis.id}`}
@@ -617,9 +654,15 @@ export default function DashboardPage() {
                             Progress
                           </Link>
                         ) : (
-                          <span className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-400 rounded-lg text-sm">
-                            Failed
-                          </span>
+                          <button
+                            onClick={() => handleRerunAnalysis(analysis.id, analysis.brandOrKeyword)}
+                            disabled={rerunningId === analysis.id}
+                            className="px-3 py-2 bg-gray-100 hover:bg-blue-50 dark:bg-gray-700 dark:hover:bg-blue-900/30 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg flex items-center gap-1.5 font-medium text-sm transition-colors"
+                            title="Re-run this failed analysis"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${rerunningId === analysis.id ? "animate-spin" : ""}`} />
+                            {rerunningId === analysis.id ? "Starting..." : "Re-run"}
+                          </button>
                         )}
                         <button
                           onClick={() => handleDeleteAnalysis(analysis.id, analysis.brandOrKeyword)}

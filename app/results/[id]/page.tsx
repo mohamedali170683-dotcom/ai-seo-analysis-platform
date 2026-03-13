@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2, TrendingUp, HelpCircle } from "lucide-react";
+import { Brain, Users, ShoppingCart, ChevronDown, ChevronUp, ArrowLeft, Lock, Sparkles, Download, FileText, ArrowRight, Calendar, Clock, X, Languages, Loader2, TrendingUp, HelpCircle, RefreshCw } from "lucide-react";
 import { useI18n } from "@/lib/i18n-context";
 import { useTier } from "@/lib/tier";
 import { UpgradeModal, PremiumBadge, BlurredContent, VisibilityGapAlert } from "@/components/UpgradeModal";
@@ -376,6 +376,9 @@ export default function ResultsPage() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [expandedSchemas, setExpandedSchemas] = useState<string[]>([]);
 
+  // Re-run state
+  const [isRerunning, setIsRerunning] = useState(false);
+
   // Schedule automation state
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduleFrequency, setScheduleFrequency] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
@@ -496,6 +499,30 @@ export default function ResultsPage() {
       alert('Failed to schedule analysis. Please try again.');
     } finally {
       setIsScheduling(false);
+    }
+  };
+
+  // Re-run the analysis with the same configuration
+  const handleRerun = async () => {
+    if (!confirm(`Re-run analysis for "${reportData?.brandOrKeyword || "this brand"}"? This will create a new analysis with the same configuration.`)) return;
+    setIsRerunning(true);
+    try {
+      const response = await fetch("/api/analysis/rerun", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ analysisId }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        router.push(`/results/${data.analysisId}`);
+      } else {
+        alert("Failed to re-run: " + (data.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error re-running analysis:", error);
+      alert("Failed to re-run analysis");
+    } finally {
+      setIsRerunning(false);
     }
   };
 
@@ -942,11 +969,19 @@ export default function ResultsPage() {
               <ArrowLeft className="w-4 h-4" />
               Dashboard
             </Link>
+            <button
+              onClick={handleRerun}
+              disabled={isRerunning}
+              className="px-4 py-2 bg-white text-petrol rounded-lg text-sm font-semibold hover:bg-off-white transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${isRerunning ? "animate-spin" : ""}`} />
+              {isRerunning ? "Starting..." : "Re-run Analysis"}
+            </button>
             <Link
               href="/analyze"
-              className="px-4 py-2 bg-white text-petrol rounded-lg text-sm font-semibold hover:bg-off-white transition-all"
+              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-semibold transition-all text-white"
             >
-              Run My Next Audit
+              New Audit
             </Link>
           </div>
         </div>

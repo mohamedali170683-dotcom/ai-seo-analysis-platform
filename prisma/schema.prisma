@@ -7,9 +7,507 @@ datasource db {
   url      = env("POSTGRES_PRISMA_URL")
 }
 
-// ============================================
-// ENUMS
-// ============================================
+model User {
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  name               String?
+  createdAt          DateTime           @default(now())
+  passwordHash       String?
+  scheduledScansUsed Int                @default(0)
+  tier               UserTier           @default(free)
+  tierUpdatedAt      DateTime?
+  alertConfigs       AlertConfig[]
+  analyses           Analysis[]
+  brandGroundTruths  BrandGroundTruth[]
+  integrations       Integration[]
+  projects           Project[]
+  scheduledScans     ScheduledScan[]
+  webhookConfigs     WebhookConfig[]
+}
+
+model Analysis {
+  id                  String               @id @default(cuid())
+  userId              String
+  brandOrKeyword      String
+  domain              String?
+  competitors         String[]
+  targetCountry       String?
+  targetRegion        String?
+  category            String?
+  selectedPlatforms   String[]
+  tier                String?
+  status              AnalysisStatus       @default(pending)
+  progress            Int                  @default(0)
+  currentStep         String?
+  createdAt           DateTime             @default(now())
+  completedAt         DateTime?
+  aiInsights          AIInsight[]
+  aiTestResults       AITestResult[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  detectedCompetitors DetectedCompetitor[]
+  discoveredQuestions DiscoveredQuestion[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([targetCountry])
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@map("analyses")
+}
+
+model DiscoveredQuestion {
+  id           String   @id @default(cuid())
+  analysisId   String
+  question     String
+  searchVolume Int
+  difficulty   Int
+  intent       String
+  category     String
+  score        Int
+  createdAt    DateTime @default(now())
+  analysis     Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@map("discovered_questions")
+}
+
+model AITestResult {
+  id               String   @id @default(cuid())
+  analysisId       String
+  question         String
+  platform         String
+  brandMentioned   Boolean
+  position         Int?
+  sentiment        String?
+  context          String?
+  fullResponse     String?
+  citations        String[]
+  sources          Json?
+  hasGrounding     Boolean  @default(false)
+  isRealAPI        Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  followUpQuestion String?
+  followUpResponse String?
+  followUpSources  Json?
+  analysis         Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([platform])
+  @@map("ai_test_results")
+}
+
+model DetectedCompetitor {
+  id             String   @id @default(cuid())
+  analysisId     String
+  competitorName String
+  domain         String?
+  overlapScore   Float
+  createdAt      DateTime @default(now())
+  analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@map("detected_competitors")
+}
+
+model AIInsight {
+  id               String   @id @default(cuid())
+  analysisId       String
+  category         String
+  priority         Int
+  title            String
+  finding          String
+  dataEvidence     String
+  aiReasoning      String
+  actions          String[]
+  expectedImpact   Json
+  effort           String
+  timeline         String
+  confidence       String
+  correlationScore Int?
+  createdAt        DateTime @default(now())
+  analysis         Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([category])
+  @@map("ai_insights")
+}
+
+model Project {
+  id          String       @id @default(cuid())
+  userId      String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  brandName   String
+  description String?
+  industry    String?
+  websiteUrl  String?
+  assessments Assessment[]
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("projects")
+}
+
+model Assessment {
+  id                  String    @id @default(cuid())
+  projectId           String
+  bsosScore           Float     @default(0)
+  websiteScore        Float     @default(0)
+  websiteBiasScore    Float     @default(0)
+  websiteChoiceScore  Float     @default(0)
+  websiteJourneyScore Float     @default(0)
+  socialScore         Float     @default(0)
+  socialContentScore  Float     @default(0)
+  socialTriggersScore Float     @default(0)
+  socialVisualScore   Float     @default(0)
+  adScore             Float     @default(0)
+  adCreativeScore     Float     @default(0)
+  adPersuasionScore   Float     @default(0)
+  adLandingScore      Float     @default(0)
+  websiteData         Json?
+  socialData          Json?
+  adData              Json?
+  recommendations     Json?
+  status              String    @default("draft")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  completedAt         DateTime?
+  project             Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+  @@map("assessments")
+}
+
+model BrandGroundTruth {
+  id                        String                     @id @default(cuid())
+  userId                    String
+  companyName               String
+  foundedYear               Int?
+  headquarters              String?
+  ceo                       String?
+  ceoSince                  Int?
+  parentCompany             String?
+  publiclyTraded            Boolean                    @default(false)
+  stockTicker               String?
+  employeeCount             Int?
+  revenue                   String?
+  industry                  String?
+  description               String?
+  websiteUrl                String?
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  approvedClaims            ApprovedClaim[]
+  user                      User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  competitorDifferentiators CompetitorDifferentiator[]
+  hallucinationDetections   HallucinationDetection[]
+  historicalFacts           HistoricalFact[]
+  products                  Product[]
+
+  @@unique([userId, companyName])
+  @@index([userId])
+  @@index([companyName])
+  @@map("brand_ground_truths")
+}
+
+model Product {
+  id                 String           @id @default(cuid())
+  groundTruthId      String
+  name               String
+  launchYear         Int?
+  currentlyAvailable Boolean          @default(true)
+  priceMin           Float?
+  priceMax           Float?
+  currency           String?
+  keyFeatures        String[]
+  categories         String[]
+  discontinuedYear   Int?
+  successorProduct   String?
+  description        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  groundTruth        BrandGroundTruth @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  @@index([groundTruthId])
+  @@index([name])
+  @@map("products")
+}
+
+model HistoricalFact {
+  id                 String           @id @default(cuid())
+  groundTruthId      String
+  fact               String
+  year               Int
+  category           String
+  verificationSource String?
+  description        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  groundTruth        BrandGroundTruth @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  @@index([groundTruthId])
+  @@index([category])
+  @@map("historical_facts")
+}
+
+model ApprovedClaim {
+  id                     String           @id @default(cuid())
+  groundTruthId          String
+  claim                  String
+  category               String
+  approved               Boolean          @default(true)
+  regulatoryRestrictions String[]
+  expirationDate         DateTime?
+  verificationSource     String?
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  groundTruth            BrandGroundTruth @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  @@index([groundTruthId])
+  @@index([category])
+  @@map("approved_claims")
+}
+
+model CompetitorDifferentiator {
+  id               String           @id @default(cuid())
+  groundTruthId    String
+  competitor       String
+  theirFeature     String
+  ourEquivalent    String?
+  commonlyConfused Boolean          @default(false)
+  description      String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  groundTruth      BrandGroundTruth @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+
+  @@index([groundTruthId])
+  @@index([competitor])
+  @@map("competitor_differentiators")
+}
+
+model HallucinationDetection {
+  id                 String           @id @default(cuid())
+  groundTruthId      String
+  scanDate           DateTime         @default(now())
+  status             ScanStatus       @default(pending)
+  overallAccuracy    Float?
+  adjustedAccuracy   Float?
+  riskLevel          RiskLevel?
+  chatgptAccuracy    Float?
+  geminiAccuracy     Float?
+  copilotAccuracy    Float?
+  perplexityAccuracy Float?
+  totalClaims        Int              @default(0)
+  correctClaims      Int              @default(0)
+  incorrectClaims    Int              @default(0)
+  unverifiableClaims Int              @default(0)
+  createdAt          DateTime         @default(now())
+  completedAt        DateTime?
+  claudeAccuracy     Float?
+  groundTruth        BrandGroundTruth @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
+  hallucinations     Hallucination[]
+  recommendations    Recommendation[]
+
+  @@index([groundTruthId])
+  @@index([status])
+  @@index([scanDate])
+  @@map("hallucination_detections")
+}
+
+model Hallucination {
+  id              String                 @id @default(cuid())
+  detectionId     String
+  llm             String
+  query           String
+  claimedFact     String
+  actualFact      String
+  category        HallucinationCategory
+  severity        HallucinationSeverity
+  severityScore   Int
+  fullContext     String?
+  responseSnippet String?
+  status          TaskStatus             @default(pending)
+  suggestedAction String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  detection       HallucinationDetection @relation(fields: [detectionId], references: [id], onDelete: Cascade)
+
+  @@index([detectionId])
+  @@index([llm])
+  @@index([category])
+  @@index([severity])
+  @@index([status])
+  @@map("hallucinations")
+}
+
+model Recommendation {
+  id               String                 @id @default(cuid())
+  detectionId      String
+  priority         Priority
+  category         String
+  title            String
+  description      String
+  affectedLLMs     String[]
+  suggestedContent String?
+  status           TaskStatus             @default(pending)
+  implementedAt    DateTime?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  detection        HallucinationDetection @relation(fields: [detectionId], references: [id], onDelete: Cascade)
+
+  @@index([detectionId])
+  @@index([priority])
+  @@index([status])
+  @@map("recommendations")
+}
+
+model ScheduledScan {
+  id             String          @id @default(cuid())
+  userId         String
+  brandOrKeyword String
+  domain         String?
+  competitors    String[]
+  name           String
+  description    String?
+  enabled        Boolean         @default(true)
+  frequency      Frequency       @default(daily)
+  hour           Int?
+  dayOfWeek      Int?
+  dayOfMonth     Int?
+  cronExpression String?
+  timezone       String          @default("UTC")
+  lastRun        DateTime?
+  nextRun        DateTime
+  lastStatus     String?
+  totalRuns      Int             @default(0)
+  successfulRuns Int             @default(0)
+  failedRuns     Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  executions     ScanExecution[]
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([enabled])
+  @@index([nextRun])
+  @@map("scheduled_scans")
+}
+
+model ScanExecution {
+  id              String        @id @default(cuid())
+  scheduledScanId String
+  status          ScanStatus    @default(pending)
+  startTime       DateTime      @default(now())
+  endTime         DateTime?
+  error           String?
+  analysisId      String?
+  createdAt       DateTime      @default(now())
+  scheduledScan   ScheduledScan @relation(fields: [scheduledScanId], references: [id], onDelete: Cascade)
+
+  @@index([scheduledScanId])
+  @@index([status])
+  @@index([startTime])
+  @@map("scan_executions")
+}
+
+model AlertConfig {
+  id                 String       @id @default(cuid())
+  userId             String
+  name               String
+  type               String
+  enabled            Boolean      @default(true)
+  conditions         Json
+  channels           Json
+  throttleEnabled    Boolean      @default(false)
+  throttleWindow     Int?
+  maxAlertsPerWindow Int?
+  lastTriggered      DateTime?
+  triggerCount       Int          @default(0)
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events             AlertEvent[]
+
+  @@index([userId])
+  @@index([enabled])
+  @@index([type])
+  @@map("alert_configs")
+}
+
+model AlertEvent {
+  id               String      @id @default(cuid())
+  alertConfigId    String
+  triggeredAt      DateTime    @default(now())
+  data             Json
+  delivered        Boolean     @default(false)
+  deliveryAttempts Int         @default(0)
+  createdAt        DateTime    @default(now())
+  alertConfig      AlertConfig @relation(fields: [alertConfigId], references: [id], onDelete: Cascade)
+
+  @@index([alertConfigId])
+  @@index([triggeredAt])
+  @@map("alert_events")
+}
+
+model WebhookConfig {
+  id            String            @id @default(cuid())
+  userId        String
+  name          String
+  url           String
+  secret        String
+  enabled       Boolean           @default(true)
+  events        String[]
+  deliveryCount Int               @default(0)
+  failureCount  Int               @default(0)
+  lastTriggered DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deliveries    WebhookDelivery[]
+
+  @@unique([userId, url])
+  @@index([userId])
+  @@index([enabled])
+  @@map("webhook_configs")
+}
+
+model WebhookDelivery {
+  id              String        @id @default(cuid())
+  webhookConfigId String
+  event           String
+  status          ScanStatus    @default(pending)
+  attempts        Int           @default(0)
+  responseCode    Int?
+  errorMessage    String?
+  payload         Json?
+  timestamp       DateTime      @default(now())
+  webhookConfig   WebhookConfig @relation(fields: [webhookConfigId], references: [id], onDelete: Cascade)
+
+  @@index([webhookConfigId])
+  @@index([status])
+  @@index([timestamp])
+  @@map("webhook_deliveries")
+}
+
+model Integration {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  name      String
+  enabled   Boolean   @default(true)
+  config    Json
+  syncCount Int       @default(0)
+  lastSync  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type])
+  @@index([userId])
+  @@index([type])
+  @@index([enabled])
+  @@map("integrations")
+}
 
 enum AnalysisStatus {
   pending
@@ -74,628 +572,4 @@ enum UserTier {
   free
   professional
   partner
-}
-
-// ============================================
-// CORE MODELS
-// ============================================
-
-model User {
-  id                  String                @id @default(cuid())
-  email               String                @unique
-  name                String?
-  passwordHash        String?
-  createdAt           DateTime              @default(now())
-
-  // Subscription tier - determines feature access
-  tier                UserTier              @default(free)
-  tierUpdatedAt       DateTime?
-
-  // Tier limits tracking
-  scheduledScansUsed  Int                   @default(0)
-
-  // Relations with cascade delete
-  analyses            Analysis[]
-  projects            Project[]
-  brandGroundTruths   BrandGroundTruth[]
-  scheduledScans      ScheduledScan[]
-  alertConfigs        AlertConfig[]
-  webhookConfigs      WebhookConfig[]
-  integrations        Integration[]
-}
-
-model Analysis {
-  id                   String                @id @default(cuid())
-  userId               String
-  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brandOrKeyword       String
-  domain               String?
-  competitors          String[]
-  targetCountry        String?               // ISO country code (US, UK, DE, etc.)
-  targetRegion         String?               // Optional region specification
-  status               AnalysisStatus        @default(pending)
-  progress             Int                   @default(0)
-  currentStep          String?
-  createdAt            DateTime              @default(now())
-  completedAt          DateTime?
-  discoveredQuestions  DiscoveredQuestion[]
-  aiTestResults        AITestResult[]
-  detectedCompetitors  DetectedCompetitor[]
-  aiInsights           AIInsight[]
-
-  @@unique([userId, brandOrKeyword, domain])
-  @@index([userId])
-  @@index([status])
-  @@index([targetCountry])
-  @@index([userId, status])
-  @@index([status, createdAt])
-  @@map("analyses")
-}
-
-model DiscoveredQuestion {
-  id           String   @id @default(cuid())
-  analysisId   String
-  analysis     Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  question     String
-  searchVolume Int
-  difficulty   Int
-  intent       String
-  category     String
-  score        Int
-  createdAt    DateTime @default(now())
-
-  @@index([analysisId])
-  @@map("discovered_questions")
-}
-
-model AITestResult {
-  id             String   @id @default(cuid())
-  analysisId     String
-  analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  question       String
-  platform       String
-  brandMentioned Boolean
-  position       Int?
-  sentiment      String?
-  context        String?
-  fullResponse   String?
-  citations      String[]
-  sources        Json?    // Detailed source citations with url, title, domain
-  hasGrounding   Boolean  @default(false) // Whether response has verifiable sources
-  isRealAPI      Boolean  @default(true)  // Whether this was from real API (not simulated)
-  // Follow-up question data for competitive analysis
-  followUpQuestion  String?  // e.g., "Why didn't you mention {brand}?"
-  followUpResponse  String?  // AI's explanation for the recommendation
-  followUpSources   Json?    // Sources cited in follow-up response
-  createdAt      DateTime @default(now())
-
-  @@index([analysisId])
-  @@index([platform])
-  @@map("ai_test_results")
-}
-
-model DetectedCompetitor {
-  id             String   @id @default(cuid())
-  analysisId     String
-  analysis       Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  competitorName String
-  domain         String?
-  overlapScore   Float
-  createdAt      DateTime @default(now())
-
-  @@index([analysisId])
-  @@map("detected_competitors")
-}
-
-model AIInsight {
-  id               String   @id @default(cuid())
-  analysisId       String
-  analysis         Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
-  category         String
-  priority         Int
-  title            String
-  finding          String
-  dataEvidence     String
-  aiReasoning      String
-  actions          String[]
-  expectedImpact   Json
-  effort           String
-  timeline         String
-  confidence       String
-  correlationScore Int?
-  createdAt        DateTime @default(now())
-
-  @@index([analysisId])
-  @@index([category])
-  @@map("ai_insights")
-}
-
-// ============================================
-// FORMA & ATTENTION MODELS
-// ============================================
-
-model Project {
-  id               String            @id @default(cuid())
-  userId           String
-  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brandName        String
-  websiteUrl       String?
-  industry         String?
-  description      String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  assessments      Assessment[]
-
-  @@index([userId])
-  @@map("projects")
-}
-
-model Assessment {
-  id                    String   @id @default(cuid())
-  projectId             String
-  project               Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  // Overall BSOS
-  bsosScore             Float    @default(0)
-
-  // Website/Blog Component (0-33)
-  websiteScore          Float    @default(0)
-  websiteBiasScore      Float    @default(0)
-  websiteChoiceScore    Float    @default(0)
-  websiteJourneyScore   Float    @default(0)
-
-  // Social Media Component (0-33)
-  socialScore           Float    @default(0)
-  socialContentScore    Float    @default(0)
-  socialTriggersScore   Float    @default(0)
-  socialVisualScore     Float    @default(0)
-
-  // Paid Advertising Component (0-34)
-  adScore               Float    @default(0)
-  adCreativeScore       Float    @default(0)
-  adPersuasionScore     Float    @default(0)
-  adLandingScore        Float    @default(0)
-
-  // Assessment Data (JSON)
-  websiteData           Json?
-  socialData            Json?
-  adData                Json?
-
-  // Recommendations
-  recommendations       Json?
-
-  // Status
-  status                String   @default("draft")
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  completedAt           DateTime?
-
-  @@index([projectId])
-  @@index([status])
-  @@map("assessments")
-}
-
-// ============================================
-// MISINFORMATION & HALLUCINATION DETECTION
-// ============================================
-
-model BrandGroundTruth {
-  id                          String                        @id @default(cuid())
-  userId                      String
-  user                        User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Company Information
-  companyName                 String
-  foundedYear                 Int?
-  headquarters                String?
-  ceo                         String?
-  ceoSince                    Int?
-  parentCompany               String?
-  publiclyTraded              Boolean                       @default(false)
-  stockTicker                 String?
-  employeeCount               Int?
-  revenue                     String?
-
-  // Additional metadata
-  industry                    String?
-  description                 String?
-  websiteUrl                  String?
-
-  // Relations
-  products                    Product[]
-  historicalFacts             HistoricalFact[]
-  approvedClaims              ApprovedClaim[]
-  competitorDifferentiators   CompetitorDifferentiator[]
-  hallucinationDetections     HallucinationDetection[]
-
-  createdAt                   DateTime                      @default(now())
-  updatedAt                   DateTime                      @updatedAt
-
-  @@unique([userId, companyName])
-  @@index([userId])
-  @@index([companyName])
-  @@map("brand_ground_truths")
-}
-
-model Product {
-  id                  String            @id @default(cuid())
-  groundTruthId       String
-  groundTruth         BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
-
-  name                String
-  launchYear          Int?
-  currentlyAvailable  Boolean           @default(true)
-  priceMin            Float?
-  priceMax            Float?
-  currency            String?
-  keyFeatures         String[]
-  categories          String[]
-  discontinuedYear    Int?
-  successorProduct    String?
-  description         String?
-
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  @@index([groundTruthId])
-  @@index([name])
-  @@map("products")
-}
-
-model HistoricalFact {
-  id                  String            @id @default(cuid())
-  groundTruthId       String
-  groundTruth         BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
-
-  fact                String
-  year                Int
-  category            String            // founding, product_launch, acquisition, milestone, leadership
-  verificationSource  String?
-  description         String?
-
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  @@index([groundTruthId])
-  @@index([category])
-  @@map("historical_facts")
-}
-
-model ApprovedClaim {
-  id                      String            @id @default(cuid())
-  groundTruthId           String
-  groundTruth             BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
-
-  claim                   String
-  category                String            // performance, sustainability, safety, comparison, award
-  approved                Boolean           @default(true)
-  regulatoryRestrictions  String[]
-  expirationDate          DateTime?
-  verificationSource      String?
-
-  createdAt               DateTime          @default(now())
-  updatedAt               DateTime          @updatedAt
-
-  @@index([groundTruthId])
-  @@index([category])
-  @@map("approved_claims")
-}
-
-model CompetitorDifferentiator {
-  id                  String            @id @default(cuid())
-  groundTruthId       String
-  groundTruth         BrandGroundTruth  @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
-
-  competitor          String
-  theirFeature        String
-  ourEquivalent       String?
-  commonlyConfused    Boolean           @default(false)
-  description         String?
-
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  @@index([groundTruthId])
-  @@index([competitor])
-  @@map("competitor_differentiators")
-}
-
-model HallucinationDetection {
-  id                      String                 @id @default(cuid())
-  groundTruthId           String
-  groundTruth             BrandGroundTruth       @relation(fields: [groundTruthId], references: [id], onDelete: Cascade)
-
-  // Scan metadata
-  scanDate                DateTime               @default(now())
-  status                  ScanStatus             @default(pending)
-
-  // Overall scores
-  overallAccuracy         Float?
-  adjustedAccuracy        Float?
-  riskLevel               RiskLevel?
-
-  // Per-LLM results
-  chatgptAccuracy         Float?
-  geminiAccuracy          Float?
-  copilotAccuracy         Float?
-  perplexityAccuracy      Float?
-  claudeAccuracy          Float?
-
-  // Counts
-  totalClaims             Int                    @default(0)
-  correctClaims           Int                    @default(0)
-  incorrectClaims         Int                    @default(0)
-  unverifiableClaims      Int                    @default(0)
-
-  // Relations
-  hallucinations          Hallucination[]
-  recommendations         Recommendation[]
-
-  createdAt               DateTime               @default(now())
-  completedAt             DateTime?
-
-  @@index([groundTruthId])
-  @@index([status])
-  @@index([scanDate])
-  @@map("hallucination_detections")
-}
-
-model Hallucination {
-  id                  String                  @id @default(cuid())
-  detectionId         String
-  detection           HallucinationDetection  @relation(fields: [detectionId], references: [id], onDelete: Cascade)
-
-  // LLM and query info
-  llm                 String                  // chatgpt, gemini, copilot, perplexity
-  query               String
-
-  // Hallucination details
-  claimedFact         String
-  actualFact          String
-  category            HallucinationCategory
-  severity            HallucinationSeverity
-  severityScore       Int
-
-  // Context
-  fullContext         String?
-  responseSnippet     String?
-
-  // Actions
-  status              TaskStatus              @default(pending)
-  suggestedAction     String?
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
-
-  @@index([detectionId])
-  @@index([llm])
-  @@index([category])
-  @@index([severity])
-  @@index([status])
-  @@map("hallucinations")
-}
-
-model Recommendation {
-  id                  String                  @id @default(cuid())
-  detectionId         String
-  detection           HallucinationDetection  @relation(fields: [detectionId], references: [id], onDelete: Cascade)
-
-  priority            Priority
-  category            String
-  title               String
-  description         String
-  affectedLLMs        String[]
-  suggestedContent    String?
-
-  // Tracking
-  status              TaskStatus              @default(pending)
-  implementedAt       DateTime?
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @updatedAt
-
-  @@index([detectionId])
-  @@index([priority])
-  @@index([status])
-  @@map("recommendations")
-}
-
-// ============================================
-// AUTOMATION & SCHEDULING
-// ============================================
-
-model ScheduledScan {
-  id                  String              @id @default(cuid())
-  userId              String
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  brandOrKeyword      String
-  domain              String?
-  competitors         String[]
-
-  name                String
-  description         String?
-  enabled             Boolean             @default(true)
-
-  // Schedule configuration
-  frequency           Frequency           @default(daily)
-  hour                Int?                // 0-23 for daily/weekly/monthly
-  dayOfWeek           Int?                // 0-6 for weekly (0=Sunday)
-  dayOfMonth          Int?                // 1-31 for monthly
-  cronExpression      String?             // For custom schedules
-  timezone            String              @default("UTC")
-
-  // Execution tracking
-  lastRun             DateTime?
-  nextRun             DateTime
-  lastStatus          String?             // success, failed, running
-  totalRuns           Int                 @default(0)
-  successfulRuns      Int                 @default(0)
-  failedRuns          Int                 @default(0)
-
-  // Relations
-  executions          ScanExecution[]
-
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-
-  @@index([userId])
-  @@index([enabled])
-  @@index([nextRun])
-  @@map("scheduled_scans")
-}
-
-model ScanExecution {
-  id                  String              @id @default(cuid())
-  scheduledScanId     String
-  scheduledScan       ScheduledScan       @relation(fields: [scheduledScanId], references: [id], onDelete: Cascade)
-
-  status              ScanStatus          @default(pending)
-  startTime           DateTime            @default(now())
-  endTime             DateTime?
-  error               String?
-  analysisId          String?
-
-  createdAt           DateTime            @default(now())
-
-  @@index([scheduledScanId])
-  @@index([status])
-  @@index([startTime])
-  @@map("scan_executions")
-}
-
-// ============================================
-// ALERTS & NOTIFICATIONS
-// ============================================
-
-model AlertConfig {
-  id                  String              @id @default(cuid())
-  userId              String
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name                String
-  type                String              // visibility_drop, competitor_takeover, hallucination_detected, etc.
-  enabled             Boolean             @default(true)
-
-  // Conditions (stored as JSON array)
-  conditions          Json                // [{metric, operator, threshold}]
-
-  // Channels (stored as JSON array)
-  channels            Json                // [{type, config, enabled}]
-
-  // Throttling
-  throttleEnabled     Boolean             @default(false)
-  throttleWindow      Int?                // Minutes
-  maxAlertsPerWindow  Int?
-
-  // Tracking
-  lastTriggered       DateTime?
-  triggerCount        Int                 @default(0)
-
-  // Relations
-  events              AlertEvent[]
-
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-
-  @@index([userId])
-  @@index([enabled])
-  @@index([type])
-  @@map("alert_configs")
-}
-
-model AlertEvent {
-  id                  String              @id @default(cuid())
-  alertConfigId       String
-  alertConfig         AlertConfig         @relation(fields: [alertConfigId], references: [id], onDelete: Cascade)
-
-  triggeredAt         DateTime            @default(now())
-  data                Json                // Alert-specific data
-  delivered           Boolean             @default(false)
-  deliveryAttempts    Int                 @default(0)
-
-  createdAt           DateTime            @default(now())
-
-  @@index([alertConfigId])
-  @@index([triggeredAt])
-  @@map("alert_events")
-}
-
-// ============================================
-// WEBHOOKS & INTEGRATIONS
-// ============================================
-
-model WebhookConfig {
-  id                  String              @id @default(cuid())
-  userId              String
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  name                String
-  url                 String
-  secret              String              // For HMAC signature
-  enabled             Boolean             @default(true)
-
-  // Event filtering
-  events              String[]            // analysis.completed, alert.triggered, etc.
-
-  // Stats
-  deliveryCount       Int                 @default(0)
-  failureCount        Int                 @default(0)
-  lastTriggered       DateTime?
-
-  // Relations
-  deliveries          WebhookDelivery[]
-
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-
-  @@unique([userId, url])
-  @@index([userId])
-  @@index([enabled])
-  @@map("webhook_configs")
-}
-
-model WebhookDelivery {
-  id                  String              @id @default(cuid())
-  webhookConfigId     String
-  webhookConfig       WebhookConfig       @relation(fields: [webhookConfigId], references: [id], onDelete: Cascade)
-
-  event               String              // Event type that triggered
-  status              ScanStatus          @default(pending)
-  attempts            Int                 @default(0)
-  responseCode        Int?
-  errorMessage        String?
-  payload             Json?               // Event payload sent
-
-  timestamp           DateTime            @default(now())
-
-  @@index([webhookConfigId])
-  @@index([status])
-  @@index([timestamp])
-  @@map("webhook_deliveries")
-}
-
-model Integration {
-  id                  String              @id @default(cuid())
-  userId              String
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type                String              // zapier, slack, google_sheets, discord, teams, airtable, etc.
-  name                String
-  enabled             Boolean             @default(true)
-
-  // OAuth/Config data (encrypted)
-  config              Json                // Integration-specific configuration
-
-  // Stats
-  syncCount           Int                 @default(0)
-  lastSync            DateTime?
-
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
-
-  @@unique([userId, type])
-  @@index([userId])
-  @@index([type])
-  @@index([enabled])
-  @@map("integrations")
 }
