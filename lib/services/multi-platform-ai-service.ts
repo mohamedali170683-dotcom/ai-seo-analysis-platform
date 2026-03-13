@@ -784,7 +784,12 @@ export class MultiPlatformAIService {
   ): Omit<AIResponse, 'platform' | 'modelVersion' | 'queryNumber' | 'question' | 'fullResponse' | 'isRealAPI' | 'hasGrounding' | 'sources'> {
     const lowerResponse = response.toLowerCase();
     const lowerBrand = brandName.toLowerCase();
-    const brandMentioned = lowerResponse.includes(lowerBrand);
+
+    // Build brand name variants for fuzzy matching
+    // Handles: "Fujifilms" → also checks "Fujifilm", "L'Oréal Inc" → also checks "L'Oréal"
+    const brandVariants = this.getBrandVariants(lowerBrand);
+    const matchedVariant = brandVariants.find(v => lowerResponse.includes(v));
+    const brandMentioned = matchedVariant !== undefined;
 
     let brandPosition: number | null = null;
     let contextExtract: string | null = null;
@@ -793,12 +798,18 @@ export class MultiPlatformAIService {
       const allBrands = [brandName, ...competitors];
       const firstBrandMentions: { brand: string; index: number }[] = [];
 
-      // For each brand, find only its FIRST occurrence
+      // For each brand, find only its FIRST occurrence (use variants for our brand)
       allBrands.forEach((brand) => {
-        const regex = new RegExp(`\\b${this.escapeRegex(brand)}\\b`, "i");  // Case-insensitive
-        const match = regex.exec(response);  // Only get first match
-        if (match) {
-          firstBrandMentions.push({ brand: brand.toLowerCase(), index: match.index });
+        const isOurBrand = brand.toLowerCase() === lowerBrand;
+        const variants = isOurBrand ? this.getBrandVariants(brand.toLowerCase()) : [brand.toLowerCase()];
+
+        for (const variant of variants) {
+          const regex = new RegExp(`\\b${this.escapeRegex(variant)}\\b`, "i");
+          const match = regex.exec(response);
+          if (match) {
+            firstBrandMentions.push({ brand: lowerBrand, index: match.index });
+            break; // Use first matching variant
+          }
         }
       });
 
@@ -809,10 +820,11 @@ export class MultiPlatformAIService {
       const brandFirstMention = firstBrandMentions.findIndex(m => m.brand === lowerBrand);
       brandPosition = brandFirstMention >= 0 ? brandFirstMention + 1 : null;
 
-      const brandIndex = lowerResponse.indexOf(lowerBrand);
+      // Extract context around the matched variant
+      const brandIndex = lowerResponse.indexOf(matchedVariant!);
       if (brandIndex !== -1) {
         const start = Math.max(0, brandIndex - 50);
-        const end = Math.min(response.length, brandIndex + brandName.length + 200);
+        const end = Math.min(response.length, brandIndex + matchedVariant!.length + 200);
         contextExtract = response.substring(start, end).trim();
         if (start > 0) contextExtract = "..." + contextExtract;
         if (end < response.length) contextExtract = contextExtract + "...";
@@ -930,6 +942,39 @@ export class MultiPlatformAIService {
     if (positiveScore > negativeScore) return "positive";
     if (negativeScore > positiveScore) return "negative";
     return "neutral";
+  }
+
+  /**
+   * Generate brand name variants for fuzzy matching.
+   * "Fujifilms" → ["fujifilms", "fujifilm"]
+   * "L'Oréal Inc" → ["l'oréal inc", "l'oréal"]
+   */
+  private getBrandVariants(brand: string): string[] {
+    const variants = new Set<string>();
+    const lower = brand.toLowerCase().trim();
+    variants.add(lower);
+
+    // Strip common corporate suffixes
+    const suffixes = [
+      /\s+(inc\.?|corp\.?|ltd\.?|llc\.?|gmbh|ag|s\.?a\.?|plc|co\.?)$/i,
+    ];
+    let stem = lower;
+    for (const suffix of suffixes) {
+      stem = stem.replace(suffix, "").trim();
+    }
+    if (stem !== lower) variants.add(stem);
+
+    // Strip trailing 's' for plural (Fujifilms → Fujifilm)
+    if (stem.length > 3 && stem.endsWith("s") && !stem.endsWith("ss")) {
+      variants.add(stem.slice(0, -1));
+    }
+
+    // Strip trailing "'s" possessive
+    if (stem.endsWith("'s")) {
+      variants.add(stem.slice(0, -2));
+    }
+
+    return Array.from(variants);
   }
 
   private escapeRegex(s: string): string {
