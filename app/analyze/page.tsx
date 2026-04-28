@@ -327,11 +327,21 @@ export default function AnalyzePage() {
     const estimatedSeconds = Math.max(120, totalQuestions * 25); // At least 2 minutes
     setAnalysisCountdown(estimatedSeconds);
 
-    const allQuestions = [
-      ...selectedQuestions.awareness,
-      ...selectedQuestions.consideration,
-      ...selectedQuestions.decision,
+    // Round-robin across stages so a partial run (e.g. time budget exceeded)
+    // doesn't disproportionately drop decision-phase questions, which used to
+    // come last in the array.
+    const allQuestions: typeof selectedQuestions.awareness = [];
+    const stageBuckets = [
+      selectedQuestions.awareness,
+      selectedQuestions.consideration,
+      selectedQuestions.decision,
     ];
+    const maxStageLen = Math.max(...stageBuckets.map(b => b.length));
+    for (let idx = 0; idx < maxStageLen; idx++) {
+      for (const bucket of stageBuckets) {
+        if (bucket[idx]) allQuestions.push(bucket[idx]);
+      }
+    }
 
     try {
       const response = await fetch("/api/analysis/run-selected", {

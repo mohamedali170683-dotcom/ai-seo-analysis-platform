@@ -381,14 +381,18 @@ async function executeSelectedAnalysis(
     const allResults: any[] = [];
     const totalQuestions = selectedQuestions.length;
     let savedResponseCount = 0;
+    let timeBudgetExceeded = false;
+    let processedQuestions = 0;
 
     for (let i = 0; i < totalQuestions; i++) {
       const elapsed = Date.now() - startTime;
       if (elapsed > maxExecutionMs) {
         console.warn(`⏱️ [EXEC] Time budget exceeded (${Math.round(elapsed/1000)}s), stopping at Q${i}/${totalQuestions}`);
         await updateProgress(85, `Time limit reached — processed ${i}/${totalQuestions} questions`);
+        timeBudgetExceeded = true;
         break;
       }
+      processedQuestions = i + 1;
 
       const question = selectedQuestions[i];
       const progress = 5 + Math.floor(((i + 1) / totalQuestions) * 80);
@@ -560,6 +564,16 @@ async function executeSelectedAnalysis(
 
     for (const [stage, results] of Object.entries(stageGroups)) {
       const stageResults = results.filter((r: any) => !r.error);
+
+      // Skip stages with zero successful results — usually means the user's
+      // selected questions for this stage never executed (time budget hit).
+      // Creating an empty insight surfaces a confusing "0% mention rate /
+      // no questions" card on the results page.
+      if (stageResults.length === 0) {
+        console.log(`⏭️ [EXEC] Skipping ${stage} stage insight — no successful results`);
+        continue;
+      }
+
       const stageResponses = stageResults.reduce((sum: number, r: any) => sum + (r.totalResponses || 0), 0);
       const stageMentions = stageResults.reduce((sum: number, r: any) => {
         return sum + (r.responses?.filter((resp: any) => resp.brandMentioned)?.length || 0);
@@ -791,6 +805,56 @@ async function executeSelectedAnalysis(
       } catch (insightErr: any) {
         console.error(`⚠️ [EXEC] Failed to create ${stage} insight: ${insightErr.message}`);
         // Continue - don't fail the whole analysis for one insight
+      }
+    }
+
+    // If the run was cut short by the time budget, surface a visible warning
+    // so users understand why some of their selected questions are missing.
+    if (timeBudgetExceeded) {
+      const droppedQuestions = selectedQuestions.slice(processedQuestions);
+      const droppedByStage: Record<string, number> = {};
+      droppedQuestions.forEach(q => {
+        droppedByStage[q.category] = (droppedByStage[q.category] || 0) + 1;
+      });
+      const droppedSummary = Object.entries(droppedByStage)
+        .map(([s, n]) => `${n} ${s}`)
+        .join(", ");
+
+      try {
+        await prisma.aIInsight.create({
+          data: {
+            analysisId,
+            category: "partial_run_warning",
+            priority: 0,
+            title: "Partial run — analysis time budget exceeded",
+            finding: `Processed ${processedQuestions} of ${totalQuestions} selected questions before the 5-minute execution limit was reached.`,
+            dataEvidence: JSON.stringify({
+              processedQuestions,
+              totalQuestions,
+              droppedQuestions: droppedQuestions.map(q => ({
+                question: q.question,
+                category: q.category,
+              })),
+              droppedByStage,
+            }),
+            aiReasoning: `Analysis stopped after ${Math.round((Date.now() - startTime) / 1000)}s. Remaining questions (${droppedSummary}) were not tested.`,
+            actions: [
+              "Re-run with fewer questions or platforms to fit within the time budget",
+              "Reduce tests-per-platform to lower total AI calls",
+            ],
+            expectedImpact: {
+              processedQuestions,
+              totalQuestions,
+              droppedByStage,
+            },
+            effort: "low",
+            timeline: "immediate",
+            confidence: "high",
+          },
+        });
+        console.log(`⚠️ [EXEC] Created partial-run warning insight (${processedQuestions}/${totalQuestions})`);
+      } catch (warnErr: any) {
+        console.error(`⚠️ [EXEC] Failed to create partial-run warning: ${warnErr.message}`);
       }
     }
 

@@ -990,6 +990,34 @@ export default function ResultsPage() {
       {/* Main Content */}
       <div className="container mx-auto max-w-6xl px-4 py-8">
 
+        {/* Partial-run warning — shown when the analysis time budget was
+            exceeded and some selected questions never executed. */}
+        {reportData.partialRunWarning && (
+          <div className="mb-6 rounded-xl border-2 border-amber-300 bg-amber-50 p-5">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl leading-none">⚠️</span>
+              <div className="flex-1">
+                <h3 className="font-bold text-amber-900 mb-1">
+                  Partial run — only {reportData.partialRunWarning.processedQuestions} of {reportData.partialRunWarning.totalQuestions} questions were tested
+                </h3>
+                <p className="text-sm text-amber-800 mb-2">
+                  The analysis hit its 5-minute execution limit before all selected questions could run.
+                  {Object.keys(reportData.partialRunWarning.droppedByStage).length > 0 && (
+                    <> Skipped: {Object.entries(reportData.partialRunWarning.droppedByStage).map(([s, n]) => `${n} ${s}`).join(", ")}.</>
+                  )}
+                </p>
+                {reportData.partialRunWarning.actions.length > 0 && (
+                  <ul className="text-sm text-amber-800 list-disc list-inside space-y-0.5">
+                    {reportData.partialRunWarning.actions.map((a: string, i: number) => (
+                      <li key={i}>{a}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ═══════════════════════════════════════════════════════════════ */}
         {/* MAIN LAYOUT: Overall Score + Funnel Stage Cards */}
         {/* ═══════════════════════════════════════════════════════════════ */}
@@ -4301,7 +4329,20 @@ function transformAnalysisData(data: any) {
   // Extract website audit insight
   const websiteAuditInsight = insights.find((i: any) => i.category === "website_audit");
   const websiteAudit = websiteAuditInsight?.expectedImpact || null;
-  
+
+  // Extract partial-run warning (set when the analysis time budget was exceeded
+  // and some selected questions never executed).
+  const partialRunInsight = insights.find((i: any) => i.category === "partial_run_warning");
+  const partialRunWarning = partialRunInsight ? {
+    title: partialRunInsight.title,
+    finding: partialRunInsight.finding,
+    reasoning: partialRunInsight.aiReasoning,
+    processedQuestions: partialRunInsight.expectedImpact?.processedQuestions,
+    totalQuestions: partialRunInsight.expectedImpact?.totalQuestions,
+    droppedByStage: partialRunInsight.expectedImpact?.droppedByStage || {},
+    actions: partialRunInsight.actions || [],
+  } : null;
+
   // Extract journey stage insights
   const journeyStageInsights = insights.filter((i: any) => i.category === "journey_stage");
   
@@ -4492,6 +4533,7 @@ function transformAnalysisData(data: any) {
     scoringMethodology,
     journeyStages,
     websiteAudit,
+    partialRunWarning,
     platformBreakdown,
     // Include raw data for detailed answers display
     aiTestResults: analysis.aiTestResults || [],
