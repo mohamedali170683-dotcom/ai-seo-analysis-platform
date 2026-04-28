@@ -79,6 +79,11 @@ export async function POST(request: Request) {
     const targetCountry = body.targetCountry || "US"; // Default to US if not specified
     const testsPerPlatform = body.testsPerPlatform || 3;
     const tier = body.tier || "free";
+    // Optional human-readable label (e.g. "P&G Pampers Q1") for easier
+    // identification in dashboards and the reuse-setup picker.
+    const auditName = typeof body.name === "string" && body.name.trim().length > 0
+      ? body.name.trim().slice(0, 120)
+      : null;
     
     // Handle questions - support both full objects and simple strings
     let selectedQuestions: SelectedQuestion[] = [];
@@ -212,6 +217,7 @@ export async function POST(request: Request) {
       data: {
         userId: user.id,
         brandOrKeyword: brandName,
+        name: auditName,
         domain: domain || null,
         competitors: finalCompetitors,
         targetCountry: targetCountry,

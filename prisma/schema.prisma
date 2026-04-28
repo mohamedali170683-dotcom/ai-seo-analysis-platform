@@ -29,6 +29,7 @@ model Analysis {
   id                  String               @id @default(cuid())
   userId              String
   brandOrKeyword      String
+  name                String?
   domain              String?
   competitors         String[]
   targetCountry       String?

@@ -21,10 +21,16 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      analyses: analyses.map((a: { id: string; brandOrKeyword: string; domain: string | null; status: string; progress: number; currentStep: string | null; createdAt: Date; completedAt: Date | null; _count: { discoveredQuestions: number; aiTestResults: number; aiInsights: number } }) => ({
+      analyses: analyses.map((a: any) => ({
         id: a.id,
+        name: a.name,
         brandOrKeyword: a.brandOrKeyword,
         domain: a.domain,
+        category: a.category,
+        competitors: a.competitors,
+        targetCountry: a.targetCountry,
+        selectedPlatforms: a.selectedPlatforms,
+        tier: a.tier,
         status: a.status,
         progress: a.progress,
         currentStep: a.currentStep,

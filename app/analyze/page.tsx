@@ -23,7 +23,7 @@ interface Question {
   searchVolume: number;
   category: "awareness" | "consideration" | "decision";
   type: "brand" | "category";
-  source: "real_data" | "strategic";
+  source: "real_data" | "strategic" | "custom";
 }
 
 interface QuestionGroup {
@@ -46,6 +46,7 @@ export default function AnalyzePage() {
   const { t } = useI18n();
 
   // Form state
+  const [auditName, setAuditName] = useState("");
   const [brandName, setBrandName] = useState("");
   const [domain, setDomain] = useState("");
   const [category, setCategory] = useState("");
@@ -53,6 +54,50 @@ export default function AnalyzePage() {
   const [questionLanguage, setQuestionLanguage] = useState("en");
   const [competitors, setCompetitors] = useState("");
   const [brandDescription, setBrandDescription] = useState("");
+
+  // Reuse-setup-from-previous-audit picker
+  type PreviousAudit = {
+    id: string;
+    name: string | null;
+    brandOrKeyword: string;
+    domain: string | null;
+    category: string | null;
+    competitors: string[] | null;
+    targetCountry: string | null;
+    createdAt: string;
+  };
+  const [previousAudits, setPreviousAudits] = useState<PreviousAudit[]>([]);
+  const [previousAuditsLoading, setPreviousAuditsLoading] = useState(false);
+  const [selectedPreviousAuditId, setSelectedPreviousAuditId] = useState("");
+
+  // Lazy-load on first focus to avoid hammering the list endpoint on every visit
+  const loadPreviousAudits = useCallback(async () => {
+    if (previousAudits.length > 0 || previousAuditsLoading) return;
+    setPreviousAuditsLoading(true);
+    try {
+      const res = await fetch("/api/analysis/list");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.analyses)) {
+        setPreviousAudits(data.analyses);
+      }
+    } catch (err) {
+      console.error("Failed to load previous audits:", err);
+    } finally {
+      setPreviousAuditsLoading(false);
+    }
+  }, [previousAudits.length, previousAuditsLoading]);
+
+  const applyPreviousAudit = (id: string) => {
+    setSelectedPreviousAuditId(id);
+    if (!id) return;
+    const source = previousAudits.find(a => a.id === id);
+    if (!source) return;
+    setBrandName(source.brandOrKeyword || "");
+    setDomain(source.domain || "");
+    setCategory(source.category || "");
+    setTargetCountry(source.targetCountry || "US");
+    setCompetitors(Array.isArray(source.competitors) ? source.competitors.join(", ") : "");
+  };
   
   // AI Persona suggestions - simplified approach
   const [suggestedPersonas, setSuggestedPersonas] = useState<SuggestedPersona[]>([]);
@@ -117,6 +162,51 @@ export default function AnalyzePage() {
     consideration: [],
     decision: [],
   });
+
+  // Per-stage drafts for user-written custom questions, keyed by stage.
+  const [customQuestionDrafts, setCustomQuestionDrafts] = useState<Record<string, string>>({
+    awareness: "",
+    consideration: "",
+    decision: "",
+  });
+
+  // Add a user-written question to the selected list for a given stage.
+  // Custom questions get searchVolume 0 (no keyword data) and source "custom"
+  // so the backend can persist them alongside discovered ones.
+  const addCustomQuestion = (stage: "awareness" | "consideration" | "decision") => {
+    if (!isStageAllowed(stage)) {
+      openUpgradeModal(stage as UpgradeModalTrigger);
+      return;
+    }
+    const text = (customQuestionDrafts[stage] || "").trim();
+    if (text.length < 5) {
+      alert("Please enter a question of at least 5 characters.");
+      return;
+    }
+    const currentTotal = Object.values(selectedQuestions).reduce((sum, qs) => sum + qs.length, 0);
+    if (currentTotal >= limits.maxQuestions) {
+      openUpgradeModal("question_limit");
+      return;
+    }
+    const stageQuestions = selectedQuestions[stage] || [];
+    if (stageQuestions.some(q => q.question.toLowerCase() === text.toLowerCase())) {
+      alert("That question is already selected.");
+      return;
+    }
+    const newQuestion: Question = {
+      id: `custom-${stage}-${Date.now()}`,
+      question: text,
+      searchVolume: 0,
+      category: stage,
+      type: "category",
+      source: "custom",
+    };
+    setSelectedQuestions(prev => ({
+      ...prev,
+      [stage]: [...(prev[stage] || []), newQuestion],
+    }));
+    setCustomQuestionDrafts(prev => ({ ...prev, [stage]: "" }));
+  };
 
   // Platform selection
   const [selectedPlatforms, setSelectedPlatforms] = useState<Platform[]>(["ChatGPT", "Gemini", "Perplexity"]);
@@ -349,6 +439,7 @@ export default function AnalyzePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brandName,
+          name: auditName.trim() || undefined,
           domain,
           category,
           targetCountry, // Add country for geo-specific analysis
@@ -556,6 +647,52 @@ export default function AnalyzePage() {
               {/* Form Body */}
               <div className="p-8 space-y-6">
                 <div className="space-y-5">
+
+                {/* Reuse setup from a previous audit (optional) */}
+                <div className="rounded-xl border border-dashed border-blue-200 bg-blue-50/40 p-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Reuse setup from a previous audit (optional)
+                  </label>
+                  <select
+                    value={selectedPreviousAuditId}
+                    onFocus={loadPreviousAudits}
+                    onChange={(e) => applyPreviousAudit(e.target.value)}
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+                  >
+                    <option value="">{previousAuditsLoading ? "Loading…" : "— Start fresh —"}</option>
+                    {previousAudits.map(a => {
+                      const dateLabel = new Date(a.createdAt).toLocaleDateString(undefined, {
+                        year: "numeric", month: "short", day: "numeric",
+                      });
+                      const label = a.name?.trim() || a.brandOrKeyword;
+                      return (
+                        <option key={a.id} value={a.id}>
+                          {label} — {dateLabel}{a.name?.trim() ? ` · ${a.brandOrKeyword}` : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Picks brand, domain, category, country and competitors. You still pick fresh questions on the next step.
+                  </p>
+                </div>
+
+                {/* Audit name (optional, helps identify it later) */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Audit name <span className="font-normal text-gray-400">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={auditName}
+                    onChange={(e) => setAuditName(e.target.value)}
+                    placeholder="e.g. P&G Pampers — Q1 pitch"
+                    maxLength={120}
+                    className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[44px]"
+                  />
+                  <p className="text-xs text-gray-400 mt-1.5">Shown on the dashboard and the reuse-setup picker.</p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('form.brandName')} *</label>
                   <input
@@ -1017,6 +1154,64 @@ export default function AnalyzePage() {
                             </div>
                           );
                         })}
+                      </div>
+
+                      {/* Custom (user-written) questions for this stage */}
+                      <div className="mt-3">
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                          <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Your Questions</span>
+                        </div>
+                        {(selectedQuestions[group.stage] || [])
+                          .filter(q => q.source === "custom")
+                          .map(q => (
+                            <div
+                              key={q.id}
+                              onClick={() => toggleQuestion(q, group.stage)}
+                              className={`p-3 rounded-xl cursor-pointer transition-all mb-2 border-2 ${colors.selected}`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="text-sm text-gray-900 font-medium">{q.question}</span>
+                                <span className="text-blue-500 text-base">✓</span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-2">
+                                <span className="text-[10px] uppercase tracking-wide text-blue-600 font-semibold">Custom</span>
+                              </div>
+                            </div>
+                          ))}
+                        {!isLocked && (
+                          <div className="rounded-xl border border-dashed border-gray-300 p-2 bg-white">
+                            <textarea
+                              value={customQuestionDrafts[group.stage] || ""}
+                              onChange={(e) =>
+                                setCustomQuestionDrafts(prev => ({ ...prev, [group.stage]: e.target.value }))
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  addCustomQuestion(group.stage);
+                                }
+                              }}
+                              placeholder="Write your own question…"
+                              rows={2}
+                              maxLength={240}
+                              className="w-full bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none resize-none"
+                            />
+                            <div className="flex items-center justify-between mt-1">
+                              <span className="text-[10px] text-gray-400">
+                                {(customQuestionDrafts[group.stage] || "").length}/240
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => addCustomQuestion(group.stage)}
+                                disabled={(customQuestionDrafts[group.stage] || "").trim().length < 5}
+                                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500 text-white disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors"
+                              >
+                                + Add
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
