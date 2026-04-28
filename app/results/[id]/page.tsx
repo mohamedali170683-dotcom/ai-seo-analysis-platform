@@ -1775,6 +1775,13 @@ export default function ResultsPage() {
                         </div>
                       </div>
 
+                      {stage.gapAnalysis.warning && (
+                        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                          <span className="text-amber-600 mt-0.5 text-sm shrink-0">⚠️</span>
+                          <p className="text-xs text-amber-900">{stage.gapAnalysis.warning}</p>
+                        </div>
+                      )}
+
                       <div className="grid md:grid-cols-2 gap-3 mb-4 text-xs">
                         <div className="p-2 bg-[#F4F1EC] rounded-lg">
                           <div className="text-[#4A5F5F] mb-0.5">Most-cited source</div>
@@ -1823,7 +1830,7 @@ export default function ResultsPage() {
                         </div>
                       )}
 
-                      {stage.gapAnalysis.matchedTopics?.length > 0 && (
+                      {stage.gapAnalysis.matchedTopics?.length > 0 ? (
                         <div>
                           <h6 className="font-semibold text-sm text-off-black mb-2">
                             Topics you already cover well
@@ -1836,6 +1843,11 @@ export default function ResultsPage() {
                               </li>
                             ))}
                           </ul>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-[#F4F1EC] rounded-lg border border-[#E5E0D8] text-xs text-[#4A5F5F]">
+                          <span className="font-semibold text-off-black">No topics from the cited source are meaningfully covered on your page yet.</span>
+                          {" "}Closest similarity in your content stayed below the {Math.round((stage.gapAnalysis.matchThreshold ?? 0.72) * 100)}% match threshold.
                         </div>
                       )}
 

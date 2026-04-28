@@ -55,8 +55,10 @@ async function main() {
   console.log(`Avg similarity:   ${result.averageSimilarity}`);
   console.log(`Match threshold:  ${result.matchThreshold}`);
   console.log(`Chunks compared:  source=${result.chunksCompared.source}  brand=${result.chunksCompared.brand}`);
-  console.log(`Cited title:      "${result.citedSource.title.slice(0, 70)}"`);
-  console.log(`Brand title:      "${result.brandSource.title.slice(0, 70)}"`);
+  console.log(`Cited:            ${result.citedSource.language ?? "?"}  "${result.citedSource.title.slice(0, 70)}"`);
+  console.log(`Brand:            ${result.brandSource.language ?? "?"}  "${result.brandSource.title.slice(0, 70)}"`);
+  console.log(`Language mismatch: ${result.languageMismatch}`);
+  if (result.warning) console.log(`⚠️  Warning:       ${result.warning}`);
 
   console.log("\nTop missing topics (lowest brand similarity):");
   result.missingTopics.forEach((t, i) => {
