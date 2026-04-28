@@ -5,6 +5,7 @@ import { AnalysisStatus } from "@prisma/client";
 import { MultiPlatformAIService } from "@/lib/services/multi-platform-ai-service";
 import { WebsiteAuditService, WebsiteAuditResult } from "@/lib/services/website-audit-service";
 import { getContentRecommendations } from "@/lib/knowledge/geo-research";
+import { computeContentGap, type ContentGapResult } from "@/lib/services/content-gap-analyzer";
 
 export const maxDuration = 300; // 5 minutes for longer analyses
 export const preferredRegion = "iad1"; // US East - for Gemini API availability
@@ -562,6 +563,39 @@ async function executeSelectedAnalysis(
     };
     const stageVisibilityScores: Record<string, number> = {};
 
+    // Kick off content-gap analyses (cited source vs brand page) for all
+    // stages in parallel before the insight loop. Each stage gets a hard
+    // timeout so a slow scrape can't drag the whole analysis past its
+    // budget. Result is awaited inside the loop just before the insight is
+    // written. When no domain is configured we skip — there's nothing to
+    // compare the cited source against.
+    const gapAnalysisPromises: Record<string, Promise<ContentGapResult | null>> = {};
+    if (domain && envVars.openaiApiKey) {
+      const stageGapBudgetMs = 20_000;
+      for (const [stage, results] of Object.entries(stageGroups)) {
+        const stageResults = results.filter((r: any) => !r.error);
+        if (stageResults.length === 0) continue;
+        const preview = analyzeCitations(stageResults, brandName, domain);
+        const target = preview.topCitedUrl;
+        if (!target) {
+          console.log(`⏭️ [GAP] ${stage} — no external citations to compare against`);
+          continue;
+        }
+        const brandUrl = domain.startsWith("http") ? domain : `https://${domain}`;
+        console.log(`🧭 [GAP] ${stage} — comparing brand "${brandUrl}" vs cited "${target}"`);
+        gapAnalysisPromises[stage] = Promise.race<ContentGapResult | null>([
+          computeContentGap(target, brandUrl, envVars.openaiApiKey).catch(err => {
+            console.warn(`⚠️ [GAP] ${stage} computeContentGap threw: ${err.message}`);
+            return null;
+          }),
+          new Promise<null>(resolve => setTimeout(() => {
+            console.warn(`⏱️ [GAP] ${stage} timed out after ${stageGapBudgetMs}ms`);
+            resolve(null);
+          }, stageGapBudgetMs)),
+        ]);
+      }
+    }
+
     for (const [stage, results] of Object.entries(stageGroups)) {
       const stageResults = results.filter((r: any) => !r.error);
 
@@ -735,7 +769,7 @@ async function executeSelectedAnalysis(
 
       // ── Citation Analysis ──────────────────────────────────────────
       // Extract all cited URLs and sources from AI responses, categorize by authority
-      const citationAnalysis = analyzeCitations(stageResults, brandName);
+      const citationAnalysis = analyzeCitations(stageResults, brandName, domain);
 
       // Build questions for this stage
       const stageQuestions = stageResults.map((r: any) => ({
@@ -758,6 +792,23 @@ async function executeSelectedAnalysis(
       // Generate concrete content recommendations (on-page + distribution/PR)
       const validStage = stage as "awareness" | "consideration" | "decision";
       const contentPlan = getContentRecommendations(validStage, visibilityScore, brandName, competitors);
+
+      // Await the cited-source-vs-brand content gap (kicked off in parallel
+      // before this loop). May be null if no domain, no citations, scrape
+      // failed, or the per-stage timeout fired.
+      let gapAnalysis: ContentGapResult | null = null;
+      if (stage in gapAnalysisPromises) {
+        try {
+          gapAnalysis = await gapAnalysisPromises[stage];
+          if (gapAnalysis?.ok) {
+            console.log(`✅ [GAP] ${stage} coverage=${gapAnalysis.coverageScore}% avgSim=${gapAnalysis.averageSimilarity}`);
+          } else if (gapAnalysis) {
+            console.log(`⚠️ [GAP] ${stage} skipped: ${gapAnalysis.error}`);
+          }
+        } catch (err: any) {
+          console.warn(`⚠️ [GAP] ${stage} await failed: ${err.message}`);
+        }
+      }
 
       // Create journey_stage insight (THIS IS WHAT THE RESULTS PAGE EXPECTS)
       const priorityMap: Record<string, number> = { awareness: 1, consideration: 2, decision: 3 };
@@ -795,6 +846,7 @@ async function executeSelectedAnalysis(
               recommendation,
               contentPlan: JSON.parse(JSON.stringify(contentPlan)),
               citationAnalysis: citationAnalysis ? JSON.parse(JSON.stringify(citationAnalysis)) : null,
+              gapAnalysis: gapAnalysis ? JSON.parse(JSON.stringify(gapAnalysis)) : null,
             },
             effort: mentionRate < 50 ? "high" : "low",
             timeline: mentionRate < 50 ? "3-6 months" : "ongoing",
@@ -1238,17 +1290,21 @@ function generateStrategicRecommendation(
  */
 function analyzeCitations(
   stageResults: any[],
-  brandName: string
+  brandName: string,
+  brandDomain?: string
 ): {
   totalCitations: number;
   brandCited: boolean;
   authoritySources: { source: string; type: string; brandPresent: boolean; count: number }[];
   topSources: { domain: string; count: number }[];
+  topCitedUrl: string | null;
+  topCitedDomain: string | null;
   gaps: string[];
 } {
   const allUrls: string[] = [];
   const allSources: any[] = [];
   const brandLower = brandName.toLowerCase();
+  const brandDomainLower = (brandDomain || "").toLowerCase().replace(/^www\./, "");
 
   // Collect all citations and sources from responses
   stageResults.forEach((result: any) => {
@@ -1258,6 +1314,11 @@ function analyzeCitations(
       }
       if (resp.sources && Array.isArray(resp.sources)) {
         allSources.push(...resp.sources);
+        // Sources may carry url fields not present in citedUrls — collect those too
+        resp.sources.forEach((s: any) => {
+          const u = s?.url || s?.link;
+          if (typeof u === "string" && u.startsWith("http")) allUrls.push(u);
+        });
       }
       // Also check follow-up sources
       if (resp.followUpSources && Array.isArray(resp.followUpSources)) {
@@ -1276,12 +1337,22 @@ function analyzeCitations(
     "Review Sites": { type: "reviews", patterns: ["trustpilot.com", "g2.com", "capterra.com", "yelp.com"] },
   };
 
-  // Count domain occurrences
+  // Count domain + full-URL occurrences. Excludes the brand's own domain so
+  // the gap analyzer compares against an external authority, not the brand itself.
   const domainCounts: Record<string, number> = {};
+  const urlCounts: Record<string, number> = {};
   allUrls.forEach(url => {
     try {
-      const domain = new URL(url).hostname.replace("www.", "");
+      const parsed = new URL(url);
+      const domain = parsed.hostname.replace(/^www\./, "");
+      if (brandDomainLower && (domain === brandDomainLower || domain.endsWith(`.${brandDomainLower}`))) {
+        return;
+      }
       domainCounts[domain] = (domainCounts[domain] || 0) + 1;
+      // Normalize URL key (drop fragment + trailing slash) so the same article
+      // doesn't get split across multiple keys.
+      const normalized = `${parsed.origin}${parsed.pathname}`.replace(/\/$/, "");
+      urlCounts[normalized] = (urlCounts[normalized] || 0) + 1;
     } catch {
       // skip invalid URLs
     }
@@ -1334,6 +1405,16 @@ function analyzeCitations(
     .slice(0, 10)
     .map(([domain, count]) => ({ domain, count }));
 
+  // Pick the single most-cited external URL — used as the comparison target
+  // for the content gap analyzer. Falls back to the homepage of the top
+  // domain when the URL counts are inconclusive.
+  const sortedUrls = Object.entries(urlCounts).sort(([, a], [, b]) => b - a);
+  let topCitedUrl: string | null = sortedUrls[0]?.[0] ?? null;
+  const topCitedDomain: string | null = topSources[0]?.domain ?? null;
+  if (!topCitedUrl && topCitedDomain) {
+    topCitedUrl = `https://${topCitedDomain}`;
+  }
+
   const brandCited = allUrls.some(url => url.toLowerCase().includes(brandLower)) ||
     allSources.some((s: any) => (s.url || s.link || "").toLowerCase().includes(brandLower));
 
@@ -1342,6 +1423,8 @@ function analyzeCitations(
     brandCited,
     authoritySources,
     topSources,
+    topCitedUrl,
+    topCitedDomain,
     gaps,
   };
 }

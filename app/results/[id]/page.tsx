@@ -1752,6 +1752,105 @@ export default function ResultsPage() {
                     </div>
                   )}
 
+                  {/* ═══ CONTENT GAP vs MOST-CITED SOURCE ═══ */}
+                  {stage?.gapAnalysis?.ok && (
+                    <div className="mt-4 bg-white rounded-xl border-2 border-[#D0DBF9] p-5 shadow-sm">
+                      <div className="flex items-start justify-between mb-4 gap-4">
+                        <div>
+                          <h5 className="font-bold text-off-black flex items-center gap-2 mb-1">
+                            <span>🎯</span> Content Gap vs Most-Cited Source
+                          </h5>
+                          <p className="text-xs text-[#4A5F5F]">
+                            How closely your page covers what the source AI cites for this stage actually talks about.
+                          </p>
+                        </div>
+                        <div className="text-center shrink-0">
+                          <div className={`text-3xl font-bold ${
+                            stage.gapAnalysis.coverageScore >= 60 ? "text-green-600" :
+                            stage.gapAnalysis.coverageScore >= 30 ? "text-yellow-600" : "text-red-600"
+                          }`}>
+                            {stage.gapAnalysis.coverageScore}%
+                          </div>
+                          <div className="text-xs text-[#4A5F5F]">coverage</div>
+                        </div>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3 mb-4 text-xs">
+                        <div className="p-2 bg-[#F4F1EC] rounded-lg">
+                          <div className="text-[#4A5F5F] mb-0.5">Most-cited source</div>
+                          <a
+                            href={stage.gapAnalysis.citedSource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-[#192F80] hover:underline break-all"
+                          >
+                            {stage.gapAnalysis.citedSource.title || stage.gapAnalysis.citedSource.url}
+                          </a>
+                          <div className="text-[#4A5F5F] mt-0.5">{stage.gapAnalysis.citedSource.wordCount} words</div>
+                        </div>
+                        <div className="p-2 bg-[#F4F1EC] rounded-lg">
+                          <div className="text-[#4A5F5F] mb-0.5">Your page</div>
+                          <a
+                            href={stage.gapAnalysis.brandSource.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium text-petrol hover:underline break-all"
+                          >
+                            {stage.gapAnalysis.brandSource.title || stage.gapAnalysis.brandSource.url}
+                          </a>
+                          <div className="text-[#4A5F5F] mt-0.5">{stage.gapAnalysis.brandSource.wordCount} words</div>
+                        </div>
+                      </div>
+
+                      {stage.gapAnalysis.missingTopics?.length > 0 && (
+                        <div className="mb-3">
+                          <h6 className="font-semibold text-sm text-off-black mb-2">
+                            Topics covered by the cited source but missing from your page
+                          </h6>
+                          <ul className="space-y-2">
+                            {stage.gapAnalysis.missingTopics.map((topic: any, idx: number) => (
+                              <li key={idx} className="flex items-start gap-2 p-3 bg-red-50 rounded-lg border border-red-200">
+                                <span className="text-red-600 mt-0.5 text-sm shrink-0">▸</span>
+                                <div className="flex-1">
+                                  <p className="text-xs text-off-black">{topic.excerpt}</p>
+                                  <p className="text-[10px] text-[#4A5F5F] mt-1">
+                                    Best similarity in your content: {Math.round(topic.bestBrandSimilarity * 100)}%
+                                  </p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {stage.gapAnalysis.matchedTopics?.length > 0 && (
+                        <div>
+                          <h6 className="font-semibold text-sm text-off-black mb-2">
+                            Topics you already cover well
+                          </h6>
+                          <ul className="space-y-1">
+                            {stage.gapAnalysis.matchedTopics.map((topic: any, idx: number) => (
+                              <li key={idx} className="flex items-start gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                                <span className="text-green-600 mt-0.5 text-sm shrink-0">✓</span>
+                                <p className="text-xs text-off-black">{topic.excerpt}</p>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-[#4A5F5F] mt-3">
+                        Compared {stage.gapAnalysis.chunksCompared.source} cited-source passages against {stage.gapAnalysis.chunksCompared.brand} brand passages using semantic embeddings.
+                      </p>
+                    </div>
+                  )}
+
+                  {stage?.gapAnalysis && !stage.gapAnalysis.ok && stage.gapAnalysis.error && (
+                    <div className="mt-4 p-3 bg-[#F4F1EC] rounded-lg border border-[#D0DBF9] text-xs text-[#4A5F5F]">
+                      <span className="font-semibold">Content gap analysis skipped:</span> {stage.gapAnalysis.error}
+                    </div>
+                  )}
+
                   {/* ═══ RECOMMENDATIONS FOR THIS STAGE ═══ */}
                   {stage?.recommendation && (
                     <div className="mt-4">
@@ -4388,6 +4487,7 @@ function transformAnalysisData(data: any) {
       },
       contentPlan: stageData.contentPlan || null,
       citationAnalysis: stageData.citationAnalysis || null,
+      gapAnalysis: stageData.gapAnalysis || null,
     };
   });
 
